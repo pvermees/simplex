@@ -5,6 +5,8 @@ logratios <- function(dat,c64=NULL){
     for (sname in snames){
         print(sname)
         samp <- dat[[sname]]
+        ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@2@"]]));##:ess-bp-end:##
         fm <- raw_count_ratios(samp=samp)
         afm <- avg_fm(fm)
         ag <- get_ag(samp=samp,c64=c64)
@@ -14,27 +16,52 @@ logratios <- function(dat,c64=NULL){
 }
 
 raw_count_ratios <- function(samp){
-    counts <- samp$counts[,c('206Pb','238U','238U16O2')]
+    counts <- samp$counts[,c('206Pb','207Pb','238U','238U16O2')]
     lc6 <- log(counts[,'206Pb'])
+    lc7 <- log(counts[,'207Pb'])
     lcU <- log(counts[,'238U'])
     lcUO <- log(counts[,'238U16O2'])
     nt <- length(lcU)
-    f6m <- lc6 - lcU
-    fUm <- lcUO - lcU
-    names(f6m) <- paste0('f6m_',1:nt)
-    names(fUm) <- paste0('fUm_',1:nt)
+    f6m <- lc6 - lcU  # f6m = v in the paper
+    f7m <- lc7 - lc6  # f7m = q in the paper
+    fUm <- lcUO - lcU # fUm = w in the paper
+    D <- (exp(f6m)+exp(f7m-f6m)+exp(fUm)+1)
+    dDdf6m <- exp(f6m)-exp(f7m-f6m)
+    dDdf7m <- exp(f7m-f6m)
+    dDdfUm <- exp(fUm)
+    d2Ddf6m2 <- exp(f6m)+exp(f7m-f6m)
+    d2Ddf7m2 <- exp(f7m-f6m)
+    d2DdfUm2 <- exp(fUm)
+    d2Ddf6mdf7m <- exp(f7m-f6m)
+    d2Ddf6mdfUm <- 0
+    d2Ddf7mdfUm <- 0
+    rs <- rowSums(counts)
+    H11 <- (rs/D)*(dDdf6m*dDdf6m/D - d2Ddf6m2)
+    H12 <- (rs/D)*(dDdf6m*dDdf7m/D - d2Ddf6mdf7m)
+    H13 <- (rs/D)*(dDdf6m*dDdfUm/D - d2Ddf6mdfUm)
+    H21 <- (rs/D)*(dDdf7m*dDdf6m/D - d2Ddf6mdf7m)
+    H22 <- (rs/D)*(dDdf7m*dDdf7m/D - d2Ddf7m2)
+    H23 <- (rs/D)*(dDdf7m*dDdfUm/D - d2Ddf7mdfUm)
+    H31 <- (rs/D)*(dDdfUm*dDdf6m/D - d2Ddf6mdfUm)
+    H32 <- (rs/D)*(dDdfUm*dDdf7m/D - d2Ddf7mdfUm)
+    H33 <- (rs/D)*(dDdfUm*dDdfUm/D - d2Ddf7m2)
     out <- list()
-    out$x <- c(f6m,fUm)
-    den <- rowSums(counts)*exp(f6m+fUm)/(exp(f6m)+exp(fUm)+1)^2
-    out$cov <- diag(exp(out$x))/den
-    diag(out$cov[1:nt,(nt+1):(2*nt)]) <- 1/den
-    diag(out$cov[(nt+1):(2*nt),1:nt]) <- 1/den
-    rownames(out$cov) <- names(out$x)
-    colnames(out$cov) <- names(out$x)
+    cnames <- c('f6m','f7m','fUm')
+    for (i in 1:nt){
+        out[[i]] <- list()
+        out[[i]]$x <- c(f6m[i],f7m[i],fUm[i])
+        H <- matrix(0,3,3)
+        H[1,1] <- H11[i]; H[1,2] <- H12[i]; H[1,3] <- H13[i]
+        H[2,1] <- H21[i]; H[2,2] <- H22[i]; H[2,3] <- H23[i]
+        H[3,1] <- H31[i]; H[3,2] <- H32[i]; H[3,3] <- H33[i]
+        out[[i]]$cov <- solve(-H)
+        names(out[[i]]$x) <- cnames
+        colnames(out[[i]]$cov) <- cnames
+        rownames(out[[i]]$cov) <- cnames
+    }
     out
 }
 
-# 2D averaging of f6m and fUm using Ludwig (1998) eqs 6, 7, 9
 avg_fm <- function(fm){
     nt <- length(fm$x)/2
     i1 <- 1:nt
