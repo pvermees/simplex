@@ -5,8 +5,6 @@ logratios <- function(dat,c64=NULL){
     for (sname in snames){
         print(sname)
         samp <- dat[[sname]]
-        ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@2@"]]));##:ess-bp-end:##
         fm <- raw_count_ratios(samp=samp)
         afm <- avg_fm(fm)
         ag <- get_ag(samp=samp,c64=c64)
@@ -44,9 +42,9 @@ raw_count_ratios <- function(samp){
     H23 <- (rs/D)*(dDdf7m*dDdfUm/D - d2Ddf7mdfUm)
     H31 <- (rs/D)*(dDdfUm*dDdf6m/D - d2Ddf6mdfUm)
     H32 <- (rs/D)*(dDdfUm*dDdf7m/D - d2Ddf7mdfUm)
-    H33 <- (rs/D)*(dDdfUm*dDdfUm/D - d2Ddf7m2)
+    H33 <- (rs/D)*(dDdfUm*dDdfUm/D - d2DdfUm2)
     out <- list()
-    cnames <- c('f6m','f7m','fUm')
+    labels <- c('f6m','f7m','fUm')
     for (i in 1:nt){
         out[[i]] <- list()
         out[[i]]$x <- c(f6m[i],f7m[i],fUm[i])
@@ -54,45 +52,41 @@ raw_count_ratios <- function(samp){
         H[1,1] <- H11[i]; H[1,2] <- H12[i]; H[1,3] <- H13[i]
         H[2,1] <- H21[i]; H[2,2] <- H22[i]; H[2,3] <- H23[i]
         H[3,1] <- H31[i]; H[3,2] <- H32[i]; H[3,3] <- H33[i]
-        out[[i]]$cov <- solve(-H)
-        names(out[[i]]$x) <- cnames
-        colnames(out[[i]]$cov) <- cnames
-        rownames(out[[i]]$cov) <- cnames
+        out[[i]]$H <- H
+        names(out[[i]]$x) <- labels
+        colnames(out[[i]]$H) <- labels
+        rownames(out[[i]]$H) <- labels
     }
     out
 }
 
 avg_fm <- function(fm){
-    nt <- length(fm$x)/2
-    i1 <- 1:nt
-    i2 <- (nt+1):(2*nt)
-    f6m <- fm$x[i1]
-    fUm <- fm$x[i2]
-    E11 <- diag(fm$cov[i1,i1])
-    E12 <- diag(fm$cov[i1,i2])
-    E22 <- diag(fm$cov[i2,i2])
-    adbc <- E11*E22-E12^2
-    O11 <- E22/adbc
-    O12 <- -E12/adbc
-    O22 <- E11/adbc
-    num6 <- sum(O22)*sum(f6m*O11+fUm*O12)-sum(O12)*sum(fUm*O22+f6m*O12)
-    numU <- sum(O11)*sum(fUm*O22+f6m*O12)-sum(O12)*sum(f6m*O11+fUm*O12)
-    den <- sum(O11)*sum(O22)-sum(O12)^2
-    af6 <- num6/den
-    afU <- numU/den
+    np <- length(fm[[1]]$x)
+    init <- rep(0,np)
+    nt <- length(fm)
+    for (i in 1:nt){ init <- init + fm[[i]]$x/nt }
+    lower <- init - rep(1,np)
+    upper <- init + rep(1,np)
+    fit <- optim(init,misfit_avg_fm,fm=fm,
+                 lower=lower,upper=upper,
+                 method='L-BFGS-B',hessian=TRUE)
     out <- list()
-    out$x <- c(af6,afU)
-    Efm <- matrix(0,2,2)
-    Efm[1,1] <- sum(O11)
-    Efm[1,2] <- sum(O12)
-    Efm[2,1] <- Efm[1,2]
-    Efm[2,2] <- sum(O22)
-    out$cov <- solve(Efm)
-    labels <- c('f6m','fUm')
+    out$x <- fit$par
+    out$cov <- solve(fit$hessian)
+    labels <- c('f6m','f7m','fUm')
     names(out$x) <- labels
     rownames(out$cov) <- labels
     colnames(out$cov) <- labels
     out
+}
+misfit_avg_fm <- function(afm,fm){
+    nt <- length(fm)
+    out <- 0
+    for (i in 1:nt){
+        D <- fm[[i]]$x - afm
+        out <- out - D %*% fm[[i]]$H %*% D
+    }
+    out/2
 }
 
 get_ag <- function(samp,c64=NULL){
@@ -129,21 +123,23 @@ init_ag <- function(samp,c64=NULL){
     out
 }
 misfit_ag <- function(ag,samp,c64=NULL){
-    simplex <- c('204Pb','206Pb','238U','238U16O2')
+    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
     b <- ag2b(ag,samp=samp,c64=c64)
     p <- b2p(b,ag['g'],tt=hours(samp$time[,simplex]))
     counts <- samp$counts[,simplex]
     dmultinom(counts,prob=p,log=TRUE)
 }
 ag2b <- function(ag,samp,c64=NULL){
-    simplex <- c('204Pb','206Pb','238U','238U16O2')
+    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
     tt <- hours(samp$time[,simplex])
     cc <- samp$counts[,simplex]
     dt <- samp$dwelltime[simplex]
     fn6 <- cc[,'206Pb'] ~ 1 + offset(ag['g']*tt[,'206Pb'])
+    fn7 <- cc[,'207Pb'] ~ 1 + offset(ag['g']*tt[,'207Pb'])
     fnU <- cc[,'238U'] ~ 1 + offset(ag['g']*tt[,'238U'])
     fnUO <- cc[,'238U16O2'] ~ 1 + offset(ag['g']*tt[,'238U16O2'])
     b6 <- glm(fn6,family=poisson(link='log'))$coef
+    b7 <- glm(fn7,family=poisson(link='log'))$coef
     bU <- glm(fnU,family=poisson(link='log'))$coef
     bUO <- glm(fnUO,family=poisson(link='log'))$coef
     if (is.null(c64)){
@@ -151,12 +147,12 @@ ag2b <- function(ag,samp,c64=NULL){
     } else {
         b4 <- b6 - log(c64*dt['206Pb']/dt['204Pb']) - log(exp(ag['a4'])+1)
     }
-    out <- c(b4,b6,bU,bUO)
+    out <- c(b4,b6,b7,bU,bUO)
     names(out) <- simplex
     out
 }
 b2p <- function(b,ag,tt){
-    simplex <- c('204Pb','206Pb','238U','238U16O2')
+    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
     nr <- nrow(tt)
     bm <- matrix(rep(b,nr),nrow=nr,byrow=TRUE)
     colnames(bm) <- simplex
@@ -167,11 +163,12 @@ b2p <- function(b,ag,tt){
 }
 
 bias_correction <- function(samp,afm,ag,c64=NULL){
-    simplex <- c('204Pb','206Pb','238U','238U16O2')
+    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
     tt <- hours(samp$time[,simplex])
-    dt <- colMeans(tt[,c(1,2,4)]-tt[,3])
-    names(dt) <- c('206Pb','238U16O2')
+    dt <- colMeans(tt[,c(1,2,3,5)]-tt[,5])
+    names(dt) <- c('206Pb','207Pb','238U16O2')
     f6c <- afm$x['f6m'] - ag$x['g']*dt['206Pb']
+    f7c <- afm$x['f7m'] - ag$x['g']*dt['207Pb']
     fUc <- afm$x['fUm'] - ag$x['g']*dt['238U16O2']
     if (is.null(c64)){
         f4c <- f6c - log(exp(ag$x['a4'])+1)
@@ -181,24 +178,26 @@ bias_correction <- function(samp,afm,ag,c64=NULL){
         f4c <- f6c - log(exp(ag$x['a4'])+1) - log(c64*d6/d4)
     }
     out <- list()
-    out$x <- c(f4c,f6c,fUc)
-    # joint covariance matrix of afm and ag:
-    E <- matrix(0,4,4)
-    E[1:2,1:2] <- afm$cov
-    E[3:4,3:4] <- ag$cov
-    J <- matrix(0,3,4)
-    J[1,1] <- 1 # df4c/df6m
-    J[2,1] <- 1 # df6c/df6m
-    J[3,2] <- 1 # dfUc/dfUm
-    J[1,3] <- -exp(ag$x['a4'])/(exp(ag$x['a4'])+1) # df4c/da4
-    J[1,4] <- -dt['206Pb'] # df4cdg
-    J[2,4] <- -dt['206Pb'] # df6cdg
-    J[3,4] <- -dt['238U16O2'] # dfUcdg
-    out$cov <- J %*% E %*% t(J)
-    labels <- c('f4c','f6c','fUc')
+    out$x <- c(f4c,f6c,f7c,fUc)
+    labels <- c('f4c','f6c','f7c','fUc')
     names(out$x) <- labels
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
+    # joint covariance matrix of afm and ag:
+    E <- matrix(0,5,5)
+    E[1:3,1:3] <- afm$cov
+    E[4:5,4:5] <- ag$cov
+    J <- matrix(0,4,5)
+    rownames(J) <- labels
+    colnames(J) <- c('f6m','f7m','fUm','a4','g')
+    J['f4c','f6m'] <- 1
+    J['f6c','f6m'] <- 1
+    J['f7c','f7m'] <- 1
+    J['fUc','fUm'] <- 1
+    J['f4c','a4'] <- -exp(ag$x['a4'])/(exp(ag$x['a4'])+1) # df4c/da4
+    J['f4c','g'] <- -dt['206Pb']
+    J['f6c','g'] <- -dt['206Pb']
+    J['f7c','g'] <- -dt['206Pb']
+    J['fUc','g'] <- -dt['238U16O2']
+    out$cov <- J %*% E %*% t(J)
     out
 }
 
@@ -209,8 +208,9 @@ lr2XY <- function(lr,dat,c64=NULL){
     colnames(out) <- c('X','sX','Y','sY','rho')
     rownames(out) <- snames
     J <- matrix(0,2,3)
+    calions <- c('f4c','f6c','fUc')
     rownames(J) <- c('X','Y')
-    colnames(J) <- c('f4c','f6c','fUc')
+    colnames(J) <- calions
     J['X','fUc'] <- 1
     for (sname in snames){
         d4 <- dat[[sname]]$dwelltime['204Pb']
@@ -230,7 +230,7 @@ lr2XY <- function(lr,dat,c64=NULL){
             J['Y','f4c'] <- -exp(f4c)*c64*d6/den
             J['Y','f6c'] <- exp(f6c)*d4/den
         }
-        E <- J %*% lr[[sname]]$cov %*% t(J)
+        E <- J %*% lr[[sname]]$cov[calions,calions] %*% t(J)
         out[sname,'X'] <- X
         out[sname,'Y'] <- Y
         out[sname,'sX'] <- sqrt(E['X','X'])
@@ -241,7 +241,8 @@ lr2XY <- function(lr,dat,c64=NULL){
 }
 
 # build a calibration curve
-calibration <- function(XY,plot=TRUE,disp=TRUE){
+calibration <- function(lr,dat,plot=TRUE,disp=TRUE){
+    XY <- lr2XY(lr=lr,dat=dat)
     xlab <- quote(''^238*'U'^16*'O'[2]*'/'^238*'U')
     ylab <- quote(''^206*'Pb*/'^238*'U')
     fit <- IsoplotR::isochron(XY,plot=plot,
@@ -263,7 +264,8 @@ calibration <- function(XY,plot=TRUE,disp=TRUE){
 }
 
 # apply a calibration to a unknown samples
-calibrate <- function(XY,fit,PbUstand=NULL,tst=c(337.13,0.18)){
+calibrate <- function(lr,fit,dat,PbUstand=NULL,tst=c(337.13,0.18)){
+    XY <- lr2XY(lr=lr,dat=dat)
     ns <- nrow(XY)
     if (is.null(PbUstand))
         Pb6U8stand <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
