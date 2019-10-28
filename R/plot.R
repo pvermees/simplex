@@ -1,0 +1,92 @@
+plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
+    ions <- names(samp$dwelltime)
+    np <- length(ions)      # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    par(mfrow=c(nr,nc),mai=c(0.4,0.4,0.1,0.1))
+    simplex <- c('204Pb','206Pb','238U','238U16O2')
+    if (fit){
+        X <- samp$time[,simplex]
+        Y <- predict_cps(samp,c64=c64)[,simplex]
+    }
+    for (ion in ions){
+        plot(samp$time[,ion],samp$cps[,ion],type='p',xlab='',ylab='')
+        if (fit & ion%in%simplex){
+            lines(X[,ion],Y[,ion])
+        }
+        mtext(side=1,text='t',line=2)
+        mtext(side=2,text=ion,line=2)
+    }
+}
+
+predict_cps <- function(samp,c64=NULL){
+    simplex <- c('204Pb','206Pb','238U','238U16O2')
+    fm <- raw_count_ratios(samp=samp)
+    afm <- avg_fm(fm)
+    eafm <- exp(afm$x)
+    ag <- get_ag(samp=samp,c64=c64)
+    if (is.null(c64)){
+        f4m <- afm$x['f6m'] - log(exp(ag$x['a4'])+1)
+    } else {
+        d4 <- samp$dwelltime['204Pb']
+        d6 <- samp$dwelltime['206Pb']
+        f4m <- afm$x['f6m'] - log(exp(ag$x['a4'])+1) - log(c64*d6/d4)
+    }
+    den <- sum(eafm) + 1
+    p4 <- exp(f4m)/den
+    p6 <- eafm['f6m']/den
+    pU <- 1/den
+    pUO <- eafm['fUm']/den
+    p <- c(p4,p6,pU,pUO)
+    rs <- rowSums(samp$counts[,simplex])
+    dt <- samp$dwelltime[simplex]
+    counts <- matrix(rs,ncol=1) %*% matrix(p,nrow=1)
+    cps <- sweep(counts,MARGIN=2,FUN='/',dt)
+    colnames(cps) <- simplex
+    cps
+}
+
+calplot_raw <- function(dat,i=NULL,...){
+    vars <- reshuffle(dat)
+    nt <- nrow(dat[[1]]$time)
+    ns <- length(dat)
+    if (is.null(i)) ii <- 1:ns
+    else ii <- i
+    matplot(vars$X[,ii],vars$Y[,ii],type='l',...)
+    text(vars$X[,ii],vars$Y[,ii],labels=1:nt)
+}
+
+reshuffle <- function(samps){
+    out <- list(counts=list(),cps=list(),time=list(),
+                sbm=list(),dwelltime=NULL)
+    snames <- names(samps)
+    ns <- length(snames)
+    ions <- names(samps[[1]]$dwelltime)
+    for (i in 1:ns){
+        samp <- samps[[i]]
+        for (ion in ions){
+            out$counts[[ion]] <- cbind(out$counts[[ion]], samp$counts[,ion])
+            out$cps[[ion]] <- cbind(out$cps[[ion]],
+                                    samp$cps[,ion] + 0.5/samp$dwelltime[ion])
+            out$time[[ion]] <- cbind(out$time[[ion]], samp$time[,ion])
+            out$sbm[[ion]] <- cbind(out$sbm[[ion]], samp$sbm[,ion])
+        }
+        out$dwelltime <- rbind(out$dwelltime, samp$dwelltime)
+    }
+    for (ion in ions){
+        colnames(out$counts[[ion]]) <- snames
+        colnames(out$cps[[ion]]) <- snames
+        colnames(out$time[[ion]]) <- snames
+    }
+    out$X <- log(out$cps[['238U16O2']]) - log(out$cps[['238U']])
+    if (is.null(c64)){
+        out$Y <- log(out$cps[['206Pb']])-log(out$cps[['238U']])
+    } else {
+        out$Y <- log(out$cps[['206Pb']]- out$cps[['204Pb']]*c64) -
+            log(out$cps[['238U']])
+    }
+    colnames(out$X) <- snames
+    colnames(out$Y) <- snames
+    rownames(out$dwelltime) <- snames
+    out
+}
