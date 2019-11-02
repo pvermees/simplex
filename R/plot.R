@@ -4,7 +4,7 @@ plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     par(mfrow=c(nr,nc),mai=c(0.4,0.4,0.1,0.1))
-    simplex <- c('204Pb','206Pb','238U','238U16O2')
+    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
     if (fit){
         X <- samp$time[,simplex]
         Y <- predict_cps(samp,c64=c64)[,simplex]
@@ -20,24 +20,27 @@ plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
 }
 
 predict_cps <- function(samp,c64=NULL){
-    simplex <- c('204Pb','206Pb','238U','238U16O2')
-    fm <- raw_count_ratios(samp=samp)
-    afm <- avg_fm(fm)
-    eafm <- exp(afm$x)
+    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
+    Lm <- raw_count_ratios(samp=samp)
+    aLm <- avg_Lm(Lm)
     ag <- get_ag(samp=samp,c64=c64)
     if (is.null(c64)){
-        f4m <- afm$x['f6m'] - log(exp(ag$x['a4'])+1)
+        L4m <- log(exp(ag$x['a4'])+1)
     } else {
         d4 <- samp$dwelltime['204Pb']
         d6 <- samp$dwelltime['206Pb']
-        f4m <- afm$x['f6m'] - log(exp(ag$x['a4'])+1) - log(c64*d6/d4)
+        L4m <- log(exp(ag$x['a4'])+1) + log(c64*d6/d4)
     }
-    den <- sum(eafm) + 1
-    p4 <- exp(f4m)/den
-    p6 <- eafm['f6m']/den
+    L6m <- aLm$x['L6m']
+    L7m <- aLm$x['L7m']
+    LUm <- aLm$x['LUm']
+    den <- exp(L6m-L4m)+exp(L6m)+exp(L7m+L6m)+exp(LUm)+1
+    p4 <- exp(L6m-L4m)/den
+    p6 <- exp(L6m)/den
+    p7 <- exp(L7m+L6m)/den
     pU <- 1/den
-    pUO <- eafm['fUm']/den
-    p <- c(p4,p6,pU,pUO)
+    pUO <- exp(LUm)/den
+    p <- c(p4,p6,p7,pU,pUO)
     rs <- rowSums(samp$counts[,simplex])
     dt <- samp$dwelltime[simplex]
     counts <- matrix(rs,ncol=1) %*% matrix(p,nrow=1)
@@ -46,7 +49,7 @@ predict_cps <- function(samp,c64=NULL){
     cps
 }
 
-calplot_raw <- function(dat,i=NULL,...){
+calplot_raw <- function(dat,i=NULL,c64=NULL,...){
     vars <- reshuffle(dat)
     nt <- nrow(dat[[1]]$time)
     ns <- length(dat)
@@ -56,7 +59,7 @@ calplot_raw <- function(dat,i=NULL,...){
     text(vars$X[,ii],vars$Y[,ii],labels=1:nt)
 }
 
-reshuffle <- function(samps){
+reshuffle <- function(samps,c64=NULL){
     out <- list(counts=list(),cps=list(),time=list(),
                 sbm=list(),dwelltime=NULL)
     snames <- names(samps)
@@ -89,4 +92,40 @@ reshuffle <- function(samps){
     colnames(out$Y) <- snames
     rownames(out$dwelltime) <- snames
     out
+}
+
+calplot <- function(XY,fit,alpha=0.05,sigdig=2,omit=NULL,...){
+    xy <- flatXYtable(XY)
+    isofit <- list(model=1)
+    isofit$fact <- stats::qt(1-alpha/2,fit$df)
+    isofit$n <- nrow(xy)
+    isofit$mswd <- fit$mswd
+    isofit$p.value <- as.numeric(1-stats::pchisq(fit$mswd/fit$df,fit$df))
+    A <- fit$AB['A']
+    B <- fit$AB['B']
+    sA <- sqrt(fit$cov['A','A'])
+    sB <- sqrt(fit$cov['B','B'])
+    isofit$a <- c(A,sA,isofit$fact*sA,isofit$mswd*isofit$fact*sA)
+    isofit$b <- c(B,sB,isofit$fact*sB,isofit$mswd*isofit$fact*sB)
+    isofit$cov.ab <- fit$cov['A','B']
+    xlab <- quote(''^238*'U'^16*'O'[2]*'/'^238*'U')
+    ylab <- quote(''^206*'Pb*/'^238*'U')
+    scatterplot(xy,xlab=xlab,ylab=ylab,fit=isofit,omit=omit,...)
+    graphics::title(isochrontitle(isofit,sigdig=sigdig),
+                    xlab=xlab,ylab=ylab)
+}
+
+flatXYtable <- function(XY){
+    snames <- names(XY)
+    ns <- length(snames)
+    xy <- matrix(0,ns,5)
+    colnames(xy) <- c('X','sX','Y','sY','rXY')
+    for (i in 1:ns){
+        xy[i,'X'] <- XY[[i]]$x['X']
+        xy[i,'Y'] <- XY[[i]]$x['Y']
+        xy[i,'sX'] <- sqrt(XY[[i]]$cov['X','X'])
+        xy[i,'sY'] <- sqrt(XY[[i]]$cov['Y','Y'])
+        xy[i,'rXY'] <- XY[[i]]$cov['X','Y']/(xy[i,'sX']*xy[i,'sY'])
+    }
+    xy
 }
