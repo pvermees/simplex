@@ -216,9 +216,9 @@ lr2XY <- function(lr,dat,c64=NULL){
     snames <- names(dat)
     ns <- length(snames)
     out <- list()
-    labels <- c('X','Y')
-    calions <- c('L4c','L6c','LUc')
-    J <- matrix(0,2,3)
+    labels <- c('X','Y','L7a','L4a')
+    calions <- c('L4c','L6c','L7c','LUc')
+    J <- matrix(0,4,4)
     rownames(J) <- labels
     colnames(J) <- calions
     J['X','LUc'] <- 1
@@ -226,10 +226,12 @@ lr2XY <- function(lr,dat,c64=NULL){
     for (sname in snames){
         d4 <- dat[[sname]]$dwelltime['204Pb']
         d6 <- dat[[sname]]$dwelltime['206Pb']
+        d7 <- dat[[sname]]$dwelltime['207Pb']
         dU <- dat[[sname]]$dwelltime['238U']
         dUO <- dat[[sname]]$dwelltime['238U16O2']
         L4c <- lr[[sname]]$x['L4c']
         L6c <- lr[[sname]]$x['L6c']
+        L7c <- lr[[sname]]$x['L7c']
         LUc <- lr[[sname]]$x['LUc']
         X <- LUc + log(dU/dUO)
         if (is.null(c64)){
@@ -238,8 +240,12 @@ lr2XY <- function(lr,dat,c64=NULL){
             Y <- log(dU) + log(dU/d6) + log(1-(c64*d6)/(d4*exp(L4c)))
             J['Y','L4c'] <- c64*d6/(c64*d6 + exp(L4c)*d4)
         }
+        L7a <- L7c + log(d6/d7)
+        L4a <- L4c + log(d6/d4)
+        J['L7a','L7c'] <- log(d6/d7)
+        J['L4a','L4c'] <- log(d6/d4)
         out[[sname]] <- list()
-        out[[sname]]$x <- c(X,Y)
+        out[[sname]]$x <- c(X,Y,L7a,L4a)
         names(out[[sname]]$x) <- labels
         out[[sname]]$cov <- J %*% lr[[sname]]$cov[calions,calions] %*% t(J)
         out[[sname]]$omega <- solve(out[[sname]]$cov)
@@ -292,7 +298,7 @@ misfit_york <- function(AB,XY=XY){
     for (sname in snames){
         X <- XY[[sname]]$x['X']
         Y <- XY[[sname]]$x['Y']
-        O <- XY[[sname]]$omega
+        O <- XY[[sname]]$omega[c('X','Y'),c('X','Y')]
         CC <- Y - A - B*X
         C1 <- O[1,1] + O[1,2]*B + O[2,1]*B + O[2,2]*B^2
         C2 <- 2*(O[1,2] + O[2,2]*B)*CC
@@ -306,47 +312,87 @@ misfit_york <- function(AB,XY=XY){
 # apply a calibration to a unknown samples
 calibrate <- function(lr,fit,dat,PbUstand=NULL,tst=c(337.13,0.18)){
     XY <- lr2XY(lr=lr,dat=dat)
-    xy <- flatXYtable(XY)
-    ns <- nrow(xy)
+    ns <- length(XY)
     if (is.null(PbUstand))
         Pb6U8stand <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
     Ytstand <- log(Pb6U8stand[1])
-    out <- list()
-    out$x <- xy[,'Y'] + Ytstand - fit$AB['A'] - fit$AB['B']*xy[,'X']
     sYtstand <- Pb6U8stand[2]/Pb6U8stand[1]
-    E <- matrix(0,2*ns+3,2*ns+3)
-    i1 <- 1:ns
-    i2 <- (ns+1):(2*ns)
-    E[i1,i1] <- diag(xy[,'sX']^2)
-    E[i2,i2] <- diag(xy[,'sY']^2)
-    E[i1,i2] <- diag(xy[,'rXY']*xy[,'sX']*xy[,'sY'])
-    E[i2,i1] <- E[i1,i2]
-    E[(2*ns+1),(2*ns+1)] <- sYtstand^2
-    E[(2*ns)+(2:3),(2*ns)+(2:3)] <- fit$cov
-    J <- matrix(0,nrow=ns,ncol=2*ns+3)
-    rownames(J) <- rownames(xy)
-    J[i1,i1] <- diag(-fit$AB['B'],ns,ns)
-    J[i1,i2] <- diag(1,ns,ns)
-    J[,2*ns+1] <- 1
-    J[,2*ns+2] <- -1
-    J[,2*ns+3] <- -xy[,'X']
+    La <- rep(0,3*ns)
+    E <- matrix(0,4*ns+3,4*ns+3)
+    E[4*ns+(1:2),4*ns+(1:2)] <- fit$cov
+    E[4*ns+3,4*ns+3] <- sYtstand^2
+    J <- matrix(0,nrow=3*ns,ncol=4*ns+3)
+    for (i in 1:ns){
+        i1 <- i      # X
+        i2 <- i+ns   # Y
+        i3 <- i+2*ns # L7a
+        i4 <- i+3*ns # L4a
+        o1 <- i      # out: L6a
+        o2 <- i+ns   # out: L7a
+        o3 <- i+2*ns # out: L4a
+        xy <- XY[[i]]
+        La[o1] <- xy$x['Y'] + Ytstand - fit$AB['A'] - fit$AB['B']*xy$x['X']
+        La[o2] <- xy$x['L7a']
+        La[o3] <- xy$x['L4a']
+        J[o1,i1] <- -fit$AB['B']   # dL6dX
+        J[o1,i2] <- 1              # dL6dY
+        J[o1,4*ns+1] <- -1         # dL6dA
+        J[o1,4*ns+2] <- -xy$x['X'] # dL6dB
+        J[o1,4*ns+3] <- 1          # dL6dYtstand
+        J[o2,i3] <- 1              # dL7dL7
+        J[o3,i4] <- 1              # dL4dL4
+        E[c(i1,i2,i3,i4),c(i1,i2,i3,i4)] <- xy$cov
+    }
+    out <- list()
+    out$snames <- names(lr)
+    out$labels <- c('L6a','L7a','L4a')
+    out$x <- La
     out$cov <- J %*% E %*% t(J)
     out
 }
 
-ages <- function(logPbU){
-    out <- list()
-    Pb6U8 <- exp(logPbU$x)
-    JR <- diag(Pb6U8)
-    E <- JR %*% logPbU$cov %*% t(JR)
-    l38 <- IsoplotR::settings('lambda','U238')[1]
-    out$x <- log(1+Pb6U8)/l38
-    Jt <- diag(1/(l38*(1+Pb6U8)))
-    out$cov <- Jt %*% E %*% t(Jt)
-    labels <- names(logPbU$x)
-    names(out$x) <- labels
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
+simplex2isoplotr <- function(alr){
+    ns <- length(alr$snames)
+    ni <- length(alr$labels)
+    out <- alr
+    out$labels <- c('U8Pb6','Pb76','Pb46')
+    J <- matrix(0,3*ns,3*ns)
+    for (i in 1:ns){
+        i1 <- i      # L6a
+        i2 <- i+ns   # L7a
+        i3 <- i+2*ns # L4a
+        out$x[i1] <- exp(-alr$x['L6a'])
+        out$x[i2] <- exp(alr$x['L7a'])
+        out$x[i3] <- exp(-alr$x['L4a'])
+        J[i1,i1] <- -exp(-alr$x['L6a'])
+        J[i2,i2] <- exp(alr$x['L7a'])
+        J[i3,i3] <- -exp(alr$x['L4a'])
+    }
+    out$cov <- J %*% alr$cov %*% t(J)
+    out
+}
+
+simplex2isoplot <- function(alr){
+    snames <- alr$snames
+    ns <- length(snames)
+    ni <- length(alr$labels)
+    idat <- simplex2isoplotr(alr)
+    out <- matrix(0,ns,9)
+    colnames(out) <- c('U238Pb206','s[U238Pb206]',
+                       'Pb207Pb206','s[Pb207Pb206]',
+                       'Pb204Pb206','s[Pb204Pb206]',
+                       'rXY','rXZ','rYZ')
+    rownames(out) <- snames
+    err <- sqrt(diag(idat$cov))
+    cormat <- cov2cor(idat$cov)
+    for (i in 1:ns){
+        i1 <- i      # U8Pb6
+        i2 <- i+ns   # Pb76
+        i3 <- i+2*ns # Pb46
+        out[i,c(1,3,5)] <- idat$x[c(i1,i2,i3)]
+        out[i,c(2,4,6)] <- err[c(i1,i2,i3)]
+        out[i,7:9] <- cormat[c(i1,i1,i2),c(i2,i3,i3)]
+    }
     out
 }
 
