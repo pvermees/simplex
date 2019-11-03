@@ -1,17 +1,16 @@
 # History files
-/**/.Rhistory
+**/*.Rhistory
 
 # Session Data files
-/**/.RData
+**/*.RData
 
 # Output files from R CMD build
-/**/.tar.gz
+**/*.tar.gz
 
 # Output files from R CMD check
-/**/.Rcheck/
+*.Rcheck/
+**/*.Rcheck/
 
 # PDF documentation
-/**/.pdf
-
-# tar balls
-/**/.tar.gz
+*.pdf
+**/*.pdf

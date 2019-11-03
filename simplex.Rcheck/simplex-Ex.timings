@@ -1,6 +1,0 @@
-name	user	system	elapsed
-avg_Lm	0.025	0.003	0.029	
-plot_timeresolved	0.892	0.207	0.648	
-raw_count_ratios	0.021	0.007	0.013	
-read_directory	0.250	0.057	0.235	
-subset_samples	0.003	0.000	0.003	
