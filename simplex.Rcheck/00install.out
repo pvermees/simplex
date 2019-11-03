@@ -6,8 +6,6 @@
 ** preparing package for lazy loading
 ** help
 *** installing help indices
-Error in Rd_info(db[[i]]) : 
-  missing/empty \title field in '/home/pvermees/Dropbox/Programming/R/simplex/man/read_Cameca_asc.Rd'
-Rd files must have a non-empty \title.
-See chapter 'Writing R documentation' in manual 'Writing R Extensions'.
-* removing ‘/home/pvermees/Dropbox/Programming/R/simplex/simplex.Rcheck/simplex’
+** building package indices
+** testing if installed package can be loaded
+* DONE (simplex)

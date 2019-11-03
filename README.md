@@ -1,6 +1,9 @@
 # simplex
 
-**simplex** is an **R** package for SIMS data processing that takes into account the *compositional* nature of isotopic data. This means that only the relative abundances of the isotopes carry are useful information.
+**simplex** is an **R** package for SIMS data processing that takes
+  into account the *compositional* nature of isotopic data. This means
+  that only the relative abundances of the isotopes carry the useful
+  information.
 
 ## Prerequisites
 

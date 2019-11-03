@@ -10,7 +10,6 @@
 \usage{
 avg_Lm(Lm)
 }
-
 \arguments{
   \item{Lm}{
     A time resolved list of logratio vectors and Hessian matrices.

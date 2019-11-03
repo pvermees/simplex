@@ -1,7 +1,7 @@
 Package: simplex
 Title: Data Reduction Software for Secondary Ion Mass Spectrometry
 Version: 0.1
-Date: 2019-10-28
+Date: 2019-11-3
 Authors@R: person("Pieter", "Vermeesch", , "p.vermeesch@ucl.ac.uk", role = c("aut", "cre"))
 Description: Processes Secondary Ion Mass Spectrometery (SIMS) data within the confines of the simplex, i.e. the data space of compositions. Accommodates input files for both Cameca and SHRIMP instruments. Models the data using a combination of multinomial and logistic normal statistics. Keeps track of inter-sample error correlations caused by using a common standard for multiple samples. Includes applications for U-Pb geochronology and stable isotope geochemistry.
 Author: Pieter Vermeesch [aut, cre]

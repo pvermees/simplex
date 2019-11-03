@@ -3,19 +3,19 @@ plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
-    par(mfrow=c(nr,nc),mai=c(0.4,0.4,0.1,0.1))
+    graphics::par(mfrow=c(nr,nc),mai=c(0.4,0.4,0.1,0.1))
     simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
     if (fit){
         X <- samp$time[,simplex]
         Y <- predict_cps(samp,c64=c64)[,simplex]
     }
     for (ion in ions){
-        plot(samp$time[,ion],samp$cps[,ion],type='p',xlab='',ylab='')
+        graphics::plot(samp$time[,ion],samp$cps[,ion],type='p',xlab='',ylab='')
         if (fit & ion%in%simplex){
-            lines(X[,ion],Y[,ion])
+            graphics::lines(X[,ion],Y[,ion])
         }
-        mtext(side=1,text='t',line=2)
-        mtext(side=2,text=ion,line=2)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ion,line=2)
     }
 }
 
@@ -55,8 +55,8 @@ calplot_raw <- function(dat,i=NULL,c64=NULL,...){
     ns <- length(dat)
     if (is.null(i)) ii <- 1:ns
     else ii <- i
-    matplot(vars$X[,ii],vars$Y[,ii],type='l',...)
-    text(vars$X[,ii],vars$Y[,ii],labels=1:nt)
+    graphics::matplot(vars$X[,ii],vars$Y[,ii],type='l',...)
+    graphics::text(vars$X[,ii],vars$Y[,ii],labels=1:nt)
 }
 
 reshuffle <- function(samps,c64=NULL){
@@ -110,8 +110,8 @@ calplot <- function(XY,fit,alpha=0.05,sigdig=2,omit=NULL,...){
     isofit$cov.ab <- fit$cov['A','B']
     xlab <- quote(''^238*'U'^16*'O'[2]*'/'^238*'U')
     ylab <- quote(''^206*'Pb*/'^238*'U')
-    scatterplot(xy,xlab=xlab,ylab=ylab,fit=isofit,omit=omit,...)
-    graphics::title(isochrontitle(isofit,sigdig=sigdig),
+    IsoplotR::scatterplot(xy,xlab=xlab,ylab=ylab,fit=isofit,omit=omit,...)
+    graphics::title(IsoplotR:::isochrontitle(isofit,sigdig=sigdig),
                     xlab=xlab,ylab=ylab)
 }
 

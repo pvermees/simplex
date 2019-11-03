@@ -1,0 +1,6 @@
+Cameca                  Example datasets for testing 'simplex'
+avg_Lm                  Average logratios
+plot_timeresolved       Plot and fit raw time-resolved SIMS data.
+raw_count_ratios        Time-resolved logratios
+read_directory          Read data directory
+subset_samples          Subset a dataset of class 'simplex'

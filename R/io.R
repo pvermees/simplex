@@ -8,7 +8,7 @@ read_directory <- function(dname,instrument='Cameca',suffix=NULL){
         stop('Unsupported instrument')
     }
     out <- list()
-    class(out) <- instrument
+    class(out) <- c('simplex',instrument)
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
     for (i in 1:nf){ # loop through the files
@@ -25,7 +25,8 @@ read_file <- function(fname,instrument='Cameca',suffix='.asc'){
     if (instrument=='Cameca' & suffix=='.asc'){
         out <- read_Cameca_asc(fname)
     } else if (instrument=='SHRIMP' & suffix=='.op'){
-        out <- read_SHRIMP_op(fname)
+        # TODO
+        #out <- read_SHRIMP_op(fname)
     }
     out
 }
@@ -100,5 +101,7 @@ read_Cameca_asc <- function(fname){
 subset_samples <- function(dat,prefix='Plesovice'){
     snames <- names(dat)
     matches <- grepl(prefix,snames)
-    subset(dat,subset=matches)
+    out <- subset(dat,subset=matches)
+    class(out) <- class(dat)
+    out
 }

@@ -78,9 +78,9 @@ avg_Lm <- function(Lm){
     for (i in 1:nt){ init <- init + Lm[[i]]$x/nt }
     lower <- init - rep(1,np)
     upper <- init + rep(1,np)
-    fit <- optim(init,misfit_avg_Lm,Lm=Lm,
-                 lower=lower,upper=upper,
-                 method='L-BFGS-B',hessian=TRUE)
+    fit <- stats::optim(init,misfit_avg_Lm,Lm=Lm,
+                        lower=lower,upper=upper,
+                        method='L-BFGS-B',hessian=TRUE)
     out <- list()
     out$x <- fit$par
     out$cov <- solve(fit$hessian)
@@ -105,9 +105,9 @@ get_ag <- function(samp,c64=NULL){
     np <- length(init) # number of parameters
     lower <- init - rep(1,np)
     upper <- init + rep(1,np)
-    fit <- optim(init,misfit_ag,method='L-BFGS-B',
-                 lower=lower,upper=upper,samp=samp,
-                 c64=c64,control=list(fnscale=-1),hessian=TRUE)
+    fit <- stats::optim(init,misfit_ag,method='L-BFGS-B',
+                        lower=lower,upper=upper,samp=samp,
+                        c64=c64,control=list(fnscale=-1),hessian=TRUE)
     out <- list()
     out$x <- fit$par
     out$cov <- solve(-fit$hessian)
@@ -118,10 +118,11 @@ init_ag <- function(samp,c64=NULL){
     t6 <- hours(samp$time[,'206Pb'])
     c4 <- samp$counts[,'204Pb']
     c6 <- samp$counts[,'206Pb']
-    fit6 <- glm(c6 ~ t6, family=poisson(link='log'))
+    fit6 <- stats::glm(c6 ~ t6, family=stats::poisson(link='log'))
     b6 <- fit6$coef[1]
     g <- fit6$coef[2]
-    b4 <- glm(c4 ~ 1 + offset(g*t4), family=poisson(link='log'))$coef
+    b4 <- stats::glm(c4 ~ 1 + offset(g*t4),
+                     family=stats::poisson(link='log'))$coef
     if (is.null(c64)){
         a4 <- log(exp(b6-b4)-1)
     } else {
@@ -138,7 +139,7 @@ misfit_ag <- function(ag,samp,c64=NULL){
     b <- ag2b(ag,samp=samp,c64=c64)
     p <- b2p(b,ag['g'],tt=hours(samp$time[,simplex]))
     counts <- samp$counts[,simplex]
-    dmultinom(counts,prob=p,log=TRUE)
+    stats::dmultinom(counts,prob=p,log=TRUE)
 }
 ag2b <- function(ag,samp,c64=NULL){
     simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
@@ -149,10 +150,10 @@ ag2b <- function(ag,samp,c64=NULL){
     fn7 <- cc[,'207Pb'] ~ 1 + offset(ag['g']*tt[,'207Pb'])
     fnU <- cc[,'238U'] ~ 1 + offset(ag['g']*tt[,'238U'])
     fnUO <- cc[,'238U16O2'] ~ 1 + offset(ag['g']*tt[,'238U16O2'])
-    b6 <- glm(fn6,family=poisson(link='log'))$coef
-    b7 <- glm(fn7,family=poisson(link='log'))$coef
-    bU <- glm(fnU,family=poisson(link='log'))$coef
-    bUO <- glm(fnUO,family=poisson(link='log'))$coef
+    b6 <- stats::glm(fn6,family=stats::poisson(link='log'))$coef
+    b7 <- stats::glm(fn7,family=stats::poisson(link='log'))$coef
+    bU <- stats::glm(fnU,family=stats::poisson(link='log'))$coef
+    bUO <- stats::glm(fnUO,family=stats::poisson(link='log'))$coef
     if (is.null(c64)){
         b4 <- b6 - log(exp(ag['a4'])+1)
     } else {
@@ -278,8 +279,8 @@ yorkfit <- function(XY,omit=NULL){
         X[i] <- XY[[i]]$x['X']
         Y[i] <- XY[[i]]$x['Y']
     }
-    init <- lm(Y ~ X)$coef
-    optim(init,misfit_york,method='BFGS',XY=XY,hessian=TRUE)
+    init <- stats::lm(Y ~ X)$coef
+    stats::optim(init,misfit_york,method='BFGS',XY=XY,hessian=TRUE)
 }
 
 misfit_york <- function(AB,XY=XY){
