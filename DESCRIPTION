@@ -1,5 +1,5 @@
 Package: simplex
-Title: Data reduction software for secondary ion mass spectrometry
+Title: Data Reduction Software for Secondary Ion Mass Spectrometry
 Version: 0.1
 Date: 2019-10-28
 Authors@R: person("Pieter", "Vermeesch", , "p.vermeesch@ucl.ac.uk", role = c("aut", "cre"))

@@ -1,0 +1,13 @@
+* installing *source* package ‘simplex’ ...
+** R
+** inst
+** preparing package for lazy loading
+** help
+Warning: /home/pvermees/Dropbox/Programming/R/simplex/man/simplex-package.Rd:27: All text must be in a section
+Warning: /home/pvermees/Dropbox/Programming/R/simplex/man/simplex-package.Rd:28: All text must be in a section
+*** installing help indices
+Error in Rd_info(db[[i]]) : 
+  missing/empty \title field in '/home/pvermees/Dropbox/Programming/R/simplex/man/ag2b.Rd'
+Rd files must have a non-empty \title.
+See chapter 'Writing R documentation' in manual 'Writing R Extensions'.
+* removing ‘/home/pvermees/Dropbox/Programming/R/simplex/simplex.Rcheck/simplex’

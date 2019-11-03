@@ -1,0 +1,44 @@
+* using log directory ‘/home/pvermees/Dropbox/Programming/R/simplex/simplex.Rcheck’
+* using R version 3.4.4 (2018-03-15)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* using option ‘--as-cran’
+* checking for file ‘simplex/DESCRIPTION’ ... OK
+* this is package ‘simplex’ version ‘0.1’
+* package encoding: UTF-8
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: ‘Pieter Vermeesch <p.vermeesch@ucl.ac.uk>’
+
+New submission
+
+Package has help file(s) containing build-stage \Sexpr{} expressions but no 'build/partial.rdb' file.
+
+Found the following (possibly) invalid URLs:
+  URL: https://github.com/pvermees/simplex
+    From: DESCRIPTION
+    Status: 404
+    Message: Not Found
+
+The build time stamp is missing.
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... NOTE
+Found the following hidden files and directories:
+  .gitignore
+  man/.Rhistory
+  .git
+These were most likely included in error. See section ‘Package
+structure’ in the ‘Writing R Extensions’ manual.
+
+CRAN-pack does not know about
+  .git
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘simplex’ can be installed ... ERROR
+Installation failed.
+See ‘/home/pvermees/Dropbox/Programming/R/simplex/simplex.Rcheck/00install.out’ for details.
+* DONE
+Status: 1 ERROR, 2 NOTEs
