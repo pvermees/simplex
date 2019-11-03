@@ -11,8 +11,6 @@ Maintainer: ‘Pieter Vermeesch <p.vermeesch@ucl.ac.uk>’
 
 New submission
 
-Package has help file(s) containing build-stage \Sexpr{} expressions but no 'build/partial.rdb' file.
-
 Found the following (possibly) invalid URLs:
   URL: https://github.com/pvermees/simplex
     From: DESCRIPTION
