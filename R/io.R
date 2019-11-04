@@ -105,3 +105,29 @@ subset_samples <- function(dat,prefix='Plesovice'){
     class(out) <- class(dat)
     out
 }
+
+simplex2isoplotr <- function(alr,format=5){
+    snames <- alr$snames
+    ns <- length(snames)
+    ni <- length(alr$labels)
+    ratios <- logratios2ratios(alr)
+    out <- matrix(0,ns,9)
+    colnames(out) <- c('U238Pb206','s[U238Pb206]',
+                       'Pb207Pb206','s[Pb207Pb206]',
+                       'Pb204Pb206','s[Pb204Pb206]',
+                       'rXY','rXZ','rYZ')
+    rownames(out) <- snames
+    err <- sqrt(diag(ratios$cov))
+    cormat <- stats::cov2cor(ratios$cov)
+    for (i in 1:ns){
+        i1 <- i      # U8Pb6
+        i2 <- i+ns   # Pb76
+        i3 <- i+2*ns # Pb46
+        out[i,c(1,3,5)] <- ratios$x[c(i1,i2,i3)]
+        out[i,c(2,4,6)] <- err[c(i1,i2,i3)]
+        out[i,7] <- cormat[i1,i2]
+        out[i,8] <- cormat[i1,i3]
+        out[i,9] <- cormat[i2,i3]
+    }
+    out
+}

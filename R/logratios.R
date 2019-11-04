@@ -351,7 +351,7 @@ calibrate <- function(lr,fit,dat,PbUstand=NULL,tst=c(337.13,0.18)){
     out
 }
 
-simplex2isoplotr <- function(alr){
+logratios2ratios <- function(alr){
     ns <- length(alr$snames)
     ni <- length(alr$labels)
     out <- alr
@@ -361,38 +361,14 @@ simplex2isoplotr <- function(alr){
         i1 <- i      # L6a
         i2 <- i+ns   # L7a
         i3 <- i+2*ns # L4a
-        out$x[i1] <- exp(-alr$x['L6a'])
-        out$x[i2] <- exp(alr$x['L7a'])
-        out$x[i3] <- exp(-alr$x['L4a'])
-        J[i1,i1] <- -exp(-alr$x['L6a'])
-        J[i2,i2] <- exp(alr$x['L7a'])
-        J[i3,i3] <- -exp(alr$x['L4a'])
+        out$x[i1] <- exp(-alr$x[i1])
+        out$x[i2] <- exp(alr$x[i2])
+        out$x[i3] <- exp(-alr$x[i3])
+        J[i1,i1] <- -exp(-alr$x[i1])
+        J[i2,i2] <- exp(alr$x[i2])
+        J[i3,i3] <- -exp(alr$x[i3])
     }
     out$cov <- J %*% alr$cov %*% t(J)
-    out
-}
-
-simplex2isoplot <- function(alr){
-    snames <- alr$snames
-    ns <- length(snames)
-    ni <- length(alr$labels)
-    idat <- simplex2isoplotr(alr)
-    out <- matrix(0,ns,9)
-    colnames(out) <- c('U238Pb206','s[U238Pb206]',
-                       'Pb207Pb206','s[Pb207Pb206]',
-                       'Pb204Pb206','s[Pb204Pb206]',
-                       'rXY','rXZ','rYZ')
-    rownames(out) <- snames
-    err <- sqrt(diag(idat$cov))
-    cormat <- cov2cor(idat$cov)
-    for (i in 1:ns){
-        i1 <- i      # U8Pb6
-        i2 <- i+ns   # Pb76
-        i3 <- i+2*ns # Pb46
-        out[i,c(1,3,5)] <- idat$x[c(i1,i2,i3)]
-        out[i,c(2,4,6)] <- err[c(i1,i2,i3)]
-        out[i,7:9] <- cormat[c(i1,i1,i2),c(i2,i3,i3)]
-    }
     out
 }
 
