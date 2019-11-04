@@ -29,8 +29,8 @@ install_github('pvermees/simplex')
 
 ## Examples
 
-Enter the following commands at the **R** prompt to start **simplex**
-and load some example data into memory:
+Enter the following commands at the R prompt to start simplex and load
+some example data into memory:
 
 ```
 library(simplex)
@@ -44,7 +44,7 @@ spot:
 plot_timeresolved(Cameca[[1]],fit=TRUE)
 ```
 
-To view further information about the *plot_timeresolved* function:
+To view further information about the **plot_timeresolved** function:
 
 ```
 ?plot_timeresolved
