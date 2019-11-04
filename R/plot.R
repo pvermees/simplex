@@ -105,8 +105,8 @@ calplot <- function(XY,fit,alpha=0.05,sigdig=2,omit=NULL,...){
     B <- fit$AB['B']
     sA <- sqrt(fit$cov['A','A'])
     sB <- sqrt(fit$cov['B','B'])
-    isofit$a <- c(A,sA,isofit$fact*sA,isofit$mswd*isofit$fact*sA)
-    isofit$b <- c(B,sB,isofit$fact*sB,isofit$mswd*isofit$fact*sB)
+    isofit$a <- c(A,sA,isofit$fact*sA,sqrt(isofit$mswd)*isofit$fact*sA)
+    isofit$b <- c(B,sB,isofit$fact*sB,sqrt(isofit$mswd)*isofit$fact*sB)
     isofit$cov.ab <- fit$cov['A','B']
     xlab <- quote(''^238*'U'^16*'O'[2]*'/'^238*'U')
     ylab <- quote(''^206*'Pb*/'^238*'U')
