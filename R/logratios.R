@@ -366,7 +366,7 @@ logratios2ratios <- function(alr){
         out$x[i3] <- exp(-alr$x[i3])
         J[i1,i1] <- -exp(-alr$x[i1])
         J[i2,i2] <- exp(alr$x[i2])
-        J[i3,i3] <- -exp(alr$x[i3])
+        J[i3,i3] <- -exp(-alr$x[i3])
     }
     out$cov <- J %*% alr$cov %*% t(J)
     out

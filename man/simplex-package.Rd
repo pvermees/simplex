@@ -28,4 +28,5 @@ fit <- calibration(lr_stand,dat=stand,plot=TRUE,disp=TRUE,omit=2)
 samp <- subset_samples(dat=Cameca,prefix='Qinghu')
 lr_samp <- logratios(dat=samp)
 PbU <- calibrate(lr_samp,fit=fit,dat=samp,tst=c(337.13,0.18))
+tab <- simplex2isoplotr(logPbU)
 }
