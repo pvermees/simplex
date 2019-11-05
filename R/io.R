@@ -105,23 +105,28 @@ read_SHRIMP_op <- function(fname){
             nscans <- read_numbers(f)
             nions <- read_numbers(f)
             samp$dwelltime <- read_numbers(f)
+            names(samp$dwelltime) <- ions
             samp$time <- matrix(0,nscans,nions)
             colnames(samp$time) <- ions
             for (i in 1:nions){
                 samp$time[,i] <- read_numbers(f)
             }
             samp$counts <- matrix(0,nscans,nions)
+            colnames(samp$counts) <- ions
             for (i in 1:nions){
                 samp$counts[,i] <- read_numbers(f)
             }
+            samp$cps <- sweep(samp$counts,MARGIN=2,FUN='/',samp$dwelltime)
             samp$sbmbkg <- read_numbers(f)
             samp$sbm <- matrix(0,nscans,nions)
+            colnames(samp$sbm) <- ions
             for (i in 1:nions){
                 samp$sbm[,i] <- read_numbers(f)
             }        
             out[[sname]] <- samp
         }
     }
+    close(f)
     out
 }
 
