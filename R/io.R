@@ -7,11 +7,12 @@ read_data <- function(dorf,instrument='Cameca',suffix=NULL){
     } else {
         stop('Unsupported instrument')
     }
+    class(out) <- c('simplex',instrument)
+    out
 }
 
 read_directory <- function(dname,instrument='Cameca',suffix='.asc'){
     out <- list()
-    class(out) <- c('simplex',instrument)
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
     for (i in 1:nf){ # loop through the files
@@ -94,7 +95,6 @@ read_SHRIMP_op <- function(fname){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
-        print(line)
         if (length(line)<1){
             break
         } else if (nchar(line)>0){
