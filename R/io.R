@@ -1,12 +1,15 @@
-# dname is a directory containing .asc files
-read_directory <- function(dname,instrument='Cameca',suffix=NULL){
+read_data <- function(dorf,instrument='Cameca',suffix=NULL){
     if (instrument == 'Cameca') {
         if (is.null(suffix)) suffix <- '.asc'
+        out <- read_directory(dorf,instrument='Cameca',suffix=suffix)
     } else if (instrument== 'SHRIMP') {
-        if (is.null(suffix)) suffix <- '.op'
+        out <- read_file(dorf,instrument='SHRIMP')
     } else {
         stop('Unsupported instrument')
     }
+}
+
+read_directory <- function(dname,instrument='Cameca',suffix='.asc'){
     out <- list()
     class(out) <- c('simplex',instrument)
     fnames <- list.files(dname,pattern=suffix)
@@ -14,19 +17,20 @@ read_directory <- function(dname,instrument='Cameca',suffix=NULL){
     for (i in 1:nf){ # loop through the files
         fname <- fnames[i]
         sname <- tools::file_path_sans_ext(fname)
-        out[[sname]] <- read_file(paste0(dname,fname),
-                                  instrument=instrument,suffix=suffix)
+        out[[sname]] <- read_file(paste0(dname,fname),instrument=instrument)
     }
     out
 }
 
 # fname is the complete path to an .asc file
-read_file <- function(fname,instrument='Cameca',suffix='.asc'){
-    if (instrument=='Cameca' & suffix=='.asc'){
+read_file <- function(fname,instrument='Cameca'){
+    suffix <- tail(strsplit(fname,split='[.]')[[1]],n=1)
+    if (instrument=='Cameca' & suffix=='asc'){
         out <- read_Cameca_asc(fname)
-    } else if (instrument=='SHRIMP' & suffix=='.op'){
-        # TODO
-        #out <- read_SHRIMP_op(fname)
+    } else if (instrument=='SHRIMP' & suffix=='op'){
+        out <- read_SHRIMP_op(fname)
+    } else {
+        stop('Unrecognised file extension.')
     }
     out
 }
@@ -96,6 +100,50 @@ read_Cameca_asc <- function(fname){
     }
     close(f)
     out
+}
+
+read_SHRIMP_op <- function(fname){
+    ions <- c('Zr2O','Pb204','bkg','Pb206','Pb207','Pb208','U238','ThO','UO','UO2')
+    f <- file(fname)
+    open(f);
+    out <- list()
+    while (TRUE) {
+        line <- readLines(f,n=1,warn=FALSE)
+        print(line)
+        if (length(line)<1){
+            break
+        } else if (nchar(line)>0){
+            samp <- list()
+            sname <- line
+            samp$date <- readLines(f,n=1,warn=FALSE)
+            samp$set <- read_numbers(f)
+            nscans <- read_numbers(f)
+            nions <- read_numbers(f)
+            samp$dwelltime <- read_numbers(f)
+            samp$time <- matrix(0,nscans,nions)
+            colnames(samp$time) <- ions
+            for (i in 1:nions){
+                samp$time[,i] <- read_numbers(f)
+            }
+            samp$counts <- matrix(0,nscans,nions)
+            for (i in 1:nions){
+                samp$counts[,i] <- read_numbers(f)
+            }
+            samp$sbmbkg <- read_numbers(f)
+            samp$sbm <- matrix(0,nscans,nions)
+            for (i in 1:nions){
+                samp$sbm[,i] <- read_numbers(f)
+            }        
+            out[[sname]] <- samp
+        }
+    }
+    out
+}
+
+read_numbers <- function(f){
+    line <- readLines(f,n=1,warn=FALSE)
+    parsed <- strsplit(line,'\t| ')[[1]]
+    as.numeric(parsed)
 }
 
 subset_samples <- function(dat,prefix='Plesovice'){
