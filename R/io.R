@@ -36,66 +36,51 @@ read_file <- function(fname,instrument='Cameca'){
 }
 
 read_Cameca_asc <- function(fname){
+    ions <- c('Zr90','Zr92','200.5','Zr94',
+              'Pb204','Pb206','Pb207','Pb208',
+              'U238','ThO2','UO2','270.1')
     f <- file(fname)
     open(f);
     out <- list()
-    while (length(line <- readLines(f, n=1, warn=FALSE)) > 0) {
-        if (grepl("ACQUISITION PARAMETERS",line)) {
-            block <- readLines(f, n=12, warn=FALSE)
-            ions <- unlist(strsplit(block[2], split='\t'))[-1]
-            out$ions <- gsub(' ','',ions)
-            out$dwelltime <- as.numeric(unlist(strsplit(block[7], split='\t'))[-1])
-            detector <- unlist(strsplit(block[12], split='\t'))[-1]
-            out$detector <- gsub(' ','',detector)
-            names(out$dwelltime) <- out$ions
-            names(out$detector) <- out$ions
+    while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
+        if (grepl("ACQUISITION PARAMETERS",line)){
+            junk <- readLines(f,n=6,warn=FALSE)
+            out$dwelltime <- read_numbers(f,remove=1)
+            junk <- readLines(f,n=4,warn=FALSE)
+            out$detector <- read_text(f,remove=1)
+            names(out$dwelltime) <- ions
+            names(out$detector) <- ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
-            block <- readLines(f, n=3, warn=FALSE)
+            junk <- readLines(f,n=3,warn=FALSE)
             detectors <- NULL
             out$yield <- NULL
             out$background <- NULL
+            out$deadtime <- NULL
             while (TRUE){
-                line <- readLines(f, n=1, warn=FALSE)
-                if (grepl("CORRECTION FACTORS",line)){
+                line <- readLines(f,n=1,warn=FALSE)
+                if (nchar(line)>0){
+                    parsed <- parse_line(line)
+                    detectors <- c(detectors,parsed[1])
+                    out$yield <- c(out$yield, as.numeric(parsed[2]))
+                    out$background <- c(out$background, as.numeric(parsed[3]))
+                    out$deadtime <- c(out$deadtime, as.numeric(parsed[4]))
+                } else {
                     break
-                } else if (nchar(line)>0){
-                    detectorpars <- gsub(' ','',unlist(strsplit(line, split='\t')))
-                    detectors <- c(detectors,detectorpars[1])
-                    out$yield <- c(out$yield, as.numeric(detectorpars[2]))
-                    out$background <- c(out$background, as.numeric(detectorpars[3]))
                 }
             }
             names(out$yield) <- detectors
             names(out$background) <- detectors
         }
         if (grepl("RAW DATA",line)) {
-            out$cps <- NULL
-            junk <- readLines(f, n = 5, warn = FALSE)
-            while ((line <- readLines(f, n=1, warn=FALSE)) != '') {
-                dat <- as.numeric(unlist(strsplit(line, split='\t')))[-c(1,2)]
-                out$cps <- rbind(out$cps,dat)
-            }
-            colnames(out$cps) <- out$ions
+            out$cps <- read_asc_block(f,ions=ions)
             out$counts <- round(sweep(out$cps,MARGIN=2,FUN='*',out$dwelltime))
         }
         if (grepl("PRIMARY INTENSITY",line)) {
-            out$sbm <- NULL
-            junk <- readLines(f, n = 5, warn = FALSE)
-            while ((line <- readLines(f, n=1, warn=FALSE)) != '') {
-                dat <- as.numeric(unlist(strsplit(line, split='\t')))[-c(1,2)]
-                out$sbm <- rbind(out$sbm,dat)
-            }
-            colnames(out$sbm) <- out$ions
+            out$sbm <- read_asc_block(f,ions=ions)
         }
         if (grepl("TIMING",line)) {
-            out$time <- NULL
-            junk <- readLines(f, n = 5, warn = FALSE)
-            while (length(line <- readLines(f, n=1, warn=FALSE)) > 0) {
-                dat <- as.numeric(unlist(strsplit(line, split='\t')))[-c(1,2)]
-                out$time <- rbind(out$time,dat)
-            }
-            colnames(out$time) <- out$ions
+            out$time <- read_asc_block(f,ions=ions)
         }
     }
     close(f)
@@ -140,10 +125,33 @@ read_SHRIMP_op <- function(fname){
     out
 }
 
-read_numbers <- function(f){
+read_text <- function(f,remove=NULL){
     line <- readLines(f,n=1,warn=FALSE)
-    parsed <- strsplit(line,'\t| ')[[1]]
+    parse_line(line,remove=remove)
+}
+read_numbers <- function(f,remove=NULL){
+    parsed <- read_text(f,remove=remove)
     as.numeric(parsed)
+}
+parse_line <- function(line,remove=NULL){
+    parsed <- strsplit(line,'\t|\\s+')[[1]]
+    if (is.null(remove)) out <- parsed
+    else out <- parsed[-remove]
+    out
+}
+read_asc_block <- function(f,ions){
+    out <- NULL
+    junk <- readLines(f,n=5,warn=FALSE)
+    while (TRUE) {
+        dat <- read_numbers(f,remove=c(1,2))
+        if (length(dat)>0){
+            out <- rbind(out,dat)
+        } else {
+            break
+        }
+    }
+    colnames(out) <- ions
+    out
 }
 
 subset_samples <- function(dat,prefix='Plesovice'){

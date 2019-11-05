@@ -10,11 +10,11 @@ lr2XY <- function(lr,dat,c64=NULL){
     J['X','LUc'] <- 1
     J['Y','L6c'] <- 1
     for (sname in snames){
-        d4 <- dat[[sname]]$dwelltime['204Pb']
-        d6 <- dat[[sname]]$dwelltime['206Pb']
-        d7 <- dat[[sname]]$dwelltime['207Pb']
-        dU <- dat[[sname]]$dwelltime['238U']
-        dUO <- dat[[sname]]$dwelltime['238U16O2']
+        d4 <- dat[[sname]]$dwelltime['Pb204']
+        d6 <- dat[[sname]]$dwelltime['Pb206']
+        d7 <- dat[[sname]]$dwelltime['Pb207']
+        dU <- dat[[sname]]$dwelltime['U238']
+        dUO <- dat[[sname]]$dwelltime['UO2']
         L4c <- lr[[sname]]$x['L4c']
         L6c <- lr[[sname]]$x['L6c']
         L7c <- lr[[sname]]$x['L7c']

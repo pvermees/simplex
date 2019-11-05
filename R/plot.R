@@ -4,7 +4,7 @@ plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     graphics::par(mfrow=c(nr,nc),mai=c(0.4,0.4,0.1,0.1))
-    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
+    simplex <- c('204Pb','Pb206','Pb207','U238','UO2')
     if (fit){
         X <- samp$time[,simplex]
         Y <- predict_cps(samp,c64=c64)[,simplex]
@@ -20,7 +20,7 @@ plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
 }
 
 predict_cps <- function(samp,c64=NULL){
-    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
+    simplex <- c('204Pb','Pb206','Pb207','U238','UO2')
     Lm <- raw_count_ratios(samp=samp)
     aLm <- avg_Lm(Lm)
     ag <- get_ag(samp=samp,c64=c64)
@@ -28,7 +28,7 @@ predict_cps <- function(samp,c64=NULL){
         L4m <- log(exp(ag$x['a4'])+1)
     } else {
         d4 <- samp$dwelltime['204Pb']
-        d6 <- samp$dwelltime['206Pb']
+        d6 <- samp$dwelltime['Pb206']
         L4m <- log(exp(ag$x['a4'])+1) + log(c64*d6/d4)
     }
     L6m <- aLm$x['L6m']
@@ -81,12 +81,12 @@ reshuffle <- function(samps,c64=NULL){
         colnames(out$cps[[ion]]) <- snames
         colnames(out$time[[ion]]) <- snames
     }
-    out$X <- log(out$cps[['238U16O2']]) - log(out$cps[['238U']])
+    out$X <- log(out$cps[['UO2']]) - log(out$cps[['U238']])
     if (is.null(c64)){
-        out$Y <- log(out$cps[['206Pb']])-log(out$cps[['238U']])
+        out$Y <- log(out$cps[['Pb206']])-log(out$cps[['U238']])
     } else {
-        out$Y <- log(out$cps[['206Pb']]- out$cps[['204Pb']]*c64) -
-            log(out$cps[['238U']])
+        out$Y <- log(out$cps[['Pb206']]- out$cps[['204Pb']]*c64) -
+            log(out$cps[['U238']])
     }
     colnames(out$X) <- snames
     colnames(out$Y) <- snames

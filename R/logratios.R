@@ -14,16 +14,16 @@ logratios <- function(dat,c64=NULL){
 }
 
 raw_count_ratios <- function(samp){
-    counts <- samp$counts[,c('206Pb','207Pb','238U','238U16O2')]
+    counts <- samp$counts[,c('Pb206','Pb207','U238','UO2')]
     lc <- log(counts)
     nt <- nrow(lc)
-    n6 <- counts[,'206Pb']
-    n7 <- counts[,'207Pb']
-    nU <- counts[,'238U']
-    nUO <- counts[,'238U16O2']
-    L6m <- lc[,'206Pb'] - lc[,'238U']
-    L7m <- lc[,'207Pb'] - lc[,'206Pb']
-    LUm <- lc[,'238U16O2'] - lc[,'238U']
+    n6 <- counts[,'Pb206']
+    n7 <- counts[,'Pb207']
+    nU <- counts[,'U238']
+    nUO <- counts[,'UO2']
+    L6m <- lc[,'Pb206'] - lc[,'U238']
+    L7m <- lc[,'Pb207'] - lc[,'Pb206']
+    LUm <- lc[,'UO2'] - lc[,'U238']
     rs <- rowSums(counts)
     D <- exp(L6m)+exp(L7m+L6m)+exp(LUm)+1
     dDdL6m <- exp(L6m)+exp(L7m+L6m)
@@ -114,10 +114,10 @@ get_ag <- function(samp,c64=NULL){
     out    
 }
 init_ag <- function(samp,c64=NULL){
-    t4 <- hours(samp$time[,'204Pb'])
-    t6 <- hours(samp$time[,'206Pb'])
-    c4 <- samp$counts[,'204Pb']
-    c6 <- samp$counts[,'206Pb']
+    t4 <- hours(samp$time[,'Pb204'])
+    t6 <- hours(samp$time[,'Pb206'])
+    c4 <- samp$counts[,'Pb204']
+    c6 <- samp$counts[,'Pb206']
     fit6 <- stats::glm(c6 ~ t6, family=stats::poisson(link='log'))
     b6 <- fit6$coef[1]
     g <- fit6$coef[2]
@@ -126,8 +126,8 @@ init_ag <- function(samp,c64=NULL){
     if (is.null(c64)){
         a4 <- log(exp(b6-b4)-1)
     } else {
-        d4 <- samp$dwelltime['204Pb']
-        d6 <- samp$dwelltime['206Pb']
+        d4 <- samp$dwelltime['Pb204']
+        d6 <- samp$dwelltime['Pb206']
         a4 <- log(exp(b6-b4)*(d4/d6)/c64 - 1)
     }
     out <- c(a4,g)
@@ -135,21 +135,21 @@ init_ag <- function(samp,c64=NULL){
     out
 }
 misfit_ag <- function(ag,samp,c64=NULL){
-    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
+    simplex <- c('Pb204','Pb206','Pb207','U238','UO2')
     b <- ag2b(ag,samp=samp,c64=c64)
     p <- b2p(b,ag['g'],tt=hours(samp$time[,simplex]))
     counts <- samp$counts[,simplex]
     stats::dmultinom(counts,prob=p,log=TRUE)
 }
 ag2b <- function(ag,samp,c64=NULL){
-    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
+    simplex <- c('Pb204','Pb206','Pb207','U238','UO2')
     tt <- hours(samp$time[,simplex])
     cc <- samp$counts[,simplex]
     dt <- samp$dwelltime[simplex]
-    fn6 <- cc[,'206Pb'] ~ 1 + offset(ag['g']*tt[,'206Pb'])
-    fn7 <- cc[,'207Pb'] ~ 1 + offset(ag['g']*tt[,'207Pb'])
-    fnU <- cc[,'238U'] ~ 1 + offset(ag['g']*tt[,'238U'])
-    fnUO <- cc[,'238U16O2'] ~ 1 + offset(ag['g']*tt[,'238U16O2'])
+    fn6 <- cc[,'Pb206'] ~ 1 + offset(ag['g']*tt[,'Pb206'])
+    fn7 <- cc[,'Pb207'] ~ 1 + offset(ag['g']*tt[,'Pb207'])
+    fnU <- cc[,'U238'] ~ 1 + offset(ag['g']*tt[,'U238'])
+    fnUO <- cc[,'UO2'] ~ 1 + offset(ag['g']*tt[,'UO2'])
     b6 <- stats::glm(fn6,family=stats::poisson(link='log'))$coef
     b7 <- stats::glm(fn7,family=stats::poisson(link='log'))$coef
     bU <- stats::glm(fnU,family=stats::poisson(link='log'))$coef
@@ -157,14 +157,14 @@ ag2b <- function(ag,samp,c64=NULL){
     if (is.null(c64)){
         b4 <- b6 - log(exp(ag['a4'])+1)
     } else {
-        b4 <- b6 - log(c64*dt['206Pb']/dt['204Pb']) - log(exp(ag['a4'])+1)
+        b4 <- b6 - log(c64*dt['Pb206']/dt['Pb204']) - log(exp(ag['a4'])+1)
     }
     out <- c(b4,b6,b7,bU,bUO)
     names(out) <- simplex
     out
 }
 b2p <- function(b,ag,tt){
-    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
+    simplex <- c('Pb204','Pb206','Pb207','U238','UO2')
     nr <- nrow(tt)
     bm <- matrix(rep(b,nr),nrow=nr,byrow=TRUE)
     colnames(bm) <- simplex
@@ -175,19 +175,19 @@ b2p <- function(b,ag,tt){
 }
 
 bias_correction <- function(samp,aLm,ag,c64=NULL){
-    simplex <- c('204Pb','206Pb','207Pb','238U','238U16O2')
+    simplex <- c('Pb204','Pb206','Pb207','U238','UO2')
     tt <- hours(samp$time[,simplex])
-    dt6 <- mean(tt[,'206Pb']-tt[,'238U'])
-    dt7 <- mean(tt[,'207Pb']-tt[,'206Pb'])
-    dtU <- mean(tt[,'238U16O2']-tt[,'238U'])
+    dt6 <- mean(tt[,'Pb206']-tt[,'U238'])
+    dt7 <- mean(tt[,'Pb207']-tt[,'Pb206'])
+    dtU <- mean(tt[,'UO2']-tt[,'U238'])
     L6c <- aLm$x['L6m'] - ag$x['g']*dt6
     L7c <- aLm$x['L7m'] - ag$x['g']*dt7
     LUc <- aLm$x['LUm'] - ag$x['g']*dtU
     if (is.null(c64)){
         L4c <- log(exp(ag$x['a4'])+1)
     } else {
-        d4 <- samp$dwelltime['204Pb']
-        d6 <- samp$dwelltime['206Pb']
+        d4 <- samp$dwelltime['Pb204']
+        d6 <- samp$dwelltime['Pb206']
         L4c <- log(exp(ag$x['a4'])+1) + log(c64*d6/d4)
     }
     out <- list()
