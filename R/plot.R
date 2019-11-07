@@ -7,10 +7,10 @@ plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
     simplex <- c('Pb204','Pb206','Pb207','U238','UO2')
     if (fit){
         X <- samp$time[,simplex]
-        Y <- predict_cps(samp,c64=c64)[,simplex]
+        Y <- predict_counts(samp,c64=c64)[,simplex]
     }
     for (ion in ions){
-        graphics::plot(samp$time[,ion],samp$cps[,ion],type='p',xlab='',ylab='')
+        graphics::plot(samp$time[,ion],samp$counts[,ion],type='p',xlab='',ylab='')
         if (fit & ion%in%simplex){
             graphics::lines(X[,ion],Y[,ion])
         }
@@ -19,7 +19,7 @@ plot_timeresolved <- function(samp,fit=FALSE,c64=NULL){
     }
 }
 
-predict_cps <- function(samp,c64=NULL){
+predict_counts <- function(samp,c64=NULL){
     simplex <- c('Pb204','Pb206','Pb207','U238','UO2')
     Lm <- raw_count_ratios(samp=samp)
     aLm <- avg_Lm(Lm)
@@ -44,9 +44,9 @@ predict_cps <- function(samp,c64=NULL){
     rs <- rowSums(samp$counts[,simplex])
     dt <- samp$dwelltime[simplex]
     counts <- matrix(rs,ncol=1) %*% matrix(p,nrow=1)
-    cps <- sweep(counts,MARGIN=2,FUN='/',dt)
-    colnames(cps) <- simplex
-    cps
+    #cps <- sweep(counts,MARGIN=2,FUN='/',dt)
+    colnames(counts) <- simplex
+    counts
 }
 
 calplot_raw <- function(dat,i=NULL,c64=NULL,...){
@@ -128,4 +128,43 @@ flatXYtable <- function(XY){
         xy[i,'rXY'] <- XY[[i]]$cov['X','Y']/(xy[i,'sX']*xy[i,'sY'])
     }
     xy
+}
+
+plot_raw_ratios <- function(dat,num='Pb206',den='UO',plot=TRUE){
+    snames <- names(dat)
+    ns <- length(snames)
+    nr <- nrow(dat[[1]]$counts)
+    out <- matrix(0,nr,ns)
+    colnames(out) <- snames
+    for (sname in snames){
+        out[,sname] <- log(dat[[sname]]$counts[,num]) -
+            log(dat[[sname]]$counts[,den])
+    }
+    X <- matrix(1:ns,nr,ns,byrow=FALSE)
+    if (plot) plot(X,out)
+    else return(out)
+}
+plot_avg_ratios <- function(dat,num='Pb206',den='UO',radial=FALSE){
+    R <- plot_raw_ratios(dat,num=num,den=den,plot=FALSE)
+    avg <- colMeans(R)
+    se <- apply(R,2,sd)/sqrt(nrow(R))
+    XsX <- cbind(avg,se)
+    if (radial) IsoplotR:::radial_helper(XsX,transformation='linear')
+    else IsoplotR::weightedmean(XsX)
+}
+
+plot_raw_scatter <- function(dat,num='Pb206',den='UO'){
+    snames <- names(dat)
+    np <- length(snames)
+    nt <- nrow(dat[[1]]$counts)
+    nr <- ceiling(sqrt(np))
+    nc <- ceiling(np/nr)
+    dev.new(width=2*nc,height=2*nr,units = "in")
+    graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    for (sname in snames){
+        X <- log(dat[[sname]]$counts[,num])
+        Y <- log(dat[[sname]]$counts[,den])
+        plot(X,Y,type='p')
+        mtext(sname,line=-1)
+    }
 }
