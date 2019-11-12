@@ -49,14 +49,28 @@ predict_counts <- function(samp,c64=NULL){
     counts
 }
 
-calplot_raw <- function(dat,i=NULL,c64=NULL,...){
+calplot_raw <- function(dat,i=NULL,c64=NULL,multipanel=FALSE,...){
     vars <- reshuffle(dat)
     nt <- nrow(dat[[1]]$time)
     ns <- length(dat)
     if (is.null(i)) ii <- 1:ns
     else ii <- i
-    graphics::matplot(vars$X[,ii],vars$Y[,ii],type='l',...)
-    graphics::text(vars$X[,ii],vars$Y[,ii],labels=1:nt)
+    if (multipanel){
+        np <- length(ii)
+        nr <- ceiling(sqrt(np)) # number of rows
+        nc <- ceiling(np/nr)    # number of columns
+        dev.new(width=2*nc,height=2*nr,units = "in")
+        graphics::par(mfrow=c(nr,nc),mar=c(2,2.5,1.5,0.5))
+        snames <- names(dat)
+        for (j in ii){
+            graphics::matplot(vars$X[,j],vars$Y[,j],type='n',...)
+            graphics::text(vars$X[,j],vars$Y[,j],labels=1:nt)
+            graphics::mtext(side=3,text=snames[j],line=0)
+        }
+    } else {
+        graphics::matplot(vars$X[,ii],vars$Y[,ii],type='n',...)
+        graphics::text(vars$X[,ii],vars$Y[,ii],labels=1:nt)        
+    }
 }
 
 reshuffle <- function(samps,c64=NULL){
@@ -153,18 +167,21 @@ plot_avg_ratios <- function(dat,num='Pb206',den='UO',radial=FALSE){
     else IsoplotR::weightedmean(XsX)
 }
 
-plot_raw_scatter <- function(dat,num='Pb206',den='UO'){
+plot_raw_ratios <- function(dat,num='Pb206',den='UO',scatter=FALSE){
     snames <- names(dat)
     np <- length(snames)
     nt <- nrow(dat[[1]]$counts)
     nr <- ceiling(sqrt(np))
     nc <- ceiling(np/nr)
     dev.new(width=2*nc,height=2*nr,units = "in")
-    graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    graphics::par(mfrow=c(nr,nc),mar=c(2,2.5,1.5,0.5))
     for (sname in snames){
-        X <- log(dat[[sname]]$counts[,num])
-        Y <- log(dat[[sname]]$counts[,den])
-        plot(X,Y,type='p')
-        mtext(sname,line=-1)
+        X <- log(dat[[sname]]$counts[,den])
+        Y <- log(dat[[sname]]$counts[,num])
+        if (scatter) plot(X,Y,type='o',xlab='',ylab='')
+        else plot(1:nt,log(Y/X),type='o',xlab='',ylab='')
+        mtext(sname,line=0)
+        Mm <- diff(range(log(Y/X)))
+        mtext(paste0('M-m=',signif(Mm,2)),line=-1)
     }
 }
