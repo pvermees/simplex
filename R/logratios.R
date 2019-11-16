@@ -236,3 +236,39 @@ logratios2ratios <- function(alr){
 hours <- function(tt){
     tt/3600
 }
+
+get_gamma <- function(samp,ion='Pb206'){
+    tt <- hours(samp$time[,ion])
+    cc <- samp$counts[,ion]    
+    fit <- stats::glm(cc ~ tt, family=stats::poisson(link='log'))
+    fit$coef[2]
+}
+
+init_abO <- function(samp,oxide='UO2'){
+    tt <- samp$time[,'U238']
+    logUOU <- log(samp$cps[,oxide]) - log(samp$cps[,'U238'])
+    fit <- lm(logUOU ~ tt)
+    out <- fit$coef
+    names(out) <- c('aO','bO')
+    out
+}
+init_a6 <- function(samp,b6){
+    tt <- samp$time[,'U238']
+    logPbU <- log(samp$cps[,'Pb206']) - log(samp$cps[,'U238'])
+    fit <- lm(logPbU ~ 1 + offset(b6*tt))
+    fit$coef[1]
+}
+
+init_abg <- function(samp,A=0,B=1,oxide='UO2'){
+    out <- rep(0,7)
+    names(out) <- c('a4','a6','aO','b6','bO','g6','gO')
+    out['g6'] <- get_gamma(samp,ion='Pb206')
+    out['gO'] <- get_gamma(samp,ion=oxide)
+    abO <- init_abO(samp,oxide=oxide)
+    out['aO'] <- abO['aO']
+    out['bO'] <- abO['bO']
+    out['b6'] <- B*out['bO']
+    out['a6'] <- init_a6(samp,b6=out['b6'])
+    out['a4'] <- out['a6'] - A - B*out['aO']
+    out
+}

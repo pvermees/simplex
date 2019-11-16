@@ -49,7 +49,7 @@ predict_counts <- function(samp,c64=NULL){
     counts
 }
 
-calplot_raw <- function(dat,i=NULL,c64=NULL,multipanel=FALSE,...){
+calplot_raw <- function(dat,i=NULL,c64=NULL,multipanel=FALSE,type='n',...){
     vars <- reshuffle(dat)
     nt <- nrow(dat[[1]]$time)
     ns <- length(dat)
@@ -63,12 +63,14 @@ calplot_raw <- function(dat,i=NULL,c64=NULL,multipanel=FALSE,...){
         graphics::par(mfrow=c(nr,nc),mar=c(2,2.5,1.5,0.5))
         snames <- names(dat)
         for (j in ii){
-            graphics::matplot(vars$X[,j],vars$Y[,j],type='n',...)
+            graphics::matplot(vars$X[,j],vars$Y[,j],type=type,
+                              xlab='log[UO/U]',ylab='log[Pb/U]',...)
             graphics::text(vars$X[,j],vars$Y[,j],labels=1:nt)
             graphics::mtext(side=3,text=snames[j],line=0)
         }
     } else {
-        graphics::matplot(vars$X[,ii],vars$Y[,ii],type='n',...)
+        graphics::matplot(vars$X[,ii],vars$Y[,ii],type=type,...,
+                          xlab='log[UO/U]',ylab='log[Pb/U]')
         graphics::text(vars$X[,ii],vars$Y[,ii],labels=1:nt)        
     }
 }
@@ -95,7 +97,7 @@ reshuffle <- function(samps,c64=NULL){
         colnames(out$cps[[ion]]) <- snames
         colnames(out$time[[ion]]) <- snames
     }
-    out$X <- log(out$cps[['UO2']]) - log(out$cps[['U238']])
+    out$X <- log(out$cps[['UO']]) - log(out$cps[['U238']])
     if (is.null(c64)){
         out$Y <- log(out$cps[['Pb206']])-log(out$cps[['U238']])
     } else {
