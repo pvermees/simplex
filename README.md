@@ -41,7 +41,7 @@ View the raw time resolved mass spectrometer data of the first SIMS
 spot:
 
 ```
-plot_timeresolved(Cameca[[1]],fit=TRUE)
+plot_timeresolved(Cameca[[1]])
 ```
 
 To view further information about the **plot_timeresolved** function:
@@ -53,20 +53,15 @@ To view further information about the **plot_timeresolved** function:
 Plot a calibration curve:
 
 ```
-stand <- subset_samples(dat=Cameca,prefix='Plesovice')
-lr_stand <- logratios(dat=stand,c64=18.7)
-fit <- calibration(lr_stand,dat=stand,plot=TRUE,disp=TRUE,omit=2)
+Ples <- subset_samples(dat=Cameca,prefix='Plesovice')
+cal <- calibration(stand=Ples,oxide='UO2')
+calplot(dat=stand,fit=cal)
 ```
 
-where the second aliquot is omitted from the regression. Process
-the samples and format as a flat data table:
+Plot the time resolved data again, but now showing the data fit:
 
 ```
-samp <- subset_samples(dat=Cameca,prefix='Qinghu')
-lr_samp <- logratios(dat=samp)
-PbU <- calibrate(lr_samp,fit=fit,dat=samp,tst=c(337.13,0.18))
-tab <- simplex2isoplotr(logPbU)
-write.csv(tab,file='~/Desktop/Qinghu.csv')
+plot_timeresolved(Cameca[[1]],fit=cal)
 ```
 
 ## Author

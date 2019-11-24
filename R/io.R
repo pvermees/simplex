@@ -1,3 +1,18 @@
+#' @title read SIMS data
+#' @description read a file or folder with ASCII data
+#' @param dorf directory or file name
+#' @param instrument either \code{'Cameca'} or \code{'SHRIMP'}
+#' @param suffix the extension of the data files to be loaded. This
+#'     defaults to \code{.asc} if \code{instrument='Cameca'} and
+#'     \code{.op} if \code{instrument='SHRIMP'}.
+#' @return an object of class \code{simplex}
+#' @examples
+#' # not run:
+#' \dontrun{
+#' camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='.asc')
+#' plot_timeresolved(camdat[[1]])
+#' }
+#' @export
 read_data <- function(dorf,instrument='Cameca',suffix=NULL){
     if (instrument == 'Cameca') {
         if (is.null(suffix)) suffix <- '.asc'
@@ -25,7 +40,7 @@ read_directory <- function(dname,instrument='Cameca',suffix='.asc'){
 
 # fname is the complete path to an .asc file
 read_file <- function(fname,instrument='Cameca'){
-    suffix <- tail(strsplit(fname,split='[.]')[[1]],n=1)
+    suffix <- utils::tail(strsplit(fname,split='[.]')[[1]],n=1)
     if (instrument=='Cameca' & suffix=='asc'){
         out <- read_Cameca_asc(fname)
     } else if (instrument=='SHRIMP' & suffix=='op'){
@@ -159,36 +174,20 @@ read_asc_block <- function(f,ions){
     out
 }
 
+#' @title subset a dataset of class \code{simplex}
+#' @description select a subset of samples or standards from a
+#'     \code{simplex} dataset.
+#' @param dat an object of class \code{simplex}
+#' @param prefix text string to match
+#' @return an object of class \code{simplex}
+#' @examples
+#' data(Cameca,package="simplex")
+#' stand <- subset_samples(Cameca,prefix='Plesovice')
+#' @export
 subset_samples <- function(dat,prefix='Plesovice'){
     snames <- names(dat)
     matches <- grepl(prefix,snames)
     out <- subset(dat,subset=matches)
     class(out) <- class(dat)
-    out
-}
-
-simplex2isoplotr <- function(alr,format=5){
-    snames <- alr$snames
-    ns <- length(snames)
-    ni <- length(alr$labels)
-    ratios <- logratios2ratios(alr)
-    out <- matrix(0,ns,9)
-    colnames(out) <- c('U238Pb206','s[U238Pb206]',
-                       'Pb207Pb206','s[Pb207Pb206]',
-                       'Pb204Pb206','s[Pb204Pb206]',
-                       'rXY','rXZ','rYZ')
-    rownames(out) <- snames
-    err <- sqrt(diag(ratios$cov))
-    cormat <- stats::cov2cor(ratios$cov)
-    for (i in 1:ns){
-        i1 <- i      # U8Pb6
-        i2 <- i+ns   # Pb76
-        i3 <- i+2*ns # Pb46
-        out[i,c(1,3,5)] <- ratios$x[c(i1,i2,i3)]
-        out[i,c(2,4,6)] <- err[c(i1,i2,i3)]
-        out[i,7] <- cormat[i1,i2]
-        out[i,8] <- cormat[i1,i3]
-        out[i,9] <- cormat[i2,i3]
-    }
     out
 }
