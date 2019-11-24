@@ -34,7 +34,7 @@ some example data into memory:
 
 ```
 library(simplex)
-data(package="simplex")
+data(Cameca,package="simplex")
 ```
 
 View the raw time resolved mass spectrometer data of the first SIMS
