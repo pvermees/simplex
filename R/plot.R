@@ -58,15 +58,17 @@ calplot <- function(dat,fit){
     colnames(Y) <- snames
     for (sname in snames){
         p <- pars(dat[[sname]],oxide=fit$oxide)
-        g <- get_gamma(AB=fit$AB,p=p)
+        g <- get_gamma(B=fit$AB['B'],p=p)
         a <- get_alpha(AB=fit$AB,p=p,g=g,c64=fit$c64)
         X[,sname] <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
         Y[,sname] <- log(p$c6/p$cU) + g$Pb*(p$tU-p$t6) + 
             log(1 - (p$c4/p$c6)*g$Pb*(p$t6-p$t4)*fit$c64)
     }
+    tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
+                  signif(fit$AB['B'],3),'X')
     graphics::plot(X,Y,type='n',
                    xlab=paste0('log[',fit$oxide,'/U]'),
-                   ylab=paste0('log[Pb','/U]'))
+                   ylab=paste0('log[Pb','/U]'),main=tit)
     graphics::matlines(X,Y,lty=1,col='grey')
     graphics::points(X[1,],Y[1,],pch=21,bg='black')
     graphics::points(X[nr,],Y[nr,],pch=21,bg='white')
@@ -76,7 +78,7 @@ calplot <- function(dat,fit){
 
 predict_counts <- function(samp,fit){
     p <- pars(samp,oxide=fit$oxide)
-    g <- get_gamma(AB=fit$AB,p=p)
+    g <- get_gamma(A=fit$AB['B'],p=p)
     a <- get_alpha(AB=fit$AB,p=p,g=g,c64=fit$c64)
     n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
     n6 <- p$nU*n6U

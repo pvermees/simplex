@@ -48,22 +48,25 @@ AB_misfit <- function(AB,dat,oxide='UO2',c64=18.7){
     snames <- names(dat)
     for (sname in snames){
         samp <- dat[[sname]]
-        p <- pars(samp,oxide=oxide)
-        g <- get_gamma(AB=AB,p=p)
-        a <- get_alpha(AB=AB,p=p,g=g,c64=c64)
-        # 1. get count ratios
-        n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
-        # 2. get proportions
-        nt <- length(p$tU)
-        den <- n6U + 1
-        theta <- cbind(n6U,1)/matrix(rep(den,2),ncol=2)
-        colnames(theta) <- c('Pb206','U238')
-        counts <- samp$counts[,c('Pb206','U238')]
-        # 3. compute multinomial log-likelihood
-        LL <- stats::dmultinom(x=counts,prob=theta,log=TRUE)
-        out <- out - LL
+        out <- out - LL_AB(AB,samp,oxide=oxide,c64=c64)
     }
     out
+}
+
+LL_AB <- function(AB,samp,oxide='UO2',c64=18.7){
+    p <- pars(samp,oxide=oxide)
+    g <- get_gamma(B=AB['B'],p=p)
+    a <- get_alpha(AB=AB,p=p,g=g,c64=c64)
+    # 1. get count ratios
+    n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
+    # 2. get proportions
+    nt <- length(p$tU)
+    den <- n6U + 1
+    theta <- cbind(n6U,1)/matrix(rep(den,2),ncol=2)
+    colnames(theta) <- c('Pb206','U238')
+    counts <- samp$counts[,c('Pb206','U238')]
+    # 3. compute multinomial log-likelihood
+    stats::dmultinom(x=counts,prob=theta,log=TRUE)
 }
 
 pars <- function(samp,oxide='UO2'){
@@ -87,24 +90,20 @@ pars <- function(samp,oxide='UO2'){
     out
 }
 
-get_gamma <- function(AB,p){
+get_gamma <- function(B,p){
     out <- list()
     out$U <- stats::glm(p$nU ~ p$tU,
                         family=stats::poisson(link='log'))$coef[2]
     out$O <- stats::glm(p$nO ~ p$tO,
                         family=stats::poisson(link='log'))$coef[2]
-    out$Pb <- AB[2]*out$O + (1-AB[2])*out$U
+    out$Pb <- B*out$O + (1-B)*out$U
     out
 }
 
 get_alpha <- function(AB,p,g,c64){
     out <- list()
-    out$a4 <- log(1-(p$n4/p$n6)*(p$d6/p$d4)*c64)
-    out$aO <- log(p$cO)-log(p$cU)
+    out$a4 <- log(1-(p$c4/p$c6)*c64*exp(g$Pb*(p$t6-p$t4)))
+    out$aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
     out$a6 <- AB[1] + AB[2]*out$aO - out$a4
     out
-}
-
-calibrate <- function(samp){
-    # TODO
 }
