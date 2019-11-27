@@ -1,109 +1,37 @@
-#' @title create a calibration curve
-#' @description fit a straight line to log[Pb/U] vs. log[UOx/U] data
-#' @details Regresses a line through
-#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
-#'     Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-#'        \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
-#' @param stand a dataset of class \code{simplex}
-#' @param oxide either \code{'UO'} or \code{'UO2'}
-#' @param c64 the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb
-#' @param PbU (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
-#'     the age standard
-#' @param tst (optional) two-element vector with the age and standard
-#'     error of the age standard
-#' @return a list with the following items:
-#' 
-#' \code{AB} a vector with the intercept (\code{'A'}) and slope
-#' (\code{'B'}) of the power law
-#'
-#' \code{cov} the covariance matrix of \code{AB}
-#'
-#' @examples
-#' data(Cameca,package="simplex")
-#' stand <- subset_samples(dat=Cameca,prefix='Plesovice')
-#' fit <- calibration(stand)
-#' @export
-calibration <- function(stand,oxide='UO2',c64=18.7,PbU=NULL,tst=NULL){
-    fit <- stats::optim(c(A=0,B=1),AB_misfit,dat=stand,oxide=oxide,c64=c64)
-    hess <- stats::optimHess(fit$par,AB_misfit,dat=stand,oxide=oxide,c64=c64)
+logratios <- function(dat,fit){
+    Pb6U8 <- calibrate_Pb206U238(dat,fit)
+    ns <- length(Pb6U8$snames)
+    Pb6U8
+}
+calibrate_Pb206U238 <- function(dat,fit){
     out <- list()
-    out$AB <- fit$par
-    out$cov <- solve(hess)
-    out$oxide <- oxide
-    out$c64 <- c64
-    if (is.null(PbU)){
-        if (is.null(tst)){
-            # TODO: get PbU from 207Pb/206Pb
-        } else {
-            out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
-        }
-    } else {
-        out$PbU <- PbU
+    out$snames <- names(dat)
+    ns <- length(out$snames)
+    nt <- nrow(dat[[1]]$time)
+    Pb6U8 <- rep(0,ns*nt)
+    J <- matrix(-1,ns*nt,2)
+    colnames(J) <- c('A','B')
+    for (i in 1:ns){
+        spot <- dat[[i]]
+        LJg <- get_Pb206U238(spot,fit)
+        j <- (i-1)*nt + 1:nt
+        Pb6U8[j] <- LJg$Pb206U238
+        J[j,'B'] <- LJg$dPb206U238dB
     }
+    out$x <- Pb6U8
+    out$cov <- J %*% fit$cov %*% t(J)
     out
 }
 
-AB_misfit <- function(AB,dat,oxide='UO2',c64=18.7){
-    out <- 0
-    snames <- names(dat)
-    for (sname in snames){
-        samp <- dat[[sname]]
-        out <- out - LL_AB(AB,samp,oxide=oxide,c64=c64)
-    }
-    out
-}
-
-LL_AB <- function(AB,samp,oxide='UO2',c64=18.7){
-    p <- pars(samp,oxide=oxide)
-    g <- get_gamma(B=AB['B'],p=p)
-    a <- get_alpha(AB=AB,p=p,g=g,c64=c64)
-    # 1. get count ratios
-    n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
-    # 2. get proportions
-    nt <- length(p$tU)
-    den <- n6U + 1
-    theta <- cbind(n6U,1)/matrix(rep(den,2),ncol=2)
-    colnames(theta) <- c('Pb206','U238')
-    counts <- samp$counts[,c('Pb206','U238')]
-    # 3. compute multinomial log-likelihood
-    stats::dmultinom(x=counts,prob=theta,log=TRUE)
-}
-
-pars <- function(samp,oxide='UO2'){
+get_Pb206U238 <- function(spot,fit){
+    p <- pars(spot,oxide=fit$oxide)
+    g <- get_gamma(B=fit$AB['B'],p=p)
     out <- list()
-    out$t4 <- samp$time[,'Pb204']
-    out$t6 <- samp$time[,'Pb206']
-    out$tU <- samp$time[,'U238']
-    out$tO <- samp$time[,oxide]
-    out$n4 <- samp$counts[,'Pb204']
-    out$n6 <- samp$counts[,'Pb206']
-    out$nU <- samp$counts[,'U238']
-    out$nO <- samp$counts[,oxide]
-    out$c4 <- samp$cps[,'Pb204']
-    out$c6 <- samp$cps[,'Pb206']
-    out$cU <- samp$cps[,'U238']
-    out$cO <- samp$cps[,oxide]
-    out$d4 <- samp$dwelltime['Pb204']
-    out$d6 <- samp$dwelltime['Pb206']
-    out$dU <- samp$dwelltime['U238']
-    out$dO <- samp$dwelltime[oxide]
+    Y <- log(p$c6/p$cU) - g$Pb*(p$t6-p$tU)
+    X <- log(p$cO/p$cU) - g$O*(p$tO-p$tU)
+    out <- list()
+    out$Pb206U238 <- log(fit$PbU[1]) + Y - fit$AB['A'] - fit$AB['B']*X
+    out$dPb206U238dB <- -X
     out
 }
 
-get_gamma <- function(B,p){
-    out <- list()
-    out$U <- stats::glm(p$nU ~ p$tU,
-                        family=stats::poisson(link='log'))$coef[2]
-    out$O <- stats::glm(p$nO ~ p$tO,
-                        family=stats::poisson(link='log'))$coef[2]
-    out$Pb <- B*out$O + (1-B)*out$U
-    out
-}
-
-get_alpha <- function(AB,p,g,c64){
-    out <- list()
-    out$a4 <- log(1-(p$c4/p$c6)*c64*exp(g$Pb*(p$t6-p$t4)))
-    out$aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-    out$a6 <- AB[1] + AB[2]*out$aO - out$a4
-    out
-}
