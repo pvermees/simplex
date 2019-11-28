@@ -86,6 +86,11 @@ Qinghu <- read.data('Qinghu.csv',method='U-Pb',format=5)
 concordia(Qinghu,type=2)
 ```
 
+Note that simplex is able to propagate the systematic uncertainties
+associated with the calibration curve. However this feature has been
+disabled in this release, until the necessary post-processing
+functions have been added to IsoplotR.
+
 ## Author
 
 [Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve)
