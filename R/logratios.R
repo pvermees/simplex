@@ -20,14 +20,17 @@ calibrate <- function(dat,fit){
     out$x <- rep(0,ns*nr)
     covmat <- matrix(0,ns*nr,ns*nr)
     J <- matrix(0,nrow=ns*nr,ncol=3)
-    colnames(J) <- c('A','B','Pb6U8s')
+    colnames(J) <- c('A','B','U8Pb6s')
+    U8Pb6s <- -log(fit$PbU[1])
+    varU8Pb6s <- fit$PbU[2]/fit$PbU[1]
     for (i in 1:ns){
         j <- (i-1)*nr+(1:nr)
-        out$x[j] <- X[i,c('U8Pb6','Pb76','Pb46')]
-        J[j[1],'A'] <- -1
-        J[j[1],'B'] <- X[i,'dU8Pb6dBs']
-        J[j[1],'Pb6U8s'] <- -1
-        covmat[j[1],j[1]] <- X[i,'varU8Pb6']
+        out$x[j[1]] <- U8Pb6s + fit$AB['A'] - X[i,'Ax']
+        out$x[j[2:3]] <- X[i,c('Pb76','Pb46')]
+        J[j[1],'A'] <- 1
+        J[j[1],'B'] <- -X[i,'dAxdBs']
+        J[j[1],'U8Pb6s'] <- 1
+        covmat[j[1],j[1]] <- X[i,'varAx']
         covmat[j[2],j[2]] <- X[i,'varPb76']
         covmat[j[3],j[3]] <- X[i,'varPb46']
         covmat[j[2],j[3]] <- X[i,'covPb46Pb76']
@@ -35,33 +38,32 @@ calibrate <- function(dat,fit){
     }
     E <- matrix(0,3,3)
     E[1:2,1:2] <- fit$cov
-    E[3,3] <- (fit$PbU[2]/fit$PbU[1])^2
+    E[3,3] <- varU8Pb6s
     out$cov <- covmat + J %*% E %*% t(J)
     out
 }
 
 calibrate_spot <- function(spot,fit){
     out <- rep(0,8)
-    names(out) <- c('U8Pb6','Pb76','Pb46',
-                    'varU8Pb6','varPb76','varPb46','covPb46Pb76',
-                    'dU8Pb6dBs')
+    names(out) <- c('Ax','Pb76','Pb46',
+                    'varAx','varPb76','varPb46','covPb46Pb76',
+                    'dAxdBs')
     p <- pars(spot,oxide=fit$oxide)
     g <- get_gamma(B=fit$AB['B'],p=p)
     init <- log(sum(p$c6))-log(sum(p$cU))
-    Ax <- optimise(misfit_A,interval=c(-10,10),spot=spot,fit=fit)$minimum
-    As <- fit$AB['A']
-    Bs <- fit$AB['B']
-    out['U8Pb6'] <- As - Ax - log(fit$PbU[1])
-    out['varU8Pb6'] <- solve(optimHess(Ax,misfit_A,spot=spot,fit=fit))
-    out['dU8Pb6dBs'] <- -dAxdBs(p,g,Ax=Ax,Bs=Bs)
+    Ax <- optimise(misfit_A,interval=c(-10,10),
+                   spot=spot,fit=fit)$minimum
+    out['Ax'] <- Ax
+    out['varAx'] <- solve(optimHess(Ax,misfit_A,spot=spot,fit=fit))
+    out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
     out['Pb46'] <- log(0.5+sum(p$c4))-log(0.5+sum(p$c6))+g$Pb*mean(p$t6-p$t4)
     out['Pb76'] <- log(sum(p$c7))-log(sum(p$c6))+g$Pb*mean(p$t6-p$t7)
     HPb <- matrix(0,2,2)
-    nsum <- sum(p$n4+p$n6+p$n7)
-    HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/nsum
-    HPb[1,2] <- sum(p$n4)*sum(p$n7)/nsum
-    HPb[2,2] <- -sum(p$n7)*sum(p$n6+p$n4)/nsum
-    HPb[2,1] <- HPb[1,2]/nsum
+    sumn <- sum(p$n4+p$n6+p$n7)
+    HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/sumn
+    HPb[1,2] <- sum(p$n4)*sum(p$n7)/sumn
+    HPb[2,2] <- -sum(p$n7)*sum(p$n6+p$n4)/sumn
+    HPb[2,1] <- HPb[1,2]/sumn
     covmat <- solve(-HPb)
     out['varPb46'] <- covmat[1,1]
     out['varPb76'] <- covmat[2,2]
