@@ -64,6 +64,33 @@ Plot the time resolved data again, but now showing the data fit:
 plot_timeresolved(Cameca[[1]],fit=cal)
 ```
 
+Apply the calibration to the Qinghu zircon measurements
+
+```
+samp <- subset_samples(dat,prefix='Qinghu')
+UPb <- calibrate(samp,fit=cal)
+```
+
+Export the results to a data table:
+
+```
+tab <- data2table(UPb)
+csv.write(tab,file='Qinghu.csv')
+```
+
+To plot the data on a concordia diagram with [IsoplotR](https://github.com/pvermees/IsoplotR):
+
+```
+library(IsoplotR)
+Qinghu <- read.data('Qinghu.csv',method='U-Pb',format=5)
+concordia(Qinghu,type=2)
+```
+
+Note that simplex is able to propagate the systematic uncertainties
+associated with the calibration curve. However this feature has been
+disabled in this release, until the necessary post-processing
+functions have been added to IsoplotR.
+
 ## Author
 
 [Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve)

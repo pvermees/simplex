@@ -38,7 +38,7 @@ read_directory <- function(dname,instrument='Cameca',suffix='.asc'){
     out
 }
 
-# fname is the complete path to an .asc file
+# fname is the complete path to an .asc or .op file
 read_file <- function(fname,instrument='Cameca'){
     suffix <- utils::tail(strsplit(fname,split='[.]')[[1]],n=1)
     if (instrument=='Cameca' & suffix=='asc'){
@@ -48,6 +48,7 @@ read_file <- function(fname,instrument='Cameca'){
     } else {
         stop('Unrecognised file extension.')
     }
+    class(out) <- 'spot'
     out
 }
 
@@ -113,32 +114,32 @@ read_SHRIMP_op <- function(fname){
         if (length(line)<1){
             break
         } else if (nchar(line)>0){
-            samp <- list()
+            spot <- list()
             sname <- line
-            samp$date <- readLines(f,n=1,warn=FALSE)
-            samp$set <- read_numbers(f)
+            spot$date <- readLines(f,n=1,warn=FALSE)
+            spot$set <- read_numbers(f)
             nscans <- read_numbers(f)
             nions <- read_numbers(f)
-            samp$dwelltime <- read_numbers(f)
-            names(samp$dwelltime) <- ions
-            samp$time <- matrix(0,nscans,nions)
-            colnames(samp$time) <- ions
+            spot$dwelltime <- read_numbers(f)
+            names(spot$dwelltime) <- ions
+            spot$time <- matrix(0,nscans,nions)
+            colnames(spot$time) <- ions
             for (i in 1:nions){
-                samp$time[,i] <- read_numbers(f)
+                spot$time[,i] <- read_numbers(f)
             }
-            samp$counts <- matrix(0,nscans,nions)
-            colnames(samp$counts) <- ions
+            spot$counts <- matrix(0,nscans,nions)
+            colnames(spot$counts) <- ions
             for (i in 1:nions){
-                samp$counts[,i] <- read_numbers(f)
+                spot$counts[,i] <- read_numbers(f)
             }
-            samp$cps <- sweep(samp$counts,MARGIN=2,FUN='/',samp$dwelltime)
-            samp$sbmbkg <- read_numbers(f)
-            samp$sbm <- matrix(0,nscans,nions)
-            colnames(samp$sbm) <- ions
+            spot$cps <- sweep(spot$counts,MARGIN=2,FUN='/',spot$dwelltime)
+            spot$sbmbkg <- read_numbers(f)
+            spot$sbm <- matrix(0,nscans,nions)
+            colnames(spot$sbm) <- ions
             for (i in 1:nions){
-                samp$sbm[,i] <- read_numbers(f)
+                spot$sbm[,i] <- read_numbers(f)
             }        
-            out[[sname]] <- samp
+            out[[sname]] <- spot
         }
     }
     close(f)
