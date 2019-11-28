@@ -39,7 +39,7 @@ calibrate <- function(dat,fit){
     E <- matrix(0,3,3)
     E[1:2,1:2] <- fit$cov
     E[3,3] <- varU8Pb6s
-    out$cov <- covmat #+ J %*% E %*% t(J)
+    out$cov <- covmat + J %*% E %*% t(J)
     out
 }
 
