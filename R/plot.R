@@ -78,7 +78,7 @@ calplot <- function(dat,fit){
 
 predict_counts <- function(samp,fit){
     p <- pars(samp,oxide=fit$oxide)
-    g <- get_gamma(A=fit$AB['B'],p=p)
+    g <- get_gamma(B=fit$AB['B'],p=p)
     a <- get_alpha(AB=fit$AB,p=p,g=g,c64=fit$c64)
     n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
     n6 <- p$nU*n6U

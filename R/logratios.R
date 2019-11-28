@@ -1,3 +1,22 @@
+#' @title apply a calibration to sample data
+#' @description fit a straight line to log[Pb/U] vs. log[UOx/U] sample
+#'     data
+#' @details Regresses a line through
+#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
+#'     Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U using the same
+#'     slope as previously determined on an age standard
+#' @param dat a dataset of class \code{simplex}
+#' @param fit the output of \code{calibration}
+#' @return an \code{IsoplotR} object of class \code{UPb}
+#'     (\code{format=5})
+#' @examples
+#' data(Cameca,package="simplex")
+#' stand <- subset_samples(dat=Cameca,prefix='Plesovice')
+#' fit <- calibration(stand,tst=c(337.13,0.18))
+#' samp <- subset_samples(dat=Cameca,prefix='Qinghu')
+#' cal <- calibrate(samp,fit)
+#' @export
 calibrate <- function(dat,fit){
     # 1. calibrate, calculate (co)variances and partial derivatives
     snames <- names(dat)
@@ -51,10 +70,10 @@ calibrate_spot <- function(spot,fit){
     p <- pars(spot,oxide=fit$oxide)
     g <- get_gamma(B=fit$AB['B'],p=p)
     init <- log(sum(p$c6))-log(sum(p$cU))
-    Ax <- optimise(misfit_A,interval=c(-10,10),
-                   spot=spot,fit=fit)$minimum
+    Ax <- stats::optimise(misfit_A,interval=c(-10,10),
+                          spot=spot,fit=fit)$minimum
     out['Ax'] <- Ax
-    out['varAx'] <- solve(optimHess(Ax,misfit_A,spot=spot,fit=fit))
+    out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
     out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
     out['Pb46'] <- log(0.5+sum(p$c4))-log(0.5+sum(p$c6))+g$Pb*mean(p$t6-p$t4)
     out['Pb76'] <- log(sum(p$c7))-log(sum(p$c6))+g$Pb*mean(p$t6-p$t7)

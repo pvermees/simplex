@@ -21,7 +21,7 @@
 #' @examples
 #' data(Cameca,package="simplex")
 #' stand <- subset_samples(dat=Cameca,prefix='Plesovice')
-#' fit <- calibration(stand)
+#' fit <- calibration(stand,tst=c(337.13,0.18))
 #' @export
 calibration <- function(stand,oxide='UO2',c64=18.7,PbU=NULL,tst=NULL){
     fit <- stats::optim(c(A=0,B=1),AB_misfit,dat=stand,oxide=oxide,c64=c64)
@@ -33,14 +33,32 @@ calibration <- function(stand,oxide='UO2',c64=18.7,PbU=NULL,tst=NULL){
     out$c64 <- c64
     if (is.null(PbU)){
         if (is.null(tst)){
-            # TODO: get PbU from 207Pb/206Pb
-        } else {
-            out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
+            Pb76 <- get_Pb76(stand)
+            warning('No standard age was supplied')
+            tst <- IsoplotR:::get.Pb207Pb206.age.default(x=Pb76[1],sx=Pb76[2])
         }
+        out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
     } else {
         out$PbU <- PbU
     }
     out
+}
+
+# get geometric mean Pb207/Pb206 ratio to estimate
+# the standard age if not supplied by the user
+get_Pb76 <- function(dat){
+    snames <- names(dat)
+    ns <- length(snames)
+    lPb76 <- rep(0,ns)
+    for (i in 1:ns){
+        p <- pars(dat[[i]])
+        lPb76[i] <- log(sum(p$c7)/sum(p$c6))
+    }
+    lPb76 <- mean(lPb76)
+    slPb76 <- stats::sd(lPb76)/sqrt(ns)
+    Pb76 <- exp(lPb76)
+    sPb76 <- Pb76*slPb76
+    c(Pb76,sPb76)
 }
 
 AB_misfit <- function(AB,dat,oxide='UO2',c64=18.7){
