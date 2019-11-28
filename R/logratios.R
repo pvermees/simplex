@@ -1,4 +1,34 @@
 logratios <- function(dat,fit){
+    X <- calibrate(dat=dat,fit=fit)
+    snames <- names(dat)
+    ns <- length(snames)
+    ratios <- c('Pb206U238','Pb207Pb206','Pb204Pb206')
+    nr <- length(ratios)
+    out <- list()
+    out$snames <- snames
+    out$x <- rep(0,ns*nr)
+    covmat <- matrix(0,ns*nr,ns*nr)
+    J <- matrix(0,nrow=ns*nr,ncol=3)
+    colnames(J) <- c('A','B','Pb6U8s')
+    for (i in 1:ns){
+        j <- (i-1)*nr+(1:nr)
+        out$x[j] <- X[i,c('Pb6U8','Pb76','Pb46')]
+        J[j[1],'A'] <- -1
+        J[j[1],'B'] <- X[i,'dPb6U8dBs']
+        J[j[1],'Pb6U8s'] <- 1
+        covmat[j[1],j[1]] <- X[i,'varPb6U8']
+        covmat[j[2],j[2]] <- X[i,'varPb76']
+        covmat[j[3],j[3]] <- X[i,'varPb46']
+        covmat[j[2],j[3]] <- X[i,'covPb46Pb76']
+        covmat[j[3],j[2]] <- covmat[j[2],j[3]]
+    }
+    E <- matrix(0,3,3)
+    E[1:2,1:2] <- fit$cov
+    out$cov <- covmat + J %*% E %*% t(J)
+    out
+}
+
+calibrate <- function(dat,fit){
     snames <- names(dat)
     ns <- length(snames)
     out <- matrix(0,ns,8)
