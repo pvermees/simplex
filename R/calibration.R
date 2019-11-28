@@ -66,7 +66,7 @@ LL_AB <- function(AB,spot,oxide='UO2',c64=18.7){
     colnames(theta) <- c('Pb206','U238')
     counts <- spot$counts[,c('Pb206','U238')]
     # 3. compute multinomial log-likelihood
-    stats::dmultinom(x=counts,prob=theta,log=TRUE)
+    sum(counts*log(theta))
 }
 
 pars <- function(spot,oxide='UO2'){

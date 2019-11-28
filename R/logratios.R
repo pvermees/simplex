@@ -20,11 +20,12 @@ calibrate_spot <- function(spot,fit){
     p <- pars(spot,oxide=fit$oxide)
     g <- get_gamma(B=fit$AB['B'],p=p)
     init <- log(sum(p$c6))-log(sum(p$cU))
-    A <- optimise(LL_A,interval=c(-10,10),spot=spot,fit=fit)$minimum
-    vA <- solve(optimHess(A,LL_A,spot=spot,fit=fit))
-    out['Pb6U8'] <- log(fit$PbU[1]) + A - fit$AB['A']
-    out['varPb6U8'] <- vA
-    out['dPb6U8dBs'] <- 0 # TODO
+    Ax <- optimise(misfit_A,interval=c(-10,10),spot=spot,fit=fit)$minimum
+    As <- fit$AB['A']
+    Bs <- fit$AB['B']
+    out['Pb6U8'] <- log(fit$PbU[1]) + Ax - As
+    out['varPb6U8'] <- solve(optimHess(Ax,misfit_A,spot=spot,fit=fit))
+    out['dPb6U8dBs'] <- dAxdBs(p,g,Ax=Ax,Bs=Bs)
     out['Pb46'] <- log(0.5+sum(p$c4))-log(0.5+sum(p$c6))+g$Pb*mean(p$t6-p$t4)
     out['Pb76'] <- log(sum(p$c7))-log(sum(p$c6))+g$Pb*mean(p$t6-p$t7)
     HPb <- matrix(0,2,2)
@@ -40,7 +41,7 @@ calibrate_spot <- function(spot,fit){
     out
 }
 
-LL_A <- function(A,spot,fit){
+misfit_A <- function(A,spot,fit){
     B <- fit$AB['B']
     AB <- c(A,B)
     p <- pars(spot,oxide=fit$oxide)
@@ -56,6 +57,34 @@ LL_A <- function(A,spot,fit){
     colnames(theta) <- c('Pb206','U238')
     counts <- spot$counts[,c('Pb206','U238')]
     # 3. compute multinomial log-likelihood
-    out <- stats::dmultinom(x=counts,prob=theta,log=TRUE)
-    -out
+    LL <- sum(counts*log(theta))
+    -LL
+}
+
+# implicit differentiation of dLLdAx to get dAxdBs
+dAxdBs <- function(p,g,Ax,Bs){
+    aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
+    n6U <- exp( Ax + Bs*aO + g$Pb*(p$t6-p$tU) )*p$d6/p$dU
+    dn6UdAx <- n6U
+    dn6UdBs <- n6U*aO
+    nt <- length(p$tU)
+    theta6 <- n6U/(n6U+1)
+    thetaU <- 1/(n6U+1)
+    dtheta6dAx <- n6U/(n6U+1)^2
+    dthetaUdAx <- -n6U/(n6U+1)^2
+    dtheta6dBs <- aO*dtheta6dAx
+    dthetaUdBs <- aO*dthetaUdAx
+    d2theta6dAx2 <- (n6U-1)/(n6U+1)
+    d2thetaUdAx2 <- (1-n6U)/(n6U+1)
+    d2theta6dAxdBs <- aO*(n6U-1)/(n6U+1)
+    d2thetaUdAxdBs <- aO*(1-n6U)/(n6U+1)
+    d2LLdAxdBs <- sum( (p$n6/theta6)*d2theta6dAxdBs +
+                       (p$nU/thetaU)*d2thetaUdAxdBs -
+                       (p$n6/theta6^2)*dtheta6dAx*dtheta6dBs -
+                       (p$nU/thetaU^2)*dthetaUdAx*dthetaUdBs )
+    d2LLdAx2 <- sum( (p$n6/theta6)*d2theta6dAx2 +
+                     (p$nU/thetaU)*d2thetaUdAx2 -
+                     (p$n6/theta6^2)*dtheta6dAx^2 -
+                     (p$nU/thetaU^2)*dthetaUdAx^2 )
+    -d2LLdAxdBs/d2LLdAx2
 }
