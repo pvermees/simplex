@@ -54,8 +54,8 @@ Plot a calibration curve:
 
 ```
 Ples <- subset_samples(dat=Cameca,prefix='Plesovice')
-cal <- calibration(stand=Ples,oxide='UO2')
-calplot(dat=stand,fit=cal)
+cal <- calibration(stand=Ples,oxide='UO2',tst=c(337.13,0.18))
+calplot(dat=Ples,fit=cal)
 ```
 
 Plot the time resolved data again, but now showing the data fit:
@@ -67,7 +67,7 @@ plot_timeresolved(Cameca[[1]],fit=cal)
 Apply the calibration to the Qinghu zircon measurements
 
 ```
-samp <- subset_samples(dat,prefix='Qinghu')
+samp <- subset_samples(Cameca,prefix='Qinghu')
 UPb <- calibrate(samp,fit=cal)
 ```
 
@@ -75,7 +75,7 @@ Export the results to a data table:
 
 ```
 tab <- data2table(UPb)
-csv.write(tab,file='Qinghu.csv')
+write.csv(tab,file='Qinghu.csv',row.names=FALSE)
 ```
 
 To plot the data on a concordia diagram with [IsoplotR](https://github.com/pvermees/IsoplotR):
@@ -83,7 +83,7 @@ To plot the data on a concordia diagram with [IsoplotR](https://github.com/pverm
 ```
 library(IsoplotR)
 Qinghu <- read.data('Qinghu.csv',method='U-Pb',format=5)
-concordia(Qinghu,type=2)
+concordia(Qinghu)
 ```
 
 Note that simplex is able to propagate the systematic uncertainties
