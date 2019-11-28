@@ -1,22 +1,33 @@
-logratios <- function(dat,fit){
-    X <- calibrate(dat=dat,fit=fit)
+calibrate <- function(dat,fit){
+    # 1. calibrate, calculate (co)variances and partial derivatives
     snames <- names(dat)
     ns <- length(snames)
-    ratios <- c('Pb206U238','Pb207Pb206','Pb204Pb206')
-    nr <- length(ratios)
+    X <- matrix(0,ns,8)
+    rownames(X) <- snames
+    for (sname in snames){
+        calspot <- calibrate_spot(dat[[sname]],fit)
+        X[sname,] <- calspot
+    }
+    colnames(X) <- names(calspot)
+    # 2. Collate calibrated data into one big covariance structure
     out <- list()
-    out$snames <- snames
+    class(out) <- 'UPb'
+    out$format <- 9
+    out$names <- rownames(X)
+    out$logratios <- c('U238Pb206','Pb207Pb206','Pb204Pb206')
+    ns <- length(out$names)
+    nr <- length(out$logratios)
     out$x <- rep(0,ns*nr)
     covmat <- matrix(0,ns*nr,ns*nr)
     J <- matrix(0,nrow=ns*nr,ncol=3)
     colnames(J) <- c('A','B','Pb6U8s')
     for (i in 1:ns){
         j <- (i-1)*nr+(1:nr)
-        out$x[j] <- X[i,c('Pb6U8','Pb76','Pb46')]
+        out$x[j] <- X[i,c('U8Pb6','Pb76','Pb46')]
         J[j[1],'A'] <- -1
-        J[j[1],'B'] <- X[i,'dPb6U8dBs']
-        J[j[1],'Pb6U8s'] <- 1
-        covmat[j[1],j[1]] <- X[i,'varPb6U8']
+        J[j[1],'B'] <- X[i,'dU8Pb6dBs']
+        J[j[1],'Pb6U8s'] <- -1
+        covmat[j[1],j[1]] <- X[i,'varU8Pb6']
         covmat[j[2],j[2]] <- X[i,'varPb76']
         covmat[j[3],j[3]] <- X[i,'varPb46']
         covmat[j[2],j[3]] <- X[i,'covPb46Pb76']
@@ -24,38 +35,25 @@ logratios <- function(dat,fit){
     }
     E <- matrix(0,3,3)
     E[1:2,1:2] <- fit$cov
+    E[3,3] <- (fit$PbU[2]/fit$PbU[1])^2
     out$cov <- covmat + J %*% E %*% t(J)
-    out
-}
-
-calibrate <- function(dat,fit){
-    snames <- names(dat)
-    ns <- length(snames)
-    out <- matrix(0,ns,8)
-    dPb6U8dAs <- -1
-    rownames(out) <- snames
-    for (sname in snames){
-        calspot <- calibrate_spot(dat[[sname]],fit)
-        out[sname,] <- calspot
-    }
-    colnames(out) <- names(calspot)
     out
 }
 
 calibrate_spot <- function(spot,fit){
     out <- rep(0,8)
-    names(out) <- c('Pb6U8','Pb76','Pb46',
-                    'varPb6U8','varPb76','varPb46','covPb46Pb76',
-                    'dPb6U8dBs')
+    names(out) <- c('U8Pb6','Pb76','Pb46',
+                    'varU8Pb6','varPb76','varPb46','covPb46Pb76',
+                    'dU8Pb6dBs')
     p <- pars(spot,oxide=fit$oxide)
     g <- get_gamma(B=fit$AB['B'],p=p)
     init <- log(sum(p$c6))-log(sum(p$cU))
     Ax <- optimise(misfit_A,interval=c(-10,10),spot=spot,fit=fit)$minimum
     As <- fit$AB['A']
     Bs <- fit$AB['B']
-    out['Pb6U8'] <- log(fit$PbU[1]) + Ax - As
-    out['varPb6U8'] <- solve(optimHess(Ax,misfit_A,spot=spot,fit=fit))
-    out['dPb6U8dBs'] <- dAxdBs(p,g,Ax=Ax,Bs=Bs)
+    out['U8Pb6'] <- As - Ax - log(fit$PbU[1])
+    out['varU8Pb6'] <- solve(optimHess(Ax,misfit_A,spot=spot,fit=fit))
+    out['dU8Pb6dBs'] <- -dAxdBs(p,g,Ax=Ax,Bs=Bs)
     out['Pb46'] <- log(0.5+sum(p$c4))-log(0.5+sum(p$c6))+g$Pb*mean(p$t6-p$t4)
     out['Pb76'] <- log(sum(p$c7))-log(sum(p$c6))+g$Pb*mean(p$t6-p$t7)
     HPb <- matrix(0,2,2)
@@ -117,4 +115,12 @@ dAxdBs <- function(p,g,Ax,Bs){
                      (p$n6/theta6^2)*dtheta6dAx^2 -
                      (p$nU/thetaU^2)*dthetaUdAx^2 )
     -d2LLdAxdBs/d2LLdAx2
+}
+
+logratios2ratios <- function(lr){
+    out <- list()
+    out$x <- exp(lr$x)
+    J <- diag(out$x)
+    out$cov <- J %*% lr$cov %*% t(J)
+    out
 }

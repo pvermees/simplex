@@ -1,0 +1,5 @@
+data2table <- function(UPb){
+    ns <- length(UPb$snames)
+    nr <- length(UPb$logratios)
+    out <- matrix(0,nr,ns)
+}
