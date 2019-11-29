@@ -4,12 +4,15 @@
 \alias{calibrate}
 \title{apply a calibration to sample data}
 \usage{
-calibrate(dat, fit)
+calibrate(dat, fit, syserr = FALSE)
 }
 \arguments{
 \item{dat}{a dataset of class \code{simplex}}
 
 \item{fit}{the output of \code{calibration}}
+
+\item{syserr}{propagate the systematic error associated with the
+standard (age uncertainty and calibration fit)?}
 }
 \value{
 an \code{IsoplotR} object of class \code{UPb}

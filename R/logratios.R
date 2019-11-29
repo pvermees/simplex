@@ -8,6 +8,8 @@
 #'     slope as previously determined on an age standard
 #' @param dat a dataset of class \code{simplex}
 #' @param fit the output of \code{calibration}
+#' @param syserr propagate the systematic error associated with the
+#'     standard (age uncertainty and calibration fit)?
 #' @return an \code{IsoplotR} object of class \code{UPb}
 #'     (\code{format=5})
 #' @examples
@@ -17,7 +19,7 @@
 #' samp <- subset_samples(dat=Cameca,prefix='Qinghu')
 #' cal <- calibrate(samp,fit)
 #' @export
-calibrate <- function(dat,fit){
+calibrate <- function(dat,fit,syserr=FALSE){
     # 1. calibrate, calculate (co)variances and partial derivatives
     snames <- names(dat)
     ns <- length(snames)
@@ -58,7 +60,8 @@ calibrate <- function(dat,fit){
     E <- matrix(0,3,3)
     E[1:2,1:2] <- fit$cov
     E[3,3] <- varU8Pb6s
-    out$cov <- covmat #+ J %*% E %*% t(J)
+    if (syserr) out$cov <- covmat + J %*% E %*% t(J)
+    else out$cov <- covmat
     out
 }
 
