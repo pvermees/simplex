@@ -190,14 +190,32 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 #' @param prefix text string to match
 #' @param invert logical.  If \code{TRUE} return samples whose names
 #'     do _not_ match
-#' @return an object of class \code{standards}
+#' @param c64 the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb
+#' @param PbU (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
+#'     the age standard
+#' @param tst (optional) two-element vector with the age and standard
+#'     error of the age standard
+#' @return an object of class \code{standard}
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standards(Cameca,prefix='Plesovice')
+#' stand <- standard(dat=Cameca,prefix='Plesovice')
 #' @export
-standards <- function(dat,prefix,invert=FALSE){
-    out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
-    class(out) <- append(class(out),'standards')
+standard <- function(dat,prefix,invert=FALSE,
+                      c64=18.7,PbU=NULL,tst=NULL){
+    out <- list()
+    out$c64 <- c64
+    if (is.null(PbU)){
+        if (is.null(tst)){
+            Pb76 <- get_Pb76(dat)
+            warning('No standard age was supplied')
+            tst <- IsoplotR:::get.Pb207Pb206.age.default(x=Pb76[1],sx=Pb76[2])
+        }
+        out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
+    } else {
+        out$PbU <- PbU
+    }
+    out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
+    class(out) <- 'standard'
     out
 }
 
@@ -208,15 +226,15 @@ standards <- function(dat,prefix,invert=FALSE){
 #' @param prefix text string to match
 #' @param invert logical.  If \code{TRUE} return samples whose names
 #'     do _not_ match
-#' @return an object of class \code{unknowns}
+#' @return a list of objects of class \code{unknown}
 #' @examples
 #' data(Cameca,package="simplex")
-#' unk <- unknowns(Cameca,prefix='Plesovice',invert=TRUE)
+#' unk <- unknown(Cameca,prefix='Plesovice',invert=TRUE)
 #' @export
-unknowns <- function(dat,prefix,invert=FALSE){
+unknown <- function(dat,prefix,invert=FALSE){
     out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
     for (sname in names(out)){
-        class(out[[sname]]) <- append(class(out[[sname]]),'unknown')
+        class(out[[sname]]) <- 'unknown'
     }
     out
 }

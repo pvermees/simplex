@@ -4,10 +4,10 @@
 \alias{calplot}
 \title{calibration plot}
 \usage{
-calplot(dat, fit)
+calplot(stand, fit)
 }
 \arguments{
-\item{dat}{an object of class \code{simplex}}
+\item{stand}{an object of class \code{standard}}
 
 \item{fit}{the output of \code{calibration}}
 }
@@ -23,7 +23,7 @@ plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
 }
 \examples{
 data(Cameca,package="simplex")
-Ples <- standards(dat=Cameca,prefix='Plesovice')
+Ples <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 cal <- calibration(stand=Ples,oxide='UO2')
-calplot(dat=Ples,fit=cal)
+calplot(stand=Ples,fit=cal)
 }

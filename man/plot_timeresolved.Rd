@@ -22,9 +22,8 @@ Shows the raw data for a single spot in a SIMS
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- standards(dat=Cameca,prefix='Plesovice')
-samp <- unknowns(dat=Cameca,prefix='Qinghu')
-tst <- c(337.13,0.18)
-cal <- calibration(stand,oxide='UO2',tst=tst)
+stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+samp <- unknown(dat=Cameca,prefix='Qinghu')
+cal <- calibration(stand,oxide='UO2')
 plot_timeresolved(samp=samp[[1]],fit=cal)
 }

@@ -7,10 +7,9 @@
 #' @return a multi-panel plot
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standards(dat=Cameca,prefix='Plesovice')
-#' samp <- unknowns(dat=Cameca,prefix='Qinghu')
-#' tst <- c(337.13,0.18)
-#' cal <- calibration(stand,oxide='UO2',tst=tst)
+#' stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' samp <- unknown(dat=Cameca,prefix='Qinghu')
+#' cal <- calibration(stand,oxide='UO2')
 #' plot_timeresolved(samp=samp[[1]],fit=cal)
 #' @export
 plot_timeresolved <- function(samp,fit=NULL,...){
@@ -56,7 +55,7 @@ plot_timeresolved <- function(samp,fit=NULL,...){
 #' plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
 #'         \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
 #'     versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
-#' @param dat an object of class \code{simplex}
+#' @param stand an object of class \code{standard}
 #' @param fit the output of \code{calibration}
 #' @return
 #' a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
@@ -64,20 +63,20 @@ plot_timeresolved <- function(samp,fit=NULL,...){
 #'     versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
 #' @examples
 #' data(Cameca,package="simplex")
-#' Ples <- standards(dat=Cameca,prefix='Plesovice')
+#' Ples <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' cal <- calibration(stand=Ples,oxide='UO2')
-#' calplot(dat=Ples,fit=cal)
+#' calplot(stand=Ples,fit=cal)
 #' @export
-calplot <- function(dat,fit){
-    snames <- names(dat)
+calplot <- function(stand,fit){
+    snames <- names(stand$x)
     nc <- length(snames)
-    nr <- nrow(dat[[1]]$counts)
+    nr <- nrow(stand$x[[1]]$counts)
     X <- matrix(0,nr,nc)
     Y <- matrix(0,nr,nc)
     colnames(X) <- snames
     colnames(Y) <- snames
     for (sname in snames){
-        p <- pars(dat[[sname]],oxide=fit$oxide)
+        p <- pars(stand$x[[sname]],oxide=fit$oxide)
         g <- get_gamma(B=fit$AB['B'],p=p)
         a <- get_alpha(AB=fit$AB,p=p,g=g,c64=fit$c64)
         X[,sname] <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)

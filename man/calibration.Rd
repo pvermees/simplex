@@ -4,21 +4,12 @@
 \alias{calibration}
 \title{create a calibration curve}
 \usage{
-calibration(stand, oxide = "UO2", c64 = 18.7, PbU = NULL,
-  tst = NULL)
+calibration(stand, oxide = "UO2")
 }
 \arguments{
 \item{stand}{a dataset of class \code{simplex}}
 
 \item{oxide}{either \code{'UO'} or \code{'UO2'}}
-
-\item{c64}{the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb}
-
-\item{PbU}{(optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
-the age standard}
-
-\item{tst}{(optional) two-element vector with the age and standard
-error of the age standard}
 }
 \value{
 a list with the following items:
@@ -39,6 +30,6 @@ Regresses a line through
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- standards(dat=Cameca,prefix='Plesovice')
-fit <- calibration(stand,tst=c(337.13,0.18))
+stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+fit <- calibration(stand,oxide='UO2')
 }
