@@ -175,20 +175,46 @@ read_asc_block <- function(f,ions){
     out
 }
 
-#' @title subset a dataset of class \code{simplex}
-#' @description select a subset of samples or standards from a
+subset_samples <- function(dat,prefix='Plesovice',...){
+    snames <- names(dat)
+    matches <- grep(prefix,snames,...)
+    out <- dat[matches]
+    class(out) <- class(dat)
+    out
+}
+
+#' @title define the standards in a dataset
+#' @description select a subset of standards from a \code{simplex}
+#'     dataset.
+#' @param dat an object of class \code{simplex}
+#' @param prefix text string to match
+#' @param invert logical.  If \code{TRUE} return samples whose names
+#'     do _not_ match
+#' @return an object of class \code{standards}
+#' @examples
+#' data(Cameca,package="simplex")
+#' stand <- standards(Cameca,prefix='Plesovice')
+#' @export
+standards <- function(dat,prefix,invert=FALSE){
+    out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
+    class(out) <- append(class(out),'standards')
+    out
+}
+
+#' @title define the samples in a dataset
+#' @description select a subset of samples of unknown age from a
 #'     \code{simplex} dataset.
 #' @param dat an object of class \code{simplex}
 #' @param prefix text string to match
-#' @return an object of class \code{simplex}
+#' @param invert logical.  If \code{TRUE} return samples whose names
+#'     do _not_ match
+#' @return an object of class \code{unknowns}
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- subset_samples(Cameca,prefix='Plesovice')
+#' unk <- unknowns(Cameca,prefix='Plesovice',invert=TRUE)
 #' @export
-subset_samples <- function(dat,prefix='Plesovice'){
-    snames <- names(dat)
-    matches <- grepl(prefix,snames)
-    out <- subset(dat,subset=matches)
-    class(out) <- class(dat)
+unknowns <- function(dat,prefix,invert=FALSE){
+    out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
+    class(out) <- append(class(out),'unknowns')
     out
 }
