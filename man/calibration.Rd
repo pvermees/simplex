@@ -39,6 +39,6 @@ Regresses a line through
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- subset_samples(dat=Cameca,prefix='Plesovice')
+stand <- standards(dat=Cameca,prefix='Plesovice')
 fit <- calibration(stand,tst=c(337.13,0.18))
 }

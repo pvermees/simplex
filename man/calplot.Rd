@@ -23,7 +23,7 @@ plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
 }
 \examples{
 data(Cameca,package="simplex")
-Ples <- subset_samples(dat=Cameca,prefix='Plesovice')
+Ples <- standards(dat=Cameca,prefix='Plesovice')
 cal <- calibration(stand=Ples,oxide='UO2')
 calplot(dat=Ples,fit=cal)
 }

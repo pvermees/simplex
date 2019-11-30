@@ -1,14 +1,34 @@
 #' @title plot the raw mass spectrometer data
-#' @description
-#' Shows the raw data for a single spot in a SIMS dataset.
+#' @description Shows the raw data for a single spot in a SIMS
+#'     dataset.
 #' @param samp one item of a \code{simplex} list object
 #' @param fit the output of \code{calibration}
+#' @param ... optional parameters to the generic \code{plot} function
 #' @return a multi-panel plot
 #' @examples
 #' data(Cameca,package="simplex")
-#' plot_timeresolved(Cameca[[1]])
+#' stand <- standards(dat=Cameca,prefix='Plesovice')
+#' samp <- unknowns(dat=Cameca,prefix='Qinghu')
+#' tst <- c(337.13,0.18)
+#' cal <- calibration(stand,oxide='UO2',tst=tst)
+#' plot_timeresolved(samp=samp[[1]],fit=cal)
 #' @export
-plot_timeresolved <- function(samp,fit=NULL){
+plot_timeresolved <- function(samp,fit=NULL,...){
+    if ('unknown' %in% class(samp) & !is.null(fit)){
+        calspot <- calibrate_spot(samp,fit=fit)
+        cal <- fit
+        cal$AB['A'] <- calspot['Ax']
+        E <- matrix(0,3,3)
+        E[1,1] <- calspot['varAx']
+        E[2:3,2:3] <- fit$cov
+        J <- matrix(0,2,3)
+        J[1,1] <- 1             # dAxdAx
+        J[1,3] <- calspot['dAxdBs'] # dAxdBs
+        J[2,3] <- 1             # dBsdBs
+        cal$cov <- J %*% E %*% t(J)
+    } else {
+        cal <- fit
+    }
     ions <- names(samp$dwelltime)
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
@@ -16,13 +36,13 @@ plot_timeresolved <- function(samp,fit=NULL){
     graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
     if (!is.null(fit)){
-        simplex <- c('Pb204','Pb206','U238',fit$oxide)
+        simplex <- c('Pb204','Pb206','U238',cal$oxide)
         X <- samp$time[,simplex]
-        Y <- predict_counts(samp,fit=fit)[,simplex]
+        Y <- predict_counts(samp,fit=cal)[,simplex]
     }
     for (ion in ions){
         graphics::plot(samp$time[,ion],samp$counts[,ion],
-                       type='p',xlab='',ylab='')
+                       type='p',xlab='',ylab='',...)
         if (!is.null(fit) & ion%in%simplex){
             graphics::lines(X[,ion],Y[,ion])
         }
@@ -44,7 +64,7 @@ plot_timeresolved <- function(samp,fit=NULL){
 #'     versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
 #' @examples
 #' data(Cameca,package="simplex")
-#' Ples <- subset_samples(dat=Cameca,prefix='Plesovice')
+#' Ples <- standards(dat=Cameca,prefix='Plesovice')
 #' cal <- calibration(stand=Ples,oxide='UO2')
 #' calplot(dat=Ples,fit=cal)
 #' @export

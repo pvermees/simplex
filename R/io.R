@@ -215,6 +215,8 @@ standards <- function(dat,prefix,invert=FALSE){
 #' @export
 unknowns <- function(dat,prefix,invert=FALSE){
     out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
-    class(out) <- append(class(out),'unknowns')
+    for (sname in names(out)){
+        class(out[[sname]]) <- append(class(out[[sname]]),'unknown')
+    }
     out
 }

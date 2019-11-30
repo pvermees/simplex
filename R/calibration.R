@@ -20,7 +20,7 @@
 #'
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- subset_samples(dat=Cameca,prefix='Plesovice')
+#' stand <- standards(dat=Cameca,prefix='Plesovice')
 #' fit <- calibration(stand,tst=c(337.13,0.18))
 #' @export
 calibration <- function(stand,oxide='UO2',c64=18.7,PbU=NULL,tst=NULL){

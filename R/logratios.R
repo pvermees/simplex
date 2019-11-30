@@ -14,10 +14,10 @@
 #'     (\code{format=5})
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- subset_samples(dat=Cameca,prefix='Plesovice')
+#' stand <- standards(dat=Cameca,prefix='Plesovice')
 #' fit <- calibration(stand,tst=c(337.13,0.18))
-#' samp <- subset_samples(dat=Cameca,prefix='Qinghu')
-#' cal <- calibrate(samp,fit)
+#' unk <- unknowns(dat=Cameca,prefix='Plesovice',invert=TRUE)
+#' cal <- calibrate(unk,fit)
 #' @export
 calibrate <- function(dat,fit,syserr=FALSE){
     # 1. calibrate, calculate (co)variances and partial derivatives
