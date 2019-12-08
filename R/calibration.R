@@ -3,9 +3,11 @@
 #' @details Regresses a line through
 #'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
 #'     Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-#'        \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
 #' @param stand a dataset of class \code{simplex}
 #' @param oxide either \code{'UO'} or \code{'UO2'}
+#' @param omit indices of measurements to be omitted from the
+#'     calibration
 #' @return a list with the following items:
 #' 
 #' \code{AB} a vector with the intercept (\code{'A'}) and slope
@@ -15,13 +17,17 @@
 #'
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-#' fit <- calibration(stand,oxide='UO2')
+#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' fit <- calibration(stand,oxide='UO2',omit=2)
+#' calplot(stand,fit)
 #' @export
-calibration <- function(stand,oxide='UO2'){
-    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=stand,oxide=oxide)
-    hess <- stats::optimHess(fit$par,AB_misfit,stand=stand,oxide=oxide)
+calibration <- function(stand,oxide='UO2',omit=NULL){
+    dat <- stand
+    if (!is.null(omit)) dat$x <- stand$x[-omit]
+    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=dat,oxide=oxide)
+    hess <- stats::optimHess(fit$par,AB_misfit,stand=dat,oxide=oxide)
     out <- list()
+    out$omit <- omit
     out$AB <- fit$par
     out$cov <- solve(hess)
     out$oxide <- oxide

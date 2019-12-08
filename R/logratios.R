@@ -14,9 +14,9 @@
 #'     (\code{format=5})
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' fit <- calibration(stand,oxide='UO2')
-#' unk <- unknown(dat=Cameca,prefix='Plesovice',invert=TRUE)
+#' unk <- unknowns(dat=Cameca,prefix='Plesovice',invert=TRUE)
 #' cal <- calibrate(unk,fit)
 #' @export
 calibrate <- function(dat,fit,syserr=FALSE){

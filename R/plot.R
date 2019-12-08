@@ -51,23 +51,23 @@ plot_timeresolved <- function(samp,fit=NULL,...){
 }
 
 #' @title calibration plot
-#' @description
-#' plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-#'         \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
-#'     versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+#' @description plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
+#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
 #' @param stand an object of class \code{standard}
 #' @param fit the output of \code{calibration}
-#' @return
-#' a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-#'              \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
-#'     versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+#' @param labels label the spots with their name (\code{labels=1}) or
+#'     number (\code{labels=2}). The default is to use no labels.
+#' @return a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
+#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
 #' @examples
 #' data(Cameca,package="simplex")
-#' Ples <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' cal <- calibration(stand=Ples,oxide='UO2')
 #' calplot(stand=Ples,fit=cal)
 #' @export
-calplot <- function(stand,fit){
+calplot <- function(stand,fit,labels=0){
     snames <- names(stand$x)
     nc <- length(snames)
     nr <- nrow(stand$x[[1]]$counts)
@@ -89,7 +89,11 @@ calplot <- function(stand,fit){
                    xlab=paste0('log[',fit$oxide,'/U]'),
                    ylab=paste0('log[Pb','/U]'),main=tit)
     graphics::matlines(X,Y,lty=1,col='grey')
-    graphics::points(X[1,],Y[1,],pch=21,bg='black')
+    bg <- rep('black',nc)
+    bg[fit$omit] <- 'grey'
+    graphics::points(X[1,],Y[1,],pch=21,bg=bg)
+    if (labels==1) graphics::text(X[1,],Y[1,],labels=snames,pos=1,col=bg)
+    if (labels==2) graphics::text(X[1,],Y[1,],labels=1:length(snames),pos=1,col=bg)
     graphics::points(X[nr,],Y[nr,],pch=21,bg='white')
     xlim <- graphics::par('usr')[1:2]
     graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)

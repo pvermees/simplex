@@ -45,6 +45,8 @@ read_file <- function(fname,instrument='Cameca'){
         out <- read_Cameca_asc(fname)
     } else if (instrument=='SHRIMP' & suffix=='op'){
         out <- read_SHRIMP_op(fname)
+    } else if (instrument=='SHRIMP' & suffix=='pd'){
+        out <- read_SHRIMP_pd(fname)
     } else {
         stop('Unrecognised file extension.')
     }
@@ -146,6 +148,52 @@ read_SHRIMP_op <- function(fname){
     out
 }
 
+read_SHRIMP_pd <- function(fname){
+    ions <- c('Zr2O','Pb204','bkg','Pb206','Pb207','Pb208','U238','ThO','UO','UO2')
+    f <- file(fname)
+    open(f);
+    out <- list()
+    while (TRUE) {
+        line <- readLines(f,n=1,warn=FALSE)
+        if (length(line)<1){
+            break
+        } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
+            header <- readLines(f,n=4,warn=FALSE)
+            spot <- list()
+            sname <- strsplit(header[[1]],split=', ')[[1]][1]
+            spot$date <-
+                paste(strsplit(header[[1]],split=', ')[[1]][2:3],collapse=' ')
+            spot$set <- split_mixed(header[[2]],1,2)
+            nscans <- split_mixed(header[[2]],2,1)
+            nions <- split_mixed(header[[2]],3,1)
+            spot$deadtime <- split_mixed(header[[2]],4,1)
+            spot$dwelltime <- read.table(text=readLines(f,n=nions,warn=FALSE))[,4]
+            names(spot$dwelltime) <- ions
+            spot$time <- matrix(0,nscans,nions)
+            spot$counts <- matrix(0,nscans,nions)
+            spot$sbm <- matrix(0,nscans,nions)
+            block <- readLines(f,n=1+nscans*nions*2,warn=FALSE)[-1]
+            colnames(spot$time) <- ions
+            colnames(spot$counts) <- ions
+            colnames(spot$sbm) <- ions
+            for (i in 1:nscans){
+                for (j in 1:nions){
+                    ii <- (i-1)*nions*2 + (j-1)*2 + 1
+                    dat <- read.table(text=block[[ii]])
+                    spot$time[i,j] <- as.numeric(dat[3])
+                    spot$counts[i,j] <- sum(as.numeric(dat[-(1:4)]))
+                    dat <- read.table(text=block[[ii+1]])
+                    spot$sbm[i,j] <- sum(as.numeric(dat))
+                }
+            }
+            spot$cps <- sweep(spot$counts,MARGIN=2,FUN='/',spot$dwelltime)
+            out[[sname]] <- spot
+        }
+    }
+    close(f)
+    out
+}
+
 read_text <- function(f,remove=NULL){
     line <- readLines(f,n=1,warn=FALSE)
     parse_line(line,remove=remove)
@@ -159,6 +207,11 @@ parse_line <- function(line,remove=NULL){
     if (is.null(remove)) out <- parsed
     else out <- parsed[-remove]
     out
+}
+split_mixed <- function(line,i,j,split1=', ',split2=' '){
+    chunk <- strsplit(line,split=split1,fixed=TRUE)[[1]][i]
+    item <- strsplit(chunk,split=split2)[[1]][j]
+    as.numeric(item)
 }
 read_asc_block <- function(f,ions){
     out <- NULL
@@ -198,9 +251,9 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 #' @return an object of class \code{standard}
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standard(dat=Cameca,prefix='Plesovice')
+#' stand <- standards(dat=Cameca,prefix='Plesovice')
 #' @export
-standard <- function(dat,prefix,invert=FALSE,
+standards <- function(dat,prefix,invert=FALSE,
                       c64=18.7,PbU=NULL,tst=NULL){
     out <- list()
     out$c64 <- c64
@@ -229,9 +282,9 @@ standard <- function(dat,prefix,invert=FALSE,
 #' @return a list of objects of class \code{unknown}
 #' @examples
 #' data(Cameca,package="simplex")
-#' unk <- unknown(Cameca,prefix='Plesovice',invert=TRUE)
+#' unk <- unknowns(Cameca,prefix='Plesovice',invert=TRUE)
 #' @export
-unknown <- function(dat,prefix,invert=FALSE){
+unknowns <- function(dat,prefix,invert=FALSE){
     out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
     for (sname in names(out)){
         class(out[[sname]]) <- 'unknown'

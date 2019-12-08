@@ -4,12 +4,15 @@
 \alias{calibration}
 \title{create a calibration curve}
 \usage{
-calibration(stand, oxide = "UO2")
+calibration(stand, oxide = "UO2", omit = NULL)
 }
 \arguments{
 \item{stand}{a dataset of class \code{simplex}}
 
 \item{oxide}{either \code{'UO'} or \code{'UO2'}}
+
+\item{omit}{indices of measurements to be omitted from the
+calibration}
 }
 \value{
 a list with the following items:
@@ -26,10 +29,11 @@ fit a straight line to log[Pb/U] vs. log[UOx/U] data
 Regresses a line through
     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
     Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-       \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
+    \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-fit <- calibration(stand,oxide='UO2')
+stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+fit <- calibration(stand,oxide='UO2',omit=2)
+calplot(stand,fit)
 }
