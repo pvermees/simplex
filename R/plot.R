@@ -32,7 +32,7 @@ plot_timeresolved <- function(samp,fit=NULL,...){
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
-    graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
     if (!is.null(fit)){
         simplex <- c('Pb204','Pb206','U238',cal$oxide)
@@ -48,6 +48,7 @@ plot_timeresolved <- function(samp,fit=NULL,...){
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)
     }
+    graphics::par(oldpar)
 }
 
 #' @title calibration plot
