@@ -31,8 +31,8 @@ Regresses a line through
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- subset_samples(dat=Cameca,prefix='Plesovice')
-fit <- calibration(stand,tst=c(337.13,0.18))
-samp <- subset_samples(dat=Cameca,prefix='Qinghu')
-cal <- calibrate(samp,fit)
+stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+fit <- calibration(stand,oxide='UO2')
+unk <- unknowns(dat=Cameca,prefix='Plesovice',invert=TRUE)
+cal <- calibrate(unk,fit)
 }

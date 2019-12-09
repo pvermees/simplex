@@ -3,14 +3,11 @@
 #' @details Regresses a line through
 #'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
 #'     Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-#'        \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
 #' @param stand a dataset of class \code{simplex}
 #' @param oxide either \code{'UO'} or \code{'UO2'}
-#' @param c64 the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb
-#' @param PbU (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
-#'     the age standard
-#' @param tst (optional) two-element vector with the age and standard
-#'     error of the age standard
+#' @param omit indices of measurements to be omitted from the
+#'     calibration
 #' @return a list with the following items:
 #' 
 #' \code{AB} a vector with the intercept (\code{'A'}) and slope
@@ -20,27 +17,22 @@
 #'
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- subset_samples(dat=Cameca,prefix='Plesovice')
-#' fit <- calibration(stand,tst=c(337.13,0.18))
+#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' fit <- calibration(stand,oxide='UO2',omit=2)
+#' calplot(stand,fit)
 #' @export
-calibration <- function(stand,oxide='UO2',c64=18.7,PbU=NULL,tst=NULL){
-    fit <- stats::optim(c(A=0,B=1),AB_misfit,dat=stand,oxide=oxide,c64=c64)
-    hess <- stats::optimHess(fit$par,AB_misfit,dat=stand,oxide=oxide,c64=c64)
+calibration <- function(stand,oxide='UO2',omit=NULL){
+    dat <- stand
+    if (!is.null(omit)) dat$x <- stand$x[-omit]
+    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=dat,oxide=oxide)
+    hess <- stats::optimHess(fit$par,AB_misfit,stand=dat,oxide=oxide)
     out <- list()
+    out$omit <- omit
     out$AB <- fit$par
     out$cov <- solve(hess)
     out$oxide <- oxide
-    out$c64 <- c64
-    if (is.null(PbU)){
-        if (is.null(tst)){
-            Pb76 <- get_Pb76(stand)
-            warning('No standard age was supplied')
-            tst <- IsoplotR:::get.Pb207Pb206.age.default(x=Pb76[1],sx=Pb76[2])
-        }
-        out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
-    } else {
-        out$PbU <- PbU
-    }
+    out$c64 <- stand$c64
+    out$PbU <- stand$PbU
     out
 }
 
@@ -61,12 +53,12 @@ get_Pb76 <- function(dat){
     c(Pb76,sPb76)
 }
 
-AB_misfit <- function(AB,dat,oxide='UO2',c64=18.7){
+AB_misfit <- function(AB,stand,oxide='UO2'){
     out <- 0
-    snames <- names(dat)
+    snames <- names(stand$x)
     for (sname in snames){
-        spot <- dat[[sname]]
-        out <- out - LL_AB(AB,spot,oxide=oxide,c64=c64)
+        spot <- stand$x[[sname]]
+        out <- out - LL_AB(AB,spot,oxide=oxide,c64=stand$c64)
     }
     out
 }

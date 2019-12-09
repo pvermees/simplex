@@ -53,9 +53,9 @@ To view further information about the **plot_timeresolved** function:
 Plot a calibration curve:
 
 ```
-Ples <- subset_samples(dat=Cameca,prefix='Plesovice')
-cal <- calibration(stand=Ples,oxide='UO2',tst=c(337.13,0.18))
-calplot(dat=Ples,fit=cal)
+Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+cal <- calibration(stand=Ples,oxide='UO2')
+calplot(stand=Ples,fit=cal)
 ```
 
 Plot the time resolved data again, but now showing the data fit:
@@ -67,7 +67,7 @@ plot_timeresolved(Cameca[[1]],fit=cal)
 Apply the calibration to the Qinghu zircon measurements
 
 ```
-samp <- subset_samples(Cameca,prefix='Qinghu')
+samp <- unknowns(dat=Cameca,prefix='Qinghu')
 UPb <- calibrate(samp,fit=cal)
 ```
 

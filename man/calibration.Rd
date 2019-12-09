@@ -4,21 +4,15 @@
 \alias{calibration}
 \title{create a calibration curve}
 \usage{
-calibration(stand, oxide = "UO2", c64 = 18.7, PbU = NULL,
-  tst = NULL)
+calibration(stand, oxide = "UO2", omit = NULL)
 }
 \arguments{
 \item{stand}{a dataset of class \code{simplex}}
 
 \item{oxide}{either \code{'UO'} or \code{'UO2'}}
 
-\item{c64}{the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb}
-
-\item{PbU}{(optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
-the age standard}
-
-\item{tst}{(optional) two-element vector with the age and standard
-error of the age standard}
+\item{omit}{indices of measurements to be omitted from the
+calibration}
 }
 \value{
 a list with the following items:
@@ -35,10 +29,11 @@ fit a straight line to log[Pb/U] vs. log[UOx/U] data
 Regresses a line through
     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
     Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-       \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
+    \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- subset_samples(dat=Cameca,prefix='Plesovice')
-fit <- calibration(stand,tst=c(337.13,0.18))
+stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+fit <- calibration(stand,oxide='UO2',omit=2)
+calplot(stand,fit)
 }

@@ -8,9 +8,9 @@
 #'     (\code{format=5})
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- subset_samples(dat=Cameca,prefix='Plesovice')
-#' fit <- calibration(stand)
-#' samp <- subset_samples(dat=Cameca,prefix='Qinghu')
+#' stand <- standards(dat=Cameca,prefix='Plesovice')
+#' fit <- calibration(stand=stand,oxide='UO2')
+#' samp <- unknowns(dat=Cameca,prefix='Qinghu')
 #' cal <- calibrate(samp,fit)
 #' tab <- data2table(cal)
 #' write.csv(tab,file='Qinghu.csv')

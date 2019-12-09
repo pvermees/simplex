@@ -1,63 +1,83 @@
 #' @title plot the raw mass spectrometer data
-#' @description
-#' Shows the raw data for a single spot in a SIMS dataset.
+#' @description Shows the raw data for a single spot in a SIMS
+#'     dataset.
 #' @param samp one item of a \code{simplex} list object
 #' @param fit the output of \code{calibration}
+#' @param ... optional parameters to the generic \code{plot} function
 #' @return a multi-panel plot
 #' @examples
 #' data(Cameca,package="simplex")
-#' plot_timeresolved(Cameca[[1]])
+#' stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' samp <- unknown(dat=Cameca,prefix='Qinghu')
+#' cal <- calibration(stand,oxide='UO2')
+#' plot_timeresolved(samp=samp[[1]],fit=cal)
 #' @export
-plot_timeresolved <- function(samp,fit=NULL){
+plot_timeresolved <- function(samp,fit=NULL,...){
+    if ('unknown' %in% class(samp) & !is.null(fit)){
+        calspot <- calibrate_spot(samp,fit=fit)
+        cal <- fit
+        cal$AB['A'] <- calspot['Ax']
+        E <- matrix(0,3,3)
+        E[1,1] <- calspot['varAx']
+        E[2:3,2:3] <- fit$cov
+        J <- matrix(0,2,3)
+        J[1,1] <- 1             # dAxdAx
+        J[1,3] <- calspot['dAxdBs'] # dAxdBs
+        J[2,3] <- 1             # dBsdBs
+        cal$cov <- J %*% E %*% t(J)
+    } else {
+        cal <- fit
+    }
     ions <- names(samp$dwelltime)
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
-    graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
     if (!is.null(fit)){
-        simplex <- c('Pb204','Pb206','U238',fit$oxide)
+        simplex <- c('Pb204','Pb206','U238',cal$oxide)
         X <- samp$time[,simplex]
-        Y <- predict_counts(samp,fit=fit)[,simplex]
+        Y <- predict_counts(samp,fit=cal)[,simplex]
     }
     for (ion in ions){
         graphics::plot(samp$time[,ion],samp$counts[,ion],
-                       type='p',xlab='',ylab='')
+                       type='p',xlab='',ylab='',...)
         if (!is.null(fit) & ion%in%simplex){
             graphics::lines(X[,ion],Y[,ion])
         }
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)
     }
+    graphics::par(oldpar)
 }
 
 #' @title calibration plot
-#' @description
-#' plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-#'         \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
-#'     versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
-#' @param dat an object of class \code{simplex}
+#' @description plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
+#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+#' @param stand an object of class \code{standard}
 #' @param fit the output of \code{calibration}
-#' @return
-#' a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-#'              \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
-#'     versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+#' @param labels label the spots with their name (\code{labels=1}) or
+#'     number (\code{labels=2}). The default is to use no labels.
+#' @return a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
+#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
 #' @examples
 #' data(Cameca,package="simplex")
-#' Ples <- subset_samples(dat=Cameca,prefix='Plesovice')
+#' Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' cal <- calibration(stand=Ples,oxide='UO2')
-#' calplot(dat=Ples,fit=cal)
+#' calplot(stand=Ples,fit=cal)
 #' @export
-calplot <- function(dat,fit){
-    snames <- names(dat)
+calplot <- function(stand,fit,labels=0){
+    snames <- names(stand$x)
     nc <- length(snames)
-    nr <- nrow(dat[[1]]$counts)
+    nr <- nrow(stand$x[[1]]$counts)
     X <- matrix(0,nr,nc)
     Y <- matrix(0,nr,nc)
     colnames(X) <- snames
     colnames(Y) <- snames
     for (sname in snames){
-        p <- pars(dat[[sname]],oxide=fit$oxide)
+        p <- pars(stand$x[[sname]],oxide=fit$oxide)
         g <- get_gamma(B=fit$AB['B'],p=p)
         a <- get_alpha(AB=fit$AB,p=p,g=g,c64=fit$c64)
         X[,sname] <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
@@ -70,7 +90,11 @@ calplot <- function(dat,fit){
                    xlab=paste0('log[',fit$oxide,'/U]'),
                    ylab=paste0('log[Pb','/U]'),main=tit)
     graphics::matlines(X,Y,lty=1,col='grey')
-    graphics::points(X[1,],Y[1,],pch=21,bg='black')
+    bg <- rep('black',nc)
+    bg[fit$omit] <- 'grey'
+    graphics::points(X[1,],Y[1,],pch=21,bg=bg)
+    if (labels==1) graphics::text(X[1,],Y[1,],labels=snames,pos=1,col=bg)
+    if (labels==2) graphics::text(X[1,],Y[1,],labels=1:length(snames),pos=1,col=bg)
     graphics::points(X[nr,],Y[nr,],pch=21,bg='white')
     xlim <- graphics::par('usr')[1:2]
     graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)

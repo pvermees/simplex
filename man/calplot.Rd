@@ -4,26 +4,29 @@
 \alias{calplot}
 \title{calibration plot}
 \usage{
-calplot(dat, fit)
+calplot(stand, fit, labels = 0)
 }
 \arguments{
-\item{dat}{an object of class \code{simplex}}
+\item{stand}{an object of class \code{standard}}
 
 \item{fit}{the output of \code{calibration}}
+
+\item{labels}{label the spots with their name (\code{labels=1}) or
+number (\code{labels=2}). The default is to use no labels.}
 }
 \value{
 a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-             \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
-    versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+    \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
+    X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
 }
 \description{
 plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-        \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
-    versus X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+    \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
+    X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
 }
 \examples{
 data(Cameca,package="simplex")
-Ples <- subset_samples(dat=Cameca,prefix='Plesovice')
+Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 cal <- calibration(stand=Ples,oxide='UO2')
-calplot(dat=Ples,fit=cal)
+calplot(stand=Ples,fit=cal)
 }

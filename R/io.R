@@ -45,6 +45,8 @@ read_file <- function(fname,instrument='Cameca'){
         out <- read_Cameca_asc(fname)
     } else if (instrument=='SHRIMP' & suffix=='op'){
         out <- read_SHRIMP_op(fname)
+    } else if (instrument=='SHRIMP' & suffix=='pd'){
+        out <- read_SHRIMP_pd(fname)
     } else {
         stop('Unrecognised file extension.')
     }
@@ -146,6 +148,53 @@ read_SHRIMP_op <- function(fname){
     out
 }
 
+read_SHRIMP_pd <- function(fname){
+    ions <- c('Zr2O','Pb204','bkg','Pb206','Pb207','Pb208','U238','ThO','UO','UO2')
+    f <- file(fname)
+    open(f);
+    out <- list()
+    while (TRUE) {
+        line <- readLines(f,n=1,warn=FALSE)
+        if (length(line)<1){
+            break
+        } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
+            header <- readLines(f,n=4,warn=FALSE)
+            spot <- list()
+            namedate <- strsplit(header[[1]],split=', ')[[1]]
+            sname <- namedate[1]
+            spot$date <- paste(namedate[2:3],collapse=' ')
+            spot$set <- split_mixed(header[[2]],1,2)
+            nscans <- split_mixed(header[[2]],2,1)
+            nions <- split_mixed(header[[2]],3,1)
+            spot$sbmbkg <- split_mixed(header[[2]],5,3)
+            spot$deadtime <- split_mixed(header[[2]],4,1)
+            spot$dwelltime <- read.table(text=readLines(f,n=nions,warn=FALSE))[,4]
+            names(spot$dwelltime) <- ions
+            spot$time <- matrix(0,nscans,nions)
+            spot$counts <- matrix(0,nscans,nions)
+            spot$sbm <- matrix(0,nscans,nions)
+            block <- readLines(f,n=1+nscans*nions*2,warn=FALSE)[-1]
+            colnames(spot$time) <- ions
+            colnames(spot$counts) <- ions
+            colnames(spot$sbm) <- ions
+            for (i in 1:nscans){
+                for (j in 1:nions){
+                    ii <- (i-1)*nions*2 + (j-1)*2 + 1
+                    dat <- read.table(text=block[[ii]])
+                    spot$time[i,j] <- as.numeric(dat[3])
+                    spot$counts[i,j] <- sum(as.numeric(dat[-(1:4)]))
+                    dat <- read.table(text=block[[ii+1]])
+                    spot$sbm[i,j] <- sum(as.numeric(dat))
+                }
+            }
+            spot$cps <- sweep(spot$counts,MARGIN=2,FUN='/',spot$dwelltime)
+            out[[sname]] <- spot
+        }
+    }
+    close(f)
+    out
+}
+
 read_text <- function(f,remove=NULL){
     line <- readLines(f,n=1,warn=FALSE)
     parse_line(line,remove=remove)
@@ -159,6 +208,11 @@ parse_line <- function(line,remove=NULL){
     if (is.null(remove)) out <- parsed
     else out <- parsed[-remove]
     out
+}
+split_mixed <- function(line,i,j,split1=', ',split2=' '){
+    chunk <- strsplit(line,split=split1,fixed=TRUE)[[1]][i]
+    item <- strsplit(chunk,split=split2)[[1]][j]
+    as.numeric(item)
 }
 read_asc_block <- function(f,ions){
     out <- NULL
@@ -175,20 +229,66 @@ read_asc_block <- function(f,ions){
     out
 }
 
-#' @title subset a dataset of class \code{simplex}
-#' @description select a subset of samples or standards from a
+subset_samples <- function(dat,prefix='Plesovice',...){
+    snames <- names(dat)
+    matches <- grep(prefix,snames,...)
+    out <- dat[matches]
+    class(out) <- class(dat)
+    out
+}
+
+#' @title define the standards in a dataset
+#' @description select a subset of standards from a \code{simplex}
+#'     dataset.
+#' @param dat an object of class \code{simplex}
+#' @param prefix text string to match
+#' @param invert logical.  If \code{TRUE} return samples whose names
+#'     do _not_ match
+#' @param c64 the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb
+#' @param PbU (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
+#'     the age standard
+#' @param tst (optional) two-element vector with the age and standard
+#'     error of the age standard
+#' @return an object of class \code{standard}
+#' @examples
+#' data(Cameca,package="simplex")
+#' stand <- standards(dat=Cameca,prefix='Plesovice')
+#' @export
+standards <- function(dat,prefix,invert=FALSE,
+                      c64=18.7,PbU=NULL,tst=NULL){
+    out <- list()
+    out$c64 <- c64
+    if (is.null(PbU)){
+        if (is.null(tst)){
+            Pb76 <- get_Pb76(dat)
+            warning('No standard age was supplied')
+            tst <- IsoplotR:::get.Pb207Pb206.age.default(x=Pb76[1],sx=Pb76[2])
+        }
+        out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
+    } else {
+        out$PbU <- PbU
+    }
+    out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
+    class(out) <- 'standard'
+    out
+}
+
+#' @title define the samples in a dataset
+#' @description select a subset of samples of unknown age from a
 #'     \code{simplex} dataset.
 #' @param dat an object of class \code{simplex}
 #' @param prefix text string to match
-#' @return an object of class \code{simplex}
+#' @param invert logical.  If \code{TRUE} return samples whose names
+#'     do _not_ match
+#' @return a list of objects of class \code{unknown}
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- subset_samples(Cameca,prefix='Plesovice')
+#' unk <- unknowns(Cameca,prefix='Plesovice',invert=TRUE)
 #' @export
-subset_samples <- function(dat,prefix='Plesovice'){
-    snames <- names(dat)
-    matches <- grepl(prefix,snames)
-    out <- subset(dat,subset=matches)
-    class(out) <- class(dat)
+unknowns <- function(dat,prefix,invert=FALSE){
+    out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
+    for (sname in names(out)){
+        class(out[[sname]]) <- 'unknown'
+    }
     out
 }
