@@ -160,12 +160,13 @@ read_SHRIMP_pd <- function(fname){
         } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
             header <- readLines(f,n=4,warn=FALSE)
             spot <- list()
-            sname <- strsplit(header[[1]],split=', ')[[1]][1]
-            spot$date <-
-                paste(strsplit(header[[1]],split=', ')[[1]][2:3],collapse=' ')
+            namedate <- strsplit(header[[1]],split=', ')[[1]]
+            sname <- namedate[1]
+            spot$date <- paste(namedate[2:3],collapse=' ')
             spot$set <- split_mixed(header[[2]],1,2)
             nscans <- split_mixed(header[[2]],2,1)
             nions <- split_mixed(header[[2]],3,1)
+            spot$sbmbkg <- split_mixed(header[[2]],5,3)
             spot$deadtime <- split_mixed(header[[2]],4,1)
             spot$dwelltime <- read.table(text=readLines(f,n=nions,warn=FALSE))[,4]
             names(spot$dwelltime) <- ions
