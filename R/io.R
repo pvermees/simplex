@@ -18,7 +18,7 @@ read_data <- function(dorf,instrument='Cameca',suffix=NULL){
         if (is.null(suffix)) suffix <- '.asc'
         out <- read_directory(dorf,instrument='Cameca',suffix=suffix)
     } else if (instrument== 'SHRIMP') {
-        out <- read_file(dorf,instrument='SHRIMP')
+        out <- read_file(dorf,instrument='SHRIMP',suffix=suffix)
     } else {
         stop('Unsupported instrument')
     }
@@ -39,7 +39,7 @@ read_directory <- function(dname,instrument='Cameca',suffix='.asc'){
 }
 
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,instrument='Cameca'){
+read_file <- function(fname,instrument='Cameca',suffix=NULL){
     suffix <- utils::tail(strsplit(fname,split='[.]')[[1]],n=1)
     if (instrument=='Cameca' & suffix=='asc'){
         out <- read_Cameca_asc(fname)
@@ -142,6 +142,7 @@ read_SHRIMP_op <- function(fname){
                 spot$sbm[,i] <- read_numbers(f)
             }        
             out[[sname]] <- spot
+            junk <- readLines(f,n=1,warn=FALSE)
         }
     }
     close(f)
