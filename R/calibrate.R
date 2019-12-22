@@ -78,7 +78,10 @@ calibrate_spot <- function(spot,fit){
     out['Ax'] <- Ax
     out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
     out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
-    out['Pb46'] <- log(0.5+sum(p$c4))-log(0.5+sum(p$c6))+g$Pb*mean(p$t6-p$t4)
+    dt4 <- length(p$c4)*spot$dwelltime['Pb204']
+    dt6 <- length(p$c6)*spot$dwelltime['Pb206']
+    out['Pb46'] <- log(0.5/dt4+sum(p$c4)) -
+        log(0.5/dt6+sum(p$c6)) + g$Pb*mean(p$t6-p$t4)
     out['Pb76'] <- log(sum(p$c7))-log(sum(p$c6))+g$Pb*mean(p$t6-p$t7)
     HPb <- matrix(0,2,2)
     sumn <- sum(p$n4+p$n6+p$n7)

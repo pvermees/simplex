@@ -10,18 +10,15 @@ pars <- function(spot,oxide='UO2'){
     out$n7 <- spot$counts[,'Pb207']
     out$nU <- spot$counts[,'U238']
     out$nO <- spot$counts[,oxide]
-    out$d4 <- spot$dwelltime['Pb204']
-    out$d6 <- spot$dwelltime['Pb206']
-    out$d7 <- spot$dwelltime['Pb207']
-    out$dU <- spot$dwelltime['U238']
-    out$dO <- spot$dwelltime[oxide]
-    # dead time correction:
-    dt <- spot$deadtime[spot$detector]
-    names(dt) <- names(spot$detector)
-    out$c4 <- out$n4/(out$d4-dt['Pb204']*out$n4*1e-9)
-    out$c6 <- out$n6/(out$d6-dt['Pb206']*out$n6*1e-9)
-    out$c7 <- out$n7/(out$d7-dt['Pb207']*out$n7*1e-9)
-    out$cU <- out$nU/(out$dU-dt['U238']*out$nU*1e-9)
-    out$cO <- out$nO/(out$dO-dt[oxide]*out$nO*1e-9)
+    out$d4 <- spot$edt[,'Pb204']
+    out$d6 <- spot$edt[,'Pb206']
+    out$d7 <- spot$edt[,'Pb207']
+    out$dU <- spot$edt[,'U238']
+    out$dO <- spot$edt[,oxide]
+    out$c4 <- out$n4/out$d4
+    out$c6 <- out$n6/out$d6
+    out$c7 <- out$n7/out$d7
+    out$cU <- out$nU/out$dU
+    out$cO <- out$nO/out$dO
     out
 }

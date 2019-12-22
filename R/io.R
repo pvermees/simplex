@@ -95,7 +95,7 @@ read_Cameca_asc <- function(fname){
         if (grepl("RAW DATA",line)) {
             cps <- read_asc_block(f,ions=ions)
             out$counts <- round(sweep(cps,MARGIN=2,FUN='*',out$dwelltime))
-            out$cps <- deadtimecorr(out,instrument='Cameca')
+            out$edt <- effective_dwelltime(out,instrument='Cameca')
         }
         if (grepl("PRIMARY INTENSITY",line)) {
             out$sbm <- read_asc_block(f,ions=ions)
@@ -137,7 +137,7 @@ read_SHRIMP_op <- function(fname){
             for (i in 1:nions){
                 spot$counts[,i] <- read_numbers(f)
             }
-            spot$cps <- deadtimecorr(spot,instrument='SHRIMP')
+            spot$edt <- effective_dwelltime(spot,instrument='SHRIMP')
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
             colnames(spot$sbm) <- ions
@@ -191,7 +191,7 @@ read_SHRIMP_pd <- function(fname){
                     spot$sbm[i,j] <- sum(as.numeric(dat))
                 }
             }
-            spot$cps <- deadtimecorr(spot,instrument='SHRIMP')
+            spot$edt <- effective_dwelltime(spot,instrument='SHRIMP')
             out[[sname]] <- spot
         }
     }
@@ -232,8 +232,8 @@ read_asc_block <- function(f,ions){
     colnames(out) <- ions
     out
 }
-# calculate cps correcting for the dead time
-deadtimecorr <- function(spot,instrument='Cameca'){
+# calculate effective dwell time correcting for the dead time
+effective_dwelltime <- function(spot,instrument='Cameca'){
     if (instrument=='Cameca'){
         deadtime <- spot$deadtime[spot$detector]
     } else if (instrument=='SHRIMP'){
@@ -242,8 +242,7 @@ deadtimecorr <- function(spot,instrument='Cameca'){
         stop('Invalid instrument type.')
     }
     lost_time <- sweep(spot$counts,MARGIN=2,FUN='*',deadtime)*1e-9
-    effective_dwelltime <- -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
-    spot$counts/effective_dwelltime
+    -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
 }
 
 subset_samples <- function(dat,prefix='Plesovice',...){
