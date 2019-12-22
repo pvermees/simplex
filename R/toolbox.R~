@@ -1,0 +1,26 @@
+pars <- function(spot,oxide='UO2'){
+    out <- list()
+    out$t4 <- spot$time[,'Pb204']
+    out$t6 <- spot$time[,'Pb206']
+    out$t7 <- spot$time[,'Pb207']
+    out$tU <- spot$time[,'U238']
+    out$tO <- spot$time[,oxide]
+    out$n4 <- spot$counts[,'Pb204']
+    out$n6 <- spot$counts[,'Pb206']
+    out$n7 <- spot$counts[,'Pb207']
+    out$nU <- spot$counts[,'U238']
+    out$nO <- spot$counts[,oxide]
+    out$d4 <- spot$dwelltime['Pb204']
+    out$d6 <- spot$dwelltime['Pb206']
+    out$d7 <- spot$dwelltime['Pb207']
+    out$dU <- spot$dwelltime['U238']
+    out$dO <- spot$dwelltime[oxide]
+    ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@11@"]]));##:ess-bp-end:##
+    out$c4 <- spot$n4[,'Pb204']/(out$d4-spot$deadtime*spot$n4[,'Pb204'])
+    out$c6 <- spot$cps[,'Pb206']
+    out$c7 <- spot$cps[,'Pb207']
+    out$cU <- spot$cps[,'U238']
+    out$cO <- spot$cps[,oxide]
+    out
+}
