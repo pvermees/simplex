@@ -90,10 +90,12 @@ read_Cameca_asc <- function(fname){
             }
             names(out$yield) <- detectors
             names(out$background) <- detectors
+            names(out$deadtime) <- detectors
         }
         if (grepl("RAW DATA",line)) {
-            out$cps <- read_asc_block(f,ions=ions)
-            out$counts <- round(sweep(out$cps,MARGIN=2,FUN='*',out$dwelltime))
+            cps <- read_asc_block(f,ions=ions)
+            out$counts <- round(sweep(cps,MARGIN=2,FUN='*',out$dwelltime))
+            out$cps <- deadtimecorr(out,instrument='Cameca')
         }
         if (grepl("PRIMARY INTENSITY",line)) {
             out$sbm <- read_asc_block(f,ions=ions)
@@ -122,6 +124,7 @@ read_SHRIMP_op <- function(fname){
             spot$set <- read_numbers(f)
             nscans <- read_numbers(f)
             nions <- read_numbers(f)
+            spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
             names(spot$dwelltime) <- ions
             spot$time <- matrix(0,nscans,nions)
@@ -134,13 +137,13 @@ read_SHRIMP_op <- function(fname){
             for (i in 1:nions){
                 spot$counts[,i] <- read_numbers(f)
             }
-            spot$cps <- sweep(spot$counts,MARGIN=2,FUN='/',spot$dwelltime)
+            spot$cps <- deadtimecorr(spot,instrument='SHRIMP')
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
             colnames(spot$sbm) <- ions
             for (i in 1:nions){
                 spot$sbm[,i] <- read_numbers(f)
-            }        
+            }
             out[[sname]] <- spot
             junk <- readLines(f,n=1,warn=FALSE)
         }
@@ -188,7 +191,7 @@ read_SHRIMP_pd <- function(fname){
                     spot$sbm[i,j] <- sum(as.numeric(dat))
                 }
             }
-            spot$cps <- sweep(spot$counts,MARGIN=2,FUN='/',spot$dwelltime)
+            spot$cps <- deadtimecorr(spot,instrument='SHRIMP')
             out[[sname]] <- spot
         }
     }
@@ -228,6 +231,19 @@ read_asc_block <- function(f,ions){
     }
     colnames(out) <- ions
     out
+}
+# calculate cps correcting for the dead time
+deadtimecorr <- function(spot,instrument='Cameca'){
+    if (instrument=='Cameca'){
+        deadtime <- spot$deadtime[spot$detector]
+    } else if (instrument=='SHRIMP'){
+        deadtime <- rep(spot$deadtime,ncol(spot$counts))
+    } else {
+        stop('Invalid instrument type.')
+    }
+    lost_time <- sweep(spot$counts,MARGIN=2,FUN='*',deadtime)*1e-9
+    effective_dwelltime <- -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
+    spot$counts/effective_dwelltime
 }
 
 subset_samples <- function(dat,prefix='Plesovice',...){
