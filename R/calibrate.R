@@ -78,11 +78,10 @@ calibrate_spot <- function(spot,fit){
     out['Ax'] <- Ax
     out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
     out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
-    dt4 <- length(p$c4)*spot$dwelltime['Pb204']
-    dt6 <- length(p$c6)*spot$dwelltime['Pb206']
-    out['Pb46'] <- log(0.5/dt4+sum(p$c4)) -
-        log(0.5/dt6+sum(p$c6)) + g$Pb*mean(p$t6-p$t4)
-    out['Pb76'] <- log(sum(p$c7))-log(sum(p$c6))+g$Pb*mean(p$t6-p$t7)
+    out['Pb76'] <- getPbLogRatio(g=g$Pb,tn=p$t7,td=p$t6,
+                                 nn=p$n7,nd=p$n6,dn=p$d7,dd=p$d6)
+    out['Pb46'] <- getPbLogRatio(g=g$Pb,tn=p$t4,td=p$t6,
+                                 nn=p$n4,nd=p$n6,dn=p$d4,dd=p$d6)
     HPb <- matrix(0,2,2)
     sumn <- sum(p$n4+p$n6+p$n7)
     HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/sumn
@@ -94,6 +93,19 @@ calibrate_spot <- function(spot,fit){
     out['varPb76'] <- covmat[2,2]
     out['covPb46Pb76'] <- covmat[1,2]
     out
+}
+
+getPbLogRatio <- function(g,tn,td,nn,nd,dn,dd){
+    init <- log(sum(nn/dn)) - log(sum(nd/dd)) + g*mean(td-tn)
+    interval <- c(0.9*init,1.1*init)
+    optimise(LL_Pb,interval=interval,g=g,tn=tn,td=td,
+             nn=nn,nd=nd,dn=dn,dd=dd,maximum=TRUE)$maximum
+}
+
+LL_Pb <- function(b,g,tn,td,nn,nd,dn,dd){
+    bn<- b + g*(tn-td) + log(dn)-log(dd)
+    LL <- nn*bn - (nn+nd)*log(1+exp(bn))
+    sum(LL)
 }
 
 misfit_A <- function(A,spot,fit){
