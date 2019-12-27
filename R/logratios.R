@@ -16,13 +16,19 @@ get_Pb76 <- function(dat){
 }
 
 get_gamma <- function(B,p){
+    fitU <- optim(c(log(p$cU[1]),0),LL_gamma,nn=p$nU,dd=p$dU,tt=p$tU)
+    fitO <- optim(c(log(p$cO[1]),0),LL_gamma,nn=p$nO,dd=p$dO,tt=p$tO)
     out <- list()
-    out$U <- stats::glm(p$nU ~ p$tU,
-                        family=stats::poisson(link='log'))$coef[2]
-    out$O <- stats::glm(p$nO ~ p$tO,
-                        family=stats::poisson(link='log'))$coef[2]
+    out$U <- fitU$par[2]
+    out$O <- fitO$par[2]
     out$Pb <- B*out$O + (1-B)*out$U
     out
+}
+LL_gamma <- function(pars,nn,dd,tt){
+    intercept <- pars[1]
+    slope <- pars[2]
+    LL <- nn*(intercept + slope*tt + log(dd)) - exp(intercept + slope*tt)*dd
+    -sum(LL)
 }
 
 get_alpha <- function(AB,p,g,c64){
