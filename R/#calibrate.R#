@@ -107,6 +107,11 @@ LL_Pb <- function(b,g,tn,td,nn,nd,dn,dd){
     LL <- nn*bn - (nn+nd)*log(1+exp(bn))
     sum(LL)
 }
+LL_Pb.old <- function(b,g,tn,td,nn,nd,dn,dd){
+    bn <- b + g*(tn-td) + log(dn)-log(dd)
+    LL <- nn*bn - (nn+nd)*log(1+exp(bn))
+    sum(LL)
+}
 
 misfit_A <- function(A,spot,fit){
     B <- fit$AB['B']

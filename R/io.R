@@ -61,6 +61,7 @@ read_Cameca_asc <- function(fname){
     f <- file(fname)
     open(f);
     out <- list()
+    out$instrument <- 'Cameca'
     while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
         if (grepl("ACQUISITION PARAMETERS",line)){
             junk <- readLines(f,n=6,warn=FALSE)
@@ -95,7 +96,7 @@ read_Cameca_asc <- function(fname){
         if (grepl("RAW DATA",line)) {
             cps <- read_asc_block(f,ions=ions)
             out$counts <- round(sweep(cps,MARGIN=2,FUN='*',out$dwelltime))
-            out$edt <- effective_dwelltime(out,instrument='Cameca')
+            out$edt <- effective_dwelltime(out)
         }
         if (grepl("PRIMARY INTENSITY",line)) {
             out$sbm <- read_asc_block(f,ions=ions)
@@ -119,6 +120,7 @@ read_SHRIMP_op <- function(fname){
             break
         } else if (nchar(line)>0){
             spot <- list()
+            spot$instrument <- 'SHRIMP'
             sname <- line
             spot$date <- readLines(f,n=1,warn=FALSE)
             spot$set <- read_numbers(f)
@@ -137,7 +139,7 @@ read_SHRIMP_op <- function(fname){
             for (i in 1:nions){
                 spot$counts[,i] <- read_numbers(f)
             }
-            spot$edt <- effective_dwelltime(spot,instrument='SHRIMP')
+            spot$edt <- effective_dwelltime(spot)
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
             colnames(spot$sbm) <- ions
@@ -164,6 +166,7 @@ read_SHRIMP_pd <- function(fname){
         } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
             header <- readLines(f,n=4,warn=FALSE)
             spot <- list()
+            spot$instrument <- 'SHRIMP'
             namedate <- strsplit(header[[1]],split=', ')[[1]]
             sname <- namedate[1]
             spot$date <- paste(namedate[2:3],collapse=' ')
@@ -191,7 +194,7 @@ read_SHRIMP_pd <- function(fname){
                     spot$sbm[i,j] <- sum(as.numeric(dat))
                 }
             }
-            spot$edt <- effective_dwelltime(spot,instrument='SHRIMP')
+            spot$edt <- effective_dwelltime(spot)
             out[[sname]] <- spot
         }
     }
@@ -233,10 +236,10 @@ read_asc_block <- function(f,ions){
     out
 }
 # calculate effective dwell time correcting for the dead time
-effective_dwelltime <- function(spot,instrument='Cameca'){
-    if (instrument=='Cameca'){
+effective_dwelltime <- function(spot){
+    if (spot$instrument=='Cameca'){
         deadtime <- spot$deadtime[spot$detector]
-    } else if (instrument=='SHRIMP'){
+    } else if (spot$instrument=='SHRIMP'){
         deadtime <- rep(spot$deadtime,ncol(spot$counts))
     } else {
         stop('Invalid instrument type.')
