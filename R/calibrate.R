@@ -78,10 +78,8 @@ calibrate_spot <- function(spot,fit){
     out['Ax'] <- Ax
     out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
     out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
-    out['Pb76'] <- getPbLogRatio(g=g$Pb,tn=p$t7,td=p$t6,
-                                 nn=p$n7,nd=p$n6,dn=p$d7,dd=p$d6)
-    out['Pb46'] <- getPbLogRatio(g=g$Pb,tn=p$t4,td=p$t6,
-                                 nn=p$n4,nd=p$n6,dn=p$d4,dd=p$d6)
+    out['Pb76'] <- getPbLogRatio(g=g$Pb,p=p,tn=p$t7,dn=p$d7,nn=p$n7)
+    out['Pb46'] <- getPbLogRatio(g=g$Pb,p=p,tn=p$t4,dn=p$d4,nn=p$n4)
     HPb <- matrix(0,2,2)
     sumn <- sum(p$n4+p$n6+p$n7)
     HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/sumn
@@ -95,16 +93,17 @@ calibrate_spot <- function(spot,fit){
     out
 }
 
-getPbLogRatio <- function(g,tn,td,nn,nd,dn,dd){
-    init <- log(sum(nn/dn)) - log(sum(nd/dd)) + g*mean(td-tn)
-    interval <- c(0.9*init,1.1*init)
-    optimise(LL_Pb,interval=interval,g=g,tn=tn,td=td,
-             nn=nn,nd=nd,dn=dn,dd=dd,maximum=TRUE)$maximum
+getPbLogRatio <- function(g,p,tn,nn,dn){
+    init <- log(sum(nn/dn)) - log(sum(p$n6/p$d6)) + g*mean(p$t6-tn)
+    interval <- c(0.1*init,1.9*init)
+    optimise(LL_Pb,interval=interval,g=g,p=p,
+             tn=tn,nn=nn,dn=dn,maximum=TRUE)$maximum
 }
 
-LL_Pb <- function(b,g,tn,td,nn,nd,dn,dd){
-    bn <- b + g*(tn-td) + log(dn)-log(dd)
-    LL <- nn*bn - (nn+nd)*log(1+exp(bn))
+LL_Pb <- function(b,g,p,tn,td,nn,dn){
+    alpha6i <- log(1-exp(g*(p$bt6-p$t6))*p$bc6/p$c6)
+    lognn6i <- log(1+exp(b+alpha6i)-exp(alpha6i))+log(dn/p$d6)+g*(tn-p$t6)
+    LL <- nn*lognn6i - (nn+p$n6)*log(exp(lognn6i)+1)
     sum(LL)
 }
 

@@ -1,6 +1,5 @@
 pars <- function(spot,oxide='UO2'){
     out <- list()
-    out$instrument <- spot$instrument
     out$t4 <- spot$time[,'Pb204']
     out$t6 <- spot$time[,'Pb206']
     out$t7 <- spot$time[,'Pb207']
@@ -24,12 +23,52 @@ pars <- function(spot,oxide='UO2'){
     if (spot$instrument=='Cameca'){
         bkg <- spot$background[spot$detector]
         names(bkg) <- names(spot$detector)
-        out$bkg <- bkg[c('Pb204','Pb206','Pb207','U238',oxide)]
+        nt <- length(out$t4)
+        out$bc4 <- rep(bkg['Pb204'],nt)
+        out$bc6 <- rep(bkg['Pb206'],nt)
+        out$bc7 <- rep(bkg['Pb207'],nt)
+        out$bcU <- rep(bkg['U238'],nt)
+        out$bcO <- rep(bkg[oxide],nt)
+        out$bd4 <- rep(1,nt)
+        out$bd6 <- rep(1,nt)
+        out$bd7 <- rep(1,nt)
+        out$bdU <- rep(1,nt)
+        out$bdO <- rep(1,nt)
+        out$bt4 <- out$t4
+        out$bt6 <- out$t6
+        out$bt7 <- out$t7
+        out$btU <- out$tU
+        out$btO <- out$tO
+        out$bn4 <- out$bc4*out$bt4
+        out$bn6 <- out$bc6*out$bt6
+        out$bn7 <- out$bc7*out$bt7
+        out$bnU <- out$bcU*out$btU
+        out$bnO <- out$bcO*out$btO
     } else {
-        out$tb <- spot$time[,'bkg']
-        out$nb <- spot$counts[,'bkg']
-        out$db <- spot$edt[,'bkg']
-        out$cb <- out$nb/out$db
+        bt <- spot$time[,'bkg']
+        bn <- spot$counts[,'bkg']
+        bd <- spot$edt[,'bkg']
+        bc <- bn/bd
+        out$bc4 <- bc
+        out$bc6 <- bc
+        out$bc7 <- bc
+        out$bcU <- bc
+        out$bcO <- bc
+        out$bd4 <- bd
+        out$bd6 <- bd
+        out$bd7 <- bd
+        out$bdU <- bd
+        out$bdO <- bd
+        out$bt4 <- bt
+        out$bt6 <- bt
+        out$bt7 <- bt
+        out$btU <- bt
+        out$btO <- bt
+        out$bn4 <- bn
+        out$bn6 <- bn
+        out$bn7 <- bn
+        out$bnU <- bn
+        out$bnO <- bn
     }
     out
 }
