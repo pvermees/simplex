@@ -49,15 +49,13 @@ AB_misfit <- function(AB,stand,oxide='UO2'){
 LL_AB <- function(AB,spot,oxide='UO2',c64=18.7){
     p <- pars(spot,oxide=oxide)
     g <- get_gamma(B=AB['B'],p=p)
-    a <- get_alpha(AB=AB,p=p,g=g,c64=c64)
-    # 1. get count ratios
-    n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
-    # 2. get proportions
-    nt <- length(p$tU)
-    den <- n6U + 1
-    theta <- cbind(n6U,1)/matrix(rep(den,2),ncol=2)
-    colnames(theta) <- c('Pb206','U238')
-    counts <- spot$counts[,c('Pb206','U238')]
-    # 3. compute multinomial log-likelihood
-    sum(counts*log(theta))
+    a6 <- get_alpha(p=p,g=g$Pb,den='6',c64=c64)
+    aU <- get_alpha(p=p,g=g$U,den='U',c64=c64)
+    aO <- get_alpha(p=p,g=g$O,den='O',c64=c64)
+    b4 <- getPbLogRatio(p=p,g=g$Pb,num='4',c64=c64)
+    bO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
+    log_n6Ui <- AB[1] + AB[2]*(bO+aO-aU) + aU - a6 -
+        log(1-exp(b4)*c64) - log(p$dU/p$d6) - g$Pb*(p$tU-p$t6)
+    LL <- p$n6*log_n6Ui - (p$n6+p$nU)*log(1+exp(log_n6Ui))
+    sum(LL)
 }

@@ -31,12 +31,37 @@ LL_gamma <- function(pars,nn,dd,tt){
     -sum(LL)
 }
 
-get_alpha <- function(AB,p,g,c64){
-    out <- list()
-    out$a4 <- log(1-(p$c4/p$c6)*c64*exp(g$Pb*(p$t6-p$t4)))
-    out$aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-    out$a6 <- AB[1] + AB[2]*out$aO - out$a4
-    out
+getPbLogRatio <- function(p,g,num,c64=1){
+    ax <- get_alpha(p=p,g=g,den=num,c64=c64)
+    a6 <- get_alpha(p=p,g=g,den=6,c64=c64)
+    optimise(LL_Pb,interval=c(-20,20),p=p,g=g,
+             anum=ax,aden=a6,num=num,maximum=TRUE)$maximum
+}
+LL_Pb <- function(b,p,g,anum,aden,num){
+    tx <- p[[paste0('t',num)]]
+    dx <- p[[paste0('d',num)]]
+    nx <- p[[paste0('n',num)]]
+    log_nx6i <- b + anum - aden - log(p$d6/dx) - g*(p$t6-tx)
+    LL <- nx*log_nx6i - (nx+p$n6)*log(1+exp(log_nx6i))
+    sum(LL)
+}
+
+get_alpha <- function(p,g,den,c64=1){
+    tx <- p[[paste0('t',den)]]
+    maxb <- - max(g*tx) - 1e-5 - log(c64)
+    b <- optimise(LL_bb,p=p,g=g,den=den,lower=-10,upper=maxb,
+                  maximum=TRUE)$maximum
+    log(1-exp(b+g*tx))
+}
+LL_bb <- function(b,p,g,den){
+    tx <- p[[paste0('t',den)]]
+    dx <- p[[paste0('d',den)]]
+    nx <- p[[paste0('n',den)]]
+    bdx <- p[[paste0('bd',den)]]
+    bnx <- p[[paste0('bn',den)]]
+    log_nbx <- b + g*tx + log(bdx/dx)
+    LL <- bnx*log_nbx - (bnx+nx)*log(1+exp(log_nbx))
+    sum(LL)
 }
 
 logratios2ratios <- function(lr){
