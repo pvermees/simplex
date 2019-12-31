@@ -16,27 +16,57 @@ get_Pb76 <- function(dat){
 }
 
 get_gamma <- function(B,p){
-    fitU <- optim(c(log(p$cU[1]),0),LL_gamma,nn=p$nU,dd=p$dU,tt=p$tU)
-    fitO <- optim(c(log(p$cO[1]),0),LL_gamma,nn=p$nO,dd=p$dO,tt=p$tO)
+    # slope(U), intercept(U), slope(O), intercept(O), intercept(Pb) :
+    init <- c(log(p$cU[1]),0,log(p$cO[1]),0,log(p$c6[1]))
+    fit <- optim(par=init,fn=LL_gamma,B=B,p=p)$par
     out <- list()
-    out$U <- fitU$par[2]
-    out$O <- fitO$par[2]
-    out$Pb <- B*out$O + (1-B)*out$U
+    out$U <- fit[2]
+    out$O <- fit[4]
+    out$Pb <- B*fit[4] + (1-B)*fit[2]
     out
 }
-LL_gamma <- function(pars,nn,dd,tt){
-    intercept <- pars[1]
-    slope <- pars[2]
-    LL <- nn*(intercept + slope*tt + log(dd)) - exp(intercept + slope*tt)*dd
-    -sum(LL)
+LL_gamma <- function(pars,B,p){
+    log_nU <- pars[1] + pars[2]*p$tU
+    LL_U <- p$nU*(log_nU + log(p$dU)) - exp(log_nU)*p$dU
+    log_nO <- pars[3] + pars[4]*p$tO
+    LL_O <- p$nO*(log_nO + log(p$dO)) - exp(log_nO)*p$dO
+    pars[6] <- B*pars[4] + (1-B)*pars[2]
+    log_n6 <- pars[5] + pars[6]*p$t6
+    LL_6 <- p$n6*(log_n6 + log(p$d6)) - exp(log_n6)*p$d6
+    -sum(LL_U + LL_O + LL_6)
 }
 
-get_alpha <- function(AB,p,g,c64){
-    out <- list()
-    out$a4 <- log(1-(p$c4/p$c6)*c64*exp(g$Pb*(p$t6-p$t4)))
-    out$aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-    out$a6 <- AB[1] + AB[2]*out$aO - out$a4
-    out
+getPbLogRatio <- function(p,g,num,c64=1){
+    ax <- get_alpha(p=p,g=g,den=num,c64=c64)
+    a6 <- get_alpha(p=p,g=g,den=6,c64=c64)
+    optimise(LL_Pb,interval=c(-20,20),p=p,g=g,
+             anum=ax,aden=a6,num=num,maximum=TRUE)$maximum
+}
+LL_Pb <- function(b,p,g,anum,aden,num){
+    tx <- p[[paste0('t',num)]]
+    dx <- p[[paste0('d',num)]]
+    nx <- p[[paste0('n',num)]]
+    log_nx6i <- b + anum - aden - log(p$d6/dx) - g*(p$t6-tx)
+    LL <- nx*log_nx6i - (nx+p$n6)*log(1+exp(log_nx6i))
+    sum(LL)
+}
+
+get_alpha <- function(p,g,den,c64=1){
+    tx <- p[[paste0('t',den)]]
+    maxb <- - max(g*tx) - 1e-5 - log(c64)
+    b <- optimise(LL_bb,p=p,g=g,den=den,lower=-10,upper=maxb,
+                  maximum=TRUE)$maximum
+    log(1-exp(b+g*tx))
+}
+LL_bb <- function(b,p,g,den){
+    tx <- p[[paste0('t',den)]]
+    dx <- p[[paste0('d',den)]]
+    nx <- p[[paste0('n',den)]]
+    bdx <- p[[paste0('bd',den)]]
+    bnx <- p[[paste0('bn',den)]]
+    log_nbx <- b + g*tx + log(bdx/dx)
+    LL <- bnx*log_nbx - (bnx+nx)*log(1+exp(log_nbx))
+    sum(LL)
 }
 
 logratios2ratios <- function(lr){

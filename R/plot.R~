@@ -77,12 +77,12 @@ calplot <- function(stand,fit,labels=0){
     colnames(X) <- snames
     colnames(Y) <- snames
     for (sname in snames){
-        spot <- stand$x[[sname]]
-        p <- pars(spot,oxide=fit$oxide)
+        p <- pars(stand$x[[sname]],oxide=fit$oxide)
         g <- get_gamma(B=fit$AB['B'],p=p)
+        a <- get_alpha(AB=fit$AB,p=p,g=g,c64=fit$c64)
         X[,sname] <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-        Y[,sname] <- LL_AB(fit$AB,spot=spot,oxide=fit$oxide,
-                           c64=stand$c64,LL=FALSE)
+        Y[,sname] <- log(p$c6/p$cU) + g$Pb*(p$tU-p$t6) + 
+            log(1 - (p$c4/p$c6)*g$Pb*(p$t6-p$t4)*fit$c64)
     }
     tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
                   signif(fit$AB['B'],3),'X')
@@ -103,7 +103,7 @@ calplot <- function(stand,fit,labels=0){
 predict_counts <- function(samp,fit){
     p <- pars(samp,oxide=fit$oxide)
     g <- get_gamma(B=fit$AB['B'],p=p)
-    a <- get_alpha(p=p,g=g,c64=fit$c64)
+    a <- get_alpha(AB=fit$AB,p=p,g=g,c64=fit$c64)
     n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
     n6 <- p$nU*n6U
     n46 <- (1-exp(a$a4))*(p$d4/p$d6)/fit$c64
