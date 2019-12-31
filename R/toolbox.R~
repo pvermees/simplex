@@ -1,10 +1,10 @@
 pars <- function(spot,oxide='UO2'){
     out <- list()
-    out$t4 <- hours(spot$time[,'Pb204'])
-    out$t6 <- hours(spot$time[,'Pb206'])
-    out$t7 <- hours(spot$time[,'Pb207'])
-    out$tU <- hours(spot$time[,'U238'])
-    out$tO <- hours(spot$time[,oxide])
+    out$t4 <- spot$time[,'Pb204']
+    out$t6 <- spot$time[,'Pb206']
+    out$t7 <- spot$time[,'Pb207']
+    out$tU <- spot$time[,'U238']
+    out$tO <- spot$time[,oxide]
     out$n4 <- spot$counts[,'Pb204']
     out$n6 <- spot$counts[,'Pb206']
     out$n7 <- spot$counts[,'Pb207']
@@ -45,7 +45,7 @@ pars <- function(spot,oxide='UO2'){
         out$bnU <- out$bcU*out$btU
         out$bnO <- out$bcO*out$btO
     } else {
-        bt <- hours(spot$time[,'bkg'])
+        bt <- spot$time[,'bkg']
         bn <- spot$counts[,'bkg']
         bd <- spot$edt[,'bkg']
         bc <- bn/bd
@@ -71,8 +71,4 @@ pars <- function(spot,oxide='UO2'){
         out$bnO <- bn
     }
     out
-}
-
-hours <- function(tt){
-    tt/3600
 }
