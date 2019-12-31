@@ -78,8 +78,8 @@ calibrate_spot <- function(spot,fit){
     out['Ax'] <- Ax
     out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
     out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
-    out['Pb76'] <- getPbLogRatio(g=g$Pb,p=p,num=7)
-    out['Pb46'] <- getPbLogRatio(g=g$Pb,p=p,num=4)
+    out['Pb76'] <- getPbLogRatio(p=p,g=g$Pb,num=7)
+    out['Pb46'] <- getPbLogRatio(p=p,g=g$Pb,num=4)
     HPb <- matrix(0,2,2)
     sumn <- sum(p$n4+p$n6+p$n7)
     HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/sumn
@@ -91,38 +91,6 @@ calibrate_spot <- function(spot,fit){
     out['varPb76'] <- covmat[2,2]
     out['covPb46Pb76'] <- covmat[1,2]
     out
-}
-
-getPbLogRatio <- function(g,p,num){
-    maxb <- -max(g*p$t6)-1e-5
-    bbx <- optimise(LL_bb,g=g,p=p,den=num,lower=-10,upper=maxb,
-                    maximum=TRUE)$maximum
-    bb6 <- optimise(LL_bb,g=g,p=p,den=6,lower=-10,upper=maxb,
-                    maximum=TRUE)$maximum
-    optimise(LL_Pb,interval=c(-10,10),g=g,p=p,
-             num=num,bbx=bbx,bb6=bb6,maximum=TRUE)$maximum
-}
-
-LL_bb <- function(b,g,p,den){
-    tx <- p[[paste0('t',den)]]
-    dx <- p[[paste0('d',den)]]
-    nx <- p[[paste0('n',den)]]
-    bdx <- p[[paste0('bd',den)]]
-    bnx <- p[[paste0('bn',den)]]
-    log_nbx <- b + g*tx + log(bdx/dx)
-    LL <- bnx*log_nbx - (bnx+nx)*log(1+exp(log_nbx))
-    sum(LL)
-}
-
-LL_Pb <- function(b,g,p,num,bbx,bb6){
-    tx <- p[[paste0('t',num)]]
-    dx <- p[[paste0('d',num)]]
-    nx <- p[[paste0('n',num)]]
-    alpha_xi <- log(1-exp(bbx+g*p$t6))
-    alpha_6i <- log(1-exp(bb6+g*p$t6))
-    log_nx6i <- b + alpha_xi - alpha_6i - log(p$d6/dx) - g*(p$t6-tx) 
-    LL <- nx*log_nx6i - (nx+p$n6)*log(1+exp(log_nx6i))
-    sum(LL)
 }
 
 misfit_A <- function(A,spot,fit){
