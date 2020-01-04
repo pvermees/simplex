@@ -81,8 +81,8 @@ calplot <- function(stand,fit,labels=0){
         p <- pars(spot,oxide=fit$oxide)
         g <- get_gamma(B=fit$AB['B'],p=p)
         X[,sname] <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-        Y[,sname] <- LL_AB(fit$AB,spot=spot,oxide=fit$oxide,
-                           c64=stand$c64,LL=FALSE)
+        Y[,sname] <- getPbULogRatio(B=fit$AB['B'],spot=spot,
+                                    oxide=fit$oxide,c64=stand$c64)
     }
     tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
                   signif(fit$AB['B'],3),'X')
@@ -99,6 +99,16 @@ calplot <- function(stand,fit,labels=0){
     xlim <- graphics::par('usr')[1:2]
     graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)
 }
+getPbULogRatio <- function(B,spot,oxide='UO2',c64=18.7){
+    p <- pars(spot,oxide=oxide)
+    g <- get_gamma(B=B,p=p)
+    b4 <- getPbLogRatio(p=p,g=g$Pb,num='4')
+    b6 <- log(p$c6/p$cU) + g$Pb*(p$tU-p$t6)
+    a6 <- get_alpha(p=p,g=g$Pb,den='6')
+    aU <- get_alpha(p=p,g=g$U,den='U')
+    b6+a6-aU + log(1-exp(b4)*c64)
+}
+
 
 predict_counts <- function(samp,fit){
     p <- pars(samp,oxide=fit$oxide)

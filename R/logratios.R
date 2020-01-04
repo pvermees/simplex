@@ -36,19 +36,14 @@ LL_gamma <- function(pars,B,p){
     -sum(LL_U + LL_O + LL_6)
 }
 
-getPbLogRatio <- function(p,g,num,c64=c64){
-    ax <- get_alpha(p=p,g=g,den=num)
-    a6 <- get_alpha(p=p,g=g,den=6)
-    optimise(LL_Pb,interval=-log(c64)-c(20,0),p=p,g=g,
-             anum=ax,aden=a6,num=num,maximum=TRUE)$maximum
-}
-LL_Pb <- function(b,p,g,anum,aden,num){
+getPbLogRatio <- function(p,g,num){
     tx <- p[[paste0('t',num)]]
     dx <- p[[paste0('d',num)]]
     nx <- p[[paste0('n',num)]]
-    log_nx6i <- b + anum - aden - log(p$d6/dx) - g*(p$t6-tx)
-    LL <- nx*log_nx6i - (nx+p$n6)*log(1+exp(log_nx6i))
-    sum(LL)
+    bi <- log(sum(p$nx)+0.5) - log(sum(p$n6)+0.5) + log(p$d6/dx) + g*(p$t6-tx)
+    ax <- get_alpha(p=p,g=g,den=num)
+    a6 <- get_alpha(p=p,g=g,den=6)
+    bi + ax - a6
 }
 
 get_alpha <- function(p,g,den){
