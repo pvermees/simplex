@@ -36,10 +36,10 @@ LL_gamma <- function(pars,B,p){
     -sum(LL_U + LL_O + LL_6)
 }
 
-getPbLogRatio <- function(p,g,num,c64=1){
-    ax <- get_alpha(p=p,g=g,den=num,c64=c64)
-    a6 <- get_alpha(p=p,g=g,den=6,c64=c64)
-    optimise(LL_Pb,interval=c(-20,20),p=p,g=g,
+getPbLogRatio <- function(p,g,num,c64=c64){
+    ax <- get_alpha(p=p,g=g,den=num)
+    a6 <- get_alpha(p=p,g=g,den=6)
+    optimise(LL_Pb,interval=-log(c64)-c(20,0),p=p,g=g,
              anum=ax,aden=a6,num=num,maximum=TRUE)$maximum
 }
 LL_Pb <- function(b,p,g,anum,aden,num){
@@ -51,11 +51,11 @@ LL_Pb <- function(b,p,g,anum,aden,num){
     sum(LL)
 }
 
-get_alpha <- function(p,g,den,c64=1){
+get_alpha <- function(p,g,den){
     tx <- p[[paste0('t',den)]]
-    maxb <- - max(g*tx) - 1e-5 - log(c64)
-    b <- optimise(LL_bb,p=p,g=g,den=den,lower=-10,upper=maxb,
-                  maximum=TRUE)$maximum
+    maxb <- -(max(g*tx)+1e-5)
+    b <- optimise(LL_bb,p=p,g=g,den=den,lower=-10,
+                  upper=maxb,maximum=TRUE)$maximum
     log(1-exp(b+g*tx))
 }
 LL_bb <- function(b,p,g,den){

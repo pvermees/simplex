@@ -49,11 +49,11 @@ AB_misfit <- function(AB,stand,oxide='UO2'){
 LL_AB <- function(AB,spot,oxide='UO2',c64=18.7,LL=TRUE){
     p <- pars(spot,oxide=oxide)
     g <- get_gamma(B=AB['B'],p=p)
-    a6 <- get_alpha(p=p,g=g$Pb,den='6',c64=c64)
-    aU <- get_alpha(p=p,g=g$U,den='U',c64=c64)
-    aO <- get_alpha(p=p,g=g$O,den='O',c64=c64)
     b4 <- getPbLogRatio(p=p,g=g$Pb,num='4',c64=c64)
     bO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
+    a6 <- get_alpha(p=p,g=g$Pb,den='6')
+    aU <- get_alpha(p=p,g=g$U,den='U')
+    aO <- get_alpha(p=p,g=g$O,den='O')
     log_n6Ui <- AB[1] + AB[2]*(bO+aO-aU) + aU - a6 -
         log(1-exp(b4)*c64) - log(p$dU/p$d6) - g$Pb*(p$tU-p$t6)
     if (LL){
