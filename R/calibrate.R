@@ -78,8 +78,8 @@ calibrate_spot <- function(spot,fit){
     out['Ax'] <- Ax
     out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
     out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
-    out['Pb76'] <- getPbLogRatio(p=p,g=g$Pb,num=7)
-    out['Pb46'] <- getPbLogRatio(p=p,g=g$Pb,num=4)
+    out['Pb76'] <- getPbLogRatio(p=p,g=g$Pb,num='7')
+    out['Pb46'] <- getPbLogRatio(p=p,g=g$Pb,num='4')
     HPb <- matrix(0,2,2)
     sumn <- sum(p$n4+p$n6+p$n7)
     HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/sumn

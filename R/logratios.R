@@ -37,23 +37,29 @@ LL_gamma <- function(pars,B,p){
 }
 
 getPbLogRatio <- function(p,g,num){
+    ax <- get_alpha(p=p,g=g,den=num)
+    a6 <- get_alpha(p=p,g=g,den=6)
+    optimise(LL_beta,p=p,g=g,ax=ax,a6=a6,num=num,
+             interval=c(-20,20),maximum=TRUE)$maximum
+}
+LL_beta <- function(b,p,g,ax,a6,num){
     tx <- p[[paste0('t',num)]]
     dx <- p[[paste0('d',num)]]
     nx <- p[[paste0('n',num)]]
-    bi <- log(sum(p$nx)+0.5) - log(sum(p$n6)+0.5) + log(p$d6/dx) + g*(p$t6-tx)
-    ax <- get_alpha(p=p,g=g,den=num)
-    a6 <- get_alpha(p=p,g=g,den=6)
-    bi + ax - a6
+    bi <- b + g*(tx-p$t6) + ax - a6
+    log_nx6i <- bi + log(dx/p$d6)
+    LL <- nx*log_nx6i -(nx+p$n6)*log(1+exp(log_nx6i))
+    sum(LL)
 }
 
 get_alpha <- function(p,g,den){
     tx <- p[[paste0('t',den)]]
     maxb <- -(max(g*tx)+1e-5)
-    b <- optimise(LL_bb,p=p,g=g,den=den,lower=-10,
+    b <- optimise(LL_balpha,p=p,g=g,den=den,lower=-10,
                   upper=maxb,maximum=TRUE)$maximum
     log(1-exp(b+g*tx))
 }
-LL_bb <- function(b,p,g,den){
+LL_balpha <- function(b,p,g,den){
     tx <- p[[paste0('t',den)]]
     dx <- p[[paste0('d',den)]]
     nx <- p[[paste0('n',den)]]
