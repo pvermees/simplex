@@ -36,11 +36,13 @@ LL_gamma <- function(pars,B,p){
     -sum(LL_U + LL_O + LL_6)
 }
 
-getPbLogRatio <- function(p,g,num){
+getPbLogRatio <- function(p,g,num,c64=NULL){
     ax <- get_alpha(p=p,g=g,den=num)
     a6 <- get_alpha(p=p,g=g,den=6)
+    if (is.null(c64)) interval <- c(-20,20)
+    else interval <- -log(c64)-c(20,1e-10)
     optimise(LL_beta,p=p,g=g,ax=ax,a6=a6,num=num,
-             interval=c(-20,20),maximum=TRUE)$maximum
+             interval=interval,maximum=TRUE)$maximum
 }
 LL_beta <- function(b,p,g,ax,a6,num){
     tx <- p[[paste0('t',num)]]
@@ -54,9 +56,9 @@ LL_beta <- function(b,p,g,ax,a6,num){
 
 get_alpha <- function(p,g,den){
     tx <- p[[paste0('t',den)]]
-    maxb <- -(max(g*tx)+1e-5)
-    b <- optimise(LL_balpha,p=p,g=g,den=den,lower=-10,
-                  upper=maxb,maximum=TRUE)$maximum
+    interval <- c(-10,0)-(max(g*tx)+1e-5)
+    b <- optimise(LL_balpha,p=p,g=g,den=den,
+                  interval=interval,maximum=TRUE)$maximum
     log(1-exp(b+g*tx))
 }
 LL_balpha <- function(b,p,g,den){

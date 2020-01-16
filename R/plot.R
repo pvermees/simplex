@@ -35,7 +35,7 @@ plot_timeresolved <- function(samp,fit=NULL,...){
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
     if (!is.null(fit)){
-        simplex <- c('Pb204','Pb206','U238',cal$oxide)
+        simplex <- c('Pb204','Pb206','Pb207','U238',cal$oxide)
         X <- samp$time[,simplex]
         Y <- predict_counts(samp,fit=cal)[,simplex]
     }
@@ -102,7 +102,7 @@ calplot <- function(stand,fit,labels=0){
 getPbULogRatio <- function(B,spot,oxide='UO2',c64=18.7){
     p <- pars(spot,oxide=oxide)
     g <- get_gamma(B=B,p=p)
-    b4 <- getPbLogRatio(p=p,g=g$Pb,num='4')
+    b4 <- getPbLogRatio(p=p,g=g$Pb,num='4',c64=c64)
     b6 <- log(p$c6/p$cU) + g$Pb*(p$tU-p$t6)
     a6 <- get_alpha(p=p,g=g$Pb,den='6')
     aU <- get_alpha(p=p,g=g$U,den='U')
@@ -119,7 +119,7 @@ predict_counts <- function(samp,fit,c64=0){
     bO <- log(p$cO/p$cU)
     b4 <- getPbLogRatio(p=p,g=g$Pb,num='4')
     b7 <- getPbLogRatio(p=p,g=g$Pb,num='7')
-    log_c6Ui <- fit$AB['A'] + fit$AB['B']*(bO+aO-aU) +
+    log_c6U <- fit$AB['A'] + fit$AB['B']*(bO+aO-aU) +
         g$Pb*(p$t6-p$tO) - log(1-exp(b4)*c64)
     n6 <- p$nU*exp(log_c6U)*p$d6/p$dU
     n7 <- n6*exp(b7+g$Pb*(p$t7-p$t6))*p$d7/p$d6
