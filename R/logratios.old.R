@@ -15,6 +15,27 @@ get_Pb76 <- function(dat){
     c(Pb76,sPb76)
 }
 
+get_gamma <- function(B,p){
+    # slope(U), intercept(U), slope(O), intercept(O), intercept(Pb) :
+    init <- c(log(p$cU[1]),0,log(p$cO[1]),0,log(p$c6[1]))
+    fit <- optim(par=init,fn=LL_gamma,B=B,p=p)$par
+    out <- list()
+    out$U <- fit[2]
+    out$O <- fit[4]
+    out$Pb <- B*fit[4] + (1-B)*fit[2]
+    out
+}
+LL_gamma <- function(pars,B,p){
+    log_nU <- pars[1] + pars[2]*p$tU
+    LL_U <- p$nU*(log_nU + log(p$dU)) - exp(log_nU)*p$dU
+    log_nO <- pars[3] + pars[4]*p$tO
+    LL_O <- p$nO*(log_nO + log(p$dO)) - exp(log_nO)*p$dO
+    pars[6] <- B*pars[4] + (1-B)*pars[2]
+    log_n6 <- pars[5] + pars[6]*p$t6
+    LL_6 <- p$n6*(log_n6 + log(p$d6)) - exp(log_n6)*p$d6
+    -sum(LL_U + LL_O + LL_6)
+}
+
 getPbLogRatio <- function(p,g,num,c64=NULL){
     ax <- get_alpha(p=p,g=g,den=num)
     a6 <- get_alpha(p=p,g=g,den=6)

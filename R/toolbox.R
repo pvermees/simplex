@@ -22,53 +22,63 @@ pars <- function(spot,oxide='UO2'){
     out$cO <- out$nO/out$dO
     if (spot$instrument=='Cameca'){
         bkg <- spot$background[spot$detector]
-        names(bkg) <- names(spot$detector)
-        nt <- length(out$t4)
-        out$bc4 <- rep(bkg['Pb204'],nt)
-        out$bc6 <- rep(bkg['Pb206'],nt)
-        out$bc7 <- rep(bkg['Pb207'],nt)
-        out$bcU <- rep(bkg['U238'],nt)
-        out$bcO <- rep(bkg[oxide],nt)
-        out$bd4 <- rep(1,nt)
-        out$bd6 <- rep(1,nt)
-        out$bd7 <- rep(1,nt)
-        out$bdU <- rep(1,nt)
-        out$bdO <- rep(1,nt)
-        out$bt4 <- out$t4
-        out$bt6 <- out$t6
-        out$bt7 <- out$t7
-        out$btU <- out$tU
-        out$btO <- out$tO
-        out$bn4 <- out$bc4*out$bt4
-        out$bn6 <- out$bc6*out$bt6
-        out$bn7 <- out$bc7*out$bt7
-        out$bnU <- out$bcU*out$btU
-        out$bnO <- out$bcO*out$btO
+        if (all(bkg==0)){
+            out$zeroblank <- TRUE
+        } else {
+            out$zeroblank <- FALSE
+            names(bkg) <- names(spot$detector)
+            nt <- length(out$t4)
+            out$bc4 <- rep(bkg['Pb204'],nt)
+            out$bc6 <- rep(bkg['Pb206'],nt)
+            out$bc7 <- rep(bkg['Pb207'],nt)
+            out$bcU <- rep(bkg['U238'],nt)
+            out$bcO <- rep(bkg[oxide],nt)
+            out$bd4 <- rep(1,nt)
+            out$bd6 <- rep(1,nt)
+            out$bd7 <- rep(1,nt)
+            out$bdU <- rep(1,nt)
+            out$bdO <- rep(1,nt)
+            out$bt4 <- out$t4
+            out$bt6 <- out$t6
+            out$bt7 <- out$t7
+            out$btU <- out$tU
+            out$btO <- out$tO
+            out$bn4 <- out$bc4*out$bt4
+            out$bn6 <- out$bc6*out$bt6
+            out$bn7 <- out$bc7*out$bt7
+            out$bnU <- out$bcU*out$btU
+            out$bnO <- out$bcO*out$btO
+        }
     } else {
-        bt <- hours(spot$time[,'bkg'])
         bn <- spot$counts[,'bkg']
-        bd <- spot$edt[,'bkg']
-        bc <- bn/bd
-        out$bc4 <- bc
-        out$bc6 <- bc
-        out$bc7 <- bc
-        out$bcU <- bc
-        out$bcO <- bc
-        out$bd4 <- bd
-        out$bd6 <- bd
-        out$bd7 <- bd
-        out$bdU <- bd
-        out$bdO <- bd
-        out$bt4 <- bt
-        out$bt6 <- bt
-        out$bt7 <- bt
-        out$btU <- bt
-        out$btO <- bt
-        out$bn4 <- bn
-        out$bn6 <- bn
-        out$bn7 <- bn
-        out$bnU <- bn
-        out$bnO <- bn
+        if (all(bn==0)){
+            out$zeroblank <- TRUE
+        } else {
+            out$zeroblank <- FALSE
+            bt <- hours(spot$time[,'bkg'])
+            bd <- spot$edt[,'bkg']
+            bc <- bn/bd
+            out$bc4 <- bc
+            out$bc6 <- bc
+            out$bc7 <- bc
+            out$bcU <- bc
+            out$bcO <- bc
+            out$bd4 <- bd
+            out$bd6 <- bd
+            out$bd7 <- bd
+            out$bdU <- bd
+            out$bdO <- bd
+            out$bt4 <- bt
+            out$bt6 <- bt
+            out$bt7 <- bt
+            out$btU <- bt
+            out$btO <- bt
+            out$bn4 <- bn
+            out$bn6 <- bn
+            out$bn7 <- bn
+            out$bnU <- bn
+            out$bnO <- bn
+        }
     }
     out
 }

@@ -37,6 +37,57 @@ calibration <- function(stand,oxide='UO2',omit=NULL){
 }
 
 AB_misfit <- function(AB,stand,oxide='UO2'){
+    snames <- names(stand$x)
+    LL <- rep(0,length(snames))
+    names(LL) <- snames
+    for (sname in snames){
+        p <- pars(spot=stand$x[[sname]],oxide=oxide)
+        if (p$zeroblank)
+            LL[sname] <- LL_AB_without_blank(AB,p=p,c64=stand$c64)
+        else
+            LL[sname] <- LL_AB_with_blank(AB,p=p,c64=stand$c64)
+    }
+    -sum(LL)
+}
+
+LL_AB_without_blank <- function(AB,p,c64=18.7){
+    b0gO <- fit_drift(nn=p$nO,dd=p$dO,tt=p$tO)
+    ibOU <- log(p$cO) - log(p$cU) + b0gO[2]*(p$tU-p$tO)
+    RHS <- AB[1] + AB[2]*ibOU
+    init <- rep(0,3)
+    init[1] <- log(p$n4[1]+0.5) - log(p$d4[1]+0.5) # b04
+    init[2] <- log(p$n6[1]+0.5) - log(p$d6[1]+0.5) # b06
+    init[3] <- 0 # gPb
+    optim(init,LL_LHS_without_blank,LHS=LHS,p=p,c64=c64)$objective
+}
+
+fit_drift <- function(nn,dd,tt){
+    negLL <- function(pars,nn,dd,tt){
+        lambda <- dd * exp(pars[1] + pars[2]*tt)
+        -sum(nn * log(lambda) - lambda)
+    }
+    init <- c(log((nn[1]+0.5)/(dd[1]+0.5)),0)
+    optim(par=init,fn=negLL,nn=nn,dd=dd,tt=tt)$par
+}
+LL_LHS_without_blank <- function(pars,RHS,p,c64=18.7){
+    gPb <- pars[3]
+    negLL_b <- function(b,g,nn,dd,tt){
+        lambda <- dd * exp(b + g*tt)
+        -sum(nn * log(lambda) - lambda)
+    }
+    b04 <- optimise(negLL_b,)$objective
+    b06 <- optimise(negLL_b,)$objective
+    ib46 <- (b06-b04) + gPb*(p$t4-p$t6)
+    ib6U <- RHS - log(1+exp(ib46)*c64)
+    mb6U <- #TODO
+}
+
+
+LL_AB_with_blank <- function(AB,p,c64=18.7){
+    LL_AB_without_blank(AB=AB,p=p,c64=c64) # TODO
+}
+
+AB_misfit.old <- function(AB,stand,oxide='UO2'){
     out <- 0
     snames <- names(stand$x)
     for (sname in snames){
@@ -45,7 +96,6 @@ AB_misfit <- function(AB,stand,oxide='UO2'){
     }
     out
 }
-
 LL_AB <- function(AB,spot,oxide='UO2',c64=18.7){
     p <- pars(spot,oxide=oxide)
     g <- get_gamma(B=AB['B'],p=p)
