@@ -1,0 +1,5 @@
+test_bgUO <- function(p,bgUO){
+    y <- log(p$cO) - log(p$cU)
+    yp <- (bgUO['bU']-bgUO['bO']) - (bgUO['gU']*p$tO-bgUO['bO']*p$tU)
+    plot(rep(p$tU,2),p(y,yp))
+}

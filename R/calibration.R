@@ -24,6 +24,7 @@
 calibration <- function(stand,oxide='UO2',omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
+    bg <- get_bg(dat,oxide='UO2')
     fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=dat,oxide=oxide)
     hess <- stats::optimHess(fit$par,AB_misfit,stand=dat,oxide=oxide)
     out <- list()
@@ -42,70 +43,11 @@ AB_misfit <- function(AB,stand,oxide='UO2'){
     names(LL) <- snames
     for (sname in snames){
         p <- pars(spot=stand$x[[sname]],oxide=oxide)
-        if (p$zeroblank)
-            LL[sname] <- LL_AB_without_blank(AB,p=p,c64=stand$c64)
-        else
-            LL[sname] <- LL_AB_with_blank(AB,p=p,c64=stand$c64)
+        LL[sname] <- LL_AB(AB,p=p,c64=stand$c64)
     }
     -sum(LL)
 }
 
-LL_AB_without_blank <- function(AB,p,c64=18.7){
-    b0gO <- fit_drift(nn=p$nO,dd=p$dO,tt=p$tO)
-    ibOU <- log(p$cO) - log(p$cU) + b0gO[2]*(p$tU-p$tO)
-    RHS <- AB[1] + AB[2]*ibOU
-    init <- rep(0,3)
-    init[1] <- log(p$n4[1]+0.5) - log(p$d4[1]+0.5) # b04
-    init[2] <- log(p$n6[1]+0.5) - log(p$d6[1]+0.5) # b06
-    init[3] <- 0 # gPb
-    optim(init,LL_LHS_without_blank,LHS=LHS,p=p,c64=c64)$objective
-}
-
-fit_drift <- function(nn,dd,tt){
-    negLL <- function(pars,nn,dd,tt){
-        lambda <- dd * exp(pars[1] + pars[2]*tt)
-        -sum(nn * log(lambda) - lambda)
-    }
-    init <- c(log((nn[1]+0.5)/(dd[1]+0.5)),0)
-    optim(par=init,fn=negLL,nn=nn,dd=dd,tt=tt)$par
-}
-LL_LHS_without_blank <- function(pars,RHS,p,c64=18.7){
-    gPb <- pars[3]
-    negLL_b <- function(b,g,nn,dd,tt){
-        lambda <- dd * exp(b + g*tt)
-        -sum(nn * log(lambda) - lambda)
-    }
-    b04 <- optimise(negLL_b,)$objective
-    b06 <- optimise(negLL_b,)$objective
-    ib46 <- (b06-b04) + gPb*(p$t4-p$t6)
-    ib6U <- RHS - log(1+exp(ib46)*c64)
-    mb6U <- #TODO
-}
-
-
-LL_AB_with_blank <- function(AB,p,c64=18.7){
-    LL_AB_without_blank(AB=AB,p=p,c64=c64) # TODO
-}
-
-AB_misfit.old <- function(AB,stand,oxide='UO2'){
-    out <- 0
-    snames <- names(stand$x)
-    for (sname in snames){
-        spot <- stand$x[[sname]]
-        out <- out - LL_AB(AB,spot,oxide=oxide,c64=stand$c64)
-    }
-    out
-}
-LL_AB <- function(AB,spot,oxide='UO2',c64=18.7){
-    p <- pars(spot,oxide=oxide)
-    g <- get_gamma(B=AB['B'],p=p)
-    b4 <- getPbLogRatio(p=p,g=g$Pb,num='4',c64=c64)
-    bO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-    a6 <- get_alpha(p=p,g=g$Pb,den='6')
-    aU <- get_alpha(p=p,g=g$U,den='U')
-    aO <- get_alpha(p=p,g=g$O,den='O')
-    log_n6Ui <- AB[1] + AB[2]*(bO+aO-aU) + aU - a6 -
-        log(1-exp(b4)*c64) - log(p$dU/p$d6) - g$Pb*(p$tU-p$t6)
-    LL <- p$n6*log_n6Ui - (p$n6+p$nU)*log(1+exp(log_n6Ui))
-    sum(LL)
+LL_AB <- function(AB,p,c64=18.7){
+    bgO <- get_beta_gamma(p)
 }

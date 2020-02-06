@@ -1,60 +1,25 @@
-# get geometric mean Pb207/Pb206 ratio to estimate
-# the standard age if not supplied by the user
-get_Pb76 <- function(dat){
-    snames <- names(dat)
+get_bg <- function(dat,oxide='UO2'){
+    snames <- names(dat$x)
     ns <- length(snames)
-    lPb76 <- rep(0,ns)
-    for (i in 1:ns){
-        p <- pars(dat[[i]])
-        lPb76[i] <- log(sum(p$c7)/sum(p$c6))
+    out <- matrix(0,ns,6)
+    colnames(out) <- c('bO','bU','b6','gO','gU','gPb')
+    rownames(out) <- snames
+    for (sname in snames){
+        spot <- dat$x[[sname]]
+        p <- pars(spot,oxide=oxide)
+        out[sname,c('bO','gO')] <- bg_helper(tt=p$tO,dd=p$dO,nn=p$nO)
+        out[sname,c('bU','gU')] <- bg_helper(tt=p$tU,dd=p$dU,nn=p$nU)
+        out[sname,c('b6','gPb')] <- bg_helper(tt=p$t6,dd=p$d6,nn=p$n6)
     }
-    lPb76 <- mean(lPb76)
-    slPb76 <- stats::sd(lPb76)/sqrt(ns)
-    Pb76 <- exp(lPb76)
-    sPb76 <- Pb76*slPb76
-    c(Pb76,sPb76)
-}
-
-getPbLogRatio <- function(p,g,num,c64=NULL){
-    ax <- get_alpha(p=p,g=g,den=num)
-    a6 <- get_alpha(p=p,g=g,den=6)
-    if (is.null(c64)) interval <- c(-20,20)
-    else interval <- -log(c64)-c(20,1e-10)
-    optimise(LL_beta,p=p,g=g,ax=ax,a6=a6,num=num,
-             interval=interval,maximum=TRUE)$maximum
-}
-LL_beta <- function(b,p,g,ax,a6,num){
-    tx <- p[[paste0('t',num)]]
-    dx <- p[[paste0('d',num)]]
-    nx <- p[[paste0('n',num)]]
-    bi <- b + g*(tx-p$t6) + ax - a6
-    log_nx6i <- bi + log(dx/p$d6)
-    LL <- nx*log_nx6i -(nx+p$n6)*log(1+exp(log_nx6i))
-    sum(LL)
-}
-
-get_alpha <- function(p,g,den){
-    tx <- p[[paste0('t',den)]]
-    interval <- c(-10,0)-(max(g*tx)+1e-5)
-    b <- optimise(LL_balpha,p=p,g=g,den=den,
-                  interval=interval,maximum=TRUE)$maximum
-    log(1-exp(b+g*tx))
-}
-LL_balpha <- function(b,p,g,den){
-    tx <- p[[paste0('t',den)]]
-    dx <- p[[paste0('d',den)]]
-    nx <- p[[paste0('n',den)]]
-    bdx <- p[[paste0('bd',den)]]
-    bnx <- p[[paste0('bn',den)]]
-    log_nbx <- b + g*tx + log(bdx/dx)
-    LL <- bnx*log_nbx - (bnx+nx)*log(1+exp(log_nbx))
-    sum(LL)
-}
-
-logratios2ratios <- function(lr){
-    out <- list()
-    out$x <- exp(lr$x)
-    J <- diag(out$x)
-    out$cov <- J %*% lr$cov %*% t(J)
     out
+}
+
+bg_helper <- function(tt,nn,dd){
+    misfit <- function(bg,tt,nn,dd){
+        LL <- nn*(bg[1]+bg[2]*tt+log(dd)) - exp(bg[1]+bg[2]*tt)*dd
+        -sum(LL)
+    }
+    init <- c(0,0)
+    fit <- optim(init,misfit,tt=tt,nn=nn,dd=dd)
+    fit$par
 }
