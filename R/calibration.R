@@ -39,19 +39,34 @@ calibration <- function(stand,oxide='UO2',omit=NULL){
 
 AB_misfit <- function(AB,stand=stand,oxide='UO2',bg=bg){
     snames <- names(stand$x)
-    LL <- rep(0,length(snames))
-    names(LL) <- snames
+    out <- 0
     for (sname in snames){
         p <- pars(spot=stand$x[[sname]],oxide=oxide)
-        X <- log(p$O$c/p$U238$c) + bg$O[sname,'g']*(p$U238$t-p$O$t) +
-            blank_correction(bg=bg$O[sname,c('b','g')],
-                             bb=bg$blank[sname,'b'],
-                             tt=p$O$t) -
-            blank_correction(bg=bg$U[sname,c('b','g')],
-                             bb=bg$blank[sname,'b'],
-                             tt=p$U$t)
+        tU <- p$U238$t
+        # bm = measured beta (logratio of cps):
+        bmOU <- log(p$O$c) - log(p$U238$c)
+        bm46 <- bg$Pb204[sname,'b'] - bg$Pb206[sname,'b']
+        # bc = blank correction:
+        bcO <- blank_correct(bg=bg,sname=sname,tt=tU,mass='O')
+        bcU <- blank_correct(bg=bg,sname=sname,tt=tU,mass='U238')
+        bc4 <- blank_correct(bg=bg,sname=sname,tt=tU,mass='Pb204')
+        bc6 <- blank_correct(bg=bg,sname=sname,tt=tU,mass='Pb206')
+        # dc = drift correction
+        dcOU <- bg$O[sname,'g']*(p$O$t-p$U238$t)
+        dc46 <- bg$Pb206[sname,'g']*(p$Pb204$t-p$Pb206$t)
+        dc6U <- bg$Pb206[sname,'g']*(p$Pb206$t-p$U238$t)
+        # infer bm6U:
+        X <- bmOU - dcOU + bcO - bcU
         RHS <- AB[1] + AB[2] * X
+        b4corr <- log(1 - exp(bm46 + dc46 + bc4 - bc6)*stand$c64)
+        bm6U <- RHS + dc6U - bc6 + bcU - b4corr
+        # calculate the log-likelihood
+        b6Ucounts <- bm6U+log(p$Pb206$d)-log(p$U238$d)
+        n6 <- p$Pb206$n
+        nU <- p$U238$n
+        LL <- n6*b6Ucounts - (n6+nU)*log(1+exp(b6Ucounts))
+        out <- out - sum(LL)
     }
-    -sum(LL)
+    out
 }
 
