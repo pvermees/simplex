@@ -1,25 +1,36 @@
 get_bg <- function(dat,oxide='UO2'){
     snames <- names(dat$x)
     ns <- length(snames)
-    out <- matrix(0,ns,6)
-    colnames(out) <- c('bO','bU','b6','gO','gU','gPb')
-    rownames(out) <- snames
+    init <- matrix(0,ns,2)
+    colnames(init) <- c('b','g')
+    rownames(init) <- snames
+    out <- list(O=init,U238=init,Pb206=init,blank=init)
     for (sname in snames){
         spot <- dat$x[[sname]]
         p <- pars(spot,oxide=oxide)
-        out[sname,c('bO','gO')] <- bg_helper(tt=p$tO,dd=p$dO,nn=p$nO)
-        out[sname,c('bU','gU')] <- bg_helper(tt=p$tU,dd=p$dU,nn=p$nU)
-        out[sname,c('b6','gPb')] <- bg_helper(tt=p$t6,dd=p$d6,nn=p$n6)
+        out$O[sname,] <- bg_helper(p=p$O)
+        out$U238[sname,] <- bg_helper(p=p$U238)
+        out$Pb206[sname,] <- bg_helper(p=p$Pb206)
+        if (sum(p$blank$n)>0)
+            out$blank[sname,'b'] <- log(sum(p$blank$n)) - log(sum(p$blank$d))
+        else
+            out$blank[sname,'b'] <- -Inf
     }
     out
 }
 
-bg_helper <- function(tt,nn,dd){
-    misfit <- function(bg,tt,nn,dd){
-        LL <- nn*(bg[1]+bg[2]*tt+log(dd)) - exp(bg[1]+bg[2]*tt)*dd
+bg_helper <- function(p){
+    misfit <- function(par,p){
+        b <- par[1]
+        g <- par[2]
+        LL <- p$n*(b+g*p$t+log(p$d)) - exp(b+g*p$t)*p$d
         -sum(LL)
     }
     init <- c(0,0)
-    fit <- optim(init,misfit,tt=tt,nn=nn,dd=dd)
+    fit <- optim(par=init,fn=misfit,p=p)
     fit$par
+}
+
+blank_correction <- function(bg,bb,tt){
+    log(1-exp(bb-bg['b']-bg['g']*tt))
 }

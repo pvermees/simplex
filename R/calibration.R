@@ -25,8 +25,8 @@ calibration <- function(stand,oxide='UO2',omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
     bg <- get_bg(dat,oxide='UO2')
-    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=dat,oxide=oxide)
-    hess <- stats::optimHess(fit$par,AB_misfit,stand=dat,oxide=oxide)
+    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=stand,oxide=oxide,bg=bg)
+    hess <- stats::optimHess(fit$par,AB_misfit,stand=stand,oxide=oxide,bg=bg)
     out <- list()
     out$omit <- omit
     out$AB <- fit$par
@@ -37,17 +37,21 @@ calibration <- function(stand,oxide='UO2',omit=NULL){
     out
 }
 
-AB_misfit <- function(AB,stand,oxide='UO2'){
+AB_misfit <- function(AB,stand=stand,oxide='UO2',bg=bg){
     snames <- names(stand$x)
     LL <- rep(0,length(snames))
     names(LL) <- snames
     for (sname in snames){
         p <- pars(spot=stand$x[[sname]],oxide=oxide)
-        LL[sname] <- LL_AB(AB,p=p,c64=stand$c64)
+        X <- log(p$O$c/p$U238$c) + bg$O[sname,'g']*(p$U238$t-p$O$t) +
+            blank_correction(bg=bg$O[sname,c('b','g')],
+                             bb=bg$blank[sname,'b'],
+                             tt=p$O$t) -
+            blank_correction(bg=bg$U[sname,c('b','g')],
+                             bb=bg$blank[sname,'b'],
+                             tt=p$U$t)
+        RHS <- AB[1] + AB[2] * X
     }
     -sum(LL)
 }
 
-LL_AB <- function(AB,p,c64=18.7){
-    bgO <- get_beta_gamma(p)
-}
