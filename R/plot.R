@@ -68,7 +68,10 @@ plot_timeresolved <- function(samp,fit=NULL,...){
 #' cal <- calibration(stand=Ples,oxide='UO2')
 #' calplot(stand=Ples,fit=cal)
 #' @export
-calplot <- function(stand,fit,labels=0){
+calplot <- function(stand,fit,labels=0,omit=NULL){
+    dat <- stand
+    if (!is.null(omit)) dat$x <- stand$x[-omit]
+    bg <- get_bg(dat,oxide=fit$oxide)
     snames <- names(stand$x)
     nc <- length(snames)
     nr <- nrow(stand$x[[1]]$counts)
@@ -79,10 +82,11 @@ calplot <- function(stand,fit,labels=0){
     for (sname in snames){
         spot <- stand$x[[sname]]
         p <- pars(spot,oxide=fit$oxide)
-        g <- get_gamma(B=fit$AB['B'],p=p)
-        X[,sname] <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-        Y[,sname] <- getPbULogRatio(B=fit$AB['B'],spot=spot,
-                                    oxide=fit$oxide,c64=stand$c64)
+        cc <- get_cal_components(p=p,bg=bg,sname=sname)
+        b4corr <- log(1 - exp(cc$bdc46)*stand$c64)
+        X[,sname] <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
+        Y[,sname] <- log(p$Pb206$c) - log(p$U238$c) - cc$dc6U +
+            cc$bc6 - cc$bcU + b4corr
     }
     tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
                   signif(fit$AB['B'],3),'X')
@@ -99,19 +103,10 @@ calplot <- function(stand,fit,labels=0){
     xlim <- graphics::par('usr')[1:2]
     graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)
 }
-getPbULogRatio <- function(B,spot,oxide='UO2',c64=18.7){
-    p <- pars(spot,oxide=oxide)
-    g <- get_gamma(B=B,p=p)
-    b4 <- getPbLogRatio(p=p,g=g$Pb,num='4',c64=c64)
-    b6 <- log(p$c6/p$cU) + g$Pb*(p$tU-p$t6)
-    a6 <- get_alpha(p=p,g=g$Pb,den='6')
-    aU <- get_alpha(p=p,g=g$U,den='U')
-    b6+a6-aU + log(1-exp(b4)*c64)
-}
 
 predict_counts <- function(samp,fit,c64=0){
     p <- pars(samp,oxide=fit$oxide)
-    g <- get_gamma(B=fit$AB['B'],p=p)
+    bg <- get_bg(samp,oxide=fit$oxide)
     aO <- get_alpha(p=p,g=g$O,den='O')
     aU <- get_alpha(p=p,g=g$U,den='U')
     a6 <- get_alpha(p=p,g=g$Pb,den='6')

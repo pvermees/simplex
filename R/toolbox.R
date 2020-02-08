@@ -7,11 +7,12 @@ pars <- function(spot,oxide='UO2'){
         out$c <-  out$n/out$d
         out
     }
-    CamecaBlank <- function(spot,tt){
+    CamecaBlank <- function(spot,mass){
         out <- list()
         bkg <- spot$background[spot$detector]
-        nt <- length(tt)
-        out$t <- tt
+        names(bkg) <- names(spot$detector)
+        out$t <- spot$time[,mass]
+        nt <- length(out$t)
         out$c <- rep(bkg[mass],nt)
         out$d <- rep(1,nt)
         out$n <- out$c*out$d
@@ -33,7 +34,7 @@ pars <- function(spot,oxide='UO2'){
         O = init(spot,oxide)
     )
     if (spot$instrument=='Cameca'){
-        out$blank <- CamecaBlank(spot,out$U238$t)
+        out$blank <- CamecaBlank(spot,mass='U238')
     } else {
         out$blank <- SHRIMPblank(spot)
     }

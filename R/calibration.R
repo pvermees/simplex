@@ -42,26 +42,14 @@ AB_misfit <- function(AB,stand=stand,oxide='UO2',bg=bg){
     out <- 0
     for (sname in snames){
         p <- pars(spot=stand$x[[sname]],oxide=oxide)
-        tU <- p$U238$t
-        # bm = measured beta (logratio of cps):
-        bmOU <- log(p$O$c) - log(p$U238$c)
-        bm46 <- bg$Pb204[sname,'b'] - bg$Pb206[sname,'b']
-        # bc = blank correction:
-        bcO <- blank_correct(bg=bg,sname=sname,tt=tU,mass='O')
-        bcU <- blank_correct(bg=bg,sname=sname,tt=tU,mass='U238')
-        bc4 <- blank_correct(bg=bg,sname=sname,tt=tU,mass='Pb204')
-        bc6 <- blank_correct(bg=bg,sname=sname,tt=tU,mass='Pb206')
-        # dc = drift correction
-        dcOU <- bg$O[sname,'g']*(p$O$t-p$U238$t)
-        dc46 <- bg$Pb206[sname,'g']*(p$Pb204$t-p$Pb206$t)
-        dc6U <- bg$Pb206[sname,'g']*(p$Pb206$t-p$U238$t)
-        # infer bm6U:
-        X <- bmOU - dcOU + bcO - bcU
+        cc <- get_cal_components(p=p,bg=bg,sname=sname)
+        # predict Pb206/U238 cps logratio (bp6U):
+        X <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
         RHS <- AB[1] + AB[2] * X
-        b4corr <- log(1 - exp(bm46 + dc46 + bc4 - bc6)*stand$c64)
-        bm6U <- RHS + dc6U - bc6 + bcU - b4corr
+        b4corr <- log(1 - exp(cc$bdc46)*stand$c64)
+        bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU - b4corr
         # calculate the log-likelihood
-        b6Ucounts <- bm6U+log(p$Pb206$d)-log(p$U238$d)
+        b6Ucounts <- bp6U+log(p$Pb206$d)-log(p$U238$d)
         n6 <- p$Pb206$n
         nU <- p$U238$n
         LL <- n6*b6Ucounts - (n6+nU)*log(1+exp(b6Ucounts))
@@ -70,3 +58,22 @@ AB_misfit <- function(AB,stand=stand,oxide='UO2',bg=bg){
     out
 }
 
+get_cal_components <- function(p,bg,sname){
+    out <- list()
+    tU <- p$U238$t
+    # bm = measured beta (logratio of cps):
+    out$bmOU <- log(p$O$c) - log(p$U238$c)
+    out$bm46 <- bg$Pb204[sname,'b'] - bg$Pb206[sname,'b']
+    # bc = blank correction:
+    out$bcO <- blank_correct(bg=bg,sname=sname,tt=tU,mass='O')
+    out$bcU <- blank_correct(bg=bg,sname=sname,tt=tU,mass='U238')
+    out$bc4 <- blank_correct(bg=bg,sname=sname,tt=tU,mass='Pb204')
+    out$bc6 <- blank_correct(bg=bg,sname=sname,tt=tU,mass='Pb206')
+    # dc = drift correction
+    out$dcOU <- bg$O[sname,'g']*(p$O$t-p$U238$t)
+    out$dc46 <- bg$Pb206[sname,'g']*(p$Pb204$t-p$Pb206$t)
+    out$dc6U <- bg$Pb206[sname,'g']*(p$Pb206$t-p$U238$t)
+    # blank and drift corrected Pb204/Pb206 logratio
+    out$bdc46 <- out$bm46 + out$dc46 + out$bc4 - out$bc6
+    out
+}
