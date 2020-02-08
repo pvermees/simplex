@@ -85,8 +85,8 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
         cc <- get_cal_components(p=p,bg=bg,sname=sname)
         b4corr <- log(1 - exp(cc$bdc46)*stand$c64)
         X[,sname] <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
-        Y[,sname] <- log(p$Pb206$c) - log(p$U238$c) - cc$dc6U +
-            cc$bc6 - cc$bcU + b4corr
+        Y[,sname] <- log(p$Pb206$c) - log(p$U238$c) -
+            cc$dc6U + cc$bc6 - cc$bcU + b4corr
     }
     tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
                   signif(fit$AB['B'],3),'X')
@@ -106,16 +106,9 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
 
 predict_counts <- function(samp,fit,c64=0){
     p <- pars(samp,oxide=fit$oxide)
+    ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@52@"]]));##:ess-bp-end:##
     bg <- get_bg(samp,oxide=fit$oxide)
-    aO <- get_alpha(p=p,g=g$O,den='O')
-    aU <- get_alpha(p=p,g=g$U,den='U')
-    a6 <- get_alpha(p=p,g=g$Pb,den='6')
-    a7 <- get_alpha(p=p,g=g$Pb,den='7')
-    bO <- log(p$cO/p$cU)
-    b4 <- getPbLogRatio(p=p,g=g$Pb,num='4')
-    b7 <- getPbLogRatio(p=p,g=g$Pb,num='7')
-    log_c6U <- fit$AB['A'] + fit$AB['B']*(bO+aO-aU) +
-        g$Pb*(p$t6-p$tO) - log(1-exp(b4)*c64)
     n6 <- p$nU*exp(log_c6U)*p$d6/p$dU
     n7 <- n6*exp(b7+g$Pb*(p$t7-p$t6))*p$d7/p$d6
     n4 <- n6*exp(b4+g$Pb*(p$t4-p$t6))*p$d4/p$d6

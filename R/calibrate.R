@@ -71,7 +71,7 @@ calibrate_spot <- function(spot,fit){
                     'varAx','varPb76','varPb46','covPb46Pb76',
                     'dAxdBs')
     p <- pars(spot,oxide=fit$oxide)
-    g <- get_gamma(B=fit$AB['B'],p=p)
+    bg <- get_bg_spot(spot,oxide=fit$oxide)
     init <- log(sum(p$c6))-log(sum(p$cU))
     Ax <- stats::optimise(misfit_A,interval=c(-10,10),
                           spot=spot,fit=fit)$minimum

@@ -8,17 +8,30 @@ get_bg <- function(dat,oxide='UO2'){
                 Pb204=init,Pb206=init,Pb207=init)
     for (sname in snames){
         spot <- dat$x[[sname]]
-        p <- pars(spot,oxide=oxide)
-        out$O[sname,] <- bg_helper(p=p$O)
-        out$U238[sname,] <- bg_helper(p=p$U238)
-        out$Pb206[sname,] <- bg_helper(p=p$Pb206)
-        out$Pb207[sname,] <- b_helper(p=p$Pb207,g=out$Pb206[sname,'g'])
-        out$Pb204[sname,] <- b_helper(p=p$Pb204,g=out$Pb206[sname,'g'])
-        if (sum(p$blank$n)>0)
-            out$blank[sname,'b'] <- log(sum(p$blank$n)) - log(sum(p$blank$d))
-        else
-            out$blank[sname,'b'] <- -Inf
+        bg <- get_bg_spot(spot=spot,oxide=oxide)
+        out$O[sname,] <- bg['O',]
+        out$U238[sname,] <- bg['U238',]
+        out$Pb206[sname,] <- bg['Pb206',]
+        out$Pb207[sname,] <- bg['Pb207',]
+        out$Pb204[sname,] <- bg['Pb204',]
+        out$blank[sname,] <- bg['blank',]
     }
+    out
+}
+get_bg_spot <- function(spot,oxide='UO2'){
+    p <- pars(spot,oxide=oxide)
+    out <- matrix(0,6,2)
+    colnames(out) <- c('b','g')
+    rownames(out) <- c('O','U238','Pb204','Pb206','Pb207','blank')
+    out['O',] <- bg_helper(p=p$O)
+    out['U238',] <- bg_helper(p=p$U238)
+    out['Pb206',] <- bg_helper(p=p$Pb206)
+    out['Pb207',] <- b_helper(p=p$Pb207,g=out['Pb206','g'])
+    out['Pb204',] <- b_helper(p=p$Pb204,g=out['Pb206','g'])
+    if (sum(p$blank$n)>0)
+        out['blank','b'] <- log(sum(p$blank$n)) - log(sum(p$blank$d))
+    else
+        out['blank','b'] <- -Inf
     out
 }
 
