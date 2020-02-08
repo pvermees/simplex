@@ -71,15 +71,15 @@ calibrate_spot <- function(spot,fit){
                     'varAx','varPb76','varPb46','covPb46Pb76',
                     'dAxdBs')
     p <- pars(spot,oxide=fit$oxide)
-    bg <- get_bg_spot(spot,oxide=fit$oxide)
+    bg <- get_bg(spot,oxide=fit$oxide)
     init <- log(sum(p$c6))-log(sum(p$cU))
     Ax <- stats::optimise(misfit_A,interval=c(-10,10),
                           spot=spot,fit=fit)$minimum
     out['Ax'] <- Ax
     out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
-    out['dAxdBs'] <- dAxdBs(p,g,Ax=Ax,Bs=fit$AB['B'])
-    out['Pb76'] <- getPbLogRatio(p=p,g=g$Pb,num='7')
-    out['Pb46'] <- getPbLogRatio(p=p,g=g$Pb,num='4')
+    out['dAxdBs'] <- dAxdBs(p,g=bg['Pb206','g'],Ax=Ax,Bs=fit$AB['B'])
+    out['Pb76'] <- getPbLogRatio(p=p,g=bg['Pb206','g'],num='7')
+    out['Pb46'] <- getPbLogRatio(p=p,g=bg['Pb206','g'],num='4')
     HPb <- matrix(0,2,2)
     sumn <- sum(p$n4+p$n6+p$n7)
     HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/sumn
@@ -96,21 +96,17 @@ calibrate_spot <- function(spot,fit){
 misfit_A <- function(A,spot,fit){
     B <- fit$AB['B']
     AB <- c(A,B)
-    p <- pars(spot,oxide=fit$oxide)
-    g <- get_gamma(B=B,p=p)
-    aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-    a6 <- A + B*aO
-    # 1. get count ratios
-    n6U <- exp(a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
-    # 2. get proportions
-    nt <- length(p$tU)
-    den <- n6U + 1
-    theta <- cbind(n6U,1)/matrix(rep(den,2),ncol=2)
-    colnames(theta) <- c('Pb206','U238')
-    counts <- spot$counts[,c('Pb206','U238')]
-    # 3. compute multinomial log-likelihood
-    LL <- sum(counts*log(theta))
-    -LL
+    p <- pars(spot=spot,oxide=fit$oxide)
+    bg <- get_bg(spot=spot,oxide=fit$oxide)
+    cc <- get_cal_components(p=p,bg=bg)
+    X <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
+    RHS <- AB[1] + AB[2] * X
+    bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU
+    b6Ucounts <- bp6U+log(p$Pb206$d)-log(p$U238$d)
+    n6 <- p$Pb206$n
+    nU <- p$U238$n
+    LL <- n6*b6Ucounts - (n6+nU)*log(1+exp(b6Ucounts))
+    -sum(LL)
 }
 
 # implicit differentiation of dLLdAx to get dAxdBs

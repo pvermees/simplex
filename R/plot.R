@@ -71,7 +71,7 @@ plot_timeresolved <- function(samp,fit=NULL,...){
 calplot <- function(stand,fit,labels=0,omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
-    bg <- get_bg(dat,oxide=fit$oxide)
+    BG <- get_BG(dat,oxide=fit$oxide)
     snames <- names(stand$x)
     nc <- length(snames)
     nr <- nrow(stand$x[[1]]$counts)
@@ -82,7 +82,7 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
     for (sname in snames){
         spot <- stand$x[[sname]]
         p <- pars(spot,oxide=fit$oxide)
-        cc <- get_cal_components(p=p,bg=bg,sname=sname)
+        cc <- get_cal_components(p=p,bg=BG[[sname]])
         b4corr <- log(1 - exp(cc$bdc46)*stand$c64)
         X[,sname] <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
         Y[,sname] <- log(p$Pb206$c) - log(p$U238$c) -
