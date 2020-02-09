@@ -26,10 +26,10 @@ calibrate <- function(dat,fit,syserr=FALSE){
     X <- matrix(0,ns,8)
     rownames(X) <- snames
     for (sname in snames){
-        calspot <- calibrate_spot(dat[[sname]],fit)
-        X[sname,] <- calspot
+        p <- pars(spot=dat[[sname]],oxide=fit$oxide)
+        bg <- get_bg(spot=spot,oxide=fit$oxide)
+        X[sname,] <- calibrate_spot(B=fit$AB['b'],p=p,bg=bg)
     }
-    colnames(X) <- names(calspot)
     # 2. Collate calibrated data into one big covariance structure
     out <- list()
     class(out) <- 'UPb'
@@ -65,74 +65,47 @@ calibrate <- function(dat,fit,syserr=FALSE){
     out
 }
 
-calibrate_spot <- function(spot,fit){
+calibrate_spot <- function(B,p,bg){
     out <- rep(0,8)
     names(out) <- c('Ax','Pb76','Pb46',
                     'varAx','varPb76','varPb46','covPb46Pb76',
                     'dAxdBs')
-    p <- pars(spot,oxide=fit$oxide)
-    bg <- get_bg(spot,oxide=fit$oxide)
-    init <- log(sum(p$c6))-log(sum(p$cU))
+    cc <- get_cal_components(p=p,bg=bg)
+    init <- log(sum(p$c6)) - log(sum(p$cU))
     Ax <- stats::optimise(misfit_A,interval=c(-10,10),
-                          spot=spot,fit=fit)$minimum
+                          B=B,p=p,cc=cc)$minimum
     out['Ax'] <- Ax
-    out['varAx'] <- solve(stats::optimHess(Ax,misfit_A,spot=spot,fit=fit))
-    out['dAxdBs'] <- dAxdBs(p,g=bg['Pb206','g'],Ax=Ax,Bs=fit$AB['B'])
-    out['Pb76'] <- getPbLogRatio(p=p,g=bg['Pb206','g'],num='7')
-    out['Pb46'] <- getPbLogRatio(p=p,g=bg['Pb206','g'],num='4')
+    out['varAx'] <- solve(stats::optimHess(par=Ax,fn=misfit_A,
+                                           B=B,p=p,cc=cc))
+    out['dAxdBs'] <- dAxdBs(p,g=bg['Pb206','g'],Ax=Ax,Bs=B)
+    out['Pb76'] <- mean(cc$bdc76) # TODO
+    out['Pb46'] <- mean(cc$bdc46) # TODO
     HPb <- matrix(0,2,2)
-    sumn <- sum(p$n4+p$n6+p$n7)
-    HPb[1,1] <- -sum(p$n4)*sum(p$n6+p$n7)/sumn
-    HPb[1,2] <- sum(p$n4)*sum(p$n7)/sumn
-    HPb[2,2] <- -sum(p$n7)*sum(p$n6+p$n4)/sumn
-    HPb[2,1] <- HPb[1,2]/sumn
-    covmat <- solve(-HPb)
+    #HPb[1,1] <- TODO
+    #HPb[1,2] <- TODO
+    #HPb[2,2] <- TODO
+    #HPb[2,1] <- TODO
+    covmat <- HPb#solve(-HPb) TODO
     out['varPb46'] <- covmat[1,1]
     out['varPb76'] <- covmat[2,2]
     out['covPb46Pb76'] <- covmat[1,2]
     out
 }
 
-misfit_A <- function(A,spot,fit){
-    B <- fit$AB['B']
-    AB <- c(A,B)
-    p <- pars(spot=spot,oxide=fit$oxide)
-    bg <- get_bg(spot=spot,oxide=fit$oxide)
-    cc <- get_cal_components(p=p,bg=bg)
+misfit_A <- function(A,B,p,cc){
     X <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
-    RHS <- AB[1] + AB[2] * X
-    bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU
-    b6Ucounts <- bp6U+log(p$Pb206$d)-log(p$U238$d)
+    RHS <- A + B * X
+    bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU # predicted cps logratio
+    b6Uc <- bp6U+log(p$Pb206$d)-log(p$U238$d) # predicted count logratio
     n6 <- p$Pb206$n
     nU <- p$U238$n
-    LL <- n6*b6Ucounts - (n6+nU)*log(1+exp(b6Ucounts))
+    LL <- n6*b6Uc - (n6+nU)*log(1+exp(b6Uc))
     -sum(LL)
 }
 
 # implicit differentiation of dLLdAx to get dAxdBs
 dAxdBs <- function(p,g,Ax,Bs){
-    aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-    n6U <- exp( Ax + Bs*aO + g$Pb*(p$t6-p$tU) )*p$d6/p$dU
-    dn6UdAx <- n6U
-    dn6UdBs <- n6U*aO
-    nt <- length(p$tU)
-    theta6 <- n6U/(n6U+1)
-    thetaU <- 1/(n6U+1)
-    dtheta6dAx <- n6U/(n6U+1)^2
-    dthetaUdAx <- -n6U/(n6U+1)^2
-    dtheta6dBs <- aO*dtheta6dAx
-    dthetaUdBs <- aO*dthetaUdAx
-    d2theta6dAx2 <- (n6U-1)/(n6U+1)
-    d2thetaUdAx2 <- (1-n6U)/(n6U+1)
-    d2theta6dAxdBs <- aO*(n6U-1)/(n6U+1)
-    d2thetaUdAxdBs <- aO*(1-n6U)/(n6U+1)
-    d2LLdAxdBs <- sum( (p$n6/theta6)*d2theta6dAxdBs +
-                       (p$nU/thetaU)*d2thetaUdAxdBs -
-                       (p$n6/theta6^2)*dtheta6dAx*dtheta6dBs -
-                       (p$nU/thetaU^2)*dthetaUdAx*dthetaUdBs )
-    d2LLdAx2 <- sum( (p$n6/theta6)*d2theta6dAx2 +
-                     (p$nU/thetaU)*d2thetaUdAx2 -
-                     (p$n6/theta6^2)*dtheta6dAx^2 -
-                     (p$nU/thetaU^2)*dthetaUdAx^2 )
-    -d2LLdAxdBs/d2LLdAx2
+    #LL <- n6*b6Uc - (n6+nU)*log(1+exp(b6Uc))
+    #-d2LLdAxdBs/d2LLdAx2
+    0
 }

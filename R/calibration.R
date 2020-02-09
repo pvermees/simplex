@@ -64,6 +64,7 @@ get_cal_components <- function(p,bg){
     tU <- p$U238$t
     # bm = measured beta (logratio of cps):
     out$bmOU <- log(p$O$c) - log(p$U238$c)
+    out$bm76 <- log(p$Pb207$c) - log(p$Pb206$c)
     out$bm46 <- bg['Pb204','b'] - bg['Pb206','b']
     # bc = blank correction:
     out$bcO <- blank_correct(bg=bg,tt=tU,mass='O')
@@ -74,7 +75,9 @@ get_cal_components <- function(p,bg){
     out$dcOU <- bg['O','g']*(p$O$t-p$U238$t)
     out$dc46 <- bg['Pb206','g']*(p$Pb204$t-p$Pb206$t)
     out$dc6U <- bg['Pb206','g']*(p$Pb206$t-p$U238$t)
+    out$dc76 <- bg['Pb206','g']*(p$Pb207$t-p$Pb206$t)
     # blank and drift corrected Pb204/Pb206 logratio
     out$bdc46 <- out$bm46 + out$dc46 + out$bc4 - out$bc6
+    out$bdc76 <- out$bm76 - out$dc76 + out$bc7 - out$bc6
     out
 }

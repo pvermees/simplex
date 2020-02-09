@@ -1,7 +1,7 @@
 #' @title plot the raw mass spectrometer data
 #' @description Shows the raw data for a single spot in a SIMS
 #'     dataset.
-#' @param samp one item of a \code{simplex} list object
+#' @param spot one item of a \code{simplex} list object
 #' @param fit the output of \code{calibration}
 #' @param ... optional parameters to the generic \code{plot} function
 #' @return a multi-panel plot
@@ -12,23 +12,25 @@
 #' cal <- calibration(stand,oxide='UO2')
 #' plot_timeresolved(samp=samp[[1]],fit=cal)
 #' @export
-plot_timeresolved <- function(samp,fit=NULL,...){
-    if ('unknown' %in% class(samp) & !is.null(fit)){
-        calspot <- calibrate_spot(samp,fit=fit)
-        cal <- fit
-        cal$AB['A'] <- calspot['Ax']
+plot_timeresolved <- function(spot,fit=NULL,...){
+    p <- pars(spot=spot,oxide=fit$oxide)
+    bg <- get_bg(spot=spot,oxide=fit$oxide)
+    if ('unknown' %in% class(spot) & !is.null(fit)){
+        cal <- list()
+        calspot <- calibrate_spot(B=fit$AB['B'],p=p,bg=bg)
+        cal$AB <- c(calspot['Ax'],fit$AB['B'])
         E <- matrix(0,3,3)
         E[1,1] <- calspot['varAx']
         E[2:3,2:3] <- fit$cov
         J <- matrix(0,2,3)
-        J[1,1] <- 1             # dAxdAx
+        J[1,1] <- 1                 # dAxdAx
         J[1,3] <- calspot['dAxdBs'] # dAxdBs
-        J[2,3] <- 1             # dBsdBs
+        J[2,3] <- 1                 # dBsdBs
         cal$cov <- J %*% E %*% t(J)
     } else {
         cal <- fit
     }
-    ions <- names(samp$dwelltime)
+    ions <- names(spot$dwelltime)
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
@@ -36,11 +38,11 @@ plot_timeresolved <- function(samp,fit=NULL,...){
     simplex <- NULL
     if (!is.null(fit)){
         simplex <- c('Pb204','Pb206','Pb207','U238',cal$oxide)
-        X <- samp$time[,simplex]
-        Y <- predict_counts(samp,fit=cal)[,simplex]
+        X <- spot$time[,simplex]
+        Y <- predict_counts(p=p,bg=bg,oxide=fit$oxide)[,simplex]
     }
     for (ion in ions){
-        graphics::plot(samp$time[,ion],samp$counts[,ion],
+        graphics::plot(spot$time[,ion],spot$counts[,ion],
                        type='p',xlab='',ylab='',...)
         if (!is.null(fit) & ion%in%simplex){
             graphics::lines(X[,ion],Y[,ion])
@@ -71,18 +73,18 @@ plot_timeresolved <- function(samp,fit=NULL,...){
 calplot <- function(stand,fit,labels=0,omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
-    BG <- get_BG(dat,oxide=fit$oxide)
-    snames <- names(stand$x)
+    snames <- names(dat$x)
     nc <- length(snames)
-    nr <- nrow(stand$x[[1]]$counts)
+    nr <- nrow(dat$x[[1]]$counts)
     X <- matrix(0,nr,nc)
     Y <- matrix(0,nr,nc)
     colnames(X) <- snames
     colnames(Y) <- snames
     for (sname in snames){
-        spot <- stand$x[[sname]]
+        spot <- dat$x[[sname]]
         p <- pars(spot,oxide=fit$oxide)
-        cc <- get_cal_components(p=p,bg=BG[[sname]])
+        bg <- get_bg(dat[[sname]],oxide=fit$oxide)
+        cc <- get_cal_components(p=p,bg=bg)
         b4corr <- log(1 - exp(cc$bdc46)*stand$c64)
         X[,sname] <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
         Y[,sname] <- log(p$Pb206$c) - log(p$U238$c) -
@@ -104,15 +106,12 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
     graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)
 }
 
-predict_counts <- function(samp,fit,c64=0){
-    p <- pars(samp,oxide=fit$oxide)
-    ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@52@"]]));##:ess-bp-end:##
-    bg <- get_bg(samp,oxide=fit$oxide)
-    n6 <- p$nU*exp(log_c6U)*p$d6/p$dU
-    n7 <- n6*exp(b7+g$Pb*(p$t7-p$t6))*p$d7/p$d6
-    n4 <- n6*exp(b4+g$Pb*(p$t4-p$t6))*p$d4/p$d6
-    out <- cbind(n4,n6,n7,p$nU,p$nO)
-    colnames(out) <- c('Pb204','Pb206','Pb207','U238',fit$oxide)
+predict_counts <- function(p,bg,oxide){
+    cc <- get_cal_components(p=p,bg=bg)
+    n6 <- 0 # TODO
+    n7 <- 0 # TODO
+    n4 <- 0 # TODO
+    out <- cbind(n4,n6,n7,p$U238$n,p$O$n)
+    colnames(out) <- c('Pb204','Pb206','Pb207','U238',oxide)
     out
 }
