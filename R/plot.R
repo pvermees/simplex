@@ -14,10 +14,10 @@
 #' @export
 plot_timeresolved <- function(spot,fit=NULL,...){
     p <- pars(spot=spot,oxide=fit$oxide)
-    bg <- get_bg(spot=spot,oxide=fit$oxide)
+    b0g <- get_b0g(spot=spot,oxide=fit$oxide)
     if ('unknown' %in% class(spot) & !is.null(fit)){
         cal <- list()
-        calspot <- calibrate_spot(B=fit$AB['B'],p=p,bg=bg)
+        calspot <- calibrate_spot(B=fit$AB['B'],p=p,b0g=b0g)
         cal$AB <- c(calspot['Ax'],fit$AB['B'])
         E <- matrix(0,3,3)
         E[1,1] <- calspot['varAx']

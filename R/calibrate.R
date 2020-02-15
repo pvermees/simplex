@@ -65,18 +65,15 @@ calibrate <- function(dat,fit,syserr=FALSE){
     out
 }
 
-calibrate_spot <- function(B,p,bg){
+calibrate_spot <- function(B,p,b0g){
     out <- rep(0,8)
     names(out) <- c('Ax','Pb76','Pb46',
                     'varAx','varPb76','varPb46','covPb46Pb76',
                     'dAxdB')
-    cc <- get_cal_components(p=p,bg=bg)
-    init <- log(sum(p$c6)) - log(sum(p$cU))
-    Ax <- stats::optimise(misfit_A,interval=c(-10,10),
-                          B=B,p=p,cc=cc)$minimum
+    init <- log(sum(p$Pb206$c)) - log(sum(p$U238$c))
+    Ax <- stats::optimise(misfit_A,interval=c(-10,10),B=B,p=p,b0g=b0g)$minimum
     out['Ax'] <- Ax
-    out['varAx'] <- solve(stats::optimHess(par=Ax,fn=misfit_A,
-                                           B=B,p=p,cc=cc))
+    out['varAx'] <- solve(stats::optimHess(par=Ax,fn=misfit_A,B=B,p=p,b0g=b0g))
     out['dAxdB'] <- dAxdB(A=Ax,B=B,p=p,cc=cc)
     out['Pb76'] <- getPbLogRatio(p=p,cc=cc,num='Pb207',den='Pb206')
     out['Pb46'] <- getPbLogRatio(p=p,cc=cc,num='Pb204',den='Pb206')
@@ -92,12 +89,6 @@ calibrate_spot <- function(B,p,bg){
     out
 }
 
-misfit_A <- function(A,B,p,cc){
-    mc <- get_misfit_A_components(A=A,B=B,p=p,cc=cc)
-    LL <- mc$n6*mc$b6Uc - (mc$n6+mc$nU)*log(1+exp(mc$b6Uc))
-    -sum(LL)
-}
-
 # implicit differentiation of dLLdAx to get dAxdBs
 dAxdB <- function(A,B,p,cc){
     mc <- get_misfit_A_components(A=A,B=B,p=p,cc=cc)
@@ -111,15 +102,4 @@ dAxdB <- function(A,B,p,cc){
     d2LdA2 <- -db6UcdA*dnumdA*(mc$n6+mc$nU)/(den^2)
     d2LdAdB <- -db6UcdA*dnumdB*(mc$n6+mc$nU)/(den^2)
     -sum(d2LdAdB)/sum(d2LdA2)
-}
-
-get_misfit_A_components <- function(A,B,p,cc){
-    out <- list()
-    out$X <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
-    RHS <- A + B * out$X
-    bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU           # predicted cps logratio
-    out$b6Uc <- bp6U + log(p$Pb206$d) - log(p$U238$d) # predicted count logratio
-    out$n6 <- p$Pb206$n
-    out$nU <- p$U238$n
-    out
 }
