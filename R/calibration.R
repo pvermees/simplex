@@ -24,8 +24,9 @@
 calibration <- function(stand,oxide='UO2',omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
-    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=dat,oxide=oxide)
-    hess <- stats::optimHess(fit$par,AB_misfit,stand=dat,oxide=oxide)
+    BG <- get_BG(dat,oxide='UO2')
+    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=stand,oxide=oxide,BG=BG)
+    hess <- stats::optimHess(fit$par,AB_misfit,stand=stand,oxide=oxide,BG=BG)
     out <- list()
     out$omit <- omit
     out$AB <- fit$par
@@ -36,28 +37,58 @@ calibration <- function(stand,oxide='UO2',omit=NULL){
     out
 }
 
-AB_misfit <- function(AB,stand,oxide='UO2'){
-    out <- 0
+AB_misfit <- function(AB,stand,oxide='UO2',BG){
     snames <- names(stand$x)
+    out <- 0
     for (sname in snames){
-        spot <- stand$x[[sname]]
-        out <- out - LL_AB(AB,spot,oxide=oxide,c64=stand$c64)
+        p <- pars(spot=stand$x[[sname]],oxide=oxide)
+        cc <- get_cal_components(p=p,bg=BG[[sname]])
+        # predict Pb206/U238 cps logratio (bp6U):
+        X <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
+        RHS <- AB[1] + AB[2] * X
+        b4corr <- log(1 - exp(cc$bdc46)*stand$c64)
+        bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU - b4corr
+        # calculate the log-likelihood
+        b6Ucounts <- bp6U+log(p$Pb206$d)-log(p$U238$d)
+        n6 <- p$Pb206$n
+        nU <- p$U238$n
+        LL <- n6*b6Ucounts - (n6+nU)*log(1+exp(b6Ucounts))
+        out <- out - sum(LL)
     }
     out
 }
 
-LL_AB <- function(AB,spot,oxide='UO2',c64=18.7){
-    p <- pars(spot,oxide=oxide)
-    g <- get_gamma(B=AB['B'],p=p)
-    a <- get_alpha(AB=AB,p=p,g=g,c64=c64)
-    # 1. get count ratios
-    n6U <- exp(a$a6 + g$Pb*(p$t6-p$tU))*p$d6/p$dU
-    # 2. get proportions
-    nt <- length(p$tU)
-    den <- n6U + 1
-    theta <- cbind(n6U,1)/matrix(rep(den,2),ncol=2)
-    colnames(theta) <- c('Pb206','U238')
-    counts <- spot$counts[,c('Pb206','U238')]
-    # 3. compute multinomial log-likelihood
-    sum(counts*log(theta))
+# bg = matrix of beta-gamma values for a single spot
+get_cal_components <- function(p,bg){
+    out <- list()
+    tU <- p$U238$t
+    # bm = measured beta (logratio of cps):
+    out$bmOU <- log(p$O$c) - log(p$U238$c)
+    out$bm76 <- log(p$Pb207$c) - log(p$Pb206$c)
+    out$bm46 <- bg['Pb204','b'] - bg['Pb206','b']
+    # bc = blank correction:
+    out$bcO <- blank_correct(bg=bg,tt=tU,mass='O')
+    out$bcU <- blank_correct(bg=bg,tt=tU,mass='U238')
+    out$bc4 <- blank_correct(bg=bg,tt=tU,mass='Pb204')
+    out$bc6 <- blank_correct(bg=bg,tt=tU,mass='Pb206')
+    out$bc7 <- blank_correct(bg=bg,tt=tU,mass='Pb207')
+    # dc = drift correction
+    out$dcOU <- bg['O','g']*(p$O$t-p$U238$t)
+    out$dc46 <- bg['Pb206','g']*(p$Pb204$t-p$Pb206$t)
+    out$dc6U <- bg['Pb206','g']*(p$Pb206$t-p$U238$t)
+    out$dc76 <- bg['Pb206','g']*(p$Pb207$t-p$Pb206$t)
+    # blank and drift corrected Pb/Pb logratios
+    out$bdc46 <- out$bm46 + out$dc46 + out$bc4 - out$bc6
+    out$bdc76 <- out$bm76 - out$dc76 + out$bc7 - out$bc6
+    out
+}
+
+blank_correct <- function(bg,tt,mass){
+    b <- bg[mass,'b']
+    g <- bg[mass,'g']
+    bb <- bg['blank','b']
+    db <- bb-b-g*tt
+    if (all(db<0)) out <- log(1-exp(db))
+    else out <- rep(-Inf,length(tt))
+    out
 }

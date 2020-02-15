@@ -1,42 +1,56 @@
-# get geometric mean Pb207/Pb206 ratio to estimate
-# the standard age if not supplied by the user
-get_Pb76 <- function(dat){
-    snames <- names(dat)
-    ns <- length(snames)
-    lPb76 <- rep(0,ns)
-    for (i in 1:ns){
-        p <- pars(dat[[i]])
-        lPb76[i] <- log(sum(p$c7)/sum(p$c6))
+get_BG <- function(dat,oxide='UO2'){
+    snames <- names(dat$x)
+    out <- list()
+    for (sname in snames){
+        spot <- dat$x[[sname]]
+        out[[sname]] <- get_bg(spot=spot,oxide=oxide)
     }
-    lPb76 <- mean(lPb76)
-    slPb76 <- stats::sd(lPb76)/sqrt(ns)
-    Pb76 <- exp(lPb76)
-    sPb76 <- Pb76*slPb76
-    c(Pb76,sPb76)
+    out
 }
-
-get_gamma <- function(B,p){
-    out <- list()
-    out$U <- stats::glm(p$nU ~ p$tU,
-                        family=stats::poisson(link='log'))$coef[2]
-    out$O <- stats::glm(p$nO ~ p$tO,
-                        family=stats::poisson(link='log'))$coef[2]
-    out$Pb <- B*out$O + (1-B)*out$U
+get_bg <- function(spot,oxide='UO2'){
+    p <- pars(spot,oxide=oxide)
+    out <- matrix(0,6,2)
+    colnames(out) <- c('b','g')
+    rownames(out) <- c('O','U238','Pb204','Pb206','Pb207','blank')
+    out['O',] <- bg_helper(p=p$O)
+    out['U238',] <- bg_helper(p=p$U238)
+    out['Pb206',] <- bg_helper(p=p$Pb206)
+    out['Pb207',] <- b_helper(p=p$Pb207,g=out['Pb206','g'])
+    out['Pb204',] <- b_helper(p=p$Pb204,g=out['Pb206','g'])
+    if (sum(p$blank$n)>0)
+        out['blank','b'] <- log(sum(p$blank$n)) - log(sum(p$blank$d))
+    else
+        out['blank','b'] <- -Inf
     out
 }
 
-get_alpha <- function(AB,p,g,c64){
-    out <- list()
-    out$a4 <- log(1-(p$c4/p$c6)*c64*exp(g$Pb*(p$t6-p$t4)))
-    out$aO <- log(p$cO/p$cU) + g$O*(p$tU-p$tO)
-    out$a6 <- AB[1] + AB[2]*out$aO - out$a4
-    out
+bg_helper <- function(p){
+    misfit <- function(par,p){
+        b <- par[1]
+        g <- par[2]
+        LL <- p$n*(b+g*p$t+log(p$d)) - exp(b+g*p$t)*p$d
+        -sum(LL)
+    }
+    init <- c(0,0)
+    fit <- optim(par=init,fn=misfit,p=p)
+    fit$par
 }
 
-logratios2ratios <- function(lr){
-    out <- list()
-    out$x <- exp(lr$x)
-    J <- diag(out$x)
-    out$cov <- J %*% lr$cov %*% t(J)
-    out
+b_helper <- function(p,g){
+    if (sum(p$n)>0)
+        b <- log(sum(p$n)) - log(sum(exp(g*p$t)*p$d))
+    else
+        b <- -Inf
+    c(b,g)
+}
+
+getPbLogRatio <- function(p,cc,num='Pb207',den='Pb206'){
+    misfit <- function(b,p,cc,num,den){
+        bij <- b + log(p[[num]]$d) - log(p[[den]]$d)
+        LL <- p[[num]]$n*bij - (p[[num]]$n+p[[den]]$n)*log(1+exp(bij))
+        -sum(LL)
+    }
+    init <- mean(cc$bdc76)
+    optimise(misfit,interval=init+c(-5,5),
+             p=p,cc=cc,num=num,den=den)$minimum
 }

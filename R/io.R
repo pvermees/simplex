@@ -61,6 +61,7 @@ read_Cameca_asc <- function(fname){
     f <- file(fname)
     open(f);
     out <- list()
+    out$instrument <- 'Cameca'
     while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
         if (grepl("ACQUISITION PARAMETERS",line)){
             junk <- readLines(f,n=6,warn=FALSE)
@@ -95,7 +96,7 @@ read_Cameca_asc <- function(fname){
         if (grepl("RAW DATA",line)) {
             cps <- read_asc_block(f,ions=ions)
             out$counts <- round(sweep(cps,MARGIN=2,FUN='*',out$dwelltime))
-            out$edt <- effective_dwelltime(out,instrument='Cameca')
+            out$edt <- effective_dwelltime(out)
         }
         if (grepl("PRIMARY INTENSITY",line)) {
             out$sbm <- read_asc_block(f,ions=ions)
@@ -119,6 +120,7 @@ read_SHRIMP_op <- function(fname){
             break
         } else if (nchar(line)>0){
             spot <- list()
+            spot$instrument <- 'SHRIMP'
             sname <- line
             spot$date <- readLines(f,n=1,warn=FALSE)
             spot$set <- read_numbers(f)
@@ -137,7 +139,7 @@ read_SHRIMP_op <- function(fname){
             for (i in 1:nions){
                 spot$counts[,i] <- read_numbers(f)
             }
-            spot$edt <- effective_dwelltime(spot,instrument='SHRIMP')
+            spot$edt <- effective_dwelltime(spot)
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
             colnames(spot$sbm) <- ions
@@ -164,6 +166,7 @@ read_SHRIMP_pd <- function(fname){
         } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
             header <- readLines(f,n=4,warn=FALSE)
             spot <- list()
+            spot$instrument <- 'SHRIMP'
             namedate <- strsplit(header[[1]],split=', ')[[1]]
             sname <- namedate[1]
             spot$date <- paste(namedate[2:3],collapse=' ')
@@ -191,7 +194,7 @@ read_SHRIMP_pd <- function(fname){
                     spot$sbm[i,j] <- sum(as.numeric(dat))
                 }
             }
-            spot$edt <- effective_dwelltime(spot,instrument='SHRIMP')
+            spot$edt <- effective_dwelltime(spot)
             out[[sname]] <- spot
         }
     }
@@ -233,10 +236,10 @@ read_asc_block <- function(f,ions){
     out
 }
 # calculate effective dwell time correcting for the dead time
-effective_dwelltime <- function(spot,instrument='Cameca'){
-    if (instrument=='Cameca'){
+effective_dwelltime <- function(spot){
+    if (spot$instrument=='Cameca'){
         deadtime <- spot$deadtime[spot$detector]
-    } else if (instrument=='SHRIMP'){
+    } else if (spot$instrument=='SHRIMP'){
         deadtime <- rep(spot$deadtime,ncol(spot$counts))
     } else {
         stop('Invalid instrument type.')
@@ -276,9 +279,8 @@ standards <- function(dat,prefix,invert=FALSE,
     out$c64 <- c64
     if (is.null(PbU)){
         if (is.null(tst)){
-            Pb76 <- get_Pb76(dat)
-            warning('No standard age was supplied')
-            tst <- IsoplotR:::get.Pb207Pb206.age.default(x=Pb76[1],sx=Pb76[2])
+            warning('No standard age or composition was supplied.')
+            tst <- Pb76_to_age(dat)
         }
         out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
     } else {
@@ -287,6 +289,22 @@ standards <- function(dat,prefix,invert=FALSE,
     out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
     class(out) <- 'standard'
     out
+}
+# get geometric mean Pb207/Pb206 ratio to estimate
+# the standard age if not supplied by the user
+Pb76_to_age <- function(dat){
+    snames <- names(dat)
+    ns <- length(snames)
+    lPb76 <- rep(0,ns)
+    for (i in 1:ns){
+        p <- pars(dat[[i]])
+        lPb76[i] <- log(sum(p$c7)/sum(p$c6))
+    }
+    lPb76 <- mean(lPb76)
+    slPb76 <- stats::sd(lPb76)/sqrt(ns)
+    Pb76 <- exp(lPb76)
+    sPb76 <- Pb76*slPb76
+    IsoplotR:::get.Pb207Pb206.age.default(x=Pb76,sx=sPb76)
 }
 
 #' @title define the samples in a dataset
