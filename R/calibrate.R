@@ -69,7 +69,7 @@ calibrate_spot <- function(B,p,bg){
     out <- rep(0,8)
     names(out) <- c('Ax','Pb76','Pb46',
                     'varAx','varPb76','varPb46','covPb46Pb76',
-                    'dAxdBs')
+                    'dAxdB')
     cc <- get_cal_components(p=p,bg=bg)
     init <- log(sum(p$c6)) - log(sum(p$cU))
     Ax <- stats::optimise(misfit_A,interval=c(-10,10),
@@ -77,9 +77,9 @@ calibrate_spot <- function(B,p,bg){
     out['Ax'] <- Ax
     out['varAx'] <- solve(stats::optimHess(par=Ax,fn=misfit_A,
                                            B=B,p=p,cc=cc))
-    out['dAxdBs'] <- dAxdBs(p,g=bg['Pb206','g'],Ax=Ax,Bs=B)
-    out['Pb76'] <- mean(cc$bdc76) # TODO
-    out['Pb46'] <- mean(cc$bdc46) # TODO
+    out['dAxdB'] <- dAxdB(A=Ax,B=B,p=p,cc=cc)
+    out['Pb76'] <- getPbLogRatio(p=p,cc=cc,num='Pb207',den='Pb206')
+    out['Pb46'] <- getPbLogRatio(p=p,cc=cc,num='Pb204',den='Pb206')
     HPb <- matrix(0,2,2)
     #HPb[1,1] <- TODO
     #HPb[1,2] <- TODO
@@ -93,19 +93,33 @@ calibrate_spot <- function(B,p,bg){
 }
 
 misfit_A <- function(A,B,p,cc){
-    X <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
-    RHS <- A + B * X
-    bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU # predicted cps logratio
-    b6Uc <- bp6U+log(p$Pb206$d)-log(p$U238$d) # predicted count logratio
-    n6 <- p$Pb206$n
-    nU <- p$U238$n
-    LL <- n6*b6Uc - (n6+nU)*log(1+exp(b6Uc))
+    mc <- get_misfit_A_components(A=A,B=B,p=p,cc=cc)
+    LL <- mc$n6*mc$b6Uc - (mc$n6+mc$nU)*log(1+exp(mc$b6Uc))
     -sum(LL)
 }
 
 # implicit differentiation of dLLdAx to get dAxdBs
-dAxdBs <- function(p,g,Ax,Bs){
-    #LL <- n6*b6Uc - (n6+nU)*log(1+exp(b6Uc))
-    #-d2LLdAxdBs/d2LLdAx2
-    0
+dAxdB <- function(A,B,p,cc){
+    mc <- get_misfit_A_components(A=A,B=B,p=p,cc=cc)
+    db6UcdA <- 1
+    db6UcdB <- mc$X
+    num <- exp(mc$b6Uc)
+    den <- 1 + exp(mc$b6Uc)
+    dnumdA <- exp(mc$b6Uc)*db6UcdA
+    dnumdB <- exp(mc$b6Uc)*db6UcdB
+    dLdA <- db6UcdA*(mc$n6-(mc$n6+mc$nU)*num/den)
+    d2LdA2 <- -db6UcdA*dnumdA*(mc$n6+mc$nU)/(den^2)
+    d2LdAdB <- -db6UcdA*dnumdB*(mc$n6+mc$nU)/(den^2)
+    -sum(d2LdAdB)/sum(d2LdA2)
+}
+
+get_misfit_A_components <- function(A,B,p,cc){
+    out <- list()
+    out$X <- cc$bmOU - cc$dcOU + cc$bcO - cc$bcU
+    RHS <- A + B * out$X
+    bp6U <- RHS + cc$dc6U - cc$bc6 + cc$bcU           # predicted cps logratio
+    out$b6Uc <- bp6U + log(p$Pb206$d) - log(p$U238$d) # predicted count logratio
+    out$n6 <- p$Pb206$n
+    out$nU <- p$U238$n
+    out
 }

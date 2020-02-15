@@ -44,16 +44,13 @@ b_helper <- function(p,g){
     c(b,g)
 }
 
-blank_correct <- function(bg,tt,mass){
-    b <- bg[mass,'b']
-    g <- bg[mass,'g']
-    bb <- bg['blank','b']
-    db <- bb-b-g*tt
-    if (all(db<0)) out <- log(1-exp(db))
-    else out <- -Inf
-    out
-}
-
-drift_correct <- function(num,den,g){
-    log(num$c/den$c) + g*(den$t-num$t)
+getPbLogRatio <- function(p,cc,num='Pb207',den='Pb206'){
+    misfit <- function(b,p,cc,num,den){
+        bij <- b + log(p[[num]]$d) - log(p[[den]]$d)
+        LL <- p[[num]]$n*bij - (p[[num]]$n+p[[den]]$n)*log(1+exp(bij))
+        -sum(LL)
+    }
+    init <- mean(cc$bdc76)
+    optimise(misfit,interval=init+c(-5,5),
+             p=p,cc=cc,num=num,den=den)$minimum
 }

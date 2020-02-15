@@ -71,13 +71,24 @@ get_cal_components <- function(p,bg){
     out$bcU <- blank_correct(bg=bg,tt=tU,mass='U238')
     out$bc4 <- blank_correct(bg=bg,tt=tU,mass='Pb204')
     out$bc6 <- blank_correct(bg=bg,tt=tU,mass='Pb206')
+    out$bc7 <- blank_correct(bg=bg,tt=tU,mass='Pb207')
     # dc = drift correction
     out$dcOU <- bg['O','g']*(p$O$t-p$U238$t)
     out$dc46 <- bg['Pb206','g']*(p$Pb204$t-p$Pb206$t)
     out$dc6U <- bg['Pb206','g']*(p$Pb206$t-p$U238$t)
     out$dc76 <- bg['Pb206','g']*(p$Pb207$t-p$Pb206$t)
-    # blank and drift corrected Pb204/Pb206 logratio
+    # blank and drift corrected Pb/Pb logratios
     out$bdc46 <- out$bm46 + out$dc46 + out$bc4 - out$bc6
     out$bdc76 <- out$bm76 - out$dc76 + out$bc7 - out$bc6
+    out
+}
+
+blank_correct <- function(bg,tt,mass){
+    b <- bg[mass,'b']
+    g <- bg[mass,'g']
+    bb <- bg['blank','b']
+    db <- bb-b-g*tt
+    if (all(db<0)) out <- log(1-exp(db))
+    else out <- rep(-Inf,length(tt))
     out
 }
