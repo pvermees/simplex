@@ -58,11 +58,18 @@ getPbLogRatio <- function(p,cc,num='Pb207',den='Pb206'){
 # atomic to cps correction: 
 # to be added to atomic and subtracted from cps logratios
 A2Corr <- function(p,b0g,num='Pb207',den='Pb206'){
-    dcnum <- b0g[num,'g']*p[[num]]$t # drift correction for num
-    dcden <- b0g[den,'g']*p[[den]]$t # drift correction for den
-    bcnum <- blank_correct(b0g=b0g,tt=p[[num]]$t,mass=num)
-    bcden <- blank_correct(b0g=b0g,tt=p[[den]]$t,mass=den)
-    dcnum - dcden - bcnum + bcden
+    tnum <- p[[num]]$t
+    tden <- p[[den]]$t
+    # 1. drift correction
+    if (identical(den,'U238')){
+        dc <- b0g[num,'g']*(tnum-tden)
+    } else {
+        dc <- b0g[num,'g']*tnum - b0g[den,'g']*tden
+    }
+    # 2. blank correction
+    bcnum <- blank_correct(b0g=b0g,tt=tnum,mass=num)
+    bcden <- blank_correct(b0g=b0g,tt=tden,mass=den)
+    dc - bcnum + bcden
 }
 
 blank_correct <- function(b0g,tt,mass){

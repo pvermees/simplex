@@ -25,7 +25,8 @@ calibration <- function(stand,oxide='UO2',omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
     B0G <- get_B0G(dat,oxide='UO2')
-    fit <- stats::optim(c(A=0,B=1),AB_misfit,stand=stand,oxide=oxide,B0G=B0G)
+    init <- initAB(stand=stand,oxide=oxide)
+    fit <- stats::optim(init,AB_misfit,stand=stand,oxide=oxide,B0G=B0G)
     hess <- stats::optimHess(fit$par,AB_misfit,stand=stand,oxide=oxide,B0G=B0G)
     out <- list()
     out$omit <- omit
@@ -34,6 +35,22 @@ calibration <- function(stand,oxide='UO2',omit=NULL){
     out$oxide <- oxide
     out$c64 <- stand$c64
     out$PbU <- stand$PbU
+    out
+}
+
+initAB <- function(stand,oxide='UO2'){
+    X <- NULL
+    Y <- NULL
+    snames <- names(stand$x)
+    for (sname in snames){
+        p <- pars(spot=stand$x[[sname]],oxide=oxide)
+        bOU <- log(p$O$c) - log(p$U238$c)
+        b6U <- log(p$Pb206$c) - log(p$U238$c)
+        X <- c(X,bOU)
+        Y <- c(Y,b6U)
+    }
+    out <- lm(Y ~ X)$coef
+    names(out) <- c('A','B')
     out
 }
 
