@@ -71,12 +71,13 @@ calibrate_spot <- function(B,p,b0g){
                     'varAx','varPb76','varPb46','covPb46Pb76',
                     'dAxdB')
     init <- log(sum(p$Pb206$c)) - log(sum(p$U238$c))
-    Ax <- stats::optimise(misfit_A,interval=c(-10,10),B=B,p=p,b0g=b0g)$minimum
-    out['Ax'] <- Ax
-    out['varAx'] <- solve(stats::optimHess(par=Ax,fn=misfit_A,B=B,p=p,b0g=b0g))
-    out['dAxdB'] <- dAxdB(A=Ax,B=B,p=p,cc=cc)
-    out['Pb76'] <- getPbLogRatio(p=p,cc=cc,num='Pb207',den='Pb206')
-    out['Pb46'] <- getPbLogRatio(p=p,cc=cc,num='Pb204',den='Pb206')
+    out['Ax'] <- stats::optimise(misfit_A,interval=c(-10,10),
+                                 B=B,p=p,b0g=b0g)$minimum
+    H <- stats::optimHess(par=out['Ax'],fn=misfit_A,B=B,p=p,b0g=b0g)
+    out['varAx'] <- solve(H)
+    out['dAxdB'] <- misfit_A(A=out['Ax'],B=B,p=p,b0g=b0g,c64=0,deriv=TRUE)
+    out['Pb76'] <- getPbLogRatio(p=p,b0g=b0g,num='Pb207',den='Pb206')
+    out['Pb46'] <- getPbLogRatio(p=p,b0g=b0g,num='Pb204',den='Pb206')
     HPb <- matrix(0,2,2)
     #HPb[1,1] <- TODO
     #HPb[1,2] <- TODO
@@ -87,19 +88,4 @@ calibrate_spot <- function(B,p,b0g){
     out['varPb76'] <- covmat[2,2]
     out['covPb46Pb76'] <- covmat[1,2]
     out
-}
-
-# implicit differentiation of dLLdAx to get dAxdBs
-dAxdB <- function(A,B,p,cc){
-    mc <- get_misfit_A_components(A=A,B=B,p=p,cc=cc)
-    db6UcdA <- 1
-    db6UcdB <- mc$X
-    num <- exp(mc$b6Uc)
-    den <- 1 + exp(mc$b6Uc)
-    dnumdA <- exp(mc$b6Uc)*db6UcdA
-    dnumdB <- exp(mc$b6Uc)*db6UcdB
-    dLdA <- db6UcdA*(mc$n6-(mc$n6+mc$nU)*num/den)
-    d2LdA2 <- -db6UcdA*dnumdA*(mc$n6+mc$nU)/(den^2)
-    d2LdAdB <- -db6UcdA*dnumdB*(mc$n6+mc$nU)/(den^2)
-    -sum(d2LdAdB)/sum(d2LdA2)
 }

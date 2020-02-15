@@ -116,7 +116,6 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
 }
 
 predict_counts <- function(p,bg,oxide){
-    cc <- get_cal_components(p=p,bg=bg)
     n6 <- 0 # TODO
     n7 <- 0 # TODO
     n4 <- 0 # TODO

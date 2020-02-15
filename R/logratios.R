@@ -44,15 +44,16 @@ b0_helper <- function(p,g){
     c(b0,g)
 }
 
-getPbLogRatio <- function(p,cc,num='Pb207',den='Pb206'){
-    misfit <- function(b,p,cc,num,den){
-        bij <- b + log(p[[num]]$d) - log(p[[den]]$d)
-        LL <- p[[num]]$n*bij - (p[[num]]$n+p[[den]]$n)*log(1+exp(bij))
+getPbLogRatio <- function(p,b0g,num='Pb207',den='Pb206'){
+    misfit <- function(b,p,b0g,num,den){
+        bpc <- b + A2Corr(p=p,b0g=b0g,num=num,den=den)
+        bpn <- bpc + log(p[[num]]$d) - log(p[[den]]$d)
+        LL <- LLbinom(bn=bpn,nnum=p[[num]]$n,nden=p[[den]]$n)
         -sum(LL)
     }
-    init <- mean(cc$bdc76)
-    optimise(misfit,interval=init+c(-5,5),
-             p=p,cc=cc,num=num,den=den)$minimum
+    init <- log(mean(p[[num]]$c)) - log(mean(p[[den]]$c))
+    stats::optimise(misfit,interval=init+c(-5,5),
+                    p=p,b0g=b0g,num=num,den=den)$minimum
 }
 
 # atomic to cps correction: 

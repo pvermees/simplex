@@ -64,7 +64,7 @@ misfit_AB <- function(AB,stand,oxide='UO2',B0G){
     }
     out
 }
-misfit_A <- function(A,B,p,b0g,c64=0){
+misfit_A <- function(A,B,p,b0g,c64=0,deriv=FALSE){
     # predict Pb206/U238 cps logratio (b6Upc):
     bOUmc <- log(p$O$c) - log(p$U238$c)
     bdcorrUO <- A2Corr(p=p,b0g=b0g,num='O',den='U238')
@@ -77,6 +77,22 @@ misfit_A <- function(A,B,p,b0g,c64=0){
     b6Upc <- RHS + bdcorr6U - b4corr
     # calculate the log-likelihood
     b6Upn <- b6Upc + log(p$Pb206$d) - log(p$U238$d)
-    LL <- LLbinom(bn=b6Upn,nnum=p$Pb206$n,nden=p$U238$n)
-    -sum(LL)
+    n6 <- p$Pb206$n
+    nU <- p$U238$n
+    LL <- n6*b6Upn - (n6+nU)*log(1+exp(b6Upn))
+    if (deriv){
+        db6UpcdA <- 1
+        db6UpcdB <- X
+        num <- exp(b6Upc)
+        den <- 1 + exp(b6Upc)
+        dnumdA <- exp(b6Upc)*db6UpcdA
+        dnumdB <- exp(b6Upc)*db6UpcdB
+        dLdA <- db6UpcdA*(n6-(n6+nU)*num/den)
+        d2LdA2 <- -db6UpcdA*dnumdA*(n6+nU)/(den^2)
+        d2LdAdB <- -db6UpcdA*dnumdB*(n6+nU)/(den^2)
+        out <- -sum(d2LdAdB)/sum(d2LdA2)
+    } else {
+        out <- -sum(LL)
+    }
+    out
 }
