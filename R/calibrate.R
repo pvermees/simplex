@@ -23,18 +23,21 @@ calibrate <- function(dat,fit,syserr=FALSE){
     # 1. calibrate, calculate (co)variances and partial derivatives
     snames <- names(dat)
     ns <- length(snames)
-    X <- matrix(0,ns,8)
-    rownames(X) <- snames
+    calspots <- matrix(0,ns,8)
+    rownames(calspots) <- snames
     for (sname in snames){
-        p <- pars(spot=dat[[sname]],oxide=fit$oxide)
-        bg <- get_bg(spot=spot,oxide=fit$oxide)
-        X[sname,] <- calibrate_spot(B=fit$AB['b'],p=p,bg=bg)
+        spot <- dat[[sname]]
+        p <- pars(spot=spot,oxide=fit$oxide)
+        b0g <- get_b0g(spot=spot,oxide=fit$oxide)
+        calspot <- calibrate_spot(B=fit$AB['B'],p=p,b0g=b0g)
+        calspots[sname,] <- calspot
     }
+    colnames(calspots) <- names(calspot)
     # 2. Collate calibrated data into one big covariance structure
     out <- list()
     class(out) <- 'UPb'
     out$format <- 9
-    out$names <- rownames(X)
+    out$names <- rownames(calspots)
     out$logratios <- c('U238Pb206','Pb207Pb206','Pb204Pb206')
     ns <- length(out$names)
     nr <- length(out$logratios)
@@ -46,15 +49,15 @@ calibrate <- function(dat,fit,syserr=FALSE){
     varU8Pb6s <- fit$PbU[2]/fit$PbU[1]
     for (i in 1:ns){
         j <- (i-1)*nr+(1:nr)
-        out$x[j[1]] <- U8Pb6s + fit$AB['A'] - X[i,'Ax']
-        out$x[j[2:3]] <- X[i,c('Pb76','Pb46')]
+        out$x[j[1]] <- U8Pb6s + fit$AB['A'] - calspots[i,'A']
+        out$x[j[2:3]] <- calspots[i,c('Pb76','Pb46')]
         J[j[1],'A'] <- 1
-        J[j[1],'B'] <- -X[i,'dAxdBs']
+        J[j[1],'B'] <- -calspots[i,'dAdB']
         J[j[1],'U8Pb6s'] <- 1
-        covmat[j[1],j[1]] <- X[i,'varAx']
-        covmat[j[2],j[2]] <- X[i,'varPb76']
-        covmat[j[3],j[3]] <- X[i,'varPb46']
-        covmat[j[2],j[3]] <- X[i,'covPb46Pb76']
+        covmat[j[1],j[1]] <- calspots[i,'varA']
+        covmat[j[2],j[2]] <- calspots[i,'varPb76']
+        covmat[j[3],j[3]] <- calspots[i,'varPb46']
+        covmat[j[2],j[3]] <- calspots[i,'covPb46Pb76']
         covmat[j[3],j[2]] <- covmat[j[2],j[3]]
     }
     E <- matrix(0,3,3)
