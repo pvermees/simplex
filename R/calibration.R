@@ -71,11 +71,10 @@ misfit_A <- function(A,B,p,b0g,c64=0,deriv=FALSE){
     b6Upc <- RHS - XY$Y + b6Umc
     b6Upn <- b6Upc + log(p$Pb206$d) - log(p$U238$d)
     LL <- LLbinom(bn=b6Upn,nnum=p$Pb206$n,nden=p$U238$n)
-    if (deriv){
-        out <- dAxdB(b6Upc=b6Upc,n6=n6,nU=nU)
-    } else {
-        out <- -sum(LL)
-    }
+    if (deriv)
+        out <- dAdB(X=XY$X,b6Upc=b6Upc,n6=p$Pb206$n,nU=p$U238$n)
+    else
+        out <- (-sum(LL))
     out
 }
 getCalXY <- function(p,b0g,c64=0){
@@ -93,7 +92,7 @@ getCalXY <- function(p,b0g,c64=0){
     out$Y <- b6Umc - bdcorr6U + b4corr
     out
 }
-dAxdB <- function(b6Upc,n6,nU){
+dAdB <- function(X,b6Upc,n6,nU){
     db6UpcdA <- 1
     db6UpcdB <- X
     num <- exp(b6Upc)

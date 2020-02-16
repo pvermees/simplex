@@ -67,15 +67,17 @@ calibrate <- function(dat,fit,syserr=FALSE){
 
 calibrate_spot <- function(B,p,b0g){
     out <- rep(0,8)
-    names(out) <- c('Ax','Pb76','Pb46',
-                    'varAx','varPb76','varPb46','covPb46Pb76',
-                    'dAxdB')
-    init <- log(sum(p$Pb206$c)) - log(sum(p$U238$c))
-    out['Ax'] <- stats::optimise(misfit_A,interval=c(-10,10),
+    names(out) <- c('A','Pb76','Pb46',
+                    'varA','varPb76','varPb46','covPb46Pb76',
+                    'dAdB')
+    x <- log(sum(p$O$c)) - log(sum(p$U238$c))
+    y <- log(sum(p$Pb206$c)) - log(sum(p$U238$c))
+    init <- y - B * x
+    out['A'] <- stats::optimise(misfit_A,interval=init+c(-5,5),
                                  B=B,p=p,b0g=b0g)$minimum
-    H <- stats::optimHess(par=out['Ax'],fn=misfit_A,B=B,p=p,b0g=b0g)
-    out['varAx'] <- solve(H)
-    out['dAxdB'] <- misfit_A(A=out['Ax'],B=B,p=p,b0g=b0g,c64=0,deriv=TRUE)
+    H <- stats::optimHess(par=out['A'],fn=misfit_A,B=B,p=p,b0g=b0g)
+    out['varA'] <- solve(H)
+    out['dAdB'] <- misfit_A(A=out['A'],B=B,p=p,b0g=b0g,deriv=TRUE)
     out['Pb76'] <- getPbLogRatio(p=p,b0g=b0g,num='Pb207',den='Pb206')
     out['Pb46'] <- getPbLogRatio(p=p,b0g=b0g,num='Pb204',den='Pb206')
     HPb <- matrix(0,2,2)
