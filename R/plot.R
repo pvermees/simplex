@@ -86,17 +86,9 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
         spot <- dat$x[[sname]]
         p <- pars(spot,oxide=fit$oxide)
         b0g <- get_b0g(spot=dat$x[[sname]],oxide=fit$oxide)
-        # get X
-        b0Umc <- log(p$O$c) - log(p$U238$c)
-        bdcorrUO <- A2Corr(p=p,b0g=b0g,num='O',den='U238')
-        X[,sname] <- b0Umc - bdcorrUO
-        # get Y
-        b6Umc <- log(p$Pb206$c) - log(p$U238$c)
-        bdcorr6U <- A2Corr(p=p,b0g=b0g,num='Pb206',den='U238')
-        bdcorr46 <- A2Corr(p=p,b0g=b0g,num='Pb204',den='Pb206')
-        b46 <- b0g['Pb204','b0'] - b0g['Pb206','b0'] - bdcorr46
-        b4corr <- log(1 - exp(b46)*stand$c64)
-        Y[,sname] <- b6Umc - bdcorr6U + b4corr
+        XY <- getCalXY(p=p,b0g=b0g,c64=stand$c64)
+        X[,sname] <- XY$X
+        Y[,sname] <- XY$Y
     }
     # 3. create the actual plot
     tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',

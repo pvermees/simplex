@@ -65,34 +65,43 @@ misfit_AB <- function(AB,stand,oxide='UO2',B0G){
     out
 }
 misfit_A <- function(A,B,p,b0g,c64=0,deriv=FALSE){
-    # predict Pb206/U238 cps logratio (b6Upc):
-    bOUmc <- log(p$O$c) - log(p$U238$c)
-    bdcorrUO <- A2Corr(p=p,b0g=b0g,num='O',den='U238')
-    X <- bOUmc - bdcorrUO
-    RHS <- A + B * X
-    bdcorr46 <- A2Corr(p=p,b0g=b0g,num='Pb204',den='Pb206')
-    b46 <- b0g['Pb204','b0'] - b0g['Pb206','b0'] - bdcorr46
-    b4corr <- log(1 - exp(b46)*c64)
-    bdcorr6U <- A2Corr(p=p,b0g=b0g,num='Pb206',den='U238')
-    b6Upc <- RHS + bdcorr6U - b4corr
-    # calculate the log-likelihood
+    XY <- getCalXY(p=p,b0g=b0g,c64=c64)
+    RHS <- A + B * XY$X
+    b6Umc <- log(p$Pb206$c) - log(p$U238$c)
+    b6Upc <- RHS - XY$Y + b6Umc
     b6Upn <- b6Upc + log(p$Pb206$d) - log(p$U238$d)
-    n6 <- p$Pb206$n
-    nU <- p$U238$n
-    LL <- n6*b6Upn - (n6+nU)*log(1+exp(b6Upn))
+    LL <- LLbinom(bn=b6Upn,nnum=p$Pb206$n,nden=p$U238$n)
     if (deriv){
-        db6UpcdA <- 1
-        db6UpcdB <- X
-        num <- exp(b6Upc)
-        den <- 1 + exp(b6Upc)
-        dnumdA <- exp(b6Upc)*db6UpcdA
-        dnumdB <- exp(b6Upc)*db6UpcdB
-        dLdA <- db6UpcdA*(n6-(n6+nU)*num/den)
-        d2LdA2 <- -db6UpcdA*dnumdA*(n6+nU)/(den^2)
-        d2LdAdB <- -db6UpcdA*dnumdB*(n6+nU)/(den^2)
-        out <- -sum(d2LdAdB)/sum(d2LdA2)
+        out <- dAxdB(b6Upc=b6Upc,n6=n6,nU=nU)
     } else {
         out <- -sum(LL)
     }
     out
+}
+getCalXY <- function(p,b0g,c64=0){
+    out <- list()
+    # get X
+    bOUmc <- log(p$O$c) - log(p$U238$c)
+    bdcorrUO <- A2Corr(p=p,b0g=b0g,num='O',den='U238')
+    out$X <- bOUmc - bdcorrUO
+    # get Y
+    b6Umc <- log(p$Pb206$c) - log(p$U238$c)
+    bdcorr6U <- A2Corr(p=p,b0g=b0g,num='Pb206',den='U238')
+    bdcorr46 <- A2Corr(p=p,b0g=b0g,num='Pb204',den='Pb206')
+    b46 <- b0g['Pb204','b0'] - b0g['Pb206','b0'] - bdcorr46
+    b4corr <- log(1 - exp(b46)*c64)
+    out$Y <- b6Umc - bdcorr6U + b4corr
+    out
+}
+dAxdB <- function(b6Upc,n6,nU){
+    db6UpcdA <- 1
+    db6UpcdB <- X
+    num <- exp(b6Upc)
+    den <- 1 + exp(b6Upc)
+    dnumdA <- exp(b6Upc)*db6UpcdA
+    dnumdB <- exp(b6Upc)*db6UpcdB
+    dLdA <- db6UpcdA*(n6-(n6+nU)*num/den)
+    d2LdA2 <- -db6UpcdA*dnumdA*(n6+nU)/(den^2)
+    d2LdAdB <- -db6UpcdA*dnumdB*(n6+nU)/(den^2)
+    -sum(d2LdAdB)/sum(d2LdA2)
 }
