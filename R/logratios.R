@@ -44,16 +44,26 @@ b0_helper <- function(p,g){
     c(b0,g)
 }
 
-getPbLogRatio <- function(p,b0g,num='Pb207',den='Pb206'){
-    misfit <- function(b,p,b0g,num,den){
+getPbLogRatio <- function(p,b0g){
+    misfit_helper <- function(b,p,b0g,num,den){
         bpc <- b + A2Corr(p=p,b0g=b0g,num=num,den=den)
         bpn <- bpc + log(p[[num]]$d) - log(p[[den]]$d)
         LL <- LLbinom(bn=bpn,nnum=p[[num]]$n,nden=p[[den]]$n)
-        -sum(LL)
+        sum(LL)
     }
-    init <- log(mean(p[[num]]$c)) - log(mean(p[[den]]$c))
-    stats::optimise(misfit,interval=init+c(-5,5),
-                    p=p,b0g=b0g,num=num,den=den)$minimum
+    misfit <- function(par,p,b0g){
+        LL76 <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb207',den='Pb206')
+        LL46 <- misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb204',den='Pb206')
+        -(LL76 + LL46)
+    }
+    init76 <- log(mean(p$Pb207$c)) - log(mean(p$Pb206$c))
+    init46 <- log(mean(p$Pb204$c)) - log(mean(p$Pb206$c))
+    init <- c(init76,init46)
+    fit <- stats::optim(par=init,fn=misfit,p=p,b0g=b0g,hessian=TRUE)
+    out <- list()
+    out$x <- fit$par
+    out$cov <- solve(fit$hessian)
+    out
 }
 
 # atomic to cps correction: 

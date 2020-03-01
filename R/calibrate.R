@@ -77,20 +77,15 @@ calibrate_spot <- function(B,p,b0g){
     y <- log(sum(p$Pb206$c)) - log(sum(p$U238$c))
     init <- y - B * x
     out['A'] <- stats::optimise(misfit_A,interval=init+c(-5,5),
-                                 B=B,p=p,b0g=b0g)$minimum
+                                B=B,p=p,b0g=b0g)$minimum
     H <- stats::optimHess(par=out['A'],fn=misfit_A,B=B,p=p,b0g=b0g)
     out['varA'] <- solve(H)
     out['dAdB'] <- misfit_A(A=out['A'],B=B,p=p,b0g=b0g,deriv=TRUE)
-    out['Pb76'] <- getPbLogRatio(p=p,b0g=b0g,num='Pb207',den='Pb206')
-    out['Pb46'] <- getPbLogRatio(p=p,b0g=b0g,num='Pb204',den='Pb206')
-    HPb <- matrix(0,2,2)
-    #HPb[1,1] <- TODO
-    #HPb[1,2] <- TODO
-    #HPb[2,2] <- TODO
-    #HPb[2,1] <- TODO
-    covmat <- HPb#solve(-HPb) TODO
-    out['varPb46'] <- covmat[1,1]
-    out['varPb76'] <- covmat[2,2]
-    out['covPb46Pb76'] <- covmat[1,2]
+    Pbfit <- getPbLogRatio(p=p,b0g=b0g)
+    out['Pb76'] <- Pbfit$x[1]
+    out['Pb46'] <- Pbfit$x[2]
+    out['varPb76'] <- Pbfit$cov[1,1]
+    out['varPb46'] <- Pbfit$cov[2,2]
+    out['covPb46Pb76'] <- Pbfit$cov[1,2]
     out
 }

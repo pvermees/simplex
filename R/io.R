@@ -58,6 +58,10 @@ read_Cameca_asc <- function(fname){
     ions <- c('Zr90','Zr92','200.5','Zr94',
               'Pb204','Pb206','Pb207','Pb208',
               'U238','ThO2','UO2','270.1')
+##   for monazite:
+#    ions <- c('La139','202.5','Pb204','Pb206',
+#              'Pb207','Pb208','Th232','U238',
+#              'Th232','UO2')
     f <- file(fname)
     open(f);
     out <- list()
