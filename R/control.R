@@ -6,7 +6,7 @@ get_ions <- function(format){
     } else if (format == 'IGG-monazite'){
         out <- c('La139','202.5','Pb204','Pb206',
                  'Pb207','Pb208','Th232','U238',
-                 'Th232','UO2')
+                 'ThO2','UO2')
     } else if (format == 'GA-zircon'){
         out <- c('Zr2O','Pb204','bkg','Pb206','Pb207',
                  'Pb208','U238','ThO','UO','UO2')

@@ -4,7 +4,10 @@
 #' @param instrument either \code{'Cameca'} or \code{'SHRIMP'}
 #' @param suffix the extension of the data files to be loaded. This
 #'     defaults to \code{.asc} if \code{instrument='Cameca'} and
-#'     \code{.op} if \code{instrument='SHRIMP'}.
+#'     \code{.op} if \code{instrument='SHRIMP'}
+#' @param control a list with (currently) on item, namely \code{ions},
+#'     which is a vector with the ions corresponding to each column of
+#'     the input data
 #' @return an object of class \code{simplex}
 #' @examples
 #' # not run:
@@ -263,7 +266,6 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 #' @param prefix text string to match
 #' @param invert logical.  If \code{TRUE} return samples whose names
 #'     do _not_ match
-#' @param c64 the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb
 #' @param PbU (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
 #'     the age standard
 #' @param tst (optional) two-element vector with the age and standard
@@ -274,9 +276,8 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 #' stand <- standards(dat=Cameca,prefix='Plesovice')
 #' @export
 standards <- function(dat,prefix,invert=FALSE,
-                      c64=18.7,PbU=NULL,tst=NULL){
+                      PbU=NULL,tst=NULL){
     out <- list()
-    out$c64 <- c64
     if (is.null(PbU)){
         if (is.null(tst)){
             warning('No standard age or composition was supplied.')

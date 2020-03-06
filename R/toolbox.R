@@ -30,7 +30,9 @@ pars <- function(spot,oxide='UO2'){
         Pb204 = init(spot,'Pb204'),
         Pb206 = init(spot,'Pb206'),
         Pb207 = init(spot,'Pb207'),
+        Pb208 = init(spot,'Pb208'),
         U238 = init(spot,'U238'),
+        Th232 = init(spot,'Th232'),
         O = init(spot,oxide)
     )
     if (spot$instrument=='Cameca'){
