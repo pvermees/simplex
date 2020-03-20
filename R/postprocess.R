@@ -15,36 +15,21 @@
 #' tab <- data2table(cal)
 #' write.csv(tab,file='Qinghu.csv')
 #' @export
-data2table <- function(x){
-    UPb <- logratios2ratios(x)
-    ns <- length(x$names)
-    nr <- length(x$logratios)
-    out <- matrix(0,ns,3*nr)
-    rownames(out) <- x$names
-    colnames(out) <- c('U238Pb206','s[U238Pb206]',
-                       'Pb207Pb206','s[Pb207Pb206]',
-                       'Pb204Pb206','s[Pb204Pb206]',
-                       'rXY','rXZ','rYZ')
-    for (i in 1:ns){
-        j <- (i-1)*nr+(1:nr)
-        out[i,c('U238Pb206','Pb207Pb206',
-                'Pb204Pb206')] <- UPb$x[j]
-        out[i,c('s[U238Pb206]','s[Pb207Pb206]',
-                's[Pb204Pb206]')] <- sqrt(diag(UPb$cov))[j]
-        cormat <- stats::cov2cor(UPb$cov[j,j])
-        out[i,'rXY'] <- cormat[1,2]
-        out[i,'rXZ'] <- cormat[1,3]
-        out[i,'rYZ'] <- cormat[2,3]
+data2table <- function(lr){
+    r <- logratios2ratios(lr)
+    ns <- length(lr$snames)
+    nc <- length(lr$x)/ns
+    out <- matrix(0,ns,nc)
+    for (i in 1:nc){
     }
-    out
+    r
 }
 
 logratios2ratios <- function(lr){
     out <- list()
-    out$names <- lr$names
-    out$ratios <- lr$logratios
-    out$x <- exp(lr$x)
-    J <- diag(out$x)
+    out$snames <- lr$snames
+    out$x <- exp(-lr$x)
+    J <- -diag(out$x)
     out$cov <- J %*% lr$cov %*% t(J)
     out
 }

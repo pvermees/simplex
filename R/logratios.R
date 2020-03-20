@@ -50,20 +50,25 @@ b0_helper <- function(p,g){
 getPbLogRatios <- function(dat,oxide='UO2'){
     snames <- names(dat)
     ns <- length(snames)
-    out <- matrix(0,ns,9)
-    rownames(out) <- snames
-    colnames(out) <- c('log[4/6]','err[X]','log[7/6]','err[Y]',
-                       'log[8/6]','err[Z]','rXY','rXZ','rYZ')
-    for (sname in snames){
-        spot <- dat[[sname]]
+    out <- list()
+    out$snames <- snames
+    labels <- c(rep('Pb204Pb206',ns),
+                rep('Pb207Pb206',ns),
+                rep('Pb208Pb206',ns))
+    out$x <- rep(0,3*ns)
+    names(out$x) <- labels
+    out$cov <- matrix(0,3*ns,3*ns)
+    rownames(out$cov) <- labels
+    colnames(out$cov) <- labels
+    for (i in 1:ns){
+        spot <- dat[[i]]
         p <- pars(spot=spot,oxide=oxide)
         b0g <- get_b0g(spot=spot,oxide=oxide)
         lr <- getPbLogRatio(p,b0g)
-        cormat <- cov2cor(lr$PbPb.cov)
-        out[sname,c(1,3,5)] <- lr$PbPb
-        out[sname,c(2,4,6)] <- sqrt(diag(lr$PbPb.cov))
-        out[sname,7:8] <- cormat[1,2:3]
-        out[sname,9] <- cormat[2,3]
+        cormat <- cov2cor(lr$cov)
+        j <- c(0,ns,2*ns)+i
+        out$x[j] <- lr$x
+        out$cov[j,j] <- sqrt(diag(lr$cov))
     }
     out
 }
@@ -86,8 +91,8 @@ getPbLogRatio <- function(p,b0g){
     init <- c(init46,init76,init86)
     fit <- stats::optim(par=init,fn=misfit,p=p,b0g=b0g,hessian=TRUE)
     out <- list()
-    out$PbPb <- fit$par
-    out$PbPb.cov <- solve(fit$hessian)
+    out$x <- fit$par
+    out$cov <- solve(fit$hessian)
     out
 }
 

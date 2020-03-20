@@ -35,29 +35,31 @@ calibrate <- function(dat,fit,syserr=FALSE){
         calspot <- calibrate_spot(B=fit$AB['B'],p=p,b0g=b0g)
         Ax[i] <- calspot['A']
         EAxB[i,i] <- calspot['varA']
-        J[i,ns+1] <- calspot['dAdB']
+        if (syserr) J[i,ns+1] <- calspot['dAdB']
     }
     EAx <- J %*% EAxB %*% t(J)
     # 2. get PD ratios
     out <- list()
-    out$parent <- fit$parent
-    out$daughter <- fit$daughter
+    out$snames <- snames
     if (fit$parent=='U238') dp <- 'Pb206U238'
     else if (fit$parent=='Th232') dp <- 'Pb208Th232'
     else stop('Illegal parent used in calibration.')
-    out$lDP <- log(fit$DP[dp]) + fit$AB['A'] - Ax
+    labels <- rep(dp,ns)
+    out$x <- log(fit$DP[dp]) + fit$AB['A'] - Ax
     EAxAslDPs <- matrix(0,ns+2,ns+2)
     EAxAslDPs[1:ns,1:ns] <- EAx
     EAxAslDPs[(ns+1),(ns+1)] <- fit$AB.cov['A','A']
     EAxAslDPs[(ns+2),(ns+2)] <- fit$DP.cov[dp,dp]
     J <- matrix(0,ns,ns+2)
-    J[(1:ns),(1:ns)] <- -diag(ns)    # dPDx_dAx
-    J[(1:ns),(ns+1)] <- 1            # dPDx_dAs
-    J[(1:ns),(ns+2)] <- 1/fit$DP[dp] # dPDx_dDPs
-    out$lDP.cov <- J %*% EAxAslDPs %*% t(J)
-    names(out$lDP) <- snames
-    rownames(out$lDP.cov) <- snames
-    colnames(out$lDP.cov) <- snames
+    J[(1:ns),(1:ns)] <- -diag(ns)        # dPDx_dAx
+    if (syserr) {
+        J[(1:ns),(ns+1)] <- 1            # dPDx_dAs
+        J[(1:ns),(ns+2)] <- 1/fit$DP[dp] # dPDx_dDPs
+    }
+    out$cov <- J %*% EAxAslDPs %*% t(J)
+    names(out$x) <- labels
+    rownames(out$cov) <- labels
+    colnames(out$cov) <- labels
     out
 }
 
@@ -72,5 +74,31 @@ calibrate_spot <- function(B,p,b0g){
     H <- stats::optimHess(par=out['A'],fn=misfit_A,B=B,p=p,b0g=b0g)
     out['varA'] <- solve(H)
     out['dAdB'] <- misfit_A(A=out['A'],B=B,p=p,b0g=b0g,deriv=TRUE)
+    out
+}
+
+mergecal <- function(...){
+    cals <- list(...)
+    nc <- length(cals)
+    out <- list()
+    cal <- cals[[1]]
+    out$snames <- cal$snames
+    out$x <- cal$x
+    out$cov <- cal$cov
+    if (nc<2) return(out)
+    for (i in 2:nc){
+        cal <- cals[[i]]
+        if (!all(out$snames%in%cal$snames))
+            stop('Mismatched sample names.')
+        nold <- length(out$x)
+        nnew <- length(cal$x)
+        out$x <- c(out$x,cal$x)
+        covmat <- diag(length(out$x))
+        covmat[1:nold,1:nold] <- out$cov
+        covmat[(nold+1):(nold+nnew),(nold+1):(nold+nnew)] <- cal$cov
+        out$cov <- covmat
+    }
+    rownames(out$cov) <- names(out$x)
+    colnames(out$cov) <- names(out$x)
     out
 }
