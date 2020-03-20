@@ -45,19 +45,19 @@ calibrate <- function(dat,fit,syserr=FALSE){
     if (fit$parent=='U238') dp <- 'Pb206U238'
     else if (fit$parent=='Th232') dp <- 'Pb208Th232'
     else stop('Illegal parent used in calibration.')
-    out$PD <- -(log(fit$DP[dp]) + fit$AB['A'] - Ax)
-    EAxAsDPs <- matrix(0,ns+2,ns+2)
-    EAxAsDPs[1:ns,1:ns] <- EAx
-    EAxAsDPs[(ns+1),(ns+1)] <- fit$AB.cov['A','A']
-    EAxAsDPs[(ns+2),(ns+2)] <- fit$DP.cov[dp,dp]
+    out$lDP <- log(fit$DP[dp]) + fit$AB['A'] - Ax
+    EAxAslDPs <- matrix(0,ns+2,ns+2)
+    EAxAslDPs[1:ns,1:ns] <- EAx
+    EAxAslDPs[(ns+1),(ns+1)] <- fit$AB.cov['A','A']
+    EAxAslDPs[(ns+2),(ns+2)] <- fit$DP.cov[dp,dp]
     J <- matrix(0,ns,ns+2)
-    J[(1:ns),(1:ns)] <- diag(ns)      # dPDx_dAx
-    J[(1:ns),(ns+1)] <- -1            # dPDx_dAs
-    J[(1:ns),(ns+2)] <- -1/fit$DP[dp] # dPDx_dDPs
-    out$PD.cov <- J %*% EAxAsDPs %*% t(J)
-    names(out$PD) <- snames
-    rownames(out$PD.cov) <- snames
-    colnames(out$PD.cov) <- snames
+    J[(1:ns),(1:ns)] <- -diag(ns)    # dPDx_dAx
+    J[(1:ns),(ns+1)] <- 1            # dPDx_dAs
+    J[(1:ns),(ns+2)] <- 1/fit$DP[dp] # dPDx_dDPs
+    out$lDP.cov <- J %*% EAxAslDPs %*% t(J)
+    names(out$lDP) <- snames
+    rownames(out$lDP.cov) <- snames
+    colnames(out$lDP.cov) <- snames
     out
 }
 

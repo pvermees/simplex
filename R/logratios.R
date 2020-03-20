@@ -47,6 +47,26 @@ b0_helper <- function(p,g){
     c(b0,g)
 }
 
+getPbLogRatios <- function(dat,oxide='UO2'){
+    snames <- names(dat)
+    ns <- length(snames)
+    out <- matrix(0,ns,9)
+    rownames(out) <- snames
+    colnames(out) <- c('log[4/6]','err[X]','log[7/6]','err[Y]',
+                       'log[8/6]','err[Z]','rXY','rXZ','rYZ')
+    for (sname in snames){
+        spot <- dat[[sname]]
+        p <- pars(spot=spot,oxide=oxide)
+        b0g <- get_b0g(spot=spot,oxide=oxide)
+        lr <- getPbLogRatio(p,b0g)
+        cormat <- cov2cor(lr$PbPb.cov)
+        out[sname,c(1,3,5)] <- lr$PbPb
+        out[sname,c(2,4,6)] <- sqrt(diag(lr$PbPb.cov))
+        out[sname,7:8] <- cormat[1,2:3]
+        out[sname,9] <- cormat[2,3]
+    }
+    out
+}
 getPbLogRatio <- function(p,b0g){
     misfit_helper <- function(b,p,b0g,num,den){
         bpc <- b + A2Corr(p=p,b0g=b0g,num=num,den=den)
@@ -55,9 +75,9 @@ getPbLogRatio <- function(p,b0g){
         sum(LL)
     }
     misfit <- function(par,p,b0g){
-        LL46 <- misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb204',den='Pb206')
-        LL76 <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb207',den='Pb206')
-        LL86 <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb208',den='Pb206')
+        LL46 <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb204',den='Pb206')
+        LL76 <- misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb207',den='Pb206')
+        LL86 <- misfit_helper(b=par[3],p=p,b0g=b0g,num='Pb208',den='Pb206')
         -(LL46 + LL76 + LL86)
     }
     init46 <- log(mean(p$Pb204$c)) - log(mean(p$Pb206$c))
@@ -66,8 +86,8 @@ getPbLogRatio <- function(p,b0g){
     init <- c(init46,init76,init86)
     fit <- stats::optim(par=init,fn=misfit,p=p,b0g=b0g,hessian=TRUE)
     out <- list()
-    out$x <- fit$par
-    out$cov <- solve(fit$hessian)
+    out$PbPb <- fit$par
+    out$PbPb.cov <- solve(fit$hessian)
     out
 }
 
