@@ -266,27 +266,35 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 #' @param prefix text string to match
 #' @param invert logical.  If \code{TRUE} return samples whose names
 #'     do _not_ match
-#' @param PbU (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
-#'     the age standard
+#' @param Pb206U238 (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio
+#'     of the age standard and its analytical uncertainty
+#' @param Pb208Th232 (optional) true
+#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratio of the age standard
 #' @param tst (optional) two-element vector with the age and standard
-#'     error of the age standard
+#'     error of the age standard and its analytical uncertainty
 #' @return an object of class \code{standard}
 #' @examples
 #' data(Cameca,package="simplex")
 #' stand <- standards(dat=Cameca,prefix='Plesovice')
 #' @export
-standards <- function(dat,prefix,invert=FALSE,
-                      PbU=NULL,tst=NULL){
+standards <- function(dat,prefix,invert=FALSE,DP,DP.cov,tst){
     out <- list()
-    if (is.null(PbU)){
-        if (is.null(tst)){
+    if (missing(DP.cov)) DP.cov <- matrix(0,2,2)
+    if (missing(DP)){
+        if (missing(tst)){
             warning('No standard age or composition was supplied.')
             tst <- Pb76_to_age(dat)
         }
-        out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
-    } else {
-        out$PbU <- PbU
+        cr <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
+        DP <- cr$x
+        DP.cov <- cr$cov
     }
+    labels <- c('Pb206U238','Pb208Th232')
+    names(DP) <- labels
+    rownames(DP.cov) <- labels
+    colnames(DP.cov) <- labels
+    out$DP <- DP
+    out$DP.cov <- DP.cov
     out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
     class(out) <- 'standard'
     out

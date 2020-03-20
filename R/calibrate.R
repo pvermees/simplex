@@ -20,72 +20,57 @@
 #' cal <- calibrate(unk,fit)
 #' @export
 calibrate <- function(dat,fit,syserr=FALSE){
-    # 1. calibrate, calculate (co)variances and partial derivatives
+    # 1. get sample intercepts
     snames <- names(dat)
     ns <- length(snames)
-    calspots <- matrix(0,ns,8)
-    rownames(calspots) <- snames
-    for (sname in snames){
-        spot <- dat[[sname]]
+    Ax <- rep(0,ns)
+    EAxB <- matrix(0,ns+1,ns+1)
+    EAxB[(ns+1),(ns+1)] <- fit$AB.cov['B','B']
+    J <- matrix(0,ns,ns+1)
+    J[(1:ns),(1:ns)] <- diag(ns)
+    for (i in 1:ns){
+        spot <- dat[[i]]
         p <- pars(spot=spot,oxide=fit$oxide)
         b0g <- get_b0g(spot=spot,oxide=fit$oxide)
         calspot <- calibrate_spot(B=fit$AB['B'],p=p,b0g=b0g)
-        calspots[sname,] <- calspot
+        Ax[i] <- calspot['A']
+        EAxB[i,i] <- calspot['varA']
+        J[i,ns+1] <- calspot['dAdB']
     }
-    colnames(calspots) <- names(calspot)
-    # 2. Collate calibrated data into one big covariance structure
+    EAx <- J %*% EAxB %*% t(J)
+    # 2. get PD ratios
     out <- list()
-    class(out) <- 'UPb'
-    out$format <- 9
-    out$names <- rownames(calspots)
-    out$logratios <- c('U238Pb206','Pb207Pb206','Pb204Pb206')
-    ns <- length(out$names)
-    nr <- length(out$logratios)
-    out$x <- rep(0,ns*nr)
-    covmat <- matrix(0,ns*nr,ns*nr)
-    J <- matrix(0,nrow=ns*nr,ncol=3)
-    colnames(J) <- c('A','B','U8Pb6s')
-    U8Pb6s <- -log(fit$PbU[1])
-    varU8Pb6s <- fit$PbU[2]/fit$PbU[1]
-    for (i in 1:ns){
-        j <- (i-1)*nr+(1:nr)
-        out$x[j[1]] <- U8Pb6s + fit$AB['A'] - calspots[i,'A']
-        out$x[j[2:3]] <- calspots[i,c('Pb76','Pb46')]
-        J[j[1],'A'] <- 1
-        J[j[1],'B'] <- -calspots[i,'dAdB']
-        J[j[1],'U8Pb6s'] <- 1
-        covmat[j[1],j[1]] <- calspots[i,'varA']
-        covmat[j[2],j[2]] <- calspots[i,'varPb76']
-        covmat[j[3],j[3]] <- calspots[i,'varPb46']
-        covmat[j[2],j[3]] <- calspots[i,'covPb46Pb76']
-        covmat[j[3],j[2]] <- covmat[j[2],j[3]]
-    }
-    E <- matrix(0,3,3)
-    E[1:2,1:2] <- fit$cov
-    E[3,3] <- varU8Pb6s
-    if (syserr) out$cov <- covmat + J %*% E %*% t(J)
-    else out$cov <- covmat
+    out$parent <- fit$parent
+    out$daughter <- fit$daughter
+    if (fit$parent=='U238') dp <- 'Pb206U238'
+    else if (fit$parent=='Th232') dp <- 'Pb208Th232'
+    else stop('Illegal parent used in calibration.')
+    out$PD <- -(log(fit$DP[dp]) + fit$AB['A'] - Ax)
+    EAxAsDPs <- matrix(0,ns+2,ns+2)
+    EAxAsDPs[1:ns,1:ns] <- EAx
+    EAxAsDPs[(ns+1),(ns+1)] <- fit$AB.cov['A','A']
+    EAxAsDPs[(ns+2),(ns+2)] <- fit$DP.cov[dp,dp]
+    J <- matrix(0,ns,ns+2)
+    J[(1:ns),(1:ns)] <- diag(ns)      # dPDx_dAx
+    J[(1:ns),(ns+1)] <- -1            # dPDx_dAs
+    J[(1:ns),(ns+2)] <- -1/fit$DP[dp] # dPDx_dDPs
+    out$PD.cov <- J %*% EAxAsDPs %*% t(J)
+    names(out$PD) <- snames
+    rownames(out$PD.cov) <- snames
+    colnames(out$PD.cov) <- snames
     out
 }
 
 calibrate_spot <- function(B,p,b0g){
-    out <- rep(0,8)
-    names(out) <- c('A','Pb76','Pb46',
-                    'varA','varPb76','varPb46','covPb46Pb76',
-                    'dAdB')
+    out <- rep(0,3)
+    names(out) <- c('A','varA','dAdB')
     x <- log(sum(p$O$c)) - log(sum(p$U238$c))
     y <- log(sum(p$Pb206$c)) - log(sum(p$U238$c))
     init <- y - B * x
     out['A'] <- stats::optimise(misfit_A,interval=init+c(-5,5),
-                                B=B,p=p,b0g=b0g)$minimum
+                                 B=B,p=p,b0g=b0g)$minimum
     H <- stats::optimHess(par=out['A'],fn=misfit_A,B=B,p=p,b0g=b0g)
     out['varA'] <- solve(H)
     out['dAdB'] <- misfit_A(A=out['A'],B=B,p=p,b0g=b0g,deriv=TRUE)
-    Pbfit <- getPbLogRatio(p=p,b0g=b0g)
-    out['Pb76'] <- Pbfit$x[1]
-    out['Pb46'] <- Pbfit$x[2]
-    out['varPb76'] <- Pbfit$cov[1,1]
-    out['varPb46'] <- Pbfit$cov[2,2]
-    out['covPb46Pb76'] <- Pbfit$cov[1,2]
     out
 }

@@ -49,9 +49,10 @@ calibration <- function(stand,oxide='UO2',parent='U238',
     out$cD4 <- cD4
     out$omit <- omit
     out$AB <- fit$par
-    out$cov <- solve(hess)
+    out$AB.cov <- solve(hess)
     out$oxide <- oxide
-    out$PbU <- stand$PbU
+    out$DP <- stand$DP
+    out$DP.cov <- stand$DP.cov
     out
 }
 
