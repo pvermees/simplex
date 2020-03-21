@@ -44,7 +44,7 @@ calibrate <- function(dat,fit,syserr=FALSE){
     out$num <- fit$daughter
     out$den <- fit$parent
     dp <- paste0(fit$daughter,fit$parent)
-    out$x <- log(fit$DP[dp]) + fit$AB['A'] - Ax
+    out$x <- log(fit$DP[dp]) + Ax - fit$AB['A']
     EAxAslDPs <- matrix(0,ns+2,ns+2)
     EAxAslDPs[1:ns,1:ns] <- EAx
     EAxAslDPs[(ns+1),(ns+1)] <- fit$AB.cov['A','A']

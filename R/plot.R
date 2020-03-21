@@ -29,8 +29,8 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
     # 2. calculate plot coordinates:
     for (sname in snames){
         spot <- dat$x[[sname]]
-        p <- pars(spot,oxide=fit$oxide)
-        b0g <- get_b0g(spot=dat$x[[sname]],oxide=fit$oxide)
+        p <- pars(spot,parent=fit$parent,daughter=fit$daughter,oxide=fit$oxide)
+        b0g <- get_b0g(spot=dat$x[[sname]],parent=fit$parent,oxide=fit$oxide)
         XY <- getCalXY(p=p,b0g=b0g,cD4=fit$cD4)
         X[,sname] <- XY$X
         Y[,sname] <- XY$Y
