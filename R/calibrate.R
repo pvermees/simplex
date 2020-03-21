@@ -62,8 +62,8 @@ calibrate <- function(dat,fit,syserr=FALSE){
 calibrate_spot <- function(B,p,b0g){
     out <- rep(0,3)
     names(out) <- c('A','varA','dAdB')
-    x <- log(sum(p$O$c)) - log(sum(p$U238$c))
-    y <- log(sum(p$Pb206$c)) - log(sum(p$U238$c))
+    x <- log(sum(p[[p$oxide]]$c)) - log(sum(p[[p$parent]]$c))
+    y <- log(sum(p[[p$daughter]]$c)) - log(sum(p[[p$parent]]$c))
     init <- y - B * x
     out['A'] <- stats::optimise(misfit_A,interval=init+c(-5,5),
                                  B=B,p=p,b0g=b0g)$minimum

@@ -1,4 +1,4 @@
-pars <- function(spot,oxide='UO2'){
+pars <- function(spot,parent='U238',daughter='Pb206',oxide='UO2'){
     init <- function(spot,mass){
         out <- list()
         out$t <- hours(spot$time[,mass])
@@ -31,12 +31,14 @@ pars <- function(spot,oxide='UO2'){
         Pb206 = init(spot,'Pb206'),
         Pb207 = init(spot,'Pb207'),
         Pb208 = init(spot,'Pb208'),
-        U238 = init(spot,'U238'),
-        Th232 = init(spot,'Th232'),
-        O = init(spot,oxide)
+        oxide = oxide,
+        parent = parent,
+        daughter = daughter
     )
+    out[[parent]] <- init(spot,parent)
+    out[[oxide]] <- init(spot,oxide)
     if (spot$instrument=='Cameca'){
-        out$blank <- CamecaBlank(spot,mass='U238')
+        out$blank <- CamecaBlank(spot,mass=parent)
     } else {
         out$blank <- SHRIMPblank(spot)
     }

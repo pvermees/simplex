@@ -31,8 +31,7 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
         spot <- dat$x[[sname]]
         p <- pars(spot,oxide=fit$oxide)
         b0g <- get_b0g(spot=dat$x[[sname]],oxide=fit$oxide)
-        XY <- getCalXY(p=p,b0g=b0g,parent=fit$parent,
-                       daughter=fit$daughter,cD4=fit$cD4)
+        XY <- getCalXY(p=p,b0g=b0g,cD4=fit$cD4)
         X[,sname] <- XY$X
         Y[,sname] <- XY$Y
     }
@@ -94,18 +93,21 @@ plot_timeresolved <- function(spot,fit=NULL,...){
 }
 
 predict_counts <- function(spot,fit){
-    p <- pars(spot=spot,oxide=fit$oxide)
+    p <- pars(spot=spot,parent=fit$parent,oxide=fit$oxide)
     b0g <- get_b0g(spot=spot,oxide=fit$oxide)
     calspot <- calibrate_spot(B=fit$AB['B'],p=p,b0g=b0g)
     b76pc <- calspot['Pb76'] + A2Corr(p=p,b0g=b0g,num='Pb207',den='Pb206')
     b76pn <- b76pc + log(p$Pb207$d) - log(p$Pb206$d)
     n6 <- (p$Pb206$n+p$Pb207$n)/(1+exp(b76pn))
     n7 <- (p$Pb206$n+p$Pb207$n)*exp(b76pn)/(1+exp(b76pn))
+    b86pc <- calspot['Pb76'] + A2Corr(p=p,b0g=b0g,num='Pb207',den='Pb206')
+    b86pn <- b86pc + log(p$Pb207$d) - log(p$Pb206$d)
+    n8 <- (p$Pb206$n+p$Pb207$n)*exp(b76pn)/(1+exp(b76pn))
     b46pc <- calspot['Pb46'] + A2Corr(p=p,b0g=b0g,num='Pb204',den='Pb206')
     b46pn <- b46pc + log(p$Pb204$d) - log(p$Pb206$d)
     n4 <- (p$Pb206$n+p$Pb204$n)*exp(b46pn)/(1+exp(b46pn))
     bkg <- exp(b0g['blank','b0'])*p$blank$d
-    out <- cbind(bkg,n4,n6,n7,p$U238$n,p$O$n)
-    colnames(out) <- c('bkg','Pb204','Pb206','Pb207','U238',fit$oxide)
+    out <- cbind(bkg,n4,n6,n7,n8,p[[p$parent]]$n,p[[p$oxide]]$n)
+    colnames(out) <- c('bkg','Pb204','Pb206','Pb207','Pb208',p$parent,p$oxide)
     out
 }

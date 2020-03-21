@@ -1,21 +1,19 @@
-get_B0G <- function(dat,oxide='UO2'){
+get_B0G <- function(dat,parent='U238',oxide='UO2'){
     snames <- names(dat$x)
     out <- list()
     for (sname in snames){
         spot <- dat$x[[sname]]
-        out[[sname]] <- get_b0g(spot=spot,oxide=oxide)
+        out[[sname]] <- get_b0g(spot=spot,parent=parent,oxide=oxide)
     }
     out
 }
-get_b0g <- function(spot,oxide='UO2'){
-    p <- pars(spot,oxide=oxide)
-    out <- matrix(0,8,2)
+get_b0g <- function(spot,parent='U238',oxide='UO2'){
+    p <- pars(spot,parent=parent,oxide=oxide)
+    out <- matrix(0,7,2)
     colnames(out) <- c('b0','g')
-    rownames(out) <- c('O','U238','Th232','Pb204',
-                       'Pb206','Pb207','Pb208','blank')
-    out['O',] <- b0g_helper(p=p$O)
-    out['U238',] <- b0g_helper(p=p$U238)
-    out['Th232',] <- b0g_helper(p=p$Th232)
+    rownames(out) <- c(oxide,parent,'Pb204','Pb206','Pb207','Pb208','blank')
+    out[oxide,] <- b0g_helper(p=p[[p$oxide]])
+    out[parent,] <- b0g_helper(p=p[[p$parent]])
     out['Pb206',] <- b0g_helper(p=p$Pb206)
     out['Pb207',] <- b0_helper(p=p$Pb207,g=out['Pb206','g'])
     out['Pb208',] <- b0_helper(p=p$Pb208,g=out['Pb206','g'])
@@ -47,7 +45,7 @@ b0_helper <- function(p,g){
     c(b0,g)
 }
 
-getPbLogRatios <- function(dat,oxide='UO2'){
+getPbLogRatios <- function(dat){
     snames <- names(dat)
     ns <- length(snames)
     out <- list()
@@ -58,8 +56,8 @@ getPbLogRatios <- function(dat,oxide='UO2'){
     out$cov <- matrix(0,3*ns,3*ns)
     for (i in 1:ns){
         spot <- dat[[i]]
-        p <- pars(spot=spot,oxide=oxide)
-        b0g <- get_b0g(spot=spot,oxide=oxide)
+        p <- pars(spot=spot)
+        b0g <- get_b0g(spot=spot)
         lr <- getPbLogRatio(p,b0g)
         cormat <- cov2cor(lr$cov)
         j <- c(0,ns,2*ns)+i

@@ -24,7 +24,8 @@ data2table <- function(lr){
         j <- (i-1)*ns + (1:ns)
         list(i=i,j=j)
     }
-    J <- matrix(0,5,5*ns)
+    nr <- length(lr$num)
+    J <- matrix(0,nr,nr*ns)
     ijU <- getij(lr=lr,num='Pb206',den='U238')
     ijTh <- getij(lr=lr,num='Pb208',den='Th232')
     ijPb204 <- getij(lr=lr,num='Pb204',den='Pb206')
@@ -47,12 +48,19 @@ data2table <- function(lr){
     sPb204Pb206 <- err[ijPb204$i]
     sPb207Pb206 <- err[ijPb207$i]
     sPb208Pb206 <- err[ijPb208$i]
-    out <- cbind(U238Pb206,sU238Pb206,Th232Pb208,sTh232Pb208,
-                 Pb204Pb206,sPb204Pb206,Pb207Pb206,sPb207Pb206,
-                 Pb208Pb206,sPb208Pb206)
-    colnames(out) <- c('U238Pb206','sU238Pb206','Th232Pb208','sTh232Pb208',
-                       'Pb204Pb206','sPb204Pb206','Pb207Pb206','sPb207Pb206',
-                       'Pb208Pb206','sPb208Pb206')
+    out <- cbind(Pb207Pb206,sPb207Pb206,Pb204Pb206,
+                 sPb204Pb206,Pb208Pb206,sPb208Pb206)
+    labels <- c('Pb207Pb206','sPb207Pb206','Pb204Pb206',
+                'sPb204Pb206','Pb208Pb206','sPb208Pb206')
+    if (length(U238Pb206)>0){
+        out <- cbind(U238Pb206,sU238Pb206,out)
+        labels <- c('U238Pb206','sU238Pb206',labels)
+    }
+    if (length(Th232Pb208)>0){
+        out <- cbind(out,Th232Pb208,sTh232Pb208)
+        labels <- c(labels,'Th232Pb208','sTh232Pb208') 
+    }
+    colnames(out) <- labels
     rownames(out) <- snames
     out
 }
