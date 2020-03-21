@@ -9,13 +9,16 @@ get_B0G <- function(dat,oxide='UO2'){
 }
 get_b0g <- function(spot,oxide='UO2'){
     p <- pars(spot,oxide=oxide)
-    out <- matrix(0,6,2)
+    out <- matrix(0,8,2)
     colnames(out) <- c('b0','g')
-    rownames(out) <- c('O','U238','Pb204','Pb206','Pb207','blank')
+    rownames(out) <- c('O','U238','Th232','Pb204',
+                       'Pb206','Pb207','Pb208','blank')
     out['O',] <- b0g_helper(p=p$O)
     out['U238',] <- b0g_helper(p=p$U238)
+    out['Th232',] <- b0g_helper(p=p$Th232)
     out['Pb206',] <- b0g_helper(p=p$Pb206)
     out['Pb207',] <- b0_helper(p=p$Pb207,g=out['Pb206','g'])
+    out['Pb208',] <- b0_helper(p=p$Pb208,g=out['Pb206','g'])
     out['Pb204',] <- b0_helper(p=p$Pb204,g=out['Pb206','g'])
     if (sum(p$blank$n)>0)
         out['blank','b0'] <- log(sum(p$blank$n)) - log(sum(p$blank$d))
@@ -44,16 +47,49 @@ b0_helper <- function(p,g){
     c(b0,g)
 }
 
-getPbLogRatio <- function(p,b0g,num='Pb207',den='Pb206'){
-    misfit <- function(b,p,b0g,num,den){
+getPbLogRatios <- function(dat,oxide='UO2'){
+    snames <- names(dat)
+    ns <- length(snames)
+    out <- list()
+    out$snames <- snames
+    out$num <- c('Pb204','Pb207','Pb208')
+    out$den <- c('Pb206','Pb206','Pb206')
+    out$x <- rep(0,3*ns)
+    out$cov <- matrix(0,3*ns,3*ns)
+    for (i in 1:ns){
+        spot <- dat[[i]]
+        p <- pars(spot=spot,oxide=oxide)
+        b0g <- get_b0g(spot=spot,oxide=oxide)
+        lr <- getPbLogRatio(p,b0g)
+        cormat <- cov2cor(lr$cov)
+        j <- c(0,ns,2*ns)+i
+        out$x[j] <- lr$x
+        out$cov[j,j] <- sqrt(diag(lr$cov))
+    }
+    out
+}
+getPbLogRatio <- function(p,b0g){
+    misfit_helper <- function(b,p,b0g,num,den){
         bpc <- b + A2Corr(p=p,b0g=b0g,num=num,den=den)
         bpn <- bpc + log(p[[num]]$d) - log(p[[den]]$d)
         LL <- LLbinom(bn=bpn,nnum=p[[num]]$n,nden=p[[den]]$n)
-        -sum(LL)
+        sum(LL)
     }
-    init <- log(mean(p[[num]]$c)) - log(mean(p[[den]]$c))
-    stats::optimise(misfit,interval=init+c(-5,5),
-                    p=p,b0g=b0g,num=num,den=den)$minimum
+    misfit <- function(par,p,b0g){
+        LL46 <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb204',den='Pb206')
+        LL76 <- misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb207',den='Pb206')
+        LL86 <- misfit_helper(b=par[3],p=p,b0g=b0g,num='Pb208',den='Pb206')
+        -(LL46 + LL76 + LL86)
+    }
+    init46 <- log(mean(p$Pb204$c)) - log(mean(p$Pb206$c))
+    init76 <- log(mean(p$Pb207$c)) - log(mean(p$Pb206$c))
+    init86 <- log(mean(p$Pb208$c)) - log(mean(p$Pb206$c))
+    init <- c(init46,init76,init86)
+    fit <- stats::optim(par=init,fn=misfit,p=p,b0g=b0g,hessian=TRUE)
+    out <- list()
+    out$x <- fit$par
+    out$cov <- solve(fit$hessian)
+    out
 }
 
 # atomic to cps correction: 

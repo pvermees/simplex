@@ -4,21 +4,29 @@
 #' @param instrument either \code{'Cameca'} or \code{'SHRIMP'}
 #' @param suffix the extension of the data files to be loaded. This
 #'     defaults to \code{.asc} if \code{instrument='Cameca'} and
-#'     \code{.op} if \code{instrument='SHRIMP'}.
+#'     \code{.op} if \code{instrument='SHRIMP'}
+#' @param control a list with (currently) on item, namely \code{ions},
+#'     which is a vector with the ions corresponding to each column of
+#'     the input data
 #' @return an object of class \code{simplex}
 #' @examples
 #' # not run:
 #' \dontrun{
-#' camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='.asc')
+#' camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='asc')
 #' plot_timeresolved(camdat[[1]])
 #' }
 #' @export
-read_data <- function(dorf,instrument='Cameca',suffix=NULL){
+read_data <- function(dorf,instrument='Cameca',suffix,control){
     if (instrument == 'Cameca') {
-        if (is.null(suffix)) suffix <- '.asc'
-        out <- read_directory(dorf,instrument='Cameca',suffix=suffix)
+        if (missing(suffix)) suffix <- 'asc'
+        if (missing(control)) control <- list(ions=get_ions('IGG-zircon'))
+        out <- read_directory(dorf,instrument='Cameca',
+                              suffix=suffix,control=control)
     } else if (instrument== 'SHRIMP') {
-        out <- read_file(dorf,instrument='SHRIMP',suffix=suffix)
+        if (missing(suffix)) suffix <- 'pd'
+        if (missing(control)) control <- list(ions=get_ions('GA-zircon'))
+        out <- read_file(dorf,instrument='SHRIMP',
+                         suffix=suffix,control=control)
     } else {
         stop('Unsupported instrument')
     }
@@ -26,27 +34,27 @@ read_data <- function(dorf,instrument='Cameca',suffix=NULL){
     out
 }
 
-read_directory <- function(dname,instrument='Cameca',suffix='.asc'){
+read_directory <- function(dname,instrument='Cameca',suffix='asc',control){
     out <- list()
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
     for (i in 1:nf){ # loop through the files
         fname <- fnames[i]
         sname <- tools::file_path_sans_ext(fname)
-        out[[sname]] <- read_file(paste0(dname,fname),instrument=instrument)
+        out[[sname]] <- read_file(paste0(dname,fname),instrument=instrument,
+                                  suffix=suffix,control=control)
     }
     out
 }
 
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,instrument='Cameca',suffix=NULL){
-    suffix <- utils::tail(strsplit(fname,split='[.]')[[1]],n=1)
+read_file <- function(fname,instrument='Cameca',suffix='asc',control){
     if (instrument=='Cameca' & suffix=='asc'){
-        out <- read_Cameca_asc(fname)
+        out <- read_Cameca_asc(fname=fname,control=control)
     } else if (instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname)
+        out <- read_SHRIMP_op(fname=fname,control=control)
     } else if (instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname)
+        out <- read_SHRIMP_pd(fname=fname,control=control)
     } else {
         stop('Unrecognised file extension.')
     }
@@ -54,10 +62,7 @@ read_file <- function(fname,instrument='Cameca',suffix=NULL){
     out
 }
 
-read_Cameca_asc <- function(fname){
-    ions <- c('Zr90','Zr92','200.5','Zr94',
-              'Pb204','Pb206','Pb207','Pb208',
-              'U238','ThO2','UO2','270.1')
+read_Cameca_asc <- function(fname,control){
     f <- file(fname)
     open(f);
     out <- list()
@@ -68,8 +73,8 @@ read_Cameca_asc <- function(fname){
             out$dwelltime <- read_numbers(f,remove=1)
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
-            names(out$dwelltime) <- ions
-            names(out$detector) <- ions
+            names(out$dwelltime) <- control$ions
+            names(out$detector) <- control$ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
             junk <- readLines(f,n=3,warn=FALSE)
@@ -94,23 +99,22 @@ read_Cameca_asc <- function(fname){
             names(out$deadtime) <- detectors
         }
         if (grepl("RAW DATA",line)) {
-            cps <- read_asc_block(f,ions=ions)
+            cps <- read_asc_block(f,ions=control$ions)
             out$counts <- round(sweep(cps,MARGIN=2,FUN='*',out$dwelltime))
             out$edt <- effective_dwelltime(out)
         }
         if (grepl("PRIMARY INTENSITY",line)) {
-            out$sbm <- read_asc_block(f,ions=ions)
+            out$sbm <- read_asc_block(f,ions=control$ions)
         }
         if (grepl("TIMING",line)) {
-            out$time <- read_asc_block(f,ions=ions)
+            out$time <- read_asc_block(f,ions=control$ions)
         }
     }
     close(f)
     out
 }
 
-read_SHRIMP_op <- function(fname){
-    ions <- c('Zr2O','Pb204','bkg','Pb206','Pb207','Pb208','U238','ThO','UO','UO2')
+read_SHRIMP_op <- function(fname,control){
     f <- file(fname)
     open(f);
     out <- list()
@@ -128,21 +132,21 @@ read_SHRIMP_op <- function(fname){
             nions <- read_numbers(f)
             spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
-            names(spot$dwelltime) <- ions
+            names(spot$dwelltime) <- control$ions
             spot$time <- matrix(0,nscans,nions)
-            colnames(spot$time) <- ions
+            colnames(spot$time) <- control$ions
             for (i in 1:nions){
                 spot$time[,i] <- read_numbers(f)
             }
             spot$counts <- matrix(0,nscans,nions)
-            colnames(spot$counts) <- ions
+            colnames(spot$counts) <- control$ions
             for (i in 1:nions){
                 spot$counts[,i] <- read_numbers(f)
             }
             spot$edt <- effective_dwelltime(spot)
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
-            colnames(spot$sbm) <- ions
+            colnames(spot$sbm) <- control$ions
             for (i in 1:nions){
                 spot$sbm[,i] <- read_numbers(f)
             }
@@ -154,8 +158,7 @@ read_SHRIMP_op <- function(fname){
     out
 }
 
-read_SHRIMP_pd <- function(fname){
-    ions <- c('Zr2O','Pb204','bkg','Pb206','Pb207','Pb208','U238','ThO','UO','UO2')
+read_SHRIMP_pd <- function(fname,control){
     f <- file(fname)
     open(f);
     out <- list()
@@ -176,14 +179,14 @@ read_SHRIMP_pd <- function(fname){
             spot$sbmbkg <- split_mixed(header[[2]],5,3)
             spot$deadtime <- split_mixed(header[[2]],4,1)
             spot$dwelltime <- read.table(text=readLines(f,n=nions,warn=FALSE))[,4]
-            names(spot$dwelltime) <- ions
+            names(spot$dwelltime) <- control$ions
             spot$time <- matrix(0,nscans,nions)
             spot$counts <- matrix(0,nscans,nions)
             spot$sbm <- matrix(0,nscans,nions)
             block <- readLines(f,n=1+nscans*nions*2,warn=FALSE)[-1]
-            colnames(spot$time) <- ions
-            colnames(spot$counts) <- ions
-            colnames(spot$sbm) <- ions
+            colnames(spot$time) <- control$ions
+            colnames(spot$counts) <- control$ions
+            colnames(spot$sbm) <- control$ions
             for (i in 1:nscans){
                 for (j in 1:nions){
                     ii <- (i-1)*nions*2 + (j-1)*2 + 1
@@ -263,29 +266,35 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 #' @param prefix text string to match
 #' @param invert logical.  If \code{TRUE} return samples whose names
 #'     do _not_ match
-#' @param c64 the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb
-#' @param PbU (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
-#'     the age standard
+#' @param Pb206U238 (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio
+#'     of the age standard and its analytical uncertainty
+#' @param Pb208Th232 (optional) true
+#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratio of the age standard
 #' @param tst (optional) two-element vector with the age and standard
-#'     error of the age standard
+#'     error of the age standard and its analytical uncertainty
 #' @return an object of class \code{standard}
 #' @examples
 #' data(Cameca,package="simplex")
 #' stand <- standards(dat=Cameca,prefix='Plesovice')
 #' @export
-standards <- function(dat,prefix,invert=FALSE,
-                      c64=18.7,PbU=NULL,tst=NULL){
+standards <- function(dat,prefix,invert=FALSE,DP,DP.cov,tst){
     out <- list()
-    out$c64 <- c64
-    if (is.null(PbU)){
-        if (is.null(tst)){
+    if (missing(DP.cov)) DP.cov <- matrix(0,2,2)
+    if (missing(DP)){
+        if (missing(tst)){
             warning('No standard age or composition was supplied.')
             tst <- Pb76_to_age(dat)
         }
-        out$PbU <- IsoplotR:::age_to_Pb206U238_ratio(tt=tst[1],st=tst[2])
-    } else {
-        out$PbU <- PbU
+        cr <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
+        DP <- cr$x
+        DP.cov <- cr$cov
     }
+    labels <- c('Pb206U238','Pb208Th232')
+    names(DP) <- labels
+    rownames(DP.cov) <- labels
+    colnames(DP.cov) <- labels
+    out$DP <- DP
+    out$DP.cov <- DP.cov
     out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
     class(out) <- 'standard'
     out

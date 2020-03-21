@@ -31,7 +31,8 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
         spot <- dat$x[[sname]]
         p <- pars(spot,oxide=fit$oxide)
         b0g <- get_b0g(spot=dat$x[[sname]],oxide=fit$oxide)
-        XY <- getCalXY(p=p,b0g=b0g,c64=stand$c64)
+        XY <- getCalXY(p=p,b0g=b0g,parent=fit$parent,
+                       daughter=fit$daughter,cD4=fit$cD4)
         X[,sname] <- XY$X
         Y[,sname] <- XY$Y
     }
@@ -39,8 +40,8 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
     tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
                   signif(fit$AB['B'],3),'X')
     graphics::plot(X,Y,type='n',
-                   xlab=paste0('log[',fit$oxide,'/U]'),
-                   ylab=paste0('log[Pb','/U]'),main=tit)
+                   xlab=paste0('log[',fit$oxide,'/',fit$parent,']'),
+                   ylab=paste0('log[',fit$daughter,'/',fit$parent,']'),main=tit)
     graphics::matlines(X,Y,lty=1,col='grey')
     bg <- rep('black',nc)
     bg[fit$omit] <- 'grey'
