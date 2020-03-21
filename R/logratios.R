@@ -52,14 +52,10 @@ getPbLogRatios <- function(dat,oxide='UO2'){
     ns <- length(snames)
     out <- list()
     out$snames <- snames
-    labels <- c(rep('Pb204Pb206',ns),
-                rep('Pb207Pb206',ns),
-                rep('Pb208Pb206',ns))
+    out$num <- c('Pb204','Pb207','Pb208')
+    out$den <- c('Pb206','Pb206','Pb206')
     out$x <- rep(0,3*ns)
-    names(out$x) <- labels
     out$cov <- matrix(0,3*ns,3*ns)
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
     for (i in 1:ns){
         spot <- dat[[i]]
         p <- pars(spot=spot,oxide=oxide)

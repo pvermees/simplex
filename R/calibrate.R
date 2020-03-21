@@ -41,10 +41,9 @@ calibrate <- function(dat,fit,syserr=FALSE){
     # 2. get PD ratios
     out <- list()
     out$snames <- snames
-    if (fit$parent=='U238') dp <- 'Pb206U238'
-    else if (fit$parent=='Th232') dp <- 'Pb208Th232'
-    else stop('Illegal parent used in calibration.')
-    labels <- rep(dp,ns)
+    out$num <- fit$daughter
+    out$den <- fit$parent
+    dp <- paste0(fit$daughter,fit$parent)
     out$x <- log(fit$DP[dp]) + fit$AB['A'] - Ax
     EAxAslDPs <- matrix(0,ns+2,ns+2)
     EAxAslDPs[1:ns,1:ns] <- EAx
@@ -57,9 +56,6 @@ calibrate <- function(dat,fit,syserr=FALSE){
         J[(1:ns),(ns+2)] <- 1/fit$DP[dp] # dPDx_dDPs
     }
     out$cov <- J %*% EAxAslDPs %*% t(J)
-    names(out$x) <- labels
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
     out
 }
 
@@ -82,6 +78,8 @@ mergecal <- function(...){
     nc <- length(cals)
     out <- list()
     cal <- cals[[1]]
+    out$num <-cal$num
+    out$den <-cal$den
     out$snames <- cal$snames
     out$x <- cal$x
     out$cov <- cal$cov
@@ -92,13 +90,13 @@ mergecal <- function(...){
             stop('Mismatched sample names.')
         nold <- length(out$x)
         nnew <- length(cal$x)
+        out$num <- c(out$num,cal$num)
+        out$den <- c(out$den,cal$den)
         out$x <- c(out$x,cal$x)
         covmat <- diag(length(out$x))
         covmat[1:nold,1:nold] <- out$cov
         covmat[(nold+1):(nold+nnew),(nold+1):(nold+nnew)] <- cal$cov
         out$cov <- covmat
     }
-    rownames(out$cov) <- names(out$x)
-    colnames(out$cov) <- names(out$x)
     out
 }
