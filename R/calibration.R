@@ -81,43 +81,28 @@ misfit_AB <- function(AB,stand,oxide='UO2',parent='U238',
         p <- pars(spot=stand$x[[sname]],parent=parent,
                   daughter=daughter,oxide=oxide)
         b0g <- B0G[[sname]]
-        out <- out + misfit_A(A=AB[1],B=AB[2],p=p,b0g=b0g,cD4=cD4)
+        XY <- getCalXY(p=p,b0g=b0g,cD4=cD4)
+        RHS <- AB[1] + AB[2] * XY$X
+        bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
+        bDPpc <- RHS - XY$Y + bDPmc
+        bDPpn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
+        LL <- LLbinom(bn=bDPpn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
+        out <- out - sum(LL)
     }
     out
-}
-misfit_A <- function(A,B,p,b0g,cD4=0){
-    XY <- getCalXY(p=p,b0g=b0g,cD4=cD4)
-    RHS <- A + B * XY$X
-    bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
-    bDPpc <- RHS - XY$Y + bDPmc
-    bDPpn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
-    LL <- LLbinom(bn=bDPpn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
-    -sum(LL)
 }
 getCalXY <- function(p,b0g,cD4=0){
     out <- list()
     # get X
     bOPmc <- log(p[[p$oxide]]$c) - log(p[[p$parent]]$c)
-    bdcorrPO <- A2Corr(p=p,b0g=b0g,num=p$oxide,den=p$parent)
-    out$X <- bOPmc - bdcorrPO
+    bdcorrOP <- A2Corr(p=p,b0g=b0g,num=p$oxide,den=p$parent)
+    out$X <- bOPmc - bdcorrOP
     # get Y
     bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
-    bdcorrDP <- A2Corr(p=p,b0g=b0g,num=p$daughter,den=p$parent)
     bdcorr4D <- A2Corr(p=p,b0g=b0g,num='Pb204',den=p$daughter)
     b4D <- b0g['Pb204','b0'] - b0g[p$daughter,'b0'] - bdcorr4D
     b4corr <- log(1 - exp(b4D)*cD4)
+    bdcorrDP <- A2Corr(p=p,b0g=b0g,num=p$daughter,den=p$parent)
     out$Y <- bDPmc - bdcorrDP + b4corr
     out
-}
-dAdB <- function(X,bDPpc,nD,nP){
-    dbDPpcdA <- 1
-    dbDPpcdB <- X
-    num <- exp(bDPpc)
-    den <- 1 + exp(bDPpc)
-    dnumdA <- exp(bDPpc)*dbDPpcdA
-    dnumdB <- exp(bDPpc)*dbDPpcdB
-    dLdA <- dbDPpcdA*(nD-(nD+nP)*num/den)
-    d2LdA2 <- -dbDPpcdA*dnumdA*(nD+nP)/(den^2)
-    d2LdAdB <- -dbDPpcdA*dnumdB*(nD+nP)/(den^2)
-    -sum(d2LdAdB)/sum(d2LdA2)
 }

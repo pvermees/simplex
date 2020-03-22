@@ -22,17 +22,6 @@
 calibrate <- function(dat,fit,syserr=FALSE){
     snames <- names(dat)
     ns <- length(snames)
-    B0G <- get_B0G(dat=dat,parent=fit$parent,oxide=fit$oxide)
-    misfit <- function(par){
-        out <- 0
-        for (i in 1:ns){
-            spot <- dat[[i]]
-            p <- pars(spot=spot,oxide=fit$oxide)
-            As <- fit$AB['A'] + par[i]
-            out <- out + misfit_A(As,B=fit$AB['B'],p=p,b0g=B0G[[i]])
-        }
-        out
-    }
     init <- rep(0,ns)
     for (i in 1:ns){
         spot <- dat[[i]]
@@ -41,11 +30,36 @@ calibrate <- function(dat,fit,syserr=FALSE){
         y <- log(sum(p[[p$daughter]]$c)) - log(sum(p[[p$parent]]$c))
         init[i] <- y - fit$AB['B'] * x - fit$AB['A']
     }
+    B0G <- get_B0G(dat=dat,parent=fit$parent,oxide=fit$oxide)
+    # par is the vertical difference between the sample and the standard curve
+    misfit <- function(par,dat,fit,B0G){
+        out <- 0
+        for (i in 1:ns){
+            spot <- dat[[i]]
+            p <- pars(spot=spot,oxide=fit$oxide)
+            XY <- getCalXY(p,B0G[[i]])
+            Yp <- fit$AB['A'] + fit$AB['B']*XY$X + par[i]
+            J <- matrix(0,length(Yp),2)
+            J[,1] <- 1
+            J[,2] <- XY$X
+            sYp <- sqrt(J %*% fit$AB.cov %*% t(J))
+            Ypc <- Yp + A2Corr(p=p,b0g=B0G[[i]],num=p$daughter,den=p$parent)
+            Ymc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
+            LL <- dnorm(Ymc,mean=Ypc,sd=sYp,log=TRUE)
+            out <- out - sum(LL)
+        }
+        out
+    }
     out <- list()
-    fit <- stats::optim(init,misfit,method='L-BFGS-B',
-                        lower=init-1,upper=init+1,hessian=TRUE)
-    out$x <- fit$par
-    out$cov <- solve(fit$hessian)
+    out$snames <- snames
+    out$num <- fit$daughter
+    out$den <- fit$parent
+    dAfit <- stats::optim(init,misfit,method='L-BFGS-B',
+                          lower=init-1,upper=init+1,hessian=TRUE,
+                          dat=dat,fit=fit,B0G=B0G)
+    dp <- paste0(fit$daughter,fit$parent)
+    out$x <- log(fit$DP[dp]) + dAfit$par
+    out$cov <- solve(dAfit$hessian)
     out
 }
 
