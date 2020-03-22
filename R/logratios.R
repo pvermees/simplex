@@ -50,8 +50,6 @@ getPbLogRatios <- function(dat){
     ns <- length(snames)
     out <- list()
     out$snames <- snames
-    out$num <- c('Pb204','Pb207','Pb208')
-    out$den <- c('Pb206','Pb206','Pb206')
     out$x <- rep(0,3*ns)
     out$cov <- matrix(0,3*ns,3*ns)
     for (i in 1:ns){
@@ -59,11 +57,17 @@ getPbLogRatios <- function(dat){
         p <- pars(spot=spot)
         b0g <- get_b0g(spot=spot)
         lr <- getPbLogRatio(p,b0g)
-        cormat <- cov2cor(lr$cov)
+        cormat <- matrix(0,3,3)
+        if (lr$cov[1,1]>0)
+            cormat <- cov2cor(lr$cov)
+        else
+            cormat[2:3,2:3] <- cov2cor(lr$cov[2:3,2:3])
         j <- c(0,ns,2*ns)+i
         out$x[j] <- lr$x
-        out$cov[j,j] <- sqrt(diag(lr$cov))
+        out$cov[j,j] <- lr$cov
     }
+    out$num <- lr$num
+    out$den <- lr$den
     out
 }
 getPbLogRatio <- function(p,b0g){
@@ -71,22 +75,40 @@ getPbLogRatio <- function(p,b0g){
         bpc <- b + A2Corr(p=p,b0g=b0g,num=num,den=den)
         bpn <- bpc + log(p[[num]]$d) - log(p[[den]]$d)
         LL <- LLbinom(bn=bpn,nnum=p[[num]]$n,nden=p[[den]]$n)
-        sum(LL)
+        -sum(LL)
     }
-    misfit <- function(par,p,b0g){
-        LL46 <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb204',den='Pb206')
-        LL76 <- misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb207',den='Pb206')
-        LL86 <- misfit_helper(b=par[3],p=p,b0g=b0g,num='Pb208',den='Pb206')
-        -(LL46 + LL76 + LL86)
+    with204 <- function(b0g,p){
+        all(is.finite(blank_correct(b0g,tt=p$Pb204$t,mass='Pb204')))
     }
-    init46 <- log(mean(p$Pb204$c)) - log(mean(p$Pb206$c))
+    misfit4 <- function(par,b0g,p){
+        misfit_helper(b=par[3],p=p,b0g=b0g,num='Pb204',den='Pb206')
+    }
+    misfit78 <- function(par,b0g,p){
+        out <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb207',den='Pb206')
+        out + misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb208',den='Pb206')
+    }
+    misfit478 <- function(par,b0g,p){
+        out <- misfit4(par=par,b0g=b0g,p=p)
+        out + misfit78(par=par,b0g=b0g,p=p)
+    }
+    out <- list()
     init76 <- log(mean(p$Pb207$c)) - log(mean(p$Pb206$c))
     init86 <- log(mean(p$Pb208$c)) - log(mean(p$Pb206$c))
-    init <- c(init46,init76,init86)
-    fit <- stats::optim(par=init,fn=misfit,p=p,b0g=b0g,hessian=TRUE)
-    out <- list()
-    out$x <- fit$par
-    out$cov <- solve(fit$hessian)
+    if (with204(b0g=b0g,p=p)){
+        init46 <- log(mean(p$Pb204$c)) - log(mean(p$Pb206$c))
+        init <- c(init46,init76,init86)
+        fit <- stats::optim(par=init,fn=misfit478,b0g=b0g,p=p,hessian=TRUE)
+        out$x <- fit$par
+        out$cov <- solve(fit$hessian)
+    } else {
+        init <- c(init76,init86)
+        fit <- stats::optim(par=init,fn=misfit78,b0g=b0g,p=p,hessian=TRUE)
+        out$x <- c(-Inf,fit$par)
+        out$cov <- matrix(0,3,3)
+        out$cov[2:3,2:3] <- solve(fit$hessian)
+    }
+    out$num <- c('Pb204','Pb207','Pb208')
+    out$den <- c('Pb206','Pb206','Pb206')
     out
 }
 

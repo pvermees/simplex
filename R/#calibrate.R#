@@ -36,8 +36,7 @@ calibrate <- function(dat,fit,syserr=FALSE){
         out <- 0
         for (i in 1:ns){
             spot <- dat[[i]]
-            p <- pars(spot=spot,parent=fit$parent,
-                      daughter=fit$daughter,oxide=fit$oxide)
+            p <- pars(spot=spot,oxide=fit$oxide)
             XY <- getCalXY(p,B0G[[i]])
             Yp <- fit$AB['A'] + fit$AB['B']*XY$X + par[i]
             J <- matrix(0,length(Yp),2)
@@ -47,7 +46,7 @@ calibrate <- function(dat,fit,syserr=FALSE){
             Ypc <- Yp + A2Corr(p=p,b0g=B0G[[i]],num=p$daughter,den=p$parent)
             Ymc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
             D <- Ypc - Ymc
-            SS <- D %*% MASS::ginv(EYp) %*% D
+            SS <- D %*% EYp %*% D
             out <- out + SS/2
             #nt <- length(Ymc)
             #plot(rep(XY$X,2),c(Ymc,Ypc),pch=c(rep(21,nt),rep(19,nt)))
