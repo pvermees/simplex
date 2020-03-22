@@ -1,8 +1,8 @@
 get_B0G <- function(dat,parent='U238',oxide='UO2'){
-    snames <- names(dat$x)
+    snames <- names(dat)
     out <- list()
     for (sname in snames){
-        spot <- dat$x[[sname]]
+        spot <- dat[[sname]]
         out[[sname]] <- get_b0g(spot=spot,parent=parent,oxide=oxide)
     }
     out

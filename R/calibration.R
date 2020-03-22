@@ -37,7 +37,7 @@ calibration <- function(stand,oxide='UO2',parent='U238',
                         daughter='Pb206',cD4=0,omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
-    B0G <- get_B0G(dat,parent=parent,oxide=oxide)
+    B0G <- get_B0G(dat$x,parent=parent,oxide=oxide)
     init <- initAB(stand=stand,parent=parent,daughter=daughter,oxide=oxide)
     fit <- stats::optim(init,misfit_AB,stand=stand,oxide=oxide,
                         parent=parent,daughter=daughter,cD4=cD4,B0G=B0G)
@@ -85,18 +85,14 @@ misfit_AB <- function(AB,stand,oxide='UO2',parent='U238',
     }
     out
 }
-misfit_A <- function(A,B,p,b0g,cD4=0,deriv=FALSE){
+misfit_A <- function(A,B,p,b0g,cD4=0){
     XY <- getCalXY(p=p,b0g=b0g,cD4=cD4)
     RHS <- A + B * XY$X
     bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
     bDPpc <- RHS - XY$Y + bDPmc
     bDPpn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
     LL <- LLbinom(bn=bDPpn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
-    if (deriv)
-        out <- dAdB(X=XY$X,bDPpc=bDPpc,nD=p[[p$daughter]]$n,nP=p[[p$parent]]$n)
-    else
-        out <- (-sum(LL))
-    out
+    -sum(LL)
 }
 getCalXY <- function(p,b0g,cD4=0){
     out <- list()

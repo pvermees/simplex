@@ -20,56 +20,32 @@
 #' cal <- calibrate(unk,fit)
 #' @export
 calibrate <- function(dat,fit,syserr=FALSE){
-    # 1. get sample intercepts
     snames <- names(dat)
     ns <- length(snames)
-    Ax <- rep(0,ns)
-    EAxB <- matrix(0,ns+1,ns+1)
-    EAxB[(ns+1),(ns+1)] <- fit$AB.cov['B','B']
-    J <- matrix(0,ns,ns+1)
-    J[(1:ns),(1:ns)] <- diag(ns)
+    B0G <- get_B0G(dat=dat,parent=fit$parent,oxide=fit$oxide)
+    misfit <- function(par){
+        out <- 0
+        for (i in 1:ns){
+            spot <- dat[[i]]
+            p <- pars(spot=spot,oxide=fit$oxide)
+            As <- fit$AB['A'] + par[i]
+            out <- out + misfit_A(As,B=fit$AB['B'],p=p,b0g=B0G[[i]])
+        }
+        out
+    }
+    init <- rep(0,ns)
     for (i in 1:ns){
         spot <- dat[[i]]
         p <- pars(spot=spot,oxide=fit$oxide)
-        b0g <- get_b0g(spot=spot,oxide=fit$oxide)
-        calspot <- calibrate_spot(B=fit$AB['B'],p=p,b0g=b0g)
-        Ax[i] <- calspot['A']
-        EAxB[i,i] <- calspot['varA']
-        if (syserr) J[i,ns+1] <- calspot['dAdB']
+        x <- log(sum(p[[p$oxide]]$c)) - log(sum(p[[p$parent]]$c))
+        y <- log(sum(p[[p$daughter]]$c)) - log(sum(p[[p$parent]]$c))
+        init[i] <- y - fit$AB['B'] * x - fit$AB['A']
     }
-    EAx <- J %*% EAxB %*% t(J)
-    # 2. get PD ratios
     out <- list()
-    out$snames <- snames
-    out$num <- fit$daughter
-    out$den <- fit$parent
-    dp <- paste0(fit$daughter,fit$parent)
-    out$x <- log(fit$DP[dp]) + Ax - fit$AB['A']
-    EAxAslDPs <- matrix(0,ns+2,ns+2)
-    EAxAslDPs[1:ns,1:ns] <- EAx
-    EAxAslDPs[(ns+1),(ns+1)] <- fit$AB.cov['A','A']
-    EAxAslDPs[(ns+2),(ns+2)] <- fit$DP.cov[dp,dp]
-    J <- matrix(0,ns,ns+2)
-    J[(1:ns),(1:ns)] <- -diag(ns)        # dPDx_dAx
-    if (syserr) {
-        J[(1:ns),(ns+1)] <- 1            # dPDx_dAs
-        J[(1:ns),(ns+2)] <- 1/fit$DP[dp] # dPDx_dDPs
-    }
-    out$cov <- J %*% EAxAslDPs %*% t(J)
-    out
-}
-
-calibrate_spot <- function(B,p,b0g){
-    out <- rep(0,3)
-    names(out) <- c('A','varA','dAdB')
-    x <- log(sum(p[[p$oxide]]$c)) - log(sum(p[[p$parent]]$c))
-    y <- log(sum(p[[p$daughter]]$c)) - log(sum(p[[p$parent]]$c))
-    init <- y - B * x
-    out['A'] <- stats::optimise(misfit_A,interval=init+c(-5,5),
-                                 B=B,p=p,b0g=b0g)$minimum
-    H <- stats::optimHess(par=out['A'],fn=misfit_A,B=B,p=p,b0g=b0g)
-    out['varA'] <- solve(H)
-    out['dAdB'] <- misfit_A(A=out['A'],B=B,p=p,b0g=b0g,deriv=TRUE)
+    fit <- stats::optim(init,misfit,method='L-BFGS-B',
+                        lower=init-1,upper=init+1,hessian=TRUE)
+    out$x <- fit$par
+    out$cov <- solve(fit$hessian)
     out
 }
 
