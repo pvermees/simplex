@@ -81,15 +81,15 @@ getPbLogRatio <- function(p,b0g){
         all(is.finite(blank_correct(b0g,tt=p$Pb204$t,mass='Pb204')))
     }
     misfit4 <- function(par,b0g,p){
-        misfit_helper(b=par[3],p=p,b0g=b0g,num='Pb204',den='Pb206')
+        misfit_helper(b=par,p=p,b0g=b0g,num='Pb204',den='Pb206')
     }
     misfit78 <- function(par,b0g,p){
         out <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb207',den='Pb206')
         out + misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb208',den='Pb206')
     }
     misfit478 <- function(par,b0g,p){
-        out <- misfit4(par=par,b0g=b0g,p=p)
-        out + misfit78(par=par,b0g=b0g,p=p)
+        out <- misfit4(par=par[1],b0g=b0g,p=p)
+        out + misfit78(par=par[2:3],b0g=b0g,p=p)
     }
     out <- list()
     init76 <- log(mean(p$Pb207$c)) - log(mean(p$Pb206$c))
