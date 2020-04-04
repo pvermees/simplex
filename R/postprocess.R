@@ -18,36 +18,35 @@
 data2table <- function(lr){
     snames <- lr$snames
     ns <- length(snames)
-    getij <- function(lr,num,den){
+    geti <- function(lr,num,den){
         ns <- length(lr$snames)
-        i <- which(lr$num%in%num & lr$den%in%den)
-        j <- (i-1)*ns + (1:ns)
-        list(i=i,j=j)
+        j <- which(lr$num%in%num & lr$den%in%den)
+        (j-1)*ns + (1:ns)
     }
     nr <- length(lr$num)
-    J <- matrix(0,nr,nr*ns)
-    ijU <- getij(lr=lr,num='Pb206',den='U238')
-    ijTh <- getij(lr=lr,num='Pb208',den='Th232')
-    ijPb204 <- getij(lr=lr,num='Pb204',den='Pb206')
-    ijPb207 <- getij(lr=lr,num='Pb207',den='Pb206')
-    ijPb208 <- getij(lr=lr,num='Pb208',den='Pb206')
-    U238Pb206 <- exp(-lr$x[ijU$j])
-    Th232Pb208 <- exp(-lr$x[ijTh$j])
-    Pb204Pb206 <- exp(lr$x[ijPb204$j])
-    Pb207Pb206 <- exp(lr$x[ijPb207$j])
-    Pb208Pb206 <- exp(lr$x[ijPb208$j])
-    J[ijU$i,ijU$j] <- -U238Pb206
-    J[ijTh$i,ijTh$j] <- -Th232Pb208
-    J[ijPb204$i,ijPb204$j] <- Pb204Pb206
-    J[ijPb207$i,ijPb207$j] <- Pb207Pb206
-    J[ijPb208$i,ijPb208$j] <- Pb208Pb206
+    J <- matrix(0,nr*ns,nr*ns)
+    iU <- geti(lr=lr,num='Pb206',den='U238')
+    iTh <- geti(lr=lr,num='Pb208',den='Th232')
+    iPb204 <- geti(lr=lr,num='Pb204',den='Pb206')
+    iPb207 <- geti(lr=lr,num='Pb207',den='Pb206')
+    iPb208 <- geti(lr=lr,num='Pb208',den='Pb206')
+    U238Pb206 <- exp(-lr$x[iU])
+    Th232Pb208 <- exp(-lr$x[iTh])
+    Pb204Pb206 <- exp(lr$x[iPb204])
+    Pb207Pb206 <- exp(lr$x[iPb207])
+    Pb208Pb206 <- exp(lr$x[iPb208])
+    J[iU,iU] <- -U238Pb206
+    J[iTh,iTh] <- -Th232Pb208
+    J[iPb204,iPb204] <- Pb204Pb206
+    J[iPb207,iPb207] <- Pb207Pb206
+    J[iPb208,iPb208] <- Pb208Pb206
     E <- J %*% lr$cov %*% t(J)
     err <- sqrt(diag(E))
-    sU238Pb206 <- err[ijU$i]
-    sTh232Pb208 <- err[ijTh$i]
-    sPb204Pb206 <- err[ijPb204$i]
-    sPb207Pb206 <- err[ijPb207$i]
-    sPb208Pb206 <- err[ijPb208$i]
+    sU238Pb206 <- err[iU]
+    sTh232Pb208 <- err[iTh]
+    sPb204Pb206 <- err[iPb204]
+    sPb207Pb206 <- err[iPb207]
+    sPb208Pb206 <- err[iPb208]
     out <- cbind(Pb207Pb206,sPb207Pb206,Pb204Pb206,
                  sPb204Pb206,Pb208Pb206,sPb208Pb206)
     labels <- c('Pb207Pb206','sPb207Pb206','Pb204Pb206',

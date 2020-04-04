@@ -49,8 +49,6 @@ calibrate <- function(dat,fit,syserr=FALSE){
             D <- Ypc - Ymc
             SS <- D %*% MASS::ginv(EYp) %*% D
             out <- out + SS/2
-            #nt <- length(Ymc)
-            #plot(rep(XY$X,2),c(Ymc,Ypc),pch=c(rep(21,nt),rep(19,nt)))
         }
         out
     }
@@ -58,8 +56,7 @@ calibrate <- function(dat,fit,syserr=FALSE){
     out$snames <- snames
     out$num <- fit$daughter
     out$den <- fit$parent
-    dAfit <- stats::optim(init,misfit,method='L-BFGS-B',
-                          lower=init-1,upper=init+1,hessian=TRUE,
+    dAfit <- stats::optim(init,misfit,method='BFGS',hessian=TRUE,
                           dat=dat,fit=fit,B0G=B0G)
     dp <- paste0(fit$daughter,fit$parent)
     out$x <- log(fit$DP[dp]) + dAfit$par
