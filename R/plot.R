@@ -15,22 +15,23 @@
 #' cal <- calibration(stand=Ples,oxide='UO2')
 #' calplot(stand=Ples,fit=cal)
 #' @export
-calplot <- function(stand,fit,labels=0,omit=NULL){
+calplot <- function(dat,fit,cal,labels=0,omit=NULL){
     # 1. set up the plot variables
-    dat <- stand
-    if (!is.null(omit)) dat$x <- stand$x[-omit]
-    snames <- names(dat$x)
+    if (is(dat,'standard')) d <- dat$x
+    else d <- dat
+    if (!is.null(omit)) d <- d[-omit]
+    snames <- names(d)
     nc <- length(snames)
-    nr <- nrow(dat$x[[1]]$counts)
+    nr <- nrow(d[[1]]$counts)
     X <- matrix(0,nr,nc)
     Y <- matrix(0,nr,nc)
     colnames(X) <- snames
     colnames(Y) <- snames
     # 2. calculate plot coordinates:
     for (sname in snames){
-        spot <- dat$x[[sname]]
+        spot <- d[[sname]]
         p <- pars(spot,parent=fit$parent,daughter=fit$daughter,oxide=fit$oxide)
-        b0g <- get_b0g(spot=dat$x[[sname]],parent=fit$parent,oxide=fit$oxide)
+        b0g <- get_b0g(spot=d[[sname]],parent=fit$parent,oxide=fit$oxide)
         XY <- getCalXY(p=p,b0g=b0g,cD4=fit$cD4)
         X[,sname] <- XY$X
         Y[,sname] <- XY$Y
@@ -49,7 +50,19 @@ calplot <- function(stand,fit,labels=0,omit=NULL){
     if (labels==2) graphics::text(X[1,],Y[1,],labels=1:length(snames),pos=1,col=bg)
     graphics::points(X[nr,],Y[nr,],pch=21,bg='white')
     xlim <- graphics::par('usr')[1:2]
-    graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)
+    if (missing(cal)){
+        graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)
+    } else {
+        ns <- length(snames)
+        for (i in 1:ns){
+            sname <- snames[i]
+            xlim <- range(X[,sname])
+            dp <- paste0(fit$daughter,fit$parent)
+            dA <- cal$x[i] - log(fit$DP[dp])
+            ylim <- fit$AB['A']+dA+fit$AB['B']*xlim
+            graphics::lines(xlim,ylim)
+        }
+    }
 }
 
 #' @title plot the raw mass spectrometer data
@@ -74,7 +87,7 @@ plot_timeresolved <- function(spot,fit=NULL,...){
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
     if (!is.null(fit)){
-        predictable <- c('bkg','Pb204','Pb206','Pb207','U238',cal$oxide)
+        predictable <- c('bkg','Pb204','Pb206','Pb207','U238',fit$oxide)
         plottable <- predictable %in% colnames(spot$time)
         simplex <- predictable[plottable]
         X <- spot$time[,simplex]

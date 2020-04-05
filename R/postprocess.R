@@ -35,11 +35,11 @@ data2table <- function(lr){
     Pb204Pb206 <- exp(lr$x[iPb204])
     Pb207Pb206 <- exp(lr$x[iPb207])
     Pb208Pb206 <- exp(lr$x[iPb208])
-    J[iU,iU] <- -U238Pb206
-    J[iTh,iTh] <- -Th232Pb208
-    J[iPb204,iPb204] <- Pb204Pb206
-    J[iPb207,iPb207] <- Pb207Pb206
-    J[iPb208,iPb208] <- Pb208Pb206
+    diag(J)[iU] <- -U238Pb206
+    diag(J)[iTh] <- -Th232Pb208
+    diag(J)[iPb204] <- Pb204Pb206
+    diag(J)[iPb207] <- Pb207Pb206
+    diag(J)[iPb208] <- Pb208Pb206
     E <- J %*% lr$cov %*% t(J)
     err <- sqrt(diag(E))
     sU238Pb206 <- err[iU]

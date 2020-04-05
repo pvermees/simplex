@@ -32,27 +32,27 @@ calibrate <- function(dat,fit,syserr=FALSE){
     }
     B0G <- get_B0G(dat=dat,parent=fit$parent,oxide=fit$oxide)
     # par is the vertical difference between the sample and the standard curve
+    misfit_spot <- function(par,spot,fit,b0g){
+        p <- pars(spot=spot,parent=fit$parent,
+                  daughter=fit$daughter,oxide=fit$oxide)
+        XY <- getCalXY(p,b0g)
+        Yp <- fit$AB['A'] + fit$AB['B']*XY$X + par
+        bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
+        bDPpc <- Yp + A2Corr(p=p,b0g=b0g,num=p$daughter,den=p$parent)
+        bDPpn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
+        LL <- LLbinom(bn=bDPpn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
+        sum(LL)
+    }
     misfit <- function(par,dat,fit,B0G){
         out <- 0
         for (i in 1:ns){
             spot <- dat[[i]]
-            p <- pars(spot=spot,parent=fit$parent,
-                      daughter=fit$daughter,oxide=fit$oxide)
-            XY <- getCalXY(p,B0G[[i]])
-            Yp <- fit$AB['A'] + fit$AB['B']*XY$X + par[i]
-            J <- matrix(0,length(Yp),2)
-            J[,1] <- 1
-            J[,2] <- XY$X
-            EYp <- J %*% fit$AB.cov %*% t(J)
-            Ypc <- Yp + A2Corr(p=p,b0g=B0G[[i]],num=p$daughter,den=p$parent)
-            Ymc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
-            D <- Ypc - Ymc
-            SS <- D %*% MASS::ginv(EYp) %*% D
-            out <- out + SS/2
+            out <- out - misfit_spot(par=par[i],spot=spot,fit=fit,b0g=B0G[[i]])
         }
         out
     }
     out <- list()
+    class(out) <- "calibrated"
     out$snames <- snames
     out$num <- fit$daughter
     out$den <- fit$parent
