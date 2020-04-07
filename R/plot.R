@@ -15,10 +15,15 @@
 #' cal <- calibration(stand=Ples,oxide='UO2')
 #' calplot(stand=Ples,fit=cal)
 #' @export
-calplot <- function(dat,fit,cal,labels=0,omit=NULL){
+calplot <- function(dat,fit,labels=0,omit=NULL){
     # 1. set up the plot variables
-    if (is(dat,'standard')) d <- dat$x
-    else d <- dat
+    if (is(dat,'standard')){
+        standard <- TRUE
+        d <- dat$x
+    } else {
+        standard <- FALSE
+        d <- dat
+    }
     if (!is.null(omit)) d <- d[-omit]
     snames <- names(d)
     nc <- length(snames)
@@ -37,8 +42,13 @@ calplot <- function(dat,fit,cal,labels=0,omit=NULL){
         Y[,sname] <- XY$Y
     }
     # 3. create the actual plot
-    tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
-                  signif(fit$AB['B'],3),'X')
+    if (standard){
+        tit <- paste0('Y = ',signif(fit$AB['A'],3),'+',
+                      signif(fit$AB['B'],3),'X')
+    } else {
+        tit <- paste0('slope = ',signif(fit$AB['B'],3),
+                      '+/-',signif(sqrt(fit$AB.cov['B','B']),2))
+    }
     graphics::plot(X,Y,type='n',
                    xlab=paste0('log[',fit$oxide,'/',fit$parent,']'),
                    ylab=paste0('log[',fit$daughter,'/',fit$parent,']'),main=tit)
@@ -50,7 +60,7 @@ calplot <- function(dat,fit,cal,labels=0,omit=NULL){
     if (labels==2) graphics::text(X[1,],Y[1,],labels=1:length(snames),pos=1,col=bg)
     graphics::points(X[nr,],Y[nr,],pch=21,bg='white')
     xlim <- graphics::par('usr')[1:2]
-    if (missing(cal)){
+    if (standard){
         graphics::lines(xlim,fit$AB['A']+fit$AB['B']*xlim)
     } else {
         ns <- length(snames)
@@ -58,7 +68,7 @@ calplot <- function(dat,fit,cal,labels=0,omit=NULL){
             sname <- snames[i]
             xlim <- range(X[,sname])
             dp <- paste0(fit$daughter,fit$parent)
-            dA <- cal$x[i] - log(fit$DP[dp])
+            dA <- fit$x[i] - log(fit$DP[dp])
             ylim <- fit$AB['A']+dA+fit$AB['B']*xlim
             graphics::lines(xlim,ylim)
         }
@@ -74,53 +84,21 @@ calplot <- function(dat,fit,cal,labels=0,omit=NULL){
 #' @return a multi-panel plot
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' samp <- unknown(dat=Cameca,prefix='Qinghu')
-#' cal <- calibration(stand,oxide='UO2')
-#' plot_timeresolved(samp=samp[[1]],fit=cal)
+#' plot_timeresolved(samp=samp[[1]])
 #' @export
-plot_timeresolved <- function(spot,fit=NULL,...){
+plot_timeresolved <- function(spot,...){
     ions <- names(spot$dwelltime)
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
-    if (!is.null(fit)){
-        predictable <- c('bkg','Pb204','Pb206','Pb207','U238',fit$oxide)
-        plottable <- predictable %in% colnames(spot$time)
-        simplex <- predictable[plottable]
-        X <- spot$time[,simplex]
-        Y <- predict_counts(spot,fit=fit)[,simplex]
-    }
     for (ion in ions){
         graphics::plot(spot$time[,ion],spot$counts[,ion],
                        type='p',xlab='',ylab='',...)
-        if (!is.null(fit) & ion%in%simplex){
-            graphics::lines(X[,ion],Y[,ion])
-        }
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)
     }
     graphics::par(oldpar)
-}
-
-predict_counts <- function(spot,fit){
-    p <- pars(spot=spot,parent=fit$parent,oxide=fit$oxide)
-    b0g <- get_b0g(spot=spot,oxide=fit$oxide)
-    calspot <- calibrate_spot(B=fit$AB['B'],p=p,b0g=b0g)
-    b76pc <- calspot['Pb76'] + A2Corr(p=p,b0g=b0g,num='Pb207',den='Pb206')
-    b76pn <- b76pc + log(p$Pb207$d) - log(p$Pb206$d)
-    n6 <- (p$Pb206$n+p$Pb207$n)/(1+exp(b76pn))
-    n7 <- (p$Pb206$n+p$Pb207$n)*exp(b76pn)/(1+exp(b76pn))
-    b86pc <- calspot['Pb76'] + A2Corr(p=p,b0g=b0g,num='Pb207',den='Pb206')
-    b86pn <- b86pc + log(p$Pb207$d) - log(p$Pb206$d)
-    n8 <- (p$Pb206$n+p$Pb207$n)*exp(b76pn)/(1+exp(b76pn))
-    b46pc <- calspot['Pb46'] + A2Corr(p=p,b0g=b0g,num='Pb204',den='Pb206')
-    b46pn <- b46pc + log(p$Pb204$d) - log(p$Pb206$d)
-    n4 <- (p$Pb206$n+p$Pb204$n)*exp(b46pn)/(1+exp(b46pn))
-    bkg <- exp(b0g['blank','b0'])*p$blank$d
-    out <- cbind(bkg,n4,n6,n7,n8,p[[p$parent]]$n,p[[p$oxide]]$n)
-    colnames(out) <- c('bkg','Pb204','Pb206','Pb207','Pb208',p$parent,p$oxide)
-    out
 }

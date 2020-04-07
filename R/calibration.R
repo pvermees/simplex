@@ -44,6 +44,7 @@ calibration <- function(stand,oxide='UO2',parent='U238',
     hess <- stats::optimHess(fit$par,misfit_AB,stand=stand,oxide=oxide,
                              parent=parent,daughter=daughter,cD4=cD4,B0G=B0G)
     out <- list()
+    class(out) <- "calibration"
     out$parent <- parent
     out$daughter <- daughter
     out$oxide <- oxide

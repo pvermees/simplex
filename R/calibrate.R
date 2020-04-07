@@ -39,8 +39,8 @@ calibrate <- function(dat,fit,syserr=FALSE){
         Yp <- fit$AB['A'] + fit$AB['B']*XY$X + par
         bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
         bDPpc <- Yp + A2Corr(p=p,b0g=b0g,num=p$daughter,den=p$parent)
-        bDPpn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
-        LL <- LLbinom(bn=bDPpn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
+        bn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
+        LL <- LLbinom(bn=bn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
         sum(LL)
     }
     misfit <- function(par,dat,fit,B0G){
@@ -51,14 +51,14 @@ calibrate <- function(dat,fit,syserr=FALSE){
         }
         out
     }
-    out <- list()
-    class(out) <- "calibrated"
-    out$snames <- snames
-    out$num <- fit$daughter
-    out$den <- fit$parent
     dAfit <- stats::optim(init,misfit,method='BFGS',hessian=TRUE,
                           dat=dat,fit=fit,B0G=B0G)
     dp <- paste0(fit$daughter,fit$parent)
+    out <- fit
+    class(out) <- "calibrated"
+    out$num <- fit$daughter
+    out$den <- fit$parent
+    out$snames <- snames
     out$x <- log(fit$DP[dp]) + dAfit$par
     out$cov <- solve(dAfit$hessian)
     out
@@ -89,5 +89,6 @@ mergecal <- function(...){
         covmat[(nold+1):(nold+nnew),(nold+1):(nold+nnew)] <- cal$cov
         out$cov <- covmat
     }
+    class(out) <- "calibrated"
     out
 }
