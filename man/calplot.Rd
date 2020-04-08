@@ -4,20 +4,27 @@
 \alias{calplot}
 \title{calibration plot}
 \usage{
-calplot(stand, fit, labels = 0)
+calplot(dat, fit, labels = 0, omit = NULL)
 }
 \arguments{
-\item{stand}{an object of class \code{standard}}
+\item{dat}{an object of class \code{simplex}}
 
-\item{fit}{the output of \code{calibration}}
+\item{fit}{the output of \code{calibration} (if \code{dat} has
+class \code{standard}) _or_ \code{calibrate} (if \code{dat} has
+class \code{unknown})}
 
 \item{labels}{label the spots with their name (\code{labels=1}) or
 number (\code{labels=2}). The default is to use no labels.}
+
+\item{omit}{list of indices to omit from the calibration plot}
 }
 \value{
 a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
-    X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+    X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U _or_ of
+    Y=(\eqn{^{208}}Pb-\eqn{^{204}}Pb[\eqn{^{208}}Pb/
+    \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{232}}Th versus
+    X=\eqn{^{232}}Th\eqn{^{16}}O\eqn{_x}/\eqn{^{232}}Th
 }
 \description{
 plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
@@ -28,5 +35,5 @@ plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
 data(Cameca,package="simplex")
 Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 cal <- calibration(stand=Ples,oxide='UO2')
-calplot(stand=Ples,fit=cal)
+calplot(dat=Ples,fit=cal)
 }

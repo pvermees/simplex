@@ -3,9 +3,10 @@
 \docType{data}
 \name{Cameca}
 \alias{Cameca}
-\title{example datasets for \code{simplex}}
+\title{example Cameca dataset}
 \description{
-built-in Cameca dataset
+built-in Cameca dataset containing Plesovice and
+    Qinghu zircon
 }
 \examples{
 data(Cameca,package="simplex")

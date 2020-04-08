@@ -10,7 +10,7 @@
 #'     X=\eqn{^{232}}Th\eqn{^{16}}O\eqn{_x}/\eqn{^{232}}Th and
 #'     Y=(\eqn{^{208}}Pb-\eqn{^{204}}Pb[\eqn{^{208}}Pb/
 #'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{232}}Th
-#' @param stand a dataset of class \code{simplex}
+#' @param stand a dataset of class \code{standard}
 #' @param oxide either \code{'UO'}, \code{'UO2'}, \code{'ThO'}, or
 #'     \code{'ThO2'}
 #' @param parent either \code{'U238'} or \code{'Th232'}
@@ -20,12 +20,13 @@
 #'     ratio (if \code{parent = 'Th232'})
 #' @param omit indices of measurements to be omitted from the
 #'     calibration
-#' @return a list with the following items:
+#' @return a list with, besides a record of the input arguments, the
+#'     following items:
 #' 
 #' \code{AB} a vector with the intercept (\code{'A'}) and slope
 #' (\code{'B'}) of the power law
 #'
-#' \code{cov} the covariance matrix of \code{AB}
+#' \code{AB.cov} the covariance matrix of \code{AB}
 #'
 #' @examples
 #' data(Cameca,package="simplex")
@@ -37,33 +38,35 @@ calibration <- function(stand,oxide='UO2',parent='U238',
                         daughter='Pb206',cD4=0,omit=NULL){
     dat <- stand
     if (!is.null(omit)) dat$x <- stand$x[-omit]
-    B0G <- get_B0G(dat,oxide=oxide)
-    init <- initAB(stand=stand,oxide=oxide,parent=parent,daughter=daughter)
+    B0G <- get_B0G(dat$x,parent=parent,oxide=oxide)
+    init <- initAB(stand=stand,parent=parent,daughter=daughter,oxide=oxide)
     fit <- stats::optim(init,misfit_AB,stand=stand,oxide=oxide,
                         parent=parent,daughter=daughter,cD4=cD4,B0G=B0G)
     hess <- stats::optimHess(fit$par,misfit_AB,stand=stand,oxide=oxide,
                              parent=parent,daughter=daughter,cD4=cD4,B0G=B0G)
     out <- list()
+    class(out) <- "calibration"
     out$parent <- parent
     out$daughter <- daughter
+    out$oxide <- oxide
     out$cD4 <- cD4
     out$omit <- omit
     out$AB <- fit$par
     out$AB.cov <- solve(hess)
-    out$oxide <- oxide
     out$DP <- stand$DP
     out$DP.cov <- stand$DP.cov
     out
 }
 
-initAB <- function(stand,oxide='UO2',parent='U238',daughter='Pb206'){
+initAB <- function(stand,parent='U238',daughter='Pb206',oxide='UO2'){
     X <- NULL
     Y <- NULL
     snames <- names(stand$x)
     for (sname in snames){
-        p <- pars(spot=stand$x[[sname]],oxide=oxide)
-        bOP <- log(p$O$c) - log(p[[parent]]$c)
-        bDP <- log(p[[daughter]]$c) - log(p[[parent]]$c)
+        p <- pars(spot=stand$x[[sname]],parent=parent,
+                  daughter=daughter,oxide=oxide)
+        bOP <- log(p[[p$oxide]]$c) - log(p[[p$parent]]$c)
+        bDP <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
         X <- c(X,bOP)
         Y <- c(Y,bDP)
     }
@@ -77,51 +80,31 @@ misfit_AB <- function(AB,stand,oxide='UO2',parent='U238',
     snames <- names(stand$x)
     out <- 0
     for (sname in snames){
-        p <- pars(spot=stand$x[[sname]],oxide=oxide)
+        p <- pars(spot=stand$x[[sname]],parent=parent,
+                  daughter=daughter,oxide=oxide)
         b0g <- B0G[[sname]]
-        out <- out + misfit_A(A=AB[1],B=AB[2],p=p,b0g=b0g,
-                              parent=parent,daughter=daughter,cD4=cD4)
+        XY <- getCalXY(p=p,b0g=b0g,cD4=cD4)
+        RHS <- AB[1] + AB[2] * XY$X
+        bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
+        bDPpc <- RHS - XY$Y + bDPmc
+        bDPpn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
+        LL <- LLbinom(bn=bDPpn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
+        out <- out - sum(LL)
     }
     out
 }
-misfit_A <- function(A,B,p,b0g,parent='U238',daughter='Pb206',
-                     cD4=0,deriv=FALSE){
-    XY <- getCalXY(p=p,b0g=b0g,parent=parent,daughter=daughter,cD4=cD4)
-    RHS <- A + B * XY$X
-    bDPmc <- log(p[[daughter]]$c) - log(p[[parent]]$c)
-    bDPpc <- RHS - XY$Y + bDPmc
-    bDPpn <- bDPpc + log(p[[daughter]]$d) - log(p[[parent]]$d)
-    LL <- LLbinom(bn=bDPpn,nnum=p[[daughter]]$n,nden=p[[parent]]$n)
-    if (deriv)
-        out <- dAdB(X=XY$X,bDPpc=bDPpc,nD=p[[daughter]]$n,nP=p[[parent]]$n)
-    else
-        out <- (-sum(LL))
-    out
-}
-getCalXY <- function(p,b0g,parent='U238',daughter='Pb206',cD4=0){
+getCalXY <- function(p,b0g,cD4=0){
     out <- list()
     # get X
-    bOPmc <- log(p$O$c) - log(p[[parent]]$c)
-    bdcorrPO <- A2Corr(p=p,b0g=b0g,num='O',den=parent)
-    out$X <- bOPmc - bdcorrPO
+    bOPmc <- log(p[[p$oxide]]$c) - log(p[[p$parent]]$c)
+    bdcorrOP <- A2Corr(p=p,b0g=b0g,num=p$oxide,den=p$parent)
+    out$X <- bOPmc - bdcorrOP
     # get Y
-    bDPmc <- log(p[[daughter]]$c) - log(p[[parent]]$c)
-    bdcorrDP <- A2Corr(p=p,b0g=b0g,num=daughter,den=parent)
-    bdcorr4D <- A2Corr(p=p,b0g=b0g,num='Pb204',den=daughter)
-    b4D <- b0g['Pb204','b0'] - b0g[daughter,'b0'] - bdcorr4D
+    bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
+    bdcorr4D <- A2Corr(p=p,b0g=b0g,num='Pb204',den=p$daughter)
+    b4D <- b0g['Pb204','b0'] - b0g[p$daughter,'b0'] - bdcorr4D
     b4corr <- log(1 - exp(b4D)*cD4)
+    bdcorrDP <- A2Corr(p=p,b0g=b0g,num=p$daughter,den=p$parent)
     out$Y <- bDPmc - bdcorrDP + b4corr
     out
-}
-dAdB <- function(X,bDPpc,nD,nP){
-    dbDPpcdA <- 1
-    dbDPpcdB <- X
-    num <- exp(bDPpc)
-    den <- 1 + exp(bDPpc)
-    dnumdA <- exp(bDPpc)*dbDPpcdA
-    dnumdB <- exp(bDPpc)*dbDPpcdB
-    dLdA <- dbDPpcdA*(nD-(nD+nP)*num/den)
-    d2LdA2 <- -dbDPpcdA*dnumdA*(nD+nP)/(den^2)
-    d2LdAdB <- -dbDPpcdA*dnumdB*(nD+nP)/(den^2)
-    -sum(d2LdAdB)/sum(d2LdA2)
 }
