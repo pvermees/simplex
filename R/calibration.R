@@ -10,7 +10,7 @@
 #'     X=\eqn{^{232}}Th\eqn{^{16}}O\eqn{_x}/\eqn{^{232}}Th and
 #'     Y=(\eqn{^{208}}Pb-\eqn{^{204}}Pb[\eqn{^{208}}Pb/
 #'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{232}}Th
-#' @param stand a dataset of class \code{simplex}
+#' @param stand a dataset of class \code{standard}
 #' @param oxide either \code{'UO'}, \code{'UO2'}, \code{'ThO'}, or
 #'     \code{'ThO2'}
 #' @param parent either \code{'U238'} or \code{'Th232'}
@@ -20,12 +20,13 @@
 #'     ratio (if \code{parent = 'Th232'})
 #' @param omit indices of measurements to be omitted from the
 #'     calibration
-#' @return a list with the following items:
+#' @return a list with, besides a record of the input arguments, the
+#'     following items:
 #' 
 #' \code{AB} a vector with the intercept (\code{'A'}) and slope
 #' (\code{'B'}) of the power law
 #'
-#' \code{cov} the covariance matrix of \code{AB}
+#' \code{AB.cov} the covariance matrix of \code{AB}
 #'
 #' @examples
 #' data(Cameca,package="simplex")

@@ -4,17 +4,15 @@
 \alias{plot_timeresolved}
 \title{plot the raw mass spectrometer data}
 \usage{
-plot_timeresolved(samp, fit = NULL, ...)
+plot_timeresolved(spot, ...)
 }
 \arguments{
-\item{samp}{one item of a \code{simplex} list object}
-
-\item{fit}{the output of \code{calibration}}
+\item{spot}{one item of a \code{simplex} list object}
 
 \item{...}{optional parameters to the generic \code{plot} function}
 }
 \value{
-a multi-panel plot
+a multi-panel plot of signal versus time
 }
 \description{
 Shows the raw data for a single spot in a SIMS
@@ -22,8 +20,6 @@ Shows the raw data for a single spot in a SIMS
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- standard(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-samp <- unknown(dat=Cameca,prefix='Qinghu')
-cal <- calibration(stand,oxide='UO2')
-plot_timeresolved(samp=samp[[1]],fit=cal)
+samp <- unknowns(dat=Cameca,prefix='Qinghu')
+plot_timeresolved(spot=samp[[1]])
 }

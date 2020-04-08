@@ -3,17 +3,18 @@
 #'     \code{type=5} table
 #' @details converts an \code{IsoplotR} \code{type=9} object to a data
 #'     table that is formatted as a \code{type=5} input table
-#' @param x the output of \code{calibrate}
-#' @return a table n \code{IsoplotR} object of class \code{UPb}
-#'     (\code{format=5})
+#' @param lr the output of \code{calibrate} or \code{mergecal}
+#' @return a table that can be read by \code{IsoplotR}
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standards(dat=Cameca,prefix='Plesovice')
-#' fit <- calibration(stand=stand,oxide='UO2')
+#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' calU <- calibration(stand=stand,oxide='UO2',parent='U238',
+#'                     daughter='Pb206',cD4=18.7)
 #' samp <- unknowns(dat=Cameca,prefix='Qinghu')
-#' cal <- calibrate(samp,fit)
-#' tab <- data2table(cal)
-#' write.csv(tab,file='Qinghu.csv')
+#' calUsamp <- calibrate(dat=samp,fit=calU)
+#' calPbsamp <- getPbLogRatios(samp)
+#' calsamp <- mergecal(calUsamp,calPbsamp)
+#' tab <- data2table(calsamp)
 #' @export
 data2table <- function(lr){
     snames <- lr$snames

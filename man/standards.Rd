@@ -4,8 +4,7 @@
 \alias{standards}
 \title{define the standards in a dataset}
 \usage{
-standards(dat, prefix, invert = FALSE, c64 = 18.7, PbU = NULL,
-  tst = NULL)
+standards(dat, prefix, invert = FALSE, DP, DP.cov, tst)
 }
 \arguments{
 \item{dat}{an object of class \code{simplex}}
@@ -15,22 +14,24 @@ standards(dat, prefix, invert = FALSE, c64 = 18.7, PbU = NULL,
 \item{invert}{logical.  If \code{TRUE} return samples whose names
 do _not_ match}
 
-\item{c64}{the \eqn{^{206}}Pb/\eqn{^{204}}Pb-ratio of the common Pb}
+\item{DP}{(optional) true \eqn{^{206}}Pb/\eqn{^{238}}U- and
+\eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the age standard}
 
-\item{PbU}{(optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio of
-the age standard}
+\item{DP.cov}{(optional) the covariance matrix of \code{DP}}
 
 \item{tst}{(optional) two-element vector with the age and standard
-error of the age standard}
+error of the (presumed concordant) age standard and its
+analytical uncertainty}
 }
 \value{
 an object of class \code{standard}
 }
 \description{
 select a subset of standards from a \code{simplex}
-    dataset.
+    dataset. The true isotopic composition of the standard can be
+    supplied either explicitly, or via its age.
 }
 \examples{
 data(Cameca,package="simplex")
-stand <- standards(dat=Cameca,prefix='Plesovice')
+stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 }

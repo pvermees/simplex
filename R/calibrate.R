@@ -32,7 +32,7 @@ calibrate <- function(dat,fit,syserr=FALSE){
     }
     B0G <- get_B0G(dat=dat,parent=fit$parent,oxide=fit$oxide)
     # par is the vertical difference between the sample and the standard curve
-    misfit_spot <- function(par,spot,fit,b0g){
+    misfit_spot <- function(par,spot,fit,b0g,deriv=FALSE){
         p <- pars(spot=spot,parent=fit$parent,
                   daughter=fit$daughter,oxide=fit$oxide)
         XY <- getCalXY(p,b0g)
@@ -40,8 +40,24 @@ calibrate <- function(dat,fit,syserr=FALSE){
         bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
         bDPpc <- Yp + A2Corr(p=p,b0g=b0g,num=p$daughter,den=p$parent)
         bn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
-        LL <- LLbinom(bn=bn,nnum=p[[p$daughter]]$n,nden=p[[p$parent]]$n)
-        sum(LL)
+        nnum <- p[[p$daughter]]$n
+        nden <- p[[p$parent]]$n
+        if (deriv) out <- dmisfit_dAB(XY=XY,bn=bn,nnum=nnum,nden=nden)
+        else out <- sum(LLbinom(bn=bn,nnum=nnum,nden=nden))
+        out
+    }
+    dmisfit_dAB <- function(XY,bn,nnum,nden){
+        dbn_dA <- 1
+        dbn_dB <- XY$X
+        dbn_dpar <- 1
+        # LL <- sum(nnum*bn - (nnum+nden)*log(1+exp(bn)))
+        dLL_dbn <- nnum - (nnum+nden)*exp(bn)/(1+exp(bn))
+        dLL_dA <- sum(dLL_dbn * dbn_dA)
+        dLL_dB <- sum(dLL_dbn * dbn_dB)
+        dLL_dpar <- sum(dLL_dbn * dbn_dpar)
+        dpar_dA <- -dLL_dA/dLL_dpar
+        dpar_dB <- -dLL_dB/dLL_dpar
+        c(dpar_dA,dpar_dB)
     }
     misfit <- function(par,dat,fit,B0G){
         out <- 0
@@ -60,10 +76,46 @@ calibrate <- function(dat,fit,syserr=FALSE){
     out$den <- fit$parent
     out$snames <- snames
     out$x <- log(fit$DP[dp]) + dAfit$par
-    out$cov <- solve(dAfit$hessian)
+    covmat <- solve(dAfit$hessian)
+    if (syserr){
+        J <- matrix(0,ns,ns+3)
+        J[1:ns,1:ns] <- diag(ns)
+        for (i in 1:ns){
+            dx_dAB <- misfit_spot(par=dAfit$par[i],spot=dat[[i]],
+                                   fit=fit,b0g=B0G[[i]],deriv=TRUE)
+            dx_dDP <- 1/fit$DP[dp]
+            dx_dpar <- 1
+            J[i,ns+1] <- dx_dDP
+            J[i,ns+2] <- dx_dAB[1]
+            J[i,ns+3] <- dx_dAB[2]
+        }
+        E <- matrix(0,ns+3,ns+3)
+        E[1:ns,1:ns] <- covmat
+        E[ns+1,ns+1] <- fit$DP.cov[dp,dp]
+        E[ns+(2:3),ns+(2:3)] <- fit$AB.cov
+        out$cov <- J %*% E %*% t(J)
+    } else {
+        out$cov <- covmat
+    }
     out
 }
 
+#' @title merge calibrated data
+#' @description groups calibrated U-Pb, Th-Pb and Pb-Pb ratios into
+#'     one object for further processing and plotting
+#' @param ... any number of objects of class \code{calibrated}
+#' @return a new object of class \code{calibrated}
+#' @examples
+#' data(Cameca,package="simplex")
+#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' calU <- calibration(stand=stand,oxide='UO2',parent='U238',
+#'                     daughter='Pb206',cD4=18.7)
+#' samp <- unknowns(dat=Cameca,prefix='Qinghu')
+#' calUsamp <- calibrate(dat=samp,fit=calU)
+#' calPbsamp <- getPbLogRatios(samp)
+#' calsamp <- mergecal(calUsamp,calPbsamp)
+#' tab <- data2table(calsamp)
+#' @export
 mergecal <- function(...){
     cals <- list(...)
     nc <- length(cals)

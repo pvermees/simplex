@@ -4,10 +4,10 @@
 #' @param instrument either \code{'Cameca'} or \code{'SHRIMP'}
 #' @param suffix the extension of the data files to be loaded. This
 #'     defaults to \code{.asc} if \code{instrument='Cameca'} and
-#'     \code{.op} if \code{instrument='SHRIMP'}
-#' @param control a list with (currently) on item, namely \code{ions},
-#'     which is a vector with the ions corresponding to each column of
-#'     the input data
+#'     \code{.pd} if \code{instrument='SHRIMP'}
+#' @param control a list with (currently) one item, namely
+#'     \code{ions}, which is a vector with the ions corresponding to
+#'     each column of the input data
 #' @return an object of class \code{simplex}
 #' @examples
 #' # not run:
@@ -261,21 +261,22 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 
 #' @title define the standards in a dataset
 #' @description select a subset of standards from a \code{simplex}
-#'     dataset.
+#'     dataset. The true isotopic composition of the standard can be
+#'     supplied either explicitly, or via its age.
 #' @param dat an object of class \code{simplex}
 #' @param prefix text string to match
 #' @param invert logical.  If \code{TRUE} return samples whose names
 #'     do _not_ match
-#' @param Pb206U238 (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U-ratio
-#'     of the age standard and its analytical uncertainty
-#' @param Pb208Th232 (optional) true
-#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratio of the age standard
+#' @param DP (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U- and
+#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the age standard
+#' @param DP.cov (optional) the covariance matrix of \code{DP}
 #' @param tst (optional) two-element vector with the age and standard
-#'     error of the age standard and its analytical uncertainty
+#'     error of the (presumed concordant) age standard and its
+#'     analytical uncertainty
 #' @return an object of class \code{standard}
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standards(dat=Cameca,prefix='Plesovice')
+#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' @export
 standards <- function(dat,prefix,invert=FALSE,DP,DP.cov,tst){
     out <- list()

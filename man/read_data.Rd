@@ -4,7 +4,7 @@
 \alias{read_data}
 \title{read SIMS data}
 \usage{
-read_data(dorf, instrument = "Cameca", suffix = NULL)
+read_data(dorf, instrument = "Cameca", suffix, control)
 }
 \arguments{
 \item{dorf}{directory or file name}
@@ -13,7 +13,11 @@ read_data(dorf, instrument = "Cameca", suffix = NULL)
 
 \item{suffix}{the extension of the data files to be loaded. This
 defaults to \code{.asc} if \code{instrument='Cameca'} and
-\code{.op} if \code{instrument='SHRIMP'}.}
+\code{.pd} if \code{instrument='SHRIMP'}}
+
+\item{control}{a list with (currently) one item, namely
+\code{ions}, which is a vector with the ions corresponding to
+each column of the input data}
 }
 \value{
 an object of class \code{simplex}
@@ -24,7 +28,7 @@ read a file or folder with ASCII data
 \examples{
 # not run:
 \dontrun{
-camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='.asc')
+camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='asc')
 plot_timeresolved(camdat[[1]])
 }
 }

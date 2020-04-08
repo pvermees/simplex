@@ -2,18 +2,24 @@
 #' @description plot Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
 #'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
 #'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
-#' @param stand an object of class \code{standard}
-#' @param fit the output of \code{calibration}
+#' @param dat an object of class \code{simplex}
+#' @param fit the output of \code{calibration} (if \code{dat} has
+#'     class \code{standard}) _or_ \code{calibrate} (if \code{dat} has
+#'     class \code{unknown})
 #' @param labels label the spots with their name (\code{labels=1}) or
 #'     number (\code{labels=2}). The default is to use no labels.
+#' @param omit list of indices to omit from the calibration plot
 #' @return a plot of Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
 #'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U versus
-#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U
+#'     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U _or_ of
+#'     Y=(\eqn{^{208}}Pb-\eqn{^{204}}Pb[\eqn{^{208}}Pb/
+#'     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{232}}Th versus
+#'     X=\eqn{^{232}}Th\eqn{^{16}}O\eqn{_x}/\eqn{^{232}}Th
 #' @examples
 #' data(Cameca,package="simplex")
 #' Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' cal <- calibration(stand=Ples,oxide='UO2')
-#' calplot(stand=Ples,fit=cal)
+#' calplot(dat=Ples,fit=cal)
 #' @export
 calplot <- function(dat,fit,labels=0,omit=NULL){
     # 1. set up the plot variables
@@ -79,13 +85,12 @@ calplot <- function(dat,fit,labels=0,omit=NULL){
 #' @description Shows the raw data for a single spot in a SIMS
 #'     dataset.
 #' @param spot one item of a \code{simplex} list object
-#' @param fit the output of \code{calibration}
 #' @param ... optional parameters to the generic \code{plot} function
-#' @return a multi-panel plot
+#' @return a multi-panel plot of signal versus time
 #' @examples
 #' data(Cameca,package="simplex")
-#' samp <- unknown(dat=Cameca,prefix='Qinghu')
-#' plot_timeresolved(samp=samp[[1]])
+#' samp <- unknowns(dat=Cameca,prefix='Qinghu')
+#' plot_timeresolved(spot=samp[[1]])
 #' @export
 plot_timeresolved <- function(spot,...){
     ions <- names(spot$dwelltime)

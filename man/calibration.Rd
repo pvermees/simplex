@@ -4,23 +4,34 @@
 \alias{calibration}
 \title{create a calibration curve}
 \usage{
-calibration(stand, oxide = "UO2", omit = NULL)
+calibration(stand, oxide = "UO2", parent = "U238",
+  daughter = "Pb206", cD4 = 0, omit = NULL)
 }
 \arguments{
-\item{stand}{a dataset of class \code{simplex}}
+\item{stand}{a dataset of class \code{standard}}
 
-\item{oxide}{either \code{'UO'} or \code{'UO2'}}
+\item{oxide}{either \code{'UO'}, \code{'UO2'}, \code{'ThO'}, or
+\code{'ThO2'}}
+
+\item{parent}{either \code{'U238'} or \code{'Th232'}}
+
+\item{daughter}{either \code{'Pb206'} or \code{'Pb208'}}
+
+\item{cD4}{common \eqn{^{206}}Pb/\eqn{^{204}}Pb ratio (if
+\code{parent = 'U238'}) or common \eqn{^{208}}Pb/\eqn{^{204}}Pb
+ratio (if \code{parent = 'Th232'})}
 
 \item{omit}{indices of measurements to be omitted from the
 calibration}
 }
 \value{
-a list with the following items:
+a list with, besides a record of the input arguments, the
+    following items:
 
 \code{AB} a vector with the intercept (\code{'A'}) and slope
 (\code{'B'}) of the power law
 
-\code{cov} the covariance matrix of \code{AB}
+\code{AB.cov} the covariance matrix of \code{AB}
 }
 \description{
 fit a straight line to log[Pb/U] vs. log[UOx/U] data
@@ -30,6 +41,12 @@ Regresses a line through
     X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
     Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
     \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
+
+or through
+
+    X=\eqn{^{232}}Th\eqn{^{16}}O\eqn{_x}/\eqn{^{232}}Th and
+    Y=(\eqn{^{208}}Pb-\eqn{^{204}}Pb[\eqn{^{208}}Pb/
+    \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{232}}Th
 }
 \examples{
 data(Cameca,package="simplex")

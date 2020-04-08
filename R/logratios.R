@@ -45,6 +45,33 @@ b0_helper <- function(p,g){
     c(b0,g)
 }
 
+#' @title estimate atomic Pb-Pb logratios from count data
+#' @description turns Pb count data into atomic logratios, using a
+#'     binomial likelihood model
+#' @param dat an object of class \code{simplex}
+#' @return a list with the following items:
+#'
+#' \code{x}: a vector of logratios
+#'
+#' \code{cov}: the covariance matrix of \code{x}
+#'
+#' \code{snames}: the sample names
+#'
+#' \code{num}: the numerator isotopes of \code{x}
+#'
+#' \code{den}: the denominator isotopes of \code{x}
+#' 
+#' @examples
+#' data(Cameca,package="simplex")
+#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' calU <- calibration(stand=stand,oxide='UO2',parent='U238',
+#'                     daughter='Pb206',cD4=18.7)
+#' samp <- unknowns(dat=Cameca,prefix='Qinghu')
+#' calUsamp <- calibrate(dat=samp,fit=calU)
+#' calPbsamp <- getPbLogRatios(samp)
+#' calsamp <- mergecal(calUsamp,calPbsamp)
+#' tab <- data2table(calsamp)
+#' @export
 getPbLogRatios <- function(dat){
     snames <- names(dat)
     ns <- length(snames)
