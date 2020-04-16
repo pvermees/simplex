@@ -42,6 +42,7 @@ calibrate <- function(dat,fit,syserr=FALSE){
         nnum <- p[[p$daughter]]$n
         nden <- p[[p$parent]]$n
         if (deriv){
+            # LL <- sum(nnum*bn - (nnum+nden)*log(1+exp(bn)))
             dLL_dbn <- nnum - (nnum+nden)*exp(bn)/(1+exp(bn))
             dbn_dpar <- 1
             dbn_dA <- 1
