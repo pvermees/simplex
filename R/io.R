@@ -73,6 +73,7 @@ read_Cameca_asc <- function(fname,control){
             out$dwelltime <- read_numbers(f,remove=1)
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
+            out$type <- read_text(f,remove=1)
             names(out$dwelltime) <- control$ions
             names(out$detector) <- control$ions
         }
