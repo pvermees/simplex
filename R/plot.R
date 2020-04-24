@@ -104,9 +104,16 @@ plot_timeresolved <- function(spot,...){
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
+    if (has_outliers(spot)){
+        nt <- nrow(spot$time)
+        pch <- rep(4,nt)
+        pch[spot$inliers] <- 1
+    } else {
+        pch <- 4
+    }
     for (ion in ions){
         graphics::plot(spot$time[,ion],spot$counts[,ion],
-                       type='p',xlab='',ylab='',...)
+                       type='p',xlab='',ylab='',pch=pch,...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)
     }
