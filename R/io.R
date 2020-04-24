@@ -76,6 +76,7 @@ read_Cameca_asc <- function(fname,control){
             out$type <- read_text(f,remove=1)
             names(out$dwelltime) <- control$ions
             names(out$detector) <- control$ions
+            names(out$type) <- control$ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
             junk <- readLines(f,n=3,warn=FALSE)
