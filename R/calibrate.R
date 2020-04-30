@@ -37,35 +37,43 @@ calibrate <- function(dat,fit,syserr=FALSE){
                   daughter=fit$daughter,oxide=fit$oxide)
         XY <- getCalXY(p,b0g)
         Yp <- fit$AB['A'] + fit$AB['B']*XY$X + par
-        bDPmc <- log(p[[p$daughter]]$c) - log(p[[p$parent]]$c)
         bDPpc <- Yp + A2Corr(p=p,b0g=b0g,num=p$daughter,den=p$parent)
         bn <- bDPpc + log(p[[p$daughter]]$d) - log(p[[p$parent]]$d)
         nnum <- p[[p$daughter]]$n
         nden <- p[[p$parent]]$n
-        if (deriv) out <- dmisfit_dAB(XY=XY,bn=bn,nnum=nnum,nden=nden)
-        else out <- sum(LLbinom(bn=bn,nnum=nnum,nden=nden))
+        if (deriv){
+            # LL <- sum(nnum*bn - (nnum+nden)*log(1+exp(bn)))
+            dLL_dbn <- nnum - (nnum+nden)*exp(bn)/(1+exp(bn))
+            dbn_dpar <- 1
+            dbn_dA <- 1
+            dbn_dB <- XY$X
+            dLL_dpar <- sum(dLL_dbn*dbn_dpar)
+            dLL_dA <- sum(dLL_dbn*dbn_dA)
+            dLL_dB <- sum(dLL_dbn*dbn_dB)
+            dpar_dA <- -dLL_dA/dLL_dpar
+            dpar_dB <- -dLL_dB/dLL_dpar
+            out <- -c(dpar_dA,dpar_dB)
+        } else {
+            out <- -sum(LLbinom(bn=bn,nnum=nnum,nden=nden))
+        }
         out
-    }
-    dmisfit_dAB <- function(XY,bn,nnum,nden){
-        dbn_dA <- 1
-        dbn_dB <- XY$X
-        dbn_dpar <- 1
-        # LL <- sum(nnum*bn - (nnum+nden)*log(1+exp(bn)))
-        dLL_dbn <- nnum - (nnum+nden)*exp(bn)/(1+exp(bn))
-        dLL_dA <- sum(dLL_dbn * dbn_dA)
-        dLL_dB <- sum(dLL_dbn * dbn_dB)
-        dLL_dpar <- sum(dLL_dbn * dbn_dpar)
-        dpar_dA <- -dLL_dA/dLL_dpar
-        dpar_dB <- -dLL_dB/dLL_dpar
-        c(dpar_dA,dpar_dB)
     }
     misfit <- function(par,dat,fit,B0G){
         out <- 0
         for (i in 1:ns){
-            spot <- dat[[i]]
-            out <- out - misfit_spot(par=par[i],spot=spot,fit=fit,b0g=B0G[[i]])
+            out <- out + misfit_spot(par=par[i],spot=dat[[i]],
+                                     fit=fit,b0g=B0G[[i]])
         }
         out
+    }
+    jacobian <- function(par,dat,fit,B0G){
+        ns <- length(dat)
+        out <- matrix(0,ns,2)
+        for (i in 1:ns){
+            out[i,] <- misfit_spot(par=par[i],spot=dat[[i]],
+                                   fit=fit,b0g=B0G[[i]],deriv=TRUE)
+        }
+        out        
     }
     dAfit <- stats::optim(init,misfit,method='BFGS',hessian=TRUE,
                           dat=dat,fit=fit,B0G=B0G)
@@ -76,26 +84,11 @@ calibrate <- function(dat,fit,syserr=FALSE){
     out$den <- fit$parent
     out$snames <- snames
     out$x <- log(fit$DP[dp]) + dAfit$par
-    covmat <- solve(dAfit$hessian)
+    out$cov <- solve(dAfit$hessian)
     if (syserr){
-        J <- matrix(0,ns,ns+3)
-        J[1:ns,1:ns] <- diag(ns)
-        for (i in 1:ns){
-            dx_dAB <- misfit_spot(par=dAfit$par[i],spot=dat[[i]],
-                                   fit=fit,b0g=B0G[[i]],deriv=TRUE)
-            dx_dDP <- 1/fit$DP[dp]
-            dx_dpar <- 1
-            J[i,ns+1] <- dx_dDP
-            J[i,ns+2] <- dx_dAB[1]
-            J[i,ns+3] <- dx_dAB[2]
-        }
-        E <- matrix(0,ns+3,ns+3)
-        E[1:ns,1:ns] <- covmat
-        E[ns+1,ns+1] <- fit$DP.cov[dp,dp]
-        E[ns+(2:3),ns+(2:3)] <- fit$AB.cov
-        out$cov <- J %*% E %*% t(J)
-    } else {
-        out$cov <- covmat
+        J <- jacobian(par=dAfit$par,dat=dat,fit=fit,B0G=B0G)
+        E <- fit$AB.cov
+        out$cov <- out$cov + J %*% E %*% t(J)
     }
     out
 }

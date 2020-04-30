@@ -30,7 +30,12 @@ calplot <- function(dat,fit,labels=0,omit=NULL){
         standard <- FALSE
         d <- dat
     }
-    if (!is.null(omit)) d <- d[-omit]
+    if (!is.null(omit)){
+        d <- d[-omit]
+        fitx <- fit$x[-omit]
+    } else {
+        fitx <- fit$x
+    }
     snames <- names(d)
     nc <- length(snames)
     nr <- nrow(d[[1]]$counts)
@@ -60,7 +65,7 @@ calplot <- function(dat,fit,labels=0,omit=NULL){
                    ylab=paste0('log[',fit$daughter,'/',fit$parent,']'),main=tit)
     graphics::matlines(X,Y,lty=1,col='grey')
     bg <- rep('black',nc)
-    bg[fit$omit] <- 'grey'
+    bg[fit$omit[omit]] <- 'grey'
     graphics::points(X[1,],Y[1,],pch=21,bg=bg)
     if (labels==1) graphics::text(X[1,],Y[1,],labels=snames,pos=1,col=bg)
     if (labels==2) graphics::text(X[1,],Y[1,],labels=1:length(snames),pos=1,col=bg)
@@ -74,7 +79,7 @@ calplot <- function(dat,fit,labels=0,omit=NULL){
             sname <- snames[i]
             xlim <- range(X[,sname])
             dp <- paste0(fit$daughter,fit$parent)
-            dA <- fit$x[i] - log(fit$DP[dp])
+            dA <- fitx[i] - log(fit$DP[dp])
             ylim <- fit$AB['A']+dA+fit$AB['B']*xlim
             graphics::lines(xlim,ylim)
         }
@@ -99,9 +104,16 @@ plot_timeresolved <- function(spot,...){
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     simplex <- NULL
+    if (has_outliers(spot)){
+        nt <- nrow(spot$time)
+        pch <- rep(4,nt)
+        pch[spot$inliers] <- 1
+    } else {
+        pch <- 4
+    }
     for (ion in ions){
         graphics::plot(spot$time[,ion],spot$counts[,ion],
-                       type='p',xlab='',ylab='',...)
+                       type='p',xlab='',ylab='',pch=pch,...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)
     }

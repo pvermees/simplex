@@ -1,0 +1,4 @@
+Log file created on Fri Apr 24 15:19:32 2020 by GPlates  
+[Warning] libpng warning: iCCP: known incorrect sRGB profile
+[Warning] QFileSystemWatcher::removePaths: list is empty
+[Warning] QFileSystemWatcher::removePaths: list is empty
