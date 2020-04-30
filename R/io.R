@@ -5,9 +5,12 @@
 #' @param suffix the extension of the data files to be loaded. This
 #'     defaults to \code{.asc} if \code{instrument='Cameca'} and
 #'     \code{.pd} if \code{instrument='SHRIMP'}
-#' @param control a list with (currently) one item, namely
-#'     \code{ions}, which is a vector with the ions corresponding to
-#'     each column of the input data
+#' @param method the name of a data acquisition protocol. One of
+#'     \code{instrument='IGG-zircon'}, \code{instrument='GA-zircon'},
+#'     \code{instrument='IGG-monazite'},
+#'     \code{instrument='IGG-oxygen'}, or
+#'     \code{instrument='IGG-sulfur'}. To create new methods, see
+#'     \link{\code{set_method}}.
 #' @return an object of class \code{simplex}
 #' @examples
 #' # not run:
@@ -16,17 +19,17 @@
 #' plot_timeresolved(camdat[[1]])
 #' }
 #' @export
-read_data <- function(dorf,instrument='Cameca',suffix,control){
+read_data <- function(dorf,instrument='Cameca',suffix,method){
     if (instrument == 'Cameca') {
         if (missing(suffix)) suffix <- 'asc'
-        if (missing(control)) control <- list(ions=get_ions('IGG-zircon'))
+        if (missing(method)) method <- 'IGG-zircon'
         out <- read_directory(dorf,instrument='Cameca',
-                              suffix=suffix,control=control)
+                              suffix=suffix,method=method)
     } else if (instrument== 'SHRIMP') {
         if (missing(suffix)) suffix <- 'pd'
-        if (missing(control)) control <- list(ions=get_ions('GA-zircon'))
+        if (missing(method)) method <- 'GA-zircon'
         out <- read_file(dorf,instrument='SHRIMP',
-                         suffix=suffix,control=control)
+                         suffix=suffix,method=method)
     } else {
         stop('Unsupported instrument')
     }
@@ -34,7 +37,8 @@ read_data <- function(dorf,instrument='Cameca',suffix,control){
     out
 }
 
-read_directory <- function(dname,instrument='Cameca',suffix='asc',control){
+read_directory <- function(dname,instrument='Cameca',
+                           suffix='asc',method='IGG-zircon'){
     out <- list()
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
@@ -42,19 +46,20 @@ read_directory <- function(dname,instrument='Cameca',suffix='asc',control){
         fname <- fnames[i]
         sname <- tools::file_path_sans_ext(fname)
         out[[sname]] <- read_file(paste0(dname,fname),instrument=instrument,
-                                  suffix=suffix,control=control)
+                                  suffix=suffix,method=method)
     }
     out
 }
 
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,instrument='Cameca',suffix='asc',control){
+read_file <- function(fname,instrument='Cameca',
+                      suffix='asc',method='IGG-zircon'){
     if (instrument=='Cameca' & suffix=='asc'){
-        out <- read_Cameca_asc(fname=fname,control=control)
+        out <- read_Cameca_asc(fname=fname,method=method)
     } else if (instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname=fname,control=control)
+        out <- read_SHRIMP_op(fname=fname,method=method)
     } else if (instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname=fname,control=control)
+        out <- read_SHRIMP_pd(fname=fname,method=method)
     } else {
         stop('Unrecognised file extension.')
     }
@@ -62,7 +67,7 @@ read_file <- function(fname,instrument='Cameca',suffix='asc',control){
     out
 }
 
-read_Cameca_asc <- function(fname,control){
+read_Cameca_asc <- function(fname,method){
     f <- file(fname)
     open(f);
     out <- list()
@@ -74,9 +79,10 @@ read_Cameca_asc <- function(fname,control){
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
             out$type <- read_text(f,remove=1)
-            names(out$dwelltime) <- control$ions
-            names(out$detector) <- control$ions
-            names(out$type) <- control$ions
+            ions <- get_ions(method)
+            names(out$dwelltime) <- ions
+            names(out$detector) <- ions
+            names(out$type) <- ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
             junk <- readLines(f,n=3,warn=FALSE)
@@ -101,22 +107,20 @@ read_Cameca_asc <- function(fname,control){
             names(out$deadtime) <- detectors
         }
         if (grepl("RAW DATA",line)) {
-            cps <- read_asc_block(f,ions=control$ions)
-            out$counts <- round(sweep(cps,MARGIN=2,FUN='*',out$dwelltime))
-            out$edt <- effective_dwelltime(out)
+            out$signal <- read_asc_block(f,ions=ions)
         }
         if (grepl("PRIMARY INTENSITY",line)) {
-            out$sbm <- read_asc_block(f,ions=control$ions)
+            out$sbm <- read_asc_block(f,ions=ions)
         }
         if (grepl("TIMING",line)) {
-            out$time <- read_asc_block(f,ions=control$ions)
+            out$time <- read_asc_block(f,ions=ions)
         }
     }
     close(f)
     out
 }
 
-read_SHRIMP_op <- function(fname,control){
+read_SHRIMP_op <- function(fname,method='GA-zircon'){
     f <- file(fname)
     open(f);
     out <- list()
@@ -134,21 +138,21 @@ read_SHRIMP_op <- function(fname,control){
             nions <- read_numbers(f)
             spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
-            names(spot$dwelltime) <- control$ions
+            ions <- get_ions(method)
+            names(spot$dwelltime) <- ions
             spot$time <- matrix(0,nscans,nions)
-            colnames(spot$time) <- control$ions
+            colnames(spot$time) <- ions
             for (i in 1:nions){
                 spot$time[,i] <- read_numbers(f)
             }
-            spot$counts <- matrix(0,nscans,nions)
-            colnames(spot$counts) <- control$ions
+            spot$signal <- matrix(0,nscans,nions)
+            colnames(spot$signal) <- ions
             for (i in 1:nions){
-                spot$counts[,i] <- read_numbers(f)
+                spot$signal[,i] <- read_numbers(f)
             }
-            spot$edt <- effective_dwelltime(spot)
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
-            colnames(spot$sbm) <- control$ions
+            colnames(spot$sbm) <- ions
             for (i in 1:nions){
                 spot$sbm[,i] <- read_numbers(f)
             }
@@ -160,7 +164,7 @@ read_SHRIMP_op <- function(fname,control){
     out
 }
 
-read_SHRIMP_pd <- function(fname,control){
+read_SHRIMP_pd <- function(fname,method){
     f <- file(fname)
     open(f);
     out <- list()
@@ -181,25 +185,25 @@ read_SHRIMP_pd <- function(fname,control){
             spot$sbmbkg <- split_mixed(header[[2]],5,3)
             spot$deadtime <- split_mixed(header[[2]],4,1)
             spot$dwelltime <- read.table(text=readLines(f,n=nions,warn=FALSE))[,4]
-            names(spot$dwelltime) <- control$ions
+            ions <- get_ions(method)
+            names(spot$dwelltime) <- ions
             spot$time <- matrix(0,nscans,nions)
-            spot$counts <- matrix(0,nscans,nions)
+            spot$signal <- matrix(0,nscans,nions)
             spot$sbm <- matrix(0,nscans,nions)
             block <- readLines(f,n=1+nscans*nions*2,warn=FALSE)[-1]
-            colnames(spot$time) <- control$ions
-            colnames(spot$counts) <- control$ions
-            colnames(spot$sbm) <- control$ions
+            colnames(spot$time) <- ions
+            colnames(spot$signal) <- ions
+            colnames(spot$sbm) <- ions
             for (i in 1:nscans){
                 for (j in 1:nions){
                     ii <- (i-1)*nions*2 + (j-1)*2 + 1
                     dat <- read.table(text=block[[ii]])
                     spot$time[i,j] <- as.numeric(dat[3])
-                    spot$counts[i,j] <- sum(as.numeric(dat[-(1:4)]))
+                    spot$signal[i,j] <- sum(as.numeric(dat[-(1:4)]))
                     dat <- read.table(text=block[[ii+1]])
                     spot$sbm[i,j] <- sum(as.numeric(dat))
                 }
             }
-            spot$edt <- effective_dwelltime(spot)
             out[[sname]] <- spot
         }
     }
@@ -239,18 +243,6 @@ read_asc_block <- function(f,ions){
     }
     colnames(out) <- ions
     out
-}
-# calculate effective dwell time correcting for the dead time
-effective_dwelltime <- function(spot){
-    if (spot$instrument=='Cameca'){
-        deadtime <- spot$deadtime[spot$detector]
-    } else if (spot$instrument=='SHRIMP'){
-        deadtime <- rep(spot$deadtime,ncol(spot$counts))
-    } else {
-        stop('Invalid instrument type.')
-    }
-    lost_time <- sweep(spot$counts,MARGIN=2,FUN='*',deadtime)*1e-9
-    -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
 }
 
 subset_samples <- function(dat,prefix='Plesovice',...){
