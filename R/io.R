@@ -19,17 +19,15 @@
 #' plot_timeresolved(camdat[[1]])
 #' }
 #' @export
-read_data <- function(dorf,instrument='Cameca',suffix,method){
+read_data <- function(dorf,method='IGG-zircon',suffix){
+    instrument <- get_instrument(method)
+    ions <- get_ions(method)
     if (instrument == 'Cameca') {
         if (missing(suffix)) suffix <- 'asc'
-        if (missing(method)) method <- 'IGG-zircon'
-        out <- read_directory(dorf,instrument='Cameca',
-                              suffix=suffix,method=method)
+        out <- read_directory(dorf,suffix=suffix,instrument='Cameca',ions=ions)
     } else if (instrument== 'SHRIMP') {
         if (missing(suffix)) suffix <- 'pd'
-        if (missing(method)) method <- 'GA-zircon'
-        out <- read_file(dorf,instrument='SHRIMP',
-                         suffix=suffix,method=method)
+        out <- read_file(dorf,suffix=suffix,instrument='SHRIMP',ions=ions)
     } else {
         stop('Unsupported instrument')
     }
@@ -37,29 +35,27 @@ read_data <- function(dorf,instrument='Cameca',suffix,method){
     out
 }
 
-read_directory <- function(dname,instrument='Cameca',
-                           suffix='asc',method='IGG-zircon'){
+read_directory <- function(dname,suffix,instrument,ions){
     out <- list()
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
     for (i in 1:nf){ # loop through the files
         fname <- fnames[i]
         sname <- tools::file_path_sans_ext(fname)
-        out[[sname]] <- read_file(paste0(dname,fname),instrument=instrument,
-                                  suffix=suffix,method=method)
+        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,
+                                  instrument=instrument,ions=ions)
     }
     out
 }
 
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,instrument='Cameca',
-                      suffix='asc',method='IGG-zircon'){
+read_file <- function(fname,suffix,instrument,ions){
     if (instrument=='Cameca' & suffix=='asc'){
-        out <- read_Cameca_asc(fname=fname,method=method)
+        out <- read_Cameca_asc(fname=fname,ions=ions)
     } else if (instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname=fname,method=method)
+        out <- read_SHRIMP_op(fname=fname,ions=ions)
     } else if (instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname=fname,method=method)
+        out <- read_SHRIMP_pd(fname=fname,ions=ions)
     } else {
         stop('Unrecognised file extension.')
     }
@@ -67,7 +63,7 @@ read_file <- function(fname,instrument='Cameca',
     out
 }
 
-read_Cameca_asc <- function(fname,method){
+read_Cameca_asc <- function(fname,ions){
     f <- file(fname)
     open(f);
     out <- list()
@@ -79,7 +75,6 @@ read_Cameca_asc <- function(fname,method){
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
             out$type <- read_text(f,remove=1)
-            ions <- get_ions(method)
             names(out$dwelltime) <- ions
             names(out$detector) <- ions
             names(out$type) <- ions
@@ -120,7 +115,7 @@ read_Cameca_asc <- function(fname,method){
     out
 }
 
-read_SHRIMP_op <- function(fname,method='GA-zircon'){
+read_SHRIMP_op <- function(fname,ions){
     f <- file(fname)
     open(f);
     out <- list()
@@ -138,7 +133,6 @@ read_SHRIMP_op <- function(fname,method='GA-zircon'){
             nions <- read_numbers(f)
             spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
-            ions <- get_ions(method)
             names(spot$dwelltime) <- ions
             spot$time <- matrix(0,nscans,nions)
             colnames(spot$time) <- ions
@@ -164,7 +158,7 @@ read_SHRIMP_op <- function(fname,method='GA-zircon'){
     out
 }
 
-read_SHRIMP_pd <- function(fname,method){
+read_SHRIMP_pd <- function(fname,ions){
     f <- file(fname)
     open(f);
     out <- list()
@@ -185,7 +179,6 @@ read_SHRIMP_pd <- function(fname,method){
             spot$sbmbkg <- split_mixed(header[[2]],5,3)
             spot$deadtime <- split_mixed(header[[2]],4,1)
             spot$dwelltime <- read.table(text=readLines(f,n=nions,warn=FALSE))[,4]
-            ions <- get_ions(method)
             names(spot$dwelltime) <- ions
             spot$time <- matrix(0,nscans,nions)
             spot$signal <- matrix(0,nscans,nions)
