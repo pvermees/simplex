@@ -1,7 +1,6 @@
 #' @title read SIMS data
 #' @description read a file or folder with ASCII data
 #' @param dorf directory or file name
-#' @param instrument either \code{'Cameca'} or \code{'SHRIMP'}
 #' @param suffix the extension of the data files to be loaded. This
 #'     defaults to \code{.asc} if \code{instrument='Cameca'} and
 #'     \code{.pd} if \code{instrument='SHRIMP'}
@@ -59,6 +58,7 @@ read_file <- function(fname,suffix,instrument,ions){
     } else {
         stop('Unrecognised file extension.')
     }
+    out$ions <- ions
     class(out) <- 'spot'
     out
 }
