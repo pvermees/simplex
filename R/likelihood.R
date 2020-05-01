@@ -27,17 +27,30 @@ LL_Faraday <- function(spot,beta,i){
     den <- beta$den[i]
     X <- log(spot$signal[,num]) - log(spot$signal[,den])
     stable <- (nrow(beta$lr)==1)
-    single <- (length(i)==1)
+    nlr <- length(i)
     mu <- beta$lr[,i]
     if (stable){
-        if (single) E <- var(X)
-        else E <- cov(X)
+        if (nlr==1) {
+            E <- var(X)
+        } else {
+            E <- cov(X)
+        }
+        out <- mahalanobis(x=X,center=mu,cov=E)
     } else {
         nt <- nrow(spot$signal)
-        if (single) E <- sum((X-mu)^2)/(nt-1)
-        else E <- NULL # TODO
+        D <- X-mu
+        if (nlr==1) {
+            E <- sum(D^2)/(nt-1)
+        } else {
+            ij <- expand.grid(1:nlr,1:nlr)
+            E <- matrix(0,nlr,nlr)
+            for (r in 1:(nlr^2)){
+                E[ij[r,1],ij[r,2]] <- sum(D[,ij[r,1]]*D[,ij[r,2]])/(nt-1)
+            }
+        }
+        out <- mahalanobis(x=D,center=FALSE,cov=E)
     }
-    mahalanobis(x=X,center=mu,cov=E)
+    out
 }
 
 LL_SEM <- function(spot,beta,i){
