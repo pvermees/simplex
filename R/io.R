@@ -1,15 +1,15 @@
 #' @title read SIMS data
 #' @description read a file or folder with ASCII data
 #' @param dorf directory or file name
-#' @param suffix the extension of the data files to be loaded. This
-#'     defaults to \code{.asc} if \code{instrument='Cameca'} and
-#'     \code{.pd} if \code{instrument='SHRIMP'}
 #' @param method the name of a data acquisition protocol. One of
 #'     \code{instrument='IGG-zircon'}, \code{instrument='GA-zircon'},
 #'     \code{instrument='IGG-monazite'},
 #'     \code{instrument='IGG-oxygen'}, or
 #'     \code{instrument='IGG-sulfur'}. To create new methods, see
 #'     \link{\code{set_method}}.
+#' @param suffix the extension of the data files to be loaded. This
+#'     defaults to \code{.asc} if \code{instrument='Cameca'} and
+#'     \code{.pd} if \code{instrument='SHRIMP'}
 #' @return an object of class \code{simplex}
 #' @examples
 #' # not run:
@@ -20,13 +20,12 @@
 #' @export
 read_data <- function(dorf,method='IGG-zircon',suffix){
     instrument <- get_instrument(method)
-    ions <- get_ions(method)
     if (instrument == 'Cameca') {
         if (missing(suffix)) suffix <- 'asc'
-        out <- read_directory(dorf,suffix=suffix,instrument='Cameca',ions=ions)
+        out <- read_directory(dorf,suffix=suffix,method=method)
     } else if (instrument== 'SHRIMP') {
         if (missing(suffix)) suffix <- 'pd'
-        out <- read_file(dorf,suffix=suffix,instrument='SHRIMP',ions=ions)
+        out <- read_file(dorf,suffix=suffix,method=method)
     } else {
         stop('Unsupported instrument')
     }
@@ -34,21 +33,22 @@ read_data <- function(dorf,method='IGG-zircon',suffix){
     out
 }
 
-read_directory <- function(dname,suffix,instrument,ions){
+read_directory <- function(dname,suffix,method){
     out <- list()
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
     for (i in 1:nf){ # loop through the files
         fname <- fnames[i]
         sname <- tools::file_path_sans_ext(fname)
-        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,
-                                  instrument=instrument,ions=ions)
+        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,method=method)
     }
     out
 }
 
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,suffix,instrument,ions){
+read_file <- function(fname,suffix,method){
+    instrument <- get_instrument(method)
+    ions <- get_ions(method)
     if (instrument=='Cameca' & suffix=='asc'){
         out <- read_Cameca_asc(fname=fname,ions=ions)
     } else if (instrument=='SHRIMP' & suffix=='op'){
@@ -59,6 +59,7 @@ read_file <- function(fname,suffix,instrument,ions){
         stop('Unrecognised file extension.')
     }
     out$ions <- ions
+    out$nominalblank <- nominalblank(method)
     class(out) <- 'spot'
     out
 }

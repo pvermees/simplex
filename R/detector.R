@@ -1,5 +1,5 @@
 # beta is a matrix
-LL <- function(spot,beta){
+LL_detector <- function(spot,beta){
     nlr <- length(beta$num)
     out <- 0
     ntype <- spot$type[beta$num]
