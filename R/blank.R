@@ -1,39 +1,43 @@
-get_alpha <- function(spot){
-    nions <- length(spot$ions)
-    out <- matrix(0,nions,2)
-    colnames(out) <- c('a0','g')
-    rownames(out) <- spot$ions
-    for (ion in spot$ions){
-        tt <- spot$time[,ion]
-        sig <- spot$signal[,ion]
-        detector <- spot$detector[ion]
-        if (spot$nominalblank){
-            bkg <- spot$background[detector]
-        } else {
-            bkg <- spot$signal[,'bkg'] # TODO
-        }
-        if (spot$type[ion]=='Fc'){
-            out[ion,] <- Faraday_blank(tt,sig,bkg)
-        } else if (spot$type[detector]=='Em'){
-            # TODO add counts to read_data for Em data?
-            dwelltime <- spot$dwelltime[ion]
-            deadtime <- spot$deadtime[detector]
-            edt <- dwelltime - deadtime*sig
-            SEM_blank(tt,sig,bkg)
+blank <- function(spot,num,den){
+    out <- list()
+    out$num <- num
+    out$den <- den
+    nlr <- length(beta$num)
+    ntype <- spot$type[beta$num]
+    dtype <- spot$type[beta$den]
+    Fc <- (ntype%in%'Fc' & dtype%in%'Fc')
+    Em <- (ntype%in%'Em' & dtype%in%'Em')
+    Mx <- (ntype%in%'Em' & dtype%in%'Fc') | (ntype%in%'Fc' & dtype%in%'Em')
+    for (i in 1:nlr){
+        numion <- beta$num[i]
+        denion <- beta$den[i]
+        numtim <- spot$time[,numion]
+        dentim <- spot$time[,denion]
+        numsig <- spot$sig[,numion]
+        densig <- spot$sig[,denion]
+        numdet <- spot$detector[numion]
+        dendet <- spot$detector[denion]
+        numbkg <- get_bkg(spot,numdet)
+        denbkg <- get_bkg(spot,dendet)
+        if (Fc[i]){
+            if (all(numsig>numbkg)){
+                numlog <- log(numsig-numbkg)
+            } else {
+                
+            }
+            if (all(densig>denbkg)){
+                denlog <- log(densig-denbkg)
+            } else {
+                
+            }
+            out$lr[,i] <- numlog - denlog
+        } else if (Em[i]){
+            # TODO
+        } else if (Mx[i]){
+            # TODO
         } else {
             stop('Invalid detector type.')
         }
     }
     out
-}
-
-Faraday_blank <- function(tt,sig,bkg){
-    a <- log(sig-bkg)
-    fit <- lm(a ~ tt)
-    out <- fit$coef
-    names(out) <- c('a0','g')
-    out
-}
-
-SEM_blank <- function(tt,sig,bkg){
 }

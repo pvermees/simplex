@@ -10,3 +10,14 @@ effective_dwelltime <- function(spot){
     lost_time <- sweep(spot$signal,MARGIN=2,FUN='*',deadtime)*1e-9
     -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
 }
+
+element <- function(ion){
+    out <- gsub("[^a-zA-Z]", "", ion)
+    empty <- which(out %in% "")
+    out[empty] <- ion[empty]
+    out
+}
+
+hours <- function(tt){
+    tt/3600
+}
