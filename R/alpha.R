@@ -1,40 +1,50 @@
 alpha <- function(spot,ions=spot$ions,plot=FALSE){
     init_a0 <- function(spot,ions){
-        sb <- subtract_blank(spot=spot,ions=ions)
-        cm <- colMeans(sb)
-        cm[cm<0] <- -cm[cm<0]
-        log(cm)
+        sb1 <- subtract_blank(spot=spot,ions=ions)[1,]
+        sb1[sb1<0] <- -sb1[sb1<0]
+        log(sb1)
     }
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
     nEL <- length(EL)
-    a0 <- init_a0(spot,ions)
-    g <- rep(0,nEL)
-    a0g <- c(a0,g)
-    gi <- rep(0,nions)
-    for (i in 1:nEL){
-        j <- which(el %in% EL[i])
-        gi[j] <- i
-    }
-    fit <- optim(par=a0g,fn=LL_alpha,spot=spot,ions=ions,gi=gi)
-    a0 <- fit$par[1:nions]
+    ia0 <- init_a0(spot=spot,ions=ions)
+    a0 <- rep(0,nions)
     names(a0) <- ions
-    g <- fit$par[(nions+1):(nions+nEL)]
+    g <- rep(0,nEL)
     names(g) <- EL
-    a0g <- list(a0=a0,g=g)
-    if (plot){
-        plot_alpha(spot=spot,a0g=a0g)
+    for (i in 1:nEL){ # loop through elements
+        j <- which(el %in% EL[i])
+        gfit <- optim(par=0,f=LL_g,method='L-BFGS-B',lower=-1,upper=1,
+                      spot=spot,ions=ions[j],ia0=ia0[ions[j]])
+        afit <- optim(par=ia0,fn=LL_a0,method='BFGS',gr=NULL,
+                      spot=spot,ions=ions[j],g=gfit$par)
+        g[EL[i]] <- gfit$par
+        a0[ions[j]] <- afit$par
     }
-    fit$par
+    out <- list(a0=a0,g=g)
+    if (plot){
+        plot_alpha(spot=spot,a0g=out)
+    }
+    out
 }
 
-LL_alpha <- function(par,spot,ions=spot$ions,gi){
+LL_g <- function(par,spot,ions=spot$ions,ia0){
+    fit <- optim(par=ia0,fn=LL_a0,gr=NULL,spot=spot,ions=ions,g=par)
+    print(fit$value)
+#    plot_alpha(spot=spot,ions=ions,a0g=list(a0=fit$par,g=par))
+    fit$value
+}
+
+LL_a0 <- function(par,spot,ions=spot$ions,g){
+    LL_a0g(c(par,g),spot=spot,ions=ions)
+}
+
+LL_a0g <- function(a0g,spot,ions=spot$ions){
     nions <- length(ions)
-    a0 <- par[1:nions]
-    np <- length(par)
-    g <- par[(nions+1):np][gi]
-    tt <- hours(spot$time[,ions])
+    a0 <- a0g[1:nions]
+    g <- a0g[nions+1]
+    tt <- hours(spot$time[,ions,drop=FALSE])
     nt <- nrow(tt)
     gt <- sweep(tt,2,g,'*')
     a <- sweep(gt,2,a0,'+')
@@ -42,14 +52,14 @@ LL_alpha <- function(par,spot,ions=spot$ions,gi){
     if (spot$nominalblank){
         bkg <- spot$background[detector]
         predsig <- sweep(exp(a),2,bkg,'+')
-        ij <- expand.grid(1:nions,1:nions)
-        E <- matrix(0,nions,nions)
+        E <- diag(nions)
         D <- predsig - spot$signal[,ions]
-        for (r in 1:(nions^2)){
-            i <- ij[r,1]
-            j <- ij[r,2]
-            E[i,j] <- sum(D[,i]*D[,j])/(nt-1)
-        }
+#        ij <- expand.grid(1:nions,1:nions)
+#        for (r in 1:(nions^2)){
+#            i <- ij[r,1]
+#            j <- ij[r,2]
+#            E[i,j] <- sum(D[,i]*D[,j])/(nt-1)
+#        }
         SS <- sum(D %*% solve(E) %*% t(D))
     } else {
         stop('Not implemented yet.')
