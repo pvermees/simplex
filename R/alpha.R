@@ -1,9 +1,4 @@
 alpha <- function(spot,ions=spot$ions,plot=FALSE){
-    init_a0 <- function(spot,ions){
-        sb1 <- subtract_blank(spot=spot,ions=ions)[1,]
-        sb1[sb1<0] <- -sb1[sb1<0]
-        log(sb1)
-    }
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
@@ -13,14 +8,12 @@ alpha <- function(spot,ions=spot$ions,plot=FALSE){
     names(a0) <- ions
     g <- rep(0,nEL)
     names(g) <- EL
-    for (i in 1:nEL){ # loop through elements
+    for (i in 1:nEL){ # loop through the elements
         j <- which(el %in% EL[i])
-        gfit <- optim(par=0,f=LL_g,method='L-BFGS-B',lower=-1,upper=1,
-                      spot=spot,ions=ions[j],ia0=ia0[ions[j]])
-        afit <- optim(par=ia0,fn=LL_a0,method='BFGS',gr=NULL,
-                      spot=spot,ions=ions[j],g=gfit$par)
-        g[EL[i]] <- gfit$par
-        a0[ions[j]] <- afit$par
+        fit <- optim(par=c(a0[ions[j]],g[i]),f=LL_a0g,
+                     method='BFGS',spot=spot,ions=ions[j])
+        a0[ions[j]] <- fit$par[1:length(j)]
+        g[EL[i]] <- fit$par[length(j)+1]
     }
     out <- list(a0=a0,g=g)
     if (plot){
@@ -29,11 +22,19 @@ alpha <- function(spot,ions=spot$ions,plot=FALSE){
     out
 }
 
+init_a0 <- function(spot,ions){
+    sb1 <- subtract_blank(spot=spot,ions=ions)[1,]
+    sb1[sb1<0] <- -sb1[sb1<0]
+    log(sb1)
+}
+
 LL_g <- function(par,spot,ions=spot$ions,ia0){
-    fit <- optim(par=ia0,fn=LL_a0,gr=NULL,spot=spot,ions=ions,g=par)
-    print(fit$value)
+    print(par)
+    afit <- optim(par=ia0,fn=LL_a0,method='BFGS',gr=NULL,
+                  spot=spot,ions=ions,g=par)
+    print(afit$value)
 #    plot_alpha(spot=spot,ions=ions,a0g=list(a0=fit$par,g=par))
-    fit$value
+    afit$value
 }
 
 LL_a0 <- function(par,spot,ions=spot$ions,g){
@@ -44,7 +45,7 @@ LL_a0g <- function(a0g,spot,ions=spot$ions){
     nions <- length(ions)
     a0 <- a0g[1:nions]
     g <- a0g[nions+1]
-    tt <- hours(spot$time[,ions,drop=FALSE])
+    tt <- days(spot$time[,ions,drop=FALSE])
     nt <- nrow(tt)
     gt <- sweep(tt,2,g,'*')
     a <- sweep(gt,2,a0,'+')
@@ -60,7 +61,7 @@ LL_a0g <- function(a0g,spot,ions=spot$ions){
 #            j <- ij[r,2]
 #            E[i,j] <- sum(D[,i]*D[,j])/(nt-1)
 #        }
-        SS <- sum(D %*% solve(E) %*% t(D))
+        SS <- sum(D^2)
     } else {
         stop('Not implemented yet.')
     }
@@ -80,7 +81,7 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
         pch <- 1
 #    }
     for (ion in spot$ions){
-        tt <- hours(spot$time[,ion])
+        tt <- days(spot$time[,ion])
         if (ion %in% ions){
             a0 <- a0g$a0[ion]
             el <- element(ion)

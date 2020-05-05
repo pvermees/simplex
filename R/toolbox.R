@@ -21,3 +21,6 @@ element <- function(ion){
 hours <- function(tt){
     tt/3600
 }
+days <- function(tt){
+    tt/(24*3600)
+}
