@@ -33,7 +33,7 @@ alpha.spot <- function(x,ions=x$ions,plot=FALSE,...){
         j <- which(el %in% EL[i])
         ni <- length(j)
         init <- rep(0,ni+1)
-        fit <- optim(par=init,f=LL_a0g,method='BFGS',spot=x,ions=ions[j])
+        fit <- optim(par=init,f=SS_a0g,method='BFGS',spot=x,ions=ions[j])
         out['a0',ions[j]] <- fit$par[1:ni]
         out['g',ions[j]] <- fit$par[ni+1]
     }
@@ -43,7 +43,7 @@ alpha.spot <- function(x,ions=x$ions,plot=FALSE,...){
     out
 }
 
-LL_a0g <- function(a0g,spot,ions=spot$ions){
+SS_a0g <- function(a0g,spot,ions=spot$ions){
     nions <- length(ions)
     a0 <- a0g[1:nions]
     g <- a0g[nions+1]
@@ -51,9 +51,8 @@ LL_a0g <- function(a0g,spot,ions=spot$ions){
     nt <- nrow(tt)
     gt <- sweep(tt,2,g,'*')
     a <- sweep(gt,2,a0,'+')
-    detector <- spot$detector[ions]
     if (spot$nominalblank){
-        bkg <- spot$background[detector]
+        bkg <- background(spot,ions)
         predsig <- sweep(exp(a),2,bkg,'+')
         D <- predsig - spot$signal[,ions]
         SS <- sum(D^2)
@@ -74,7 +73,8 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
             a0 <- a0g['a0',ion]
             g <- a0g['g',ion]
             predsig <- exp(a0 + g*tt)
-            sb <- subtract_blank(spot=spot,ions=ion)
+            bkg <- background(spot,ions)
+            sweep(spot$signal[,ions,drop=FALSE],2,bkg,'-')
             ylab <- paste0('signal - blank (',ion,')')
         } else {
             sb <- spot$signal[,ion]
@@ -88,8 +88,7 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
     graphics::par(oldpar)
 }
 
-subtract_blank <- function(spot,ions){
-    detectors <- spot$detector[ions]
-    bkg <- spot$background[detectors]
-    sweep(spot$signal[,ions,drop=FALSE],2,bkg,'-')
+background <- function(spot,ions){
+    detector <- spot$detector[ions]
+    spot$background[detector]
 }
