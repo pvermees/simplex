@@ -1,3 +1,0 @@
-LL <- function(spot,betas){
-    
-}

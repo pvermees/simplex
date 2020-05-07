@@ -267,7 +267,6 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 #' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' @export
 standards <- function(dat,prefix,invert=FALSE,DP,DP.cov,tst){
-    out <- list()
     if (missing(DP.cov)) DP.cov <- matrix(0,2,2)
     if (missing(DP)){
         if (missing(tst)){
@@ -282,10 +281,11 @@ standards <- function(dat,prefix,invert=FALSE,DP,DP.cov,tst){
     names(DP) <- labels
     rownames(DP.cov) <- labels
     colnames(DP.cov) <- labels
+    out <- list()
     out$DP <- DP
     out$DP.cov <- DP.cov
     out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
-    class(out) <- 'standard'
+    class(out) <- 'standards'
     out
 }
 # get geometric mean Pb207/Pb206 ratio to estimate
@@ -315,12 +315,12 @@ Pb76_to_age <- function(dat){
 #' @return a list of objects of class \code{unknown}
 #' @examples
 #' data(Cameca,package="simplex")
-#' unk <- unknowns(Cameca,prefix='Plesovice',invert=TRUE)
+#' samp <- samples(Cameca,prefix='Plesovice',invert=TRUE)
 #' @export
-unknowns <- function(dat,prefix,invert=FALSE){
+samples <- function(dat,prefix,invert=FALSE){
     out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
     for (sname in names(out)){
-        class(out[[sname]]) <- 'unknown'
+        class(out[[sname]]) <- append(class(out),'samples')
     }
     out
 }

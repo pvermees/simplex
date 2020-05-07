@@ -1,9 +1,31 @@
-alpha <- function(spot,ions=spot$ions,plot=FALSE){
+#' @rdname alpha
+#' @export
+alpha <- function(x,...){ UseMethod("alpha",x) }
+#' @rdname alpha
+#' @export
+alpha.default <- function(x,...){ stop('No default method.') }
+#' @rdname alpha
+#' @export
+alpha.simplex <- function(x,ions,...){
+    snames <- names(x)
+    out <- list()
+    for (sname in snames){
+        out[[sname]] <- alpha_spot(spot=x[[sname]],ions=ions,...)
+    }
+    out
+}
+#' @rdname alpha
+#' @export
+alpha.standards <- function(x,ions,...){
+    alpha(x=x$x,ions=ions,...)
+}
+#' @rdname alpha
+#' @export
+alpha_spot <- function(spot,ions=spot$ions,plot=FALSE,...){
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
     nEL <- length(EL)
-    ia0 <- init_a0(spot=spot,ions=ions)
     a0 <- rep(0,nions)
     names(a0) <- ions
     g <- rep(0,nEL)
@@ -17,28 +39,9 @@ alpha <- function(spot,ions=spot$ions,plot=FALSE){
     }
     out <- list(a0=a0,g=g)
     if (plot){
-        plot_alpha(spot=spot,a0g=out)
+        plot_alpha(spot=spot,a0g=out,...)
     }
     out
-}
-
-init_a0 <- function(spot,ions){
-    sb1 <- subtract_blank(spot=spot,ions=ions)[1,]
-    sb1[sb1<0] <- -sb1[sb1<0]
-    log(sb1)
-}
-
-LL_g <- function(par,spot,ions=spot$ions,ia0){
-    print(par)
-    afit <- optim(par=ia0,fn=LL_a0,method='BFGS',gr=NULL,
-                  spot=spot,ions=ions,g=par)
-    print(afit$value)
-#    plot_alpha(spot=spot,ions=ions,a0g=list(a0=fit$par,g=par))
-    afit$value
-}
-
-LL_a0 <- function(par,spot,ions=spot$ions,g){
-    LL_a0g(c(par,g),spot=spot,ions=ions)
 }
 
 LL_a0g <- function(a0g,spot,ions=spot$ions){
@@ -53,14 +56,7 @@ LL_a0g <- function(a0g,spot,ions=spot$ions){
     if (spot$nominalblank){
         bkg <- spot$background[detector]
         predsig <- sweep(exp(a),2,bkg,'+')
-        E <- diag(nions)
         D <- predsig - spot$signal[,ions]
-#        ij <- expand.grid(1:nions,1:nions)
-#        for (r in 1:(nions^2)){
-#            i <- ij[r,1]
-#            j <- ij[r,2]
-#            E[i,j] <- sum(D[,i]*D[,j])/(nt-1)
-#        }
         SS <- sum(D^2)
     } else {
         stop('Not implemented yet.')
@@ -73,13 +69,6 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-#    if (has_outliers(spot)){
-#        nt <- nrow(spot$time)
-#        pch <- rep(4,nt)
-#        pch[spot$inliers] <- 1
-#    } else {
-        pch <- 1
-#    }
     for (ion in spot$ions){
         tt <- days(spot$time[,ion])
         if (ion %in% ions){
@@ -93,7 +82,7 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
             sb <- spot$signal[,ion]
             ylab <- paste0('signal (',ion,')')
         }
-        graphics::plot(tt,sb,type='p',xlab='',ylab='',pch=pch,...)
+        graphics::plot(tt,sb,type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
         if (ion %in% ions) graphics::lines(tt,predsig)
