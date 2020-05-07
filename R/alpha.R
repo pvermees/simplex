@@ -10,7 +10,7 @@ alpha.simplex <- function(x,ions,...){
     snames <- names(x)
     out <- list()
     for (sname in snames){
-        out[[sname]] <- alpha_spot(spot=x[[sname]],ions=ions,...)
+        out[[sname]] <- alpha(x=x[[sname]],ions=ions,...)
     }
     out
 }
@@ -21,25 +21,24 @@ alpha.standards <- function(x,ions,...){
 }
 #' @rdname alpha
 #' @export
-alpha_spot <- function(spot,ions=spot$ions,plot=FALSE,...){
+alpha.spot <- function(x,ions=x$ions,plot=FALSE,...){
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
     nEL <- length(EL)
-    a0 <- rep(0,nions)
-    names(a0) <- ions
-    g <- rep(0,nEL)
-    names(g) <- EL
+    out <- matrix(0,2,nions)
+    colnames(out) <- ions
+    rownames(out) <- c('a0','g')
     for (i in 1:nEL){ # loop through the elements
         j <- which(el %in% EL[i])
-        fit <- optim(par=c(a0[ions[j]],g[i]),f=LL_a0g,
-                     method='BFGS',spot=spot,ions=ions[j])
-        a0[ions[j]] <- fit$par[1:length(j)]
-        g[EL[i]] <- fit$par[length(j)+1]
+        ni <- length(j)
+        init <- rep(0,ni+1)
+        fit <- optim(par=init,f=LL_a0g,method='BFGS',spot=x,ions=ions[j])
+        out['a0',ions[j]] <- fit$par[1:ni]
+        out['g',ions[j]] <- fit$par[ni+1]
     }
-    out <- list(a0=a0,g=g)
     if (plot){
-        plot_alpha(spot=spot,a0g=out,...)
+        plot_alpha(spot=x,a0g=out,ions=ions,...)
     }
     out
 }
@@ -72,9 +71,8 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
     for (ion in spot$ions){
         tt <- days(spot$time[,ion])
         if (ion %in% ions){
-            a0 <- a0g$a0[ion]
-            el <- element(ion)
-            g <- a0g$g[el]
+            a0 <- a0g['a0',ion]
+            g <- a0g['g',ion]
             predsig <- exp(a0 + g*tt)
             sb <- subtract_blank(spot=spot,ions=ion)
             ylab <- paste0('signal - blank (',ion,')')
