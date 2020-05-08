@@ -7,14 +7,14 @@ beta.default <- function(x,...){ stop('No default method.') }
 #' @rdname beta
 #' @export
 beta.spot <- function(x,num,den,a,plot=FALSE,...){
+    out <- rbind(a['a0',num]-a['a0',den],0)
+    rownames(out) <- c('b0','g')
+    colnames(out) <- paste0(num,'/',den)
     groups <- groupbypairs(num,den)
-    out <- NULL
-    if (plot){
-        plot_beta(spot=x,num=num,den=den,b0g=NULL,a=a,...)
-    }
     for (gr in groups){
-        ni <- length(gr$num)
-        init <- a['a0',gr$num]-a['a0',gr$den]
+        nb <- length(gr$num)
+        ratios <- paste0(gr$num,'/',gr$den)
+        init <- out['b0',ratios]
         if (gr$elements['num']==gr$elements['den']){
             fit <- optim(par=init,f=SS_b0,method='L-BFGS-B',
                          lower=init-1,upper=init+1,spot=x,
@@ -24,11 +24,13 @@ beta.spot <- function(x,num,den,a,plot=FALSE,...){
             fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
                          lower=init-1,upper=init+1,spot=x,
                          num=gr$num,den=gr$den,a=a)
+            out['g',ratios] <- fit$par[nb+1]
         }
-        out <- cbind(out)
+        out['b0',ratios] <- fit$par[1:nb]
     }
-    rownames(out) <- c('b0','g')
-    colnames(out) <- paste(num,den,sep='/')
+    if (plot){
+        plot_beta(spot=x,num=num,den=den,b0g=out,a=a,...)
+    }
     out
 }
 
@@ -38,13 +40,19 @@ plot_beta <- function(spot,num,den,b0g,a,...){
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:np){
+        ratio <- paste0(num[i],'/',den[i])
         Np <- betapars(spot=spot,ion=num[i],a=a)
         Dp <- betapars(spot=spot,ion=den[i],a=a)
         driftcor <- exp(Np$g*(Np$t-Dp$t))
         X <- Dp$t
         Y <- driftcor*(Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
+        a0D <- a['a0',den[i]]
+        a0N <- a0D + b0g['b0',ratio] + b0g['g',ratio]*Dp$t + Np$g*(Np$t-Dp$t)
+        Ypred <- (Np$bkg+exp(a0N))/(Dp$bkg+exp(a0D))
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
-        graphics::plot(X,Y,type='p',xlab='',ylab='',...)
+        graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
+        graphics::points(X,Y)
+        graphics::lines(X,Ypred)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
     }
@@ -52,7 +60,6 @@ plot_beta <- function(spot,num,den,b0g,a,...){
 }
 
 SS_b0g <- function(b0g,spot,num,den,a){
-    print(b0g)
     ni <- length(num)
     nt <- nrow(spot$time)
     out <- 0
@@ -75,7 +82,7 @@ SS_a0 <- function(a0,b0g,spot,num,den,a){
     Np <- betapars(spot=spot,ion=num,a=a)
     Dp <- betapars(spot=spot,ion=den,a=a)
     a0D <- a0
-    a0N <- a0D + b0 + g*Dp$t + Np$sig*(Np$t-Dp$t)
+    a0N <- a0D + b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
     SS <- (Np$sig-Np$bkg-exp(a0N))^2 + (Dp$sig-Dp$bkg-exp(a0D))^2
     sum(SS)
 }

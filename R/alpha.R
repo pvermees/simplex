@@ -51,15 +51,14 @@ SS_a0g <- function(a0g,spot,ions=spot$ions){
     nt <- nrow(tt)
     gt <- sweep(tt,2,g,'*')
     a <- sweep(gt,2,a0,'+')
+    bkg <- background(spot,ions)
     if (spot$nominalblank){
-        bkg <- background(spot,ions)
         predsig <- sweep(exp(a),2,bkg,'+')
-        D <- predsig - spot$signal[,ions]
-        SS <- sum(D^2)
     } else {
-        stop('Not implemented yet.')
+        predsig <- sweep(exp(a),1,bkg,'+')
     }
-    sum(SS)
+    D <- predsig - spot$signal[,ions]
+    sum(D^2)
 }
 
 plot_alpha <- function(spot,ions=spot$ions,a0g,...){
@@ -90,5 +89,10 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
 
 background <- function(spot,ions){
     detector <- spot$detector[ions]
-    spot$background[detector]
+    if (spot$nominalblank){
+        out <- spot$background[detector]
+    } else {
+        out <- spot$signal[,'bkg']
+    }
+    out
 }
