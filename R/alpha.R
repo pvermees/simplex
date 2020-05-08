@@ -47,7 +47,7 @@ SS_a0g <- function(a0g,spot,ions=spot$ions){
     nions <- length(ions)
     a0 <- a0g[1:nions]
     g <- a0g[nions+1]
-    tt <- days(spot$time[,ions,drop=FALSE])
+    tt <- hours(spot$time[,ions,drop=FALSE])
     nt <- nrow(tt)
     gt <- sweep(tt,2,g,'*')
     a <- sweep(gt,2,a0,'+')
@@ -68,7 +68,7 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in spot$ions){
-        tt <- days(spot$time[,ion])
+        tt <- hours(spot$time[,ion])
         if (ion %in% ions){
             a0 <- a0g['a0',ion]
             g <- a0g['g',ion]

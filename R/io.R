@@ -48,26 +48,24 @@ read_directory <- function(dname,suffix,method){
 # fname is the complete path to an .asc or .op file
 read_file <- function(fname,suffix,method){
     instrument <- get_instrument(method)
-    ions <- get_ions(method)
     if (instrument=='Cameca' & suffix=='asc'){
-        out <- read_Cameca_asc(fname=fname,ions=ions)
+        out <- read_Cameca_asc(fname=fname,method=method)
     } else if (instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname=fname,ions=ions)
+        out <- read_SHRIMP_op(fname=fname,method=method)
     } else if (instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname=fname,ions=ions)
+        out <- read_SHRIMP_pd(fname=fname,method=method)
     } else {
         stop('Unrecognised file extension.')
     }
-    out$ions <- ions
-    out$nominalblank <- nominalblank(method)
-    class(out) <- 'spot'
     out
 }
 
-read_Cameca_asc <- function(fname,ions){
+read_Cameca_asc <- function(fname,method){
     f <- file(fname)
     open(f);
     out <- list()
+    out$ions <- get_ions(method)
+    out$nominalblank <- nominalblank(method)
     out$instrument <- 'Cameca'
     while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
         if (grepl("ACQUISITION PARAMETERS",line)){
@@ -76,9 +74,9 @@ read_Cameca_asc <- function(fname,ions){
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
             out$type <- read_text(f,remove=1)
-            names(out$dwelltime) <- ions
-            names(out$detector) <- ions
-            names(out$type) <- ions
+            names(out$dwelltime) <- out$ions
+            names(out$detector) <- out$ions
+            names(out$type) <- out$ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
             junk <- readLines(f,n=3,warn=FALSE)
@@ -103,29 +101,35 @@ read_Cameca_asc <- function(fname,ions){
             names(out$deadtime) <- detectors
         }
         if (grepl("RAW DATA",line)) {
-            out$signal <- read_asc_block(f,ions=ions)
+            out$signal <- read_asc_block(f,ions=out$ions)
         }
         if (grepl("PRIMARY INTENSITY",line)) {
-            out$sbm <- read_asc_block(f,ions=ions)
+            out$sbm <- read_asc_block(f,ions=out$ions)
         }
         if (grepl("TIMING",line)) {
-            out$time <- read_asc_block(f,ions=ions)
+            out$time <- read_asc_block(f,ions=out$ions)
         }
     }
     close(f)
+    class(out) <- 'spot'
     out
 }
 
-read_SHRIMP_op <- function(fname,ions){
+read_SHRIMP_op <- function(fname,method){
     f <- file(fname)
     open(f);
     out <- list()
+    ions <- get_ions(method)
+    nominalblank <- nominalblank(method)
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
         if (length(line)<1){
             break
         } else if (nchar(line)>0){
             spot <- list()
+            spot$ions <- ions
+            spot$nominalblank <- nominalblank
+            class(spot) <- 'spot'
             spot$instrument <- 'SHRIMP'
             sname <- line
             spot$date <- readLines(f,n=1,warn=FALSE)
@@ -159,10 +163,12 @@ read_SHRIMP_op <- function(fname,ions){
     out
 }
 
-read_SHRIMP_pd <- function(fname,ions){
+read_SHRIMP_pd <- function(fname,ions,method){
     f <- file(fname)
     open(f);
     out <- list()
+    ions <- get_ions(method)
+    nominalblank <- nominalblank(method)
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
         if (length(line)<1){
@@ -170,6 +176,9 @@ read_SHRIMP_pd <- function(fname,ions){
         } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
             header <- readLines(f,n=4,warn=FALSE)
             spot <- list()
+            spot$ions <- ions
+            spot$nominalblank <- nominalblank
+            class(spot) <- 'spot'
             spot$instrument <- 'SHRIMP'
             namedate <- strsplit(header[[1]],split=', ')[[1]]
             sname <- namedate[1]
