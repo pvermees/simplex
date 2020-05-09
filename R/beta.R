@@ -38,6 +38,7 @@ plot_beta <- function(spot,num,den,b0g,a,...){
     np <- length(num) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
+    nt <- nrow(spot$time)
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:np){
         ratio <- paste0(num[i],'/',den[i])
@@ -46,9 +47,12 @@ plot_beta <- function(spot,num,den,b0g,a,...){
         driftcor <- exp(Np$g*(Np$t-Dp$t))
         X <- Dp$t
         Y <- driftcor*(Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
-        a0D <- a['a0',den[i]]
-        a0N <- a0D + b0g['b0',ratio] + b0g['g',ratio]*Dp$t + Np$g*(Np$t-Dp$t)
-        Ypred <- (Np$bkg+exp(a0N))/(Dp$bkg+exp(a0D))
+        b0 <- b0g['b0',ratio]
+        g <- b0g['g',ratio]
+        exp_a0D <- get_exp_a0D(b0=b0,g=g,Np=Np,Dp=Dp)
+        b0i <- b0g['b0',ratio] + b0g['g',ratio]*Dp$t + Np$g*(Np$t-Dp$t)
+        exp_a0N <- exp_a0D*exp(b0i)
+        Ypred <- exp_a0N/exp_a0D
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
         graphics::points(X,Y)
@@ -62,12 +66,18 @@ plot_beta <- function(spot,num,den,b0g,a,...){
 SS_b0g <- function(b0g,spot,num,den,a){
     ni <- length(num)
     nt <- nrow(spot$time)
+    b0 <- b0g[1:ni]
+    g <- b0g[ni+1]
     out <- 0
     for (i in 1:ni){
-        a0 <- rep(a['a0',num],nt) # TODO
-        fit <- optim(a0,SS_a0,method='BFGS',b0g=b0g,spot=spot,
-                     num=num[i],den=den[i],a=a)
-        out <- out + fit$value
+        Np <- betapars(spot=spot,ion=num[i],a=a)
+        Dp <- betapars(spot=spot,ion=den[i],a=a)
+        exp_a0D <- get_exp_a0D(b0=b0[i],g=g,Np=Np,Dp=Dp)
+        b0i <- b0[i] + g*Dp$t + Np$g*(Np$t-Dp$t)
+        exp_a0N <- exp_a0D*exp(b0i)
+        SS <- sum((Np$sig-Np$bkg-exp_a0N)^2 +
+                  (Dp$sig-Dp$bkg-exp_a0D)^2)
+        out <- out + SS
     }
     out
 }
@@ -75,16 +85,11 @@ SS_b0 <- function(b0,spot,num,den,a){
     SS_b0g(c(b0,0),spot=spot,num=num,den=den,a=a)
 }
 
-SS_a0 <- function(a0,b0g,spot,num,den,a){
-    nb0 <- length(b0g)-1
-    b0 <- b0g[1:nb0]
-    g <- b0g[nb0+1]
-    Np <- betapars(spot=spot,ion=num,a=a)
-    Dp <- betapars(spot=spot,ion=den,a=a)
-    a0D <- a0
-    a0N <- a0D + b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
-    SS <- (Np$sig-Np$bkg-exp(a0N))^2 + (Dp$sig-Dp$bkg-exp(a0D))^2
-    sum(SS)
+get_exp_a0D <- function(b0,g,Np,Dp){
+    b0i <- b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
+    numerator <- (Dp$sig-Dp$bkg) + (Np$sig-Np$bkg)*exp(b0i)
+    denominator <- exp(b0i)^2 + 1
+    numerator/denominator
 }
 
 betapars <- function(spot,ion,a){
@@ -118,7 +123,9 @@ elementpairs <- function(num,den){
     out <- rbind(nele[1],dele[1])
     if (length(num)>1){
         for (i in 2:length(num)){
-            alreadyin <- (nele[i] %in% out[1,] || dele[i] %in% out[2,])
+            ni <- which(out[1,] %in% nele[i])
+            di <- which(out[2,] %in% dele[i])
+            alreadyin <- any(ni%in%di)
             if (!alreadyin){
                 out <- cbind(out,c(nele[i],dele[i]))
             }
