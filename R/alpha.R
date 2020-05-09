@@ -28,40 +28,57 @@ alpha.spot <- function(x,ions=x$ions,plot=FALSE,...){
     nEL <- length(EL)
     out <- matrix(0,2,nions)
     colnames(out) <- ions
-    rownames(out) <- c('a0','g')
+    rownames(out) <- c('exp_a0','g')
     for (i in 1:nEL){ # loop through the elements
         j <- which(el %in% EL[i])
         ni <- length(j)
-        init <- rep(0,ni+1)
-        fit <- optim(par=init,f=SS_a0g,method='BFGS',spot=x,ions=ions[j])
-        out['a0',ions[j]] <- fit$par[1:ni]
-        out['g',ions[j]] <- fit$par[ni+1]
+        fit <- optim(par=0,f=SS_g,method='BFGS',spot=x,ions=ions[j])
+        out['g',ions[j]] <- fit$par
+        out['exp_a0',ions[j]] <- get_exp_a0(g=fit$par,spot=x,ions=ions[j])
     }
     if (plot){
-        plot_alpha(spot=x,a0g=out,ions=ions,...)
+        plot_alpha(spot=x,ea0g=out,ions=ions,...)
     }
     out
 }
 
-SS_a0g <- function(a0g,spot,ions=spot$ions){
+get_exp_a0 <- function(g,spot,ions){
+    out <- rep(0,length(ions))
+    names(out) <- ions
+    for (ion in ions){
+        p <- alphapars(spot,ion)
+        out[ion] <- sum(exp(g*p$t)*(p$sig-p$bkg))/sum(exp(g*p$t)^2)
+    }
+    out
+}
+
+alphapars <- function(spot,ion){
+    out <- list()
+    out$sig <- spot$signal[,ion]
+    out$bkg <- background(spot,ion)
+    out$t <- hours(spot$time[,ion])
+    out
+}
+
+SS_g <- function(par,spot,ions=spot$ions){
     nions <- length(ions)
-    a0 <- a0g[1:nions]
-    g <- a0g[nions+1]
+    g <- par
+    exp_a0 <- get_exp_a0(g=g,spot=spot,ions=ions)
     tt <- hours(spot$time[,ions,drop=FALSE])
     nt <- nrow(tt)
     gt <- sweep(tt,2,g,'*')
-    a <- sweep(gt,2,a0,'+')
+    exp_a <- sweep(exp(gt),2,exp_a0,'*')
     bkg <- background(spot,ions)
     if (spot$nominalblank){
-        predsig <- sweep(exp(a),2,bkg,'+')
+        predsig <- sweep(exp_a,2,bkg,'+')
     } else {
-        predsig <- sweep(exp(a),1,bkg,'+')
+        predsig <- sweep(exp_a,1,bkg,'+')
     }
     D <- predsig - spot$signal[,ions]
     sum(D^2)
 }
 
-plot_alpha <- function(spot,ions=spot$ions,a0g,...){
+plot_alpha <- function(spot,ions=spot$ions,ea0g,...){
     np <- length(spot$ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
@@ -69,9 +86,9 @@ plot_alpha <- function(spot,ions=spot$ions,a0g,...){
     for (ion in spot$ions){
         tt <- hours(spot$time[,ion])
         if (ion %in% ions){
-            a0 <- a0g['a0',ion]
-            g <- a0g['g',ion]
-            predsig <- exp(a0 + g*tt)
+            exp_a0 <- ea0g['exp_a0',ion]
+            g <- ea0g['g',ion]
+            predsig <- exp_a0*exp(g*tt)
             bkg <- background(spot,ions)
             sweep(spot$signal[,ions,drop=FALSE],2,bkg,'-')
             ylab <- paste0('signal - blank (',ion,')')

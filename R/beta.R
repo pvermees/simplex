@@ -7,11 +7,12 @@ beta.default <- function(x,...){ stop('No default method.') }
 #' @rdname beta
 #' @export
 beta.spot <- function(x,num,den,a,plot=FALSE,...){
-    out <- rbind(a['a0',num]-a['a0',den],0)
+    out <- rbind(log(a['exp_a0',num]/a['exp_a0',den]),0) # initialise
     rownames(out) <- c('b0','g')
     colnames(out) <- paste0(num,'/',den)
     groups <- groupbypairs(num,den)
     for (gr in groups){
+        print(gr$num)
         nb <- length(gr$num)
         ratios <- paste0(gr$num,'/',gr$den)
         init <- out['b0',ratios]
@@ -49,10 +50,8 @@ plot_beta <- function(spot,num,den,b0g,a,...){
         Y <- driftcor*(Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g['b0',ratio]
         g <- b0g['g',ratio]
-        exp_a0D <- get_exp_a0D(b0=b0,g=g,Np=Np,Dp=Dp)
-        b0i <- b0g['b0',ratio] + b0g['g',ratio]*Dp$t + Np$g*(Np$t-Dp$t)
-        exp_a0N <- exp_a0D*exp(b0i)
-        Ypred <- exp_a0N/exp_a0D
+        pND <- predict_ND(b0=b0,g=g,Np=Np,Dp=Dp)
+        Ypred <- pND$N/pND$D
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
         graphics::points(X,Y)
@@ -65,22 +64,29 @@ plot_beta <- function(spot,num,den,b0g,a,...){
 
 SS_b0g <- function(b0g,spot,num,den,a){
     ni <- length(num)
-    nt <- nrow(spot$time)
     b0 <- b0g[1:ni]
     g <- b0g[ni+1]
     out <- 0
     for (i in 1:ni){
         Np <- betapars(spot=spot,ion=num[i],a=a)
         Dp <- betapars(spot=spot,ion=den[i],a=a)
-        exp_a0D <- get_exp_a0D(b0=b0[i],g=g,Np=Np,Dp=Dp)
-        b0i <- b0[i] + g*Dp$t + Np$g*(Np$t-Dp$t)
-        exp_a0N <- exp_a0D*exp(b0i)
-        SS <- sum((Np$sig-Np$bkg-exp_a0N)^2 +
-                  (Dp$sig-Dp$bkg-exp_a0D)^2)
+        pND <- predict_ND(b0=b0[i],g=g,Np=Np,Dp=Dp)
+        SS <- sum((Np$sig - pND$N)^2 + (Dp$sig - pND$D)^2)
         out <- out + SS
     }
     out
 }
+
+predict_ND <- function(b0,g,Np,Dp){
+    exp_a0D <- get_exp_a0D(b0=b0,g=g,Np=Np,Dp=Dp)
+    b0i <- b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
+    exp_a0N <- exp_a0D*exp(b0i)
+    out <- list()
+    out$N <- Np$bkg + exp_a0N
+    out$D <- Dp$bkg + exp_a0D
+    out
+}
+
 SS_b0 <- function(b0,spot,num,den,a){
     SS_b0g(c(b0,0),spot=spot,num=num,den=den,a=a)
 }
