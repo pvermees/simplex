@@ -12,7 +12,6 @@ beta.spot <- function(x,num,den,a,plot=FALSE,...){
     colnames(out) <- paste0(num,'/',den)
     groups <- groupbypairs(num,den)
     for (gr in groups){
-        print(gr$num)
         nb <- length(gr$num)
         ratios <- paste0(gr$num,'/',gr$den)
         init <- out['b0',ratios]
@@ -47,10 +46,11 @@ plot_beta <- function(spot,num,den,b0g,a,...){
         Dp <- betapars(spot=spot,ion=den[i],a=a)
         driftcor <- exp(Np$g*(Np$t-Dp$t))
         X <- Dp$t
-        Y <- driftcor*(Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
+        Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g['b0',ratio]
         g <- b0g['g',ratio]
         pND <- predict_ND(b0=b0,g=g,Np=Np,Dp=Dp)
+        print(cbind(Np$sig,pND$N,Dp$sig,pND$D))
         Ypred <- pND$N/pND$D
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)

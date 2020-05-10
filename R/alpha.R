@@ -84,22 +84,18 @@ plot_alpha <- function(spot,ions=spot$ions,ea0g,...){
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in spot$ions){
-        tt <- hours(spot$time[,ion])
+        ap <- alphapars(spot,ion)
+        sb <- ap$sig - ap$bkg
+        ylab <- paste0(ion,'- b')
+        graphics::plot(ap$t,sb,type='p',xlab='',ylab='',...)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ylab,line=2)
         if (ion %in% ions){
             exp_a0 <- ea0g['exp_a0',ion]
             g <- ea0g['g',ion]
-            predsig <- exp_a0*exp(g*tt)
-            bkg <- background(spot,ions)
-            sweep(spot$signal[,ions,drop=FALSE],2,bkg,'-')
-            ylab <- paste0('signal - blank (',ion,')')
-        } else {
-            sb <- spot$signal[,ion]
-            ylab <- paste0('signal (',ion,')')
+            predsig <- exp_a0*exp(g*ap$t)
+            graphics::lines(ap$t,predsig)
         }
-        graphics::plot(tt,sb,type='p',xlab='',ylab='',...)
-        graphics::mtext(side=1,text='t',line=2)
-        graphics::mtext(side=2,text=ylab,line=2)
-        if (ion %in% ions) graphics::lines(tt,predsig)
     }
     graphics::par(oldpar)
 }
