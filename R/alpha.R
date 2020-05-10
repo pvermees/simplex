@@ -47,7 +47,11 @@ get_exp_a0 <- function(g,spot,ions){
     names(out) <- ions
     for (ion in ions){
         p <- alphapars(spot,ion)
-        out[ion] <- sum(exp(g*p$t)*(p$sig-p$bkg))/sum(exp(g*p$t)^2)
+        if (all(p$sig>p$bkg)){
+            out[ion] <- sum(exp(g*p$t)*(p$sig-p$bkg))/sum(exp(g*p$t)^2)
+        } else {
+            out[ion] <- 1e-10
+        }
     }
     out
 }
@@ -98,14 +102,4 @@ plot_alpha <- function(spot,ions=spot$ions,ea0g,...){
         }
     }
     graphics::par(oldpar)
-}
-
-background <- function(spot,ions){
-    detector <- spot$detector[ions]
-    if (spot$nominalblank){
-        out <- spot$background[detector]
-    } else {
-        out <- spot$signal[,'bkg']
-    }
-    out
 }

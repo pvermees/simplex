@@ -21,6 +21,13 @@ element <- function(ion){
 hours <- function(tt){
     tt/3600
 }
-days <- function(tt){
-    tt/(24*3600)
+
+background <- function(spot,ions){
+    detector <- spot$detector[ions]
+    if (spot$nominalblank){
+        out <- spot$background[detector]
+    } else {
+        out <- spot$signal[,'bkg']
+    }
+    out
 }

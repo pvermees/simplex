@@ -6,6 +6,21 @@ beta <- function(x,...){ UseMethod("beta",x) }
 beta.default <- function(x,...){ stop('No default method.') }
 #' @rdname beta
 #' @export
+beta.simplex <- function(x,num,den,a,...){
+    snames <- names(x)
+    out <- list()
+    for (sname in snames){
+        out[[sname]] <- beta(x=x[[sname]],num=num,den=den,a=a[[sname]],...)
+    }
+    out
+}
+#' @rdname alpha
+#' @export
+beta.standards <- function(x,num=num,den=den,a=a,...){
+    beta(x=x$x,num=num,den=den,a=a,...)
+}
+#' @rdname beta
+#' @export
 beta.spot <- function(x,num,den,a,plot=FALSE,...){
     out <- rbind(log(a['exp_a0',num]/a['exp_a0',den]),0) # initialise
     rownames(out) <- c('b0','g')
