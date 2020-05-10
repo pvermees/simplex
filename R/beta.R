@@ -44,13 +44,11 @@ plot_beta <- function(spot,num,den,b0g,a,...){
         ratio <- paste0(num[i],'/',den[i])
         Np <- betapars(spot=spot,ion=num[i],a=a)
         Dp <- betapars(spot=spot,ion=den[i],a=a)
-        driftcor <- exp(Np$g*(Np$t-Dp$t))
         X <- Dp$t
         Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g['b0',ratio]
         g <- b0g['g',ratio]
         pND <- predict_ND(b0=b0,g=g,Np=Np,Dp=Dp)
-        print(cbind(Np$sig,pND$N,Dp$sig,pND$D))
         Ypred <- pND$N/pND$D
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
@@ -71,19 +69,18 @@ SS_b0g <- function(b0g,spot,num,den,a){
         Np <- betapars(spot=spot,ion=num[i],a=a)
         Dp <- betapars(spot=spot,ion=den[i],a=a)
         pND <- predict_ND(b0=b0[i],g=g,Np=Np,Dp=Dp)
-        SS <- sum((Np$sig - pND$N)^2 + (Dp$sig - pND$D)^2)
+        SS <- sum((Np$sig - pND$N - Np$bkg)^2 +
+                  (Dp$sig - pND$D - Dp$bkg)^2)
         out <- out + SS
     }
     out
 }
 
 predict_ND <- function(b0,g,Np,Dp){
-    exp_a0D <- get_exp_a0D(b0=b0,g=g,Np=Np,Dp=Dp)
-    b0i <- b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
-    exp_a0N <- exp_a0D*exp(b0i)
     out <- list()
-    out$N <- Np$bkg + exp_a0N
-    out$D <- Dp$bkg + exp_a0D
+    b0i <- b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
+    out$D <- get_exp_a0D(b0=b0,g=g,Np=Np,Dp=Dp)
+    out$N <- out$D*exp(b0i)
     out
 }
 
