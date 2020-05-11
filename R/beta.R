@@ -39,8 +39,8 @@ common_denominator <- function(ions){
     count <- table(ions)
     i <- which.max(count)
     out <- list()
-    out$den <- names(count)[i]
     out$num <- names(count)[-i]
+    out$den <- names(count)[i]
     out
 }
 
@@ -49,13 +49,15 @@ init_beta <- function(spot,groups,a){
     g <- NULL
     b0names <- NULL
     gnames <- NULL
-    for (gr in groups){
-        b0 <- c(b0,log(a['exp_a0',gr$num]/a['exp_a0',gr$den]))
-        b0names <- c(b0names,paste0('b0[',gr$num,'/',gr$den,']'))
-        if (gr$elements['num']!=gr$elements['den']){
+    den <- groups$den
+    for (num in groups$num){
+        b0 <- c(b0,log(a['exp_a0',num]/a['exp_a0',den]))
+        b0names <- c(b0names,num)
+        nele <- unique(element(num))
+        dele <- element(den)
+        if (nele!=dele){
             g <- c(g,0)
-            gnames <- c(gnames,paste0('g[',gr$elements['num'],
-                                      '/',gr$elements['den'],']'))
+            gnames <- c(gnames,nele)
         }
     }
     out <- c(b0,g)
@@ -90,27 +92,64 @@ plot_beta <- function(spot,num,den,b0g,a,...){
 }
 
 SS_b0g <- function(b0g,spot,groups,a){
-    out <- 0
-    for (gr in groups){
-        bnames <- paste0('b0[',gr$num,'/',gr$den,']')
-        b0 <- b0g[bnames]
-        if (gr$elements['num']==gr$elements['den']){
-            g <- 0
-        } else {
-            gname <- paste0('g[',gr$elements['num'],'/',gr$elements['den'],']')
-            g <- b0g[gname]
-        }
-        ni <- length(gr$num)
+    den <- groups$den
+    a0D <- get_a0D(b0g=b0g,spot=spot,groups=groups,a=a)
+    B0G <- b0g2list(b0g=b0g,groups=groups)
+    b0 <- B0G$b0
+    g <- B0G$g
+    nb <- length(b0)
+    nele <- names(groups$num)
+    Dp <- betapars(spot=spot,ion=den,a=a)
+    SS <- (Dp$bkg + a0D - Dp$sig)^2
+    for (ele in nele){
+        num <- groups$num[[ele]]
+        ni <- length(num)
         for (i in 1:ni){
-            Np <- betapars(spot=spot,ion=gr$num[i],a=a)
-            Dp <- betapars(spot=spot,ion=gr$den[i],a=a)
-            pND <- predict_ND(b0=b0[i],g=g,Np=Np,Dp=Dp)
-            SS <- sum((Np$sig - pND$N - Np$bkg)^2 +
-                      (Dp$sig - pND$D - Dp$bkg)^2)
-            out <- out + SS
+            ion <- num[i]
+            Np <- betapars(spot=spot,ion=ion,a=a)
+            a0N <- a0D + b0[ion] + g[ele]*Dp$t + a['g',ion]*(Np$t-Dp$t)
+            SS <- SS + (Np$bkg + a0N - Np$sig)^2
         }
     }
-    out
+    sum(SS)
+}
+
+get_a0D <- function(b0g,spot,groups,a){
+    B0G <- b0g2list(b0g=b0g,groups=groups)
+    b0 <- B0G$b0
+    g <- B0G$g
+    num <- names(b0)
+    den <- groups$den
+    tD <- hours(spot$time[,den])
+    NUM <- 0
+    DEN <- 0
+    for (ion in num){
+        bX <- background(spot,ion)
+        X <- spot$signal[,ion]
+        gX <- a['g',ion]
+        tX <- hours(spot$time[,ion])
+        gXD <- g[element(ion)]
+        ebXD <- exp( b0[ion] + gXD*tD + gX*(tX-tD) )
+        NUM <- NUM + (X-bX)*ebXD
+        DEN <- DEN + ebXD^2
+    }
+    NUM/DEN
+}
+
+b0g2list <- function(b0g,groups){
+    dele <- element(groups$den)
+    nele <- element(names(groups$num))
+    if (dele %in% nele) {
+        ng <- length(groups$num) - 1
+        g <- c(0,tail(b0g,n=ng))
+        names(g)[1] <- dele
+    } else {
+        ng <- length(groups$num)
+        g <- tail(b0g,n=ng)
+    }
+    nb <- length(b0g) - ng
+    b0 <- b0g[1:nb]
+    list(b0=b0,g=g)
 }
 
 predict_ND <- function(b0,g,Np,Dp){
@@ -144,7 +183,6 @@ betapars <- function(spot,ion,a){
 # B = output of common_denominator
 groupbypairs <- function(B){
     out <- list()
-    out$den <- B$den
     out$num <- list()
     for (ion in B$num){
         nele <- element(ion)
@@ -154,5 +192,6 @@ groupbypairs <- function(B){
             out$num[[nele]] <- ion
         }
     }
+    out$den <- B$den
     out
 }
