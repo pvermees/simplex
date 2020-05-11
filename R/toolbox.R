@@ -12,9 +12,12 @@ effective_dwelltime <- function(spot){
 }
 
 element <- function(ion){
-    out <- gsub("[^a-zA-Z]", "", ion)
-    empty <- which(out %in% "")
-    out[empty] <- ion[empty]
+    txt <- gsub("[^a-zA-Z]", "", ion)
+    empty <- which(txt %in% "")
+    txt[empty] <- ion[empty]
+    good <- which(txt %in% elements())
+    out <- ion
+    out[good] <- txt[good]
     out
 }
 
@@ -30,4 +33,17 @@ background <- function(spot,ions){
         out <- spot$signal[,'bkg']
     }
     out
+}
+
+elements <- function(){
+    c('H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg',
+      'Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr',
+      'Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br',
+      'Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd',
+      'Ag','Cd','In','Sn','Sb','Te','I','Xe','Cs','Ba','La',
+      'Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er',
+      'Tm','Yb','Lu','Hf','Ta','W','Re','Os','Ir','Pt','Au',
+      'Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th',
+      'Pa','U','Np','Pu','Am','Cm','Bk','Cf','Es','Fm','Md',
+      'No','Lr','Rf','Db','Sg','Bh','Hs','Mt')
 }

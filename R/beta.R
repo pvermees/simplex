@@ -22,30 +22,44 @@ beta.standards <- function(x,num=num,den=den,a=a,...){
 #' @rdname beta
 #' @export
 beta.spot <- function(x,num,den,a,plot=FALSE,...){
-    out <- rbind(log(a['exp_a0',num]/a['exp_a0',den]),0) # initialise
-    rownames(out) <- c('b0','g')
-    colnames(out) <- paste0(num,'/',den)
-    groups <- groupbypairs(num,den)
-    for (gr in groups){
-        nb <- length(gr$num)
-        ratios <- paste0(gr$num,'/',gr$den)
-        init <- out['b0',ratios]
-        if (gr$elements['num']==gr$elements['den']){
-            fit <- optim(par=init,f=SS_b0,method='L-BFGS-B',
-                         lower=init-1,upper=init+1,spot=x,
-                         num=gr$num,den=gr$den,a=a)
-        } else {
-            init <- c(init,0)
-            fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
-                         lower=init-1,upper=init+1,spot=x,
-                         num=gr$num,den=gr$den,a=a)
-            out['g',ratios] <- fit$par[nb+1]
-        }
-        out['b0',ratios] <- fit$par[1:nb]
-    }
+    B <- common_denominator(c(num,den))
+    groups <- groupbypairs(B)
+    init <- init_beta(spot=x,groups=groups,a=a)
+    fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
+                 lower=init-1,upper=init+1,spot=x,
+                 groups=groups,a=a,hessian=TRUE)
+    # TODO: covariance matrix
     if (plot){
-        plot_beta(spot=x,num=num,den=den,b0g=out,a=a,...)
+        plot_beta(spot=x,groups=groups,b0g=out,a=a,...)
     }
+    out
+}
+
+common_denominator <- function(ions){
+    count <- table(ions)
+    i <- which.max(count)
+    out <- list()
+    out$den <- names(count)[i]
+    out$num <- names(count)[-i]
+    out
+}
+
+init_beta <- function(spot,groups,a){
+    b0 <- NULL
+    g <- NULL
+    b0names <- NULL
+    gnames <- NULL
+    for (gr in groups){
+        b0 <- c(b0,log(a['exp_a0',gr$num]/a['exp_a0',gr$den]))
+        b0names <- c(b0names,paste0('b0[',gr$num,'/',gr$den,']'))
+        if (gr$elements['num']!=gr$elements['den']){
+            g <- c(g,0)
+            gnames <- c(gnames,paste0('g[',gr$elements['num'],
+                                      '/',gr$elements['den'],']'))
+        }
+    }
+    out <- c(b0,g)
+    names(out) <- c(b0names,gnames)
     out
 }
 
@@ -75,18 +89,26 @@ plot_beta <- function(spot,num,den,b0g,a,...){
     graphics::par(oldpar)
 }
 
-SS_b0g <- function(b0g,spot,num,den,a){
-    ni <- length(num)
-    b0 <- b0g[1:ni]
-    g <- b0g[ni+1]
+SS_b0g <- function(b0g,spot,groups,a){
     out <- 0
-    for (i in 1:ni){
-        Np <- betapars(spot=spot,ion=num[i],a=a)
-        Dp <- betapars(spot=spot,ion=den[i],a=a)
-        pND <- predict_ND(b0=b0[i],g=g,Np=Np,Dp=Dp)
-        SS <- sum((Np$sig - pND$N - Np$bkg)^2 +
-                  (Dp$sig - pND$D - Dp$bkg)^2)
-        out <- out + SS
+    for (gr in groups){
+        bnames <- paste0('b0[',gr$num,'/',gr$den,']')
+        b0 <- b0g[bnames]
+        if (gr$elements['num']==gr$elements['den']){
+            g <- 0
+        } else {
+            gname <- paste0('g[',gr$elements['num'],'/',gr$elements['den'],']')
+            g <- b0g[gname]
+        }
+        ni <- length(gr$num)
+        for (i in 1:ni){
+            Np <- betapars(spot=spot,ion=gr$num[i],a=a)
+            Dp <- betapars(spot=spot,ion=gr$den[i],a=a)
+            pND <- predict_ND(b0=b0[i],g=g,Np=Np,Dp=Dp)
+            SS <- sum((Np$sig - pND$N - Np$bkg)^2 +
+                      (Dp$sig - pND$D - Dp$bkg)^2)
+            out <- out + SS
+        }
     }
     out
 }
@@ -119,34 +141,17 @@ betapars <- function(spot,ion,a){
     out
 }
 
-groupbypairs <- function(num,den){
+# B = output of common_denominator
+groupbypairs <- function(B){
     out <- list()
-    pairs <- elementpairs(num,den)
-    nele <- element(num)
-    dele <- element(den)
-    for (i in 1:ncol(pairs)){
-        matches <- which((nele %in% pairs[1,i]) & (dele %in% pairs[2,i]))
-        out[[i]] <- list()
-        out[[i]]$elements <- pairs[,i]
-        names(out[[i]]$elements) <- c('num','den')
-        out[[i]]$num <- num[matches]
-        out[[i]]$den <- den[matches]
-    }
-    out
-}
-
-elementpairs <- function(num,den){
-    nele <- element(num)
-    dele <- element(den)
-    out <- rbind(nele[1],dele[1])
-    if (length(num)>1){
-        for (i in 2:length(num)){
-            ni <- which(out[1,] %in% nele[i])
-            di <- which(out[2,] %in% dele[i])
-            alreadyin <- any(ni%in%di)
-            if (!alreadyin){
-                out <- cbind(out,c(nele[i],dele[i]))
-            }
+    out$den <- B$den
+    out$num <- list()
+    for (ion in B$num){
+        nele <- element(ion)
+        if (nele %in% names(out$num)){
+            out$num[[nele]] <- c(out$num[[nele]],ion)
+        } else {
+            out$num[[nele]] <- ion
         }
     }
     out
