@@ -26,7 +26,7 @@ beta.spot <- function(x,num,den,a,plot=FALSE,...){
     groups <- groupbypairs(B)
     init <- init_beta(spot=x,groups=groups,a=a)
     fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
-                 lower=init-1,upper=init+1,spot=x,
+                 lower=init-2,upper=init+2,spot=x,
                  groups=groups,a=a,hessian=TRUE)
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
     if (plot){
@@ -44,7 +44,7 @@ common2original <- function(fit,num,den,groups){
     bnamesin <- names(b0in)
     gnamesin <- names(gin)
     rnames <- paste0(num,'/',den)
-    outnames <- c(paste0('b[',rnames,']'),
+    outnames <- c(paste0('b0[',rnames,']'),
                   paste0('g[',rnames,']'))
     ni <- length(rnames)
     J <- matrix(0,nrow=2*ni,ncol=length(fit$par))
@@ -63,11 +63,11 @@ common2original <- function(fit,num,den,groups){
             inum <- which(bnamesin %in% nion)
             b0gout[i] <- b0gout[i] + b0in[inum]
             J[i,inum] <- 1
-        }
-        if (dion != groups$den){
-            iden <- which(bnamesin %in% dion)
-            b0gout[i] <- b0gout[i] - b0in[iden]
-            J[i,iden] <- -1
+            if (dion != groups$den){
+                iden <- which(bnamesin %in% dion)
+                b0gout[i] <- b0gout[i] - b0in[iden]
+                J[i,iden] <- -1
+            }
         }
         nele <- element(num[i])
         dele <- element(den[i])
@@ -77,14 +77,14 @@ common2original <- function(fit,num,den,groups){
             inele <- which(gnamesin %in% nele)
             b0gout[ni+i] <- b0gout[ni+i] + gin[inele]
             J[ni+i,inele] <- 1
-        }
-        if (dele != element(groups$den)){
-            idele <- which(gnamesin %in% dele)
-            b0gout[ni+i] <- b0gout[ni+i] - gin[idele]
-            J[ni+i,idele] <- -1
+            if (dele != element(groups$den)){
+                idele <- which(gnamesin %in% dele)
+                b0gout[ni+i] <- b0gout[ni+i] - gin[idele]
+                J[ni+i,idele] <- -1
+            }
         }
     }
-    E <- solve(fit$hessian)
+    E <- MASS::ginv(fit$hessian)
     out <- list()
     out$b0g <- b0gout
     out$cov <- J %*% E %*% t(J)
@@ -127,6 +127,7 @@ plot_beta <- function(spot,groups,b0g,a,...){
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     nt <- nrow(spot$time)
+    nb <- length(b0g)/2
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:np){
         ratio <- paste0(num[i],'/',den[i])
@@ -134,10 +135,9 @@ plot_beta <- function(spot,groups,b0g,a,...){
         Dp <- betapars(spot=spot,ion=den[i],a=a)
         X <- Dp$t
         Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
-        b0 <- b0g['b0',ratio]
-        g <- b0g['g',ratio]
-        pND <- predict_ND(b0=b0,g=g,Np=Np,Dp=Dp)
-        Ypred <- pND$N/pND$D
+        b0 <- b0g[paste0('b0[',ratio,']')]
+        g <- b0g[paste0('g[',ratio,']')]
+        Ypred <- exp(b0 + g*Dp$t + a['g',num[i]]*(Np$t-Dp$t))
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
         graphics::points(X,Y)
@@ -150,29 +150,30 @@ plot_beta <- function(spot,groups,b0g,a,...){
 
 SS_b0g <- function(b0g,spot,groups,a){
     den <- groups$den
-    a0D <- get_a0D(b0g=b0g,spot=spot,groups=groups,a=a)
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
     g <- B0G$g
     nb <- length(b0)
     nele <- names(groups$num)
     Dp <- betapars(spot=spot,ion=den,a=a)
-    SS <- (Dp$bkg + a0D - Dp$sig)^2
+    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups,a=a)
+    SS <- (Dp$bkg + exp_a0D - Dp$sig)^2
     for (ele in nele){
         num <- groups$num[[ele]]
         ni <- length(num)
         for (i in 1:ni){
             ion <- num[i]
             Np <- betapars(spot=spot,ion=ion,a=a)
-            a0N <- a0D + b0[ion] + g[ele]*Dp$t + a['g',ion]*(Np$t-Dp$t)
-            SS <- SS + (Np$bkg + a0N - Np$sig)^2
+            bND <- b0[ion] + g[ele]*Dp$t + a['g',ion]*(Np$t-Dp$t)
+            exp_a0N <- exp_a0D*exp(bND)
+            SS <- SS + (Np$bkg + exp_a0N - Np$sig)^2
         }
     }
     sum(SS)
 }
 
-# analytical solution for log(D - bkg) where D is the common denominator
-get_a0D <- function(b0g,spot,groups,a){
+# analytical solution for (D - bkg) where D is the common denominator
+get_exp_a0D <- function(b0g,spot,groups,a){
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
     g <- B0G$g
@@ -209,14 +210,6 @@ b0g2list <- function(b0g,groups){
     nb <- length(b0g) - ng
     b0 <- b0g[1:nb]
     list(b0=b0,g=g)
-}
-
-predict_ND <- function(b0,g,Np,Dp){
-    out <- list()
-    b0i <- b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
-    out$D <- get_exp_a0D(b0=b0,g=g,Np=Np,Dp=Dp)
-    out$N <- out$D*exp(b0i)
-    out
 }
 
 # extract data from a spot for beta calculation
