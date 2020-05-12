@@ -30,7 +30,7 @@ beta.spot <- function(x,num,den,a,plot=FALSE,...){
                  groups=groups,a=a,hessian=TRUE)
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
     if (plot){
-        plot_beta(spot=x,groups=groups,b0g=out,a=a,...)
+        plot_beta(spot=x,groups=groups,b0g=out$b0g,a=a,...)
     }
     out
 }
@@ -39,37 +39,54 @@ beta.spot <- function(x,num,den,a,plot=FALSE,...){
 # denominator to scientifically useful logratios
 common2original <- function(fit,num,den,groups){
     B0G <- b0g2list(b0g=fit$par,groups=groups)
-    b0 <- B0G$b0
-    g <- B0G$g
-    bnamesin <- names(b0)
-    bnamesout <- paste0(num,'/',den) # isotopic ratio names
-    ni <- length(bnamesout) # number of isotopic ratios
-    J <- matrix(0,nrow=ni,ncol=length(fit$par))
+    b0in <- B0G$b0
+    gin <- B0G$g
+    bnamesin <- names(b0in)
+    gnamesin <- names(gin)
+    rnames <- paste0(num,'/',den)
+    outnames <- c(paste0('b[',rnames,']'),
+                  paste0('g[',rnames,']'))
+    ni <- length(rnames)
+    J <- matrix(0,nrow=2*ni,ncol=length(fit$par))
     colnames(J) <- names(fit$par)
-    rownames(J) <- bnamesout
-    out <- list()
-    out$b0 <- rep(0,ni)
-    names(out$b0) <- bnamesout
+    rownames(J) <- outnames
+    b0gout <- rep(0,2*ni)
+    names(b0gout) <- outnames
     for (i in 1:ni){
         nion <- num[i]
         dion <- den[i]
         if (nion == groups$den){
             iden <- which(bnamesin %in% dion)
-            out$b0[i] <- out$b0[i] - b0[iden]
+            b0gout[i] <- b0gout[i] - b0in[iden]
             J[i,iden] <- -1
         } else {
             inum <- which(bnamesin %in% nion)
-            out$b0[i] <- out$b0[i] + b0[inum]
+            b0gout[i] <- b0gout[i] + b0in[inum]
             J[i,inum] <- 1
         }
         if (dion != groups$den){
             iden <- which(bnamesin %in% dion)
-            out$b0[i] <- out$b0[i] - b0[iden]
+            b0gout[i] <- b0gout[i] - b0in[iden]
             J[i,iden] <- -1
         }
-        # don't forget the g's at the end!
+        nele <- element(num[i])
+        dele <- element(den[i])
+        if (nele == dele){
+            b0gout[ni+i] <- 0
+        } else {
+            inele <- which(gnamesin %in% nele)
+            b0gout[ni+i] <- b0gout[ni+i] + gin[inele]
+            J[ni+i,inele] <- 1
+        }
+        if (dele != element(groups$den)){
+            idele <- which(gnamesin %in% dele)
+            b0gout[ni+i] <- b0gout[ni+i] - gin[idele]
+            J[ni+i,idele] <- -1
+        }
     }
     E <- solve(fit$hessian)
+    out <- list()
+    out$b0g <- b0gout
     out$cov <- J %*% E %*% t(J)
     out
 }
