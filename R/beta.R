@@ -28,13 +28,53 @@ beta.spot <- function(x,num,den,a,plot=FALSE,...){
     fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
                  lower=init-1,upper=init+1,spot=x,
                  groups=groups,a=a,hessian=TRUE)
-    # TODO: covariance matrix
+    out <- common2original(fit=fit,num=num,den=den,groups=groups)
     if (plot){
         plot_beta(spot=x,groups=groups,b0g=out,a=a,...)
     }
     out
 }
 
+# converts logratio intercepts and slopes from common
+# denominator to scientifically useful logratios
+common2original <- function(fit,num,den,groups){
+    B0G <- b0g2list(b0g=fit$par,groups=groups)
+    b0 <- B0G$b0
+    g <- B0G$g
+    bnamesin <- names(b0)
+    bnamesout <- paste0(num,'/',den) # isotopic ratio names
+    ni <- length(bnamesout) # number of isotopic ratios
+    J <- matrix(0,nrow=ni,ncol=length(fit$par))
+    colnames(J) <- names(fit$par)
+    rownames(J) <- bnamesout
+    out <- list()
+    out$b0 <- rep(0,ni)
+    names(out$b0) <- bnamesout
+    for (i in 1:ni){
+        nion <- num[i]
+        dion <- den[i]
+        if (nion == groups$den){
+            iden <- which(bnamesin %in% dion)
+            out$b0[i] <- out$b0[i] - b0[iden]
+            J[i,iden] <- -1
+        } else {
+            inum <- which(bnamesin %in% nion)
+            out$b0[i] <- out$b0[i] + b0[inum]
+            J[i,inum] <- 1
+        }
+        if (dion != groups$den){
+            iden <- which(bnamesin %in% dion)
+            out$b0[i] <- out$b0[i] - b0[iden]
+            J[i,iden] <- -1
+        }
+        # don't forget the g's at the end!
+    }
+    E <- solve(fit$hessian)
+    out$cov <- J %*% E %*% t(J)
+    out
+}
+
+# uses the most used ion as a common denominator
 common_denominator <- function(ions){
     count <- table(ions)
     i <- which.max(count)
@@ -65,7 +105,7 @@ init_beta <- function(spot,groups,a){
     out
 }
 
-plot_beta <- function(spot,num,den,b0g,a,...){
+plot_beta <- function(spot,groups,b0g,a,...){
     np <- length(num) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
@@ -114,6 +154,7 @@ SS_b0g <- function(b0g,spot,groups,a){
     sum(SS)
 }
 
+# analytical solution for log(D - bkg) where D is the common denominator
 get_a0D <- function(b0g,spot,groups,a){
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
@@ -136,6 +177,7 @@ get_a0D <- function(b0g,spot,groups,a){
     NUM/DEN
 }
 
+# splits a pooled logratio slope and intercept vector into two
 b0g2list <- function(b0g,groups){
     dele <- element(groups$den)
     nele <- element(names(groups$num))
@@ -160,17 +202,7 @@ predict_ND <- function(b0,g,Np,Dp){
     out
 }
 
-SS_b0 <- function(b0,spot,num,den,a){
-    SS_b0g(c(b0,0),spot=spot,num=num,den=den,a=a)
-}
-
-get_exp_a0D <- function(b0,g,Np,Dp){
-    b0i <- b0 + g*Dp$t + Np$g*(Np$t-Dp$t)
-    numerator <- (Dp$sig-Dp$bkg) + (Np$sig-Np$bkg)*exp(b0i)
-    denominator <- exp(b0i)^2 + 1
-    numerator/denominator
-}
-
+# extract data from a spot for beta calculation
 betapars <- function(spot,ion,a){
     out <- list()
     out$sig <- spot$signal[,ion]
