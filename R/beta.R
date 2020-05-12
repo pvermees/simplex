@@ -10,6 +10,7 @@ beta.simplex <- function(x,num,den,a,...){
     snames <- names(x)
     out <- list()
     for (sname in snames){
+        print(sname)
         out[[sname]] <- beta(x=x[[sname]],num=num,den=den,a=a[[sname]],...)
     }
     out
