@@ -1,15 +1,23 @@
-#' @rdname calplot
+#' @rdname calibration
 #' @export
-calplot <- function(x,...){ UseMethod("calplot",x) }
-#' @rdname calplot
+calibration <- function(x,...){ UseMethod("calibration",x) }
+#' @rdname calibration
 #' @export
-calplot.default <- function(x,...){ stop('No default method.') }
-#' @rdname calplot
+calibration.default <- function(x,...){ stop('No default method.') }
+#' @rdname calibration
 #' @export
-calplot.simplex <- function(x,a,b,X=c('UO2','U238'),
-                            Y=c('Pb206','U238'),raw=FALSE,...){
+calibration.simplex <- function(x,a,b,X=c('UO2','U238'),
+                            Y=c('Pb206','U238'),plot=1,...){
     B <- beta2york(b=b,X=X,Y=Y)
-    if (raw){
+    fit <- IsoplotR:::york(B)
+    if (plot>0){
+        xlab <- paste0('log[',X[1],'/',X[2],']')
+        ylab <- paste0('log[',Y[1],'/',Y[2],']')
+    }
+    if (plot==1){
+        IsoplotR:::isochron(B,xlab=xlab,ylab=ylab,...)
+    }
+    if (plot>1){
         XX <- NULL
         YY <- NULL
         snames <- names(x)
@@ -28,19 +36,20 @@ calplot.simplex <- function(x,a,b,X=c('UO2','U238'),
         Xlim[2] <- max(B[,'X']+2*B[,'sX'],XX)
         Ylim[1] <- min(B[,'Y']-2*B[,'sY'],YY)
         Ylim[2] <- max(B[,'Y']+2*B[,'sY'],YY)
-        IsoplotR:::scatterplot(B,xlim=Xlim,ylim=Ylim)
-        matlines(XX,YY,lty=1,col='grey')
-        #points(XX[1,],YY[1,],pch=21,bg='black')
-        #points(XX[nrow(XX),],YY[nrow(YY),],pch=21,bg='white')
-    } else {
-        IsoplotR:::scatterplot(B,...)
+        fit <- IsoplotR:::isochron(B,xlim=Xlim,ylim=Ylim,xlab=xlab,ylab=ylab)
+        matlines(XX,YY,lty=1,col='darkgrey')
+        if (plot>2){
+            points(XX[1,],YY[1,],pch=21,bg='black')
+            points(XX[nrow(XX),],YY[nrow(YY),],pch=21,bg='white')
+        }
     }
+    invisible(fit)
 }
-#' @rdname calplot
+#' @rdname calibration
 #' @export
-calplot.standards <- function(x,a,b,X=c('UO2','U238'),
+calibration.standards <- function(x,a,b,X=c('UO2','U238'),
                               Y=c('Pb206','U238'),raw=FALSE,...){
-    calplot(x=x$x,a=a,b=b,X=X,Y=Y,raw=raw,...)
+    calibration(x=x$x,a=a,b=b,X=X,Y=Y,raw=raw,...)
 }
 
 beta2york <- function(b,X=c('UO2','U238'),Y=c('Pb206','U238')){

@@ -86,7 +86,7 @@ common2original <- function(fit,num,den,groups){
             }
         }
     }
-    E <- MASS::ginv(fit$hessian)*fit$mse
+    E <- MASS::ginv(fit$hessian/2)*fit$mse
     out <- list()
     out$b0g <- b0gout
     out$cov <- J %*% E %*% t(J)
