@@ -29,6 +29,7 @@ beta.spot <- function(x,num,den,a,plot=FALSE,...){
     fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
                  lower=init-2,upper=init+2,spot=x,
                  groups=groups,a=a,hessian=TRUE)
+    fit$mse <- SS_b0g(fit$par,spot=x,groups=groups,a=a,mse=TRUE)
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
     if (plot){
         plot_beta(spot=x,groups=groups,b0g=out$b0g,a=a,...)
@@ -85,7 +86,7 @@ common2original <- function(fit,num,den,groups){
             }
         }
     }
-    E <- MASS::ginv(fit$hessian)
+    E <- MASS::ginv(fit$hessian)*fit$mse
     out <- list()
     out$b0g <- b0gout
     out$cov <- J %*% E %*% t(J)
@@ -149,7 +150,7 @@ plot_beta <- function(spot,groups,b0g,a,...){
     graphics::par(oldpar)
 }
 
-SS_b0g <- function(b0g,spot,groups,a){
+SS_b0g <- function(b0g,spot,groups,a,mse=FALSE){
     den <- groups$den
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
@@ -170,7 +171,14 @@ SS_b0g <- function(b0g,spot,groups,a){
             SS <- SS + (Np$bkg + exp_a0N - Np$sig)^2
         }
     }
-    sum(SS)
+    out <- sum(SS)
+    if (mse){
+        np <- length(b0g)  # number of parameters
+        ne <- length(b0)   # number of equations
+        nm <- length(Np$t) # number of measurements per equation
+        out <- out/(ne*nm-np)
+    }
+    out
 }
 
 # analytical solution for (D - bkg) where D is the common denominator
