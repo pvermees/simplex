@@ -31,7 +31,7 @@ logratios.spot <- function(x,num,den,dc=NULL,plot=0,...){
                  groups=groups,dc=dc,hessian=TRUE)
     fit$mse <- SS_b0g(fit$par,spot=x,groups=groups,dc=dc,mse=TRUE)
     if (plot==2){
-        plot_signals(spot=x,b0g=out$b0g,groups=groups,dc=dc,...)
+        plot_signals(spot=x,b0g=fit$par,groups=groups,dc=dc,...)
     }
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
     if (plot==1){
@@ -152,9 +152,7 @@ SS_b0g <- function(b0g,spot,groups,dc=NULL,mse=FALSE){
         for (i in 1:ni){
             ion <- num[i]
             Np <- betapars(spot=spot,ion=ion,dc=dc)
-            bND <- b0[ion] + g[ele]*Dp$t
-            if (!is.null(dc))
-                bND <- bND + dc['g',ion]*(Np$t-Dp$t)
+            bND <- b0[ion] + g[ele]*Dp$t + Np$g*(Np$t-Dp$t)
             exp_a0N <- exp_a0D*exp(bND)
             SS <- SS + (Np$bkg + exp_a0N - Np$sig)^2
         }
@@ -180,14 +178,9 @@ get_exp_a0D <- function(b0g,spot,groups,dc=NULL){
     NUM <- 0
     DEN <- 0
     for (ion in num){
-        bX <- background(spot,ion)
-        X <- spot$signal[,ion]
-        if (is.null(dc)) gX <- 0
-        else gX <- dc['g',ion]
-        tX <- hours(spot$time[,ion])
-        gXD <- g[element(ion)]
-        ebXD <- exp( b0[ion] + gXD*tD + gX*(tX-tD) )
-        NUM <- NUM + (X-bX)*ebXD
+        bpX <- betapars(spot=spot,ion=ion,dc=dc)
+        ebXD <- exp( b0[ion] + g[element(ion)]*tD + bpX$g*(bpX$t-tD) )
+        NUM <- NUM + (bpX$sig-bpX$bkg)*ebXD
         DEN <- DEN + ebXD^2
     }
     NUM/DEN
@@ -268,18 +261,23 @@ plot_signals <- function(spot,b0g,groups,dc=NULL,...){
     exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups,dc=dc)
     Dt <- spot$time[,groups$den]
     B0G <- b0g2list(b0g=b0g,groups=groups)
+    ions <- names(B0G$b0)
     for (ion in spot$ions){
         bp <- betapars(spot=spot,ion=ion,dc=dc)
         sb <- bp$sig - bp$bkg
         ylab <- paste0(ion,'- b')
-        graphics::plot(ap$t,sb,type='p',xlab='',ylab='',...)
+        graphics::plot(bp$t,sb,type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
         if (ion %in% ions){
-            b0 <- B0G$b0g[ion]
+            b0 <- B0G$b0[ion]
             g <- B0G$g[element(ion)]
-            predsig <- exp_a0D*exp(b0+g*bp$t+dc['g',ion]*(bp$t-Dt))
+            predsig <- exp_a0D*exp(b0+g*bp$t+bp$g*(bp$t-Dt))
             graphics::lines(bp$t,predsig)
+        } else if (ion == groups$den){
+            graphics::lines(bp$t,exp_a0D)
+        } else {
+            # don't plot lines
         }
     }
     graphics::par(oldpar)
