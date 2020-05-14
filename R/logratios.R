@@ -22,7 +22,7 @@ logratios.standards <- function(x,num,den,dc=NULL,...){
 }
 #' @rdname logratios
 #' @export
-logratios.spot <- function(x,num,den,dc=NULL,plot=FALSE,...){
+logratios.spot <- function(x,num,den,dc=NULL,plot=0,...){
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
     init <- init_logratios(spot=x,groups=groups,dc=dc)
@@ -30,8 +30,11 @@ logratios.spot <- function(x,num,den,dc=NULL,plot=FALSE,...){
                  lower=init-2,upper=init+2,spot=x,
                  groups=groups,dc=dc,hessian=TRUE)
     fit$mse <- SS_b0g(fit$par,spot=x,groups=groups,dc=dc,mse=TRUE)
+    if (plot==2){
+        plot_signals(spot=x,b0g=out$b0g,groups=groups,dc=dc,...)
+    }
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
-    if (plot){
+    if (plot==1){
         plot_logratios(spot=x,groups=groups,b0g=out$b0g,dc=dc,...)
     }
     out
@@ -109,10 +112,19 @@ init_logratios <- function(spot,groups,dc=NULL){
     b0names <- NULL
     gnames <- NULL
     den <- groups$den
-    for (num in groups$num){
-        b0 <- c(b0,log(dc['exp_a0',num]/dc['exp_a0',den]))
-        b0names <- c(b0names,num)
-        nele <- unique(element(num))
+    for (nums in groups$num){
+        if (is.null(dc)){
+            for (num in nums){
+                Np <- alphapars(spot,num)
+                Dp <- alphapars(spot,den)
+                absND <- abs((Np$sig-Np$bkg)/(Dp$sig-Dp$bkg))
+                b0 <- c(b0,mean(log(absND[absND>0])))
+            }
+        } else {
+            b0 <- c(b0,log(dc['exp_a0',nums]/dc['exp_a0',den]))
+        }
+        b0names <- c(b0names,nums)
+        nele <- unique(element(nums))
         dele <- element(den)
         if (nele!=dele){
             g <- c(g,0)
@@ -122,32 +134,6 @@ init_logratios <- function(spot,groups,dc=NULL){
     out <- c(b0,g)
     names(out) <- c(b0names,gnames)
     out
-}
-
-plot_logratios <- function(spot,groups,b0g,dc=NULL,...){
-    np <- length(num) # number of plot panels
-    nr <- ceiling(sqrt(np)) # number of rows
-    nc <- ceiling(np/nr)    # number of columns
-    nt <- nrow(spot$time)
-    nb <- length(b0g)/2
-    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-    for (i in 1:np){
-        ratio <- paste0(num[i],'/',den[i])
-        Np <- betapars(spot=spot,ion=num[i],dc=dc)
-        Dp <- betapars(spot=spot,ion=den[i],dc=dc)
-        X <- Dp$t
-        Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
-        b0 <- b0g[paste0('b0[',ratio,']')]
-        g <- b0g[paste0('g[',ratio,']')]
-        Ypred <- exp(b0 + g*Dp$t + dc['g',num[i]]*(Np$t-Dp$t))
-        ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
-        graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
-        graphics::points(X,Y)
-        graphics::lines(X,Ypred)
-        graphics::mtext(side=1,text='t',line=2)
-        graphics::mtext(side=2,text=ylab,line=2)
-    }
-    graphics::par(oldpar)
 }
 
 SS_b0g <- function(b0g,spot,groups,dc=NULL,mse=FALSE){
@@ -166,7 +152,9 @@ SS_b0g <- function(b0g,spot,groups,dc=NULL,mse=FALSE){
         for (i in 1:ni){
             ion <- num[i]
             Np <- betapars(spot=spot,ion=ion,dc=dc)
-            bND <- b0[ion] + g[ele]*Dp$t + dc['g',ion]*(Np$t-Dp$t)
+            bND <- b0[ion] + g[ele]*Dp$t
+            if (!is.null(dc))
+                bND <- bND + dc['g',ion]*(Np$t-Dp$t)
             exp_a0N <- exp_a0D*exp(bND)
             SS <- SS + (Np$bkg + exp_a0N - Np$sig)^2
         }
@@ -194,7 +182,8 @@ get_exp_a0D <- function(b0g,spot,groups,dc=NULL){
     for (ion in num){
         bX <- background(spot,ion)
         X <- spot$signal[,ion]
-        gX <- dc['g',ion]
+        if (is.null(dc)) gX <- 0
+        else gX <- dc['g',ion]
         tX <- hours(spot$time[,ion])
         gXD <- g[element(ion)]
         ebXD <- exp( b0[ion] + gXD*tD + gX*(tX-tD) )
@@ -243,4 +232,55 @@ groupbypairs <- function(B){
     }
     out$den <- B$den
     out
+}
+
+plot_logratios <- function(spot,groups,b0g,dc=NULL,...){
+    np <- length(num) # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    nt <- nrow(spot$time)
+    nb <- length(b0g)/2
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    for (i in 1:np){
+        ratio <- paste0(num[i],'/',den[i])
+        Np <- betapars(spot=spot,ion=num[i],dc=dc)
+        Dp <- betapars(spot=spot,ion=den[i],dc=dc)
+        X <- Dp$t
+        Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
+        b0 <- b0g[paste0('b0[',ratio,']')]
+        g <- b0g[paste0('g[',ratio,']')]
+        Ypred <- exp(b0 + g*Dp$t + dc['g',num[i]]*(Np$t-Dp$t))
+        ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
+        graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
+        graphics::points(X,Y)
+        graphics::lines(X,Ypred)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ylab,line=2)
+    }
+    graphics::par(oldpar)
+}
+
+plot_signals <- function(spot,b0g,groups,dc=NULL,...){
+    np <- length(spot$ions) # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups,dc=dc)
+    Dt <- spot$time[,groups$den]
+    B0G <- b0g2list(b0g=b0g,groups=groups)
+    for (ion in spot$ions){
+        bp <- betapars(spot=spot,ion=ion,dc=dc)
+        sb <- bp$sig - bp$bkg
+        ylab <- paste0(ion,'- b')
+        graphics::plot(ap$t,sb,type='p',xlab='',ylab='',...)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ylab,line=2)
+        if (ion %in% ions){
+            b0 <- B0G$b0g[ion]
+            g <- B0G$g[element(ion)]
+            predsig <- exp_a0D*exp(b0+g*bp$t+dc['g',ion]*(bp$t-Dt))
+            graphics::lines(bp$t,predsig)
+        }
+    }
+    graphics::par(oldpar)
 }
