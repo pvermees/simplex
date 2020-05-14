@@ -1,27 +1,27 @@
-#' @rdname alpha
+#' @rdname drift
 #' @export
-alpha <- function(x,...){ UseMethod("alpha",x) }
-#' @rdname alpha
+drift <- function(x,...){ UseMethod("drift",x) }
+#' @rdname drift
 #' @export
-alpha.default <- function(x,...){ stop('No default method.') }
-#' @rdname alpha
+drift.default <- function(x,...){ stop('No default method.') }
+#' @rdname drift
 #' @export
-alpha.simplex <- function(x,ions,...){
+drift.simplex <- function(x,ions,...){
     snames <- names(x)
     out <- list()
     for (sname in snames){
-        out[[sname]] <- alpha(x=x[[sname]],ions=ions,...)
+        out[[sname]] <- drift(x=x[[sname]],ions=ions,...)
     }
     out
 }
-#' @rdname alpha
+#' @rdname drift
 #' @export
-alpha.standards <- function(x,ions,...){
-    alpha(x=x$x,ions=ions,...)
+drift.standards <- function(x,ions,...){
+    drift(x=x$x,ions=ions,...)
 }
-#' @rdname alpha
+#' @rdname drift
 #' @export
-alpha.spot <- function(x,ions=x$ions,plot=FALSE,...){
+drift.spot <- function(x,ions=x$ions,plot=FALSE,...){
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
@@ -37,7 +37,7 @@ alpha.spot <- function(x,ions=x$ions,plot=FALSE,...){
         out['exp_a0',ions[j]] <- get_exp_a0(g=fit$par,spot=x,ions=ions[j])
     }
     if (plot){
-        plot_alpha(spot=x,ea0g=out,ions=ions,...)
+        plot_drift(spot=x,ea0g=out,ions=ions,...)
     }
     out
 }
@@ -82,7 +82,7 @@ SS_g <- function(par,spot,ions=spot$ions){
     sum(D^2)
 }
 
-plot_alpha <- function(spot,ions=spot$ions,ea0g,...){
+plot_drift <- function(spot,ions=spot$ions,ea0g,...){
     np <- length(spot$ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
