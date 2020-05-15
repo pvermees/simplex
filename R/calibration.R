@@ -1,5 +1,5 @@
-calibration <- function(lr,t=0,dc=NULL,dat=NULL,x=c('UO2','U238'),
-                        y=c('Pb206','U238'),plot=1,...){
+calibration <- function(lr,dc=NULL,dat=NULL,x=c('UO2','U238'),
+                        y=c('Pb206','U238'),plot=1,t=0,...){
     B <- beta2york(lr=lr,t=t,x=x,y=y)
     fit <- IsoplotR:::york(B)
     if (plot>0){

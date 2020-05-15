@@ -256,64 +256,6 @@ subset_samples <- function(dat,prefix='Plesovice',...){
     out
 }
 
-#' @title define the standards in a dataset
-#' @description select a subset of standards from a \code{simplex}
-#'     dataset. The true isotopic composition of the standard can be
-#'     supplied either explicitly, or via its age.
-#' @param dat an object of class \code{simplex}
-#' @param prefix text string to match
-#' @param invert logical.  If \code{TRUE} return samples whose names
-#'     do _not_ match
-#' @param DP (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U- and
-#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the age standard
-#' @param DP.cov (optional) the covariance matrix of \code{DP}
-#' @param tst (optional) two-element vector with the age and standard
-#'     error of the (presumed concordant) age standard and its
-#'     analytical uncertainty
-#' @return an object of class \code{standard}
-#' @examples
-#' data(Cameca,package="simplex")
-#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-#' @export
-standards <- function(dat,prefix,invert=FALSE,DP,DP.cov,tst){
-    if (missing(DP.cov)) DP.cov <- matrix(0,2,2)
-    if (missing(DP)){
-        if (missing(tst)){
-            warning('No standard age or composition was supplied.')
-            tst <- Pb76_to_age(dat)
-        }
-        cr <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
-        DP <- cr$x
-        DP.cov <- cr$cov
-    }
-    labels <- c('Pb206U238','Pb208Th232')
-    names(DP) <- labels
-    rownames(DP.cov) <- labels
-    colnames(DP.cov) <- labels
-    out <- list()
-    out$DP <- DP
-    out$DP.cov <- DP.cov
-    out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
-    class(out) <- 'standards'
-    out
-}
-# get geometric mean Pb207/Pb206 ratio to estimate
-# the standard age if not supplied by the user
-Pb76_to_age <- function(dat){
-    snames <- names(dat)
-    ns <- length(snames)
-    lPb76 <- rep(0,ns)
-    for (i in 1:ns){
-        p <- pars(dat[[i]])
-        lPb76[i] <- log(sum(p$c7)/sum(p$c6))
-    }
-    lPb76 <- mean(lPb76)
-    slPb76 <- stats::sd(lPb76)/sqrt(ns)
-    Pb76 <- exp(lPb76)
-    sPb76 <- Pb76*slPb76
-    IsoplotR:::get.Pb207Pb206.age.default(x=Pb76,sx=sPb76)
-}
-
 #' @title define the samples in a dataset
 #' @description select a subset of samples of unknown age from a
 #'     \code{simplex} dataset.
