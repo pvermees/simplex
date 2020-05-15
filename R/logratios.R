@@ -206,7 +206,7 @@ b0g2list <- function(b0g,groups){
 # extract data from a spot for logratios calculation
 betapars <- function(spot,ion,dc=NULL){
     out <- alphapars(spot=spot,ion=ion)
-    if (is.null(dc)) out$g <- 0
+    if (is.null(dc) || !(ion%in%colnames(dc))) out$g <- 0
     else out$g <- dc['g',ion]
     out
 }
@@ -242,7 +242,7 @@ plot_logratios <- function(spot,groups,b0g,dc=NULL,...){
         Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g[paste0('b0[',ratio,']')]
         g <- b0g[paste0('g[',ratio,']')]
-        Ypred <- exp(b0 + g*Dp$t + dc['g',num[i]]*(Np$t-Dp$t))
+        Ypred <- exp(b0 + g*Dp$t + Np$g*(Np$t-Dp$t))
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
         graphics::points(X,Y)
@@ -259,23 +259,22 @@ plot_signals <- function(spot,b0g,groups,dc=NULL,...){
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups,dc=dc)
-    Dt <- spot$time[,groups$den]
+    Dp <- betapars(spot=spot,ion=groups$den,dc=dc)
     B0G <- b0g2list(b0g=b0g,groups=groups)
     ions <- names(B0G$b0)
     for (ion in spot$ions){
-        bp <- betapars(spot=spot,ion=ion,dc=dc)
-        sb <- bp$sig - bp$bkg
+        Np <- betapars(spot=spot,ion=ion,dc=dc)
         ylab <- paste0(ion,'- b')
-        graphics::plot(bp$t,sb,type='p',xlab='',ylab='',...)
+        graphics::plot(Np$t,Np$sig-Np$bkg,type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
         if (ion %in% ions){
             b0 <- B0G$b0[ion]
             g <- B0G$g[element(ion)]
-            predsig <- exp_a0D*exp(b0+g*bp$t+bp$g*(bp$t-Dt))
-            graphics::lines(bp$t,predsig)
+            predsig <- exp_a0D*exp(b0+g*Dp$t+Np$g*(Np$t-Dp$t))
+            graphics::lines(Np$t,predsig)
         } else if (ion == groups$den){
-            graphics::lines(bp$t,exp_a0D)
+            graphics::lines(Dp$t,exp_a0D)
         } else {
             # don't plot lines
         }
