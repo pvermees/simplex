@@ -36,13 +36,14 @@ stable_calibration <- function(lr,dc=NULL,dat=NULL,plot=1,...){
         for (i in 1:nr){
             for (j in (i+1):max(nc,nr+1)){
                 b0names <- names(out$x)
-                # TODO
-                #xlab <- paste0(lr$num[i],'/',lr$den[i])
-                #ylab <- paste0(lr$num[j],'/',lr$den[j])
+                xlab <- paste0(lr$num[i],'/',lr$den[i])
+                ylab <- paste0(lr$num[j],'/',lr$den[j])
                 B <- beta2york(lr=lr,
                                x=c(lr$num[i],lr$den[i]),
                                y=c(lr$num[j],lr$den[j]))
                 IsoplotR::scatterplot(B)
+                graphics::mtext(side=1,text=xlab,line=2)
+                graphics::mtext(side=2,text=ylab,line=2)
                 ell <- IsoplotR::ellipse(out$x[i],out$x[j],out$cov[c(i,j),c(i,j)])
                 graphics::polygon(ell,col='white')
             }
