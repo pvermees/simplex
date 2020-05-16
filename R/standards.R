@@ -17,8 +17,8 @@
 #' data(Cameca,package="simplex")
 #' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' @export
-standards <- function(dat,prefix,invert=FALSE,
-                      type='U-Pb',val,cov,tst){
+standards <- function(dat,prefix,invert=FALSE,type='U-Pb',
+                      val,cov=matrix(0,length(val),length(val)),tst){
     out <- list()
     if (missing(val)){
         if (missing(tst)){
@@ -26,8 +26,6 @@ standards <- function(dat,prefix,invert=FALSE,
             tst <- dat2age(dat,type=type)
         }
         out <- age2lr(tst=tst,type=type)
-    } else if (missing(cov)){
-        out <- lrstand(val=val,type=type)
     } else {
         out <- lrstand(val=val,cov=cov,type=type)
     }
@@ -35,21 +33,23 @@ standards <- function(dat,prefix,invert=FALSE,
     class(out) <- 'standards'
     out
 }
-lrstand <- function(val,cov,type="U-Pb"){
+lrstand <- function(val,cov=matrix(0,length(val),length(val)),type="U-Pb"){
     out <- list()
     if (type=="U-Pb"){
         labels <- c("Pb206U238","Pb208Th232")
         out$lr <- log(val)
         J <- diag(1/val)
     } else if (type=="d18O"){
+        if (length(val)==1){ # if d17O is missing
+            val <- c(val,val/2)
+            J <- matrix(c(1,0.5),2,1)
+            cov <- J %*% cov %*% t(J)
+        }
         labels <- c("O18O16","O17O16")
         out$lr <- log(1 + val/1000) + VSMOW()$lr
         J <- diag(1/(1000 + val))
     } else {
         stop('Invalid type argument supplied to lrstand')
-    }
-    if (missing(cov)){
-        cov <- matrix(0,length(val),length(val))
     }
     out$cov <- J %*% cov %*% t(J)
     names(out$lr) <- labels

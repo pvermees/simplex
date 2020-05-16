@@ -1,5 +1,18 @@
-calibration <- function(lr,dc=NULL,dat=NULL,x=c('UO2','U238'),
-                        y=c('Pb206','U238'),plot=1,t=0,...){
+calibration <- function(lr,dc=NULL,dat=NULL,type="U-Pb",oxide,plot=1,t=0,...){
+    if (type=="U-Pb"){
+        if (missing(oxide)){
+            b0gnames <- names(lr[[1]]$b0g)
+            if (any(grepl('UO2',b0gnames))){
+                oxide <- 'UO2'
+            } else if (any(grepl('UO',b0gnames))){
+                oxide <- 'UO'
+            } else {
+                stop('No valid oxide was measured.')
+            }
+        }
+        x <- c(oxide,'U238')
+        y <- c('Pb206','U238')
+    }
     B <- beta2york(lr=lr,t=t,x=x,y=y)
     fit <- IsoplotR:::york(B)
     if (plot>0){
