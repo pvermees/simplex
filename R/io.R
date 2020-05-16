@@ -34,7 +34,6 @@ read_data <- function(dorf,method='IGG-zircon',suffix){
     }
     out$instrument <- instrument
     out$ions <- ions
-    out$type <- get_type(method)
     out$nominalblank <- nominalblank(method)
     class(out) <- 'simplex'
     out
@@ -278,7 +277,6 @@ spot <- function(dat,sname,i=1,...){
     out$sname <- sname
     out$instrument <- dat$instrument
     out$ions <- dat$ions
-    out$type <- dat$type
     out$nominalblank <- dat$nominalblank
     class(out) <- 'spot'
     out

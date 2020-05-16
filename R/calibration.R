@@ -1,40 +1,39 @@
-calibration <- function(lr,dc=NULL,dat=NULL,type="U-Pb",oxide=NULL,plot=1,t=0,...){
-    if (stable(type)){
+calibration <- function(lr,dc=NULL,dat=NULL,oxide=NULL,plot=1,t=0,...){
+    if (stable(lr)){
         fit <- stable_calibration(lr=lr,dc=dc,dat=dat,type=type,plot=plot,...)
     } else {
-        fit <- geochron_calibration(lr=lr,dc=dc,dat=dat,type=type,
+        fit <- geochron_calibration(lr=lr,dc=dc,dat=dat,
                                     oxide=oxide,plot=plot,t=t,...)
     }
     invisible(fit)
 }
 
-stable_calibration <- function(lr,dc=NULL,dat=NULL,
-                               type="dO18",plot=1,...){
-    LL <- function(par,lr=lr){
+stable_calibration <- function(lr,dc=NULL,dat=NULL,plot=1,...){
+    LL <- function(par,lr){
         out <- 0
-        snames <- names(lr)
+        snames <- names(lr$x)
         for (sname in snames){
-            LL <- mahalanobis(x=lr[[sname]],center=init,cov=lr[[sname]]$cov)
+            X <- lr$x[[sname]]$b0g
+            E <- lr$x[[sname]]$cov
+            LL <- mahalanobis(x=X,center=init,cov=E)
             out <- out + LL
         }
         -out
     }
-    init <- lr[[1]]$lr
+    init <- lr$x[[1]]$b0g
     wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
     out <- list()
-    out$x <- rep(0,nn)
-    out$cov <- matrix(0,nn,nn)
+    out$x <- wtdmean$par
+    out$cov <- solve(-wtdmean$hessian)
     out
 }
 
-geochron_calibration <- function(lr,dc=NULL,dat=NULL,type="U-Pb",
-                                 oxide=NULL,plot=1,t=0,...){
-    if (type=="U-Pb"){
+geochron_calibration <- function(lr,dc=NULL,dat=NULL,oxide=NULL,plot=1,t=0,...){
+    if (datatype(lr)=="U-Pb"){
         if (is.null(oxide)){
-            b0gnames <- names(lr[[1]]$b0g)
-            if (any(grepl('UO2',b0gnames))){
+            if ('UO2'%in%lr$num){
                 oxide <- 'UO2'
-            } else if (any(grepl('UO',b0gnames))){
+            } else if ('UO'%in%lr$num){
                 oxide <- 'UO'
             } else {
                 stop('No valid oxide was measured.')
@@ -90,7 +89,7 @@ beta2york <- function(lr,t=0,x=c('UO2','U238'),y=c('Pb206','U238')){
     colnames(out) <- c('X','sX','Y','sY','rXY')
     rownames(out) <- snames
     for (sname in snames){
-        b <- b0gt2b(lr=lr[[sname]],t=t,
+        b <- b0gt2b(LR=lr$x[[sname]],t=t,
                     xlab=paste0(x[1],'/',x[2]),
                     ylab=paste0(y[1],'/',y[2]))
         out[sname,'X'] <- b$x[1]
@@ -102,8 +101,8 @@ beta2york <- function(lr,t=0,x=c('UO2','U238'),y=c('Pb206','U238')){
     out
 }
 
-b0gt2b <- function(lr,t=0,xlab,ylab){
-    b0g <- lr$b0g
+b0gt2b <- function(LR,t=0,xlab,ylab){
+    b0g <- LR$b0g
     b0gnames <- names(b0g)
     nb0g <- length(b0gnames)
     out <- list()
@@ -119,6 +118,6 @@ b0gt2b <- function(lr,t=0,xlab,ylab){
     J[1,igx] <- hours(t)
     J[2,iby] <- 1
     J[2,igy] <- hours(t)
-    out$cov <- J %*% lr$cov %*% t(J)
+    out$cov <- J %*% LR$cov %*% t(J)
     out
 }

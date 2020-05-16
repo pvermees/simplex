@@ -60,12 +60,52 @@ VSMOW <- function(){
     out
 }
 
-stable <- function(type){
-    if (type %in% c("d18O")) return(TRUE)
+stable <- function(dat){
+    type <- datatype(dat)
+    if (type %in% c("oxygen")) return(TRUE)
+    else if (type %in% c("sulphur")) return(TRUE)
     else if (type %in% c("U-Pb")) return(FALSE)
+    else if (type %in% c("U-Th-Pb")) return(FALSE)
     else stop("Invalid data type.")
 }
 
 names.simplex <- function(x){
     names(x$x)
+}
+names.logratios <- function(x){
+    names(x$x)
+}
+
+#' @rdname datatype
+#' @export
+datatype <- function(x,...){ UseMethod("datatype",x) }
+#' @rdname datatype
+#' @export
+datatype.default <- function(x,...){ stop('No default method.') }
+#' @rdname datatype
+#' @export
+datatype.simplex <- function(x){
+    ions2type(ions=x$ions)
+}
+#' @rdname datatype
+#' @export
+datatype.logratios <- function(x){
+    ions2type(ions=c(x$num,x$den))
+}
+
+ions2type <- function(ions){
+    if (all(c("U238","Pb206","Pb206","Pb207")%in%ions) &&
+        any(c("UO","UO2")%in%ions)){
+        out <- "U-Pb"
+    } else if (all(c("U238","Th232","Pb204",
+                     "Pb206","Pb207","Pb208")%in%ions) &&
+               any(c("UO","UO2")%in%ions) &&
+               any(c("ThO","ThO2")%in%ions)){
+        out <- "U-Th-Pb"
+    } else if (all(c("O16","O17","O18")%in%ions)){
+        out <- "oxygen"
+    } else if (all(c('S32','S33','S34','S36')%in%ions)){
+        out <- "sulphur"
+    }
+    out
 }

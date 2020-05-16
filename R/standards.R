@@ -17,8 +17,9 @@
 #' data(Cameca,package="simplex")
 #' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' @export
-standards <- function(dat,prefix,invert=FALSE,type='U-Pb',
-                      val,cov=matrix(0,length(val),length(val)),tst){
+standards <- function(dat,prefix,invert=FALSE,val,
+                      cov=matrix(0,length(val),length(val)),tst){
+    type <- datatype(dat)
     if (missing(val)){
         if (missing(tst)){
             warning('No standard age or composition was supplied.')
@@ -38,7 +39,7 @@ lrstand <- function(val,cov=matrix(0,length(val),length(val)),type="U-Pb"){
         labels <- c("Pb206U238","Pb208Th232")
         out$lr <- log(val)
         J <- diag(1/val)
-    } else if (type=="d18O"){
+    } else if (type=="oxygen"){
         if (length(val)==1){ # if d17O is missing
             val <- c(val,val/2)
             J <- matrix(c(1,0.5),2,1)

@@ -9,11 +9,15 @@ logratios.default <- function(x,...){ stop('No default method.') }
 logratios.simplex <- function(x,num,den,dc=NULL,...){
     snames <- names(x)
     out <- list()
+    out$num <- num
+    out$den <- den
+    out$x <- list()
     for (sname in snames){
         print(sname)
         sp <- spot(dat=x,sname=sname)
-        out[[sname]] <- logratios(x=sp,num=num,den=den,dc=dc[[sname]],...)
+        out$x[[sname]] <- logratios(x=sp,num=num,den=den,dc=dc[[sname]],...)
     }
+    class(out) <- "logratios"
     out
 }
 #' @rdname logratios
@@ -33,7 +37,7 @@ logratios.spot <- function(x,num,den,dc=NULL,plot=0,...){
     if (plot==1){
         plot_logratios(spot=x,groups=groups,b0g=out$b0g,dc=dc,...)
     }
-    out
+    invisible(out)
 }
 
 # converts logratio intercepts and slopes from common
