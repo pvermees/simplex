@@ -9,22 +9,45 @@ calibration <- function(lr,dc=NULL,dat=NULL,oxide=NULL,plot=1,t=0,...){
 }
 
 stable_calibration <- function(lr,dc=NULL,dat=NULL,plot=1,...){
-    LL <- function(par,lr){
+    LL <- function(par,LR){
         out <- 0
-        snames <- names(lr$x)
+        np <- length(par)
+        snames <- names(LR)
         for (sname in snames){
-            X <- lr$x[[sname]]$b0g
-            E <- lr$x[[sname]]$cov
-            LL <- mahalanobis(x=X,center=init,cov=E)
+            X <- LR[[sname]]$b0g[1:np]
+            E <- LR[[sname]]$cov[1:np,1:np]
+            LL <- mahalanobis(x=X,center=par,cov=E)
             out <- out + LL
         }
-        -out
+        out
     }
-    init <- lr$x[[1]]$b0g
-    wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
+    ni <- length(lr$num)
+    LR <- lr$x
+    init <- LR[[1]]$b0g[1:ni]
+    wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,LR=LR)
     out <- list()
     out$x <- wtdmean$par
-    out$cov <- solve(-wtdmean$hessian)
+    out$cov <- solve(wtdmean$hessian)
+    if (plot>0){
+        np <- length(lr$num)-1    # number of plot panels
+        nr <- ceiling(sqrt(np)) # number of rows
+        nc <- ceiling(np/nr)    # number of columns
+        oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+        for (i in 1:nr){
+            for (j in (i+1):max(nc,nr+1)){
+                b0names <- names(out$x)
+                # TODO
+                #xlab <- paste0(lr$num[i],'/',lr$den[i])
+                #ylab <- paste0(lr$num[j],'/',lr$den[j])
+                B <- beta2york(lr=lr,
+                               x=c(lr$num[i],lr$den[i]),
+                               y=c(lr$num[j],lr$den[j]))
+                IsoplotR::scatterplot(B)
+                ell <- IsoplotR::ellipse(out$x[i],out$x[j],out$cov[c(i,j),c(i,j)])
+                graphics::polygon(ell,col='white')
+            }
+        }
+    }
     out
 }
 
