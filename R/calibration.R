@@ -1,6 +1,36 @@
-calibration <- function(lr,dc=NULL,dat=NULL,type="U-Pb",oxide,plot=1,t=0,...){
+calibration <- function(lr,dc=NULL,dat=NULL,type="U-Pb",oxide=NULL,plot=1,t=0,...){
+    if (stable(type)){
+        fit <- stable_calibration(lr=lr,dc=dc,dat=dat,type=type,plot=plot,...)
+    } else {
+        fit <- geochron_calibration(lr=lr,dc=dc,dat=dat,type=type,
+                                    oxide=oxide,plot=plot,t=t,...)
+    }
+    invisible(fit)
+}
+
+stable_calibration <- function(lr,dc=NULL,dat=NULL,
+                               type="dO18",plot=1,...){
+    LL <- function(par,lr=lr){
+        out <- 0
+        snames <- names(lr)
+        for (sname in snames){
+            LL <- mahalanobis(x=lr[[sname]],center=init,cov=lr[[sname]]$cov)
+            out <- out + LL
+        }
+        -out
+    }
+    init <- lr[[1]]$lr
+    wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
+    out <- list()
+    out$x <- rep(0,nn)
+    out$cov <- matrix(0,nn,nn)
+    out
+}
+
+geochron_calibration <- function(lr,dc=NULL,dat=NULL,type="U-Pb",
+                                 oxide=NULL,plot=1,t=0,...){
     if (type=="U-Pb"){
-        if (missing(oxide)){
+        if (is.null(oxide)){
             b0gnames <- names(lr[[1]]$b0g)
             if (any(grepl('UO2',b0gnames))){
                 oxide <- 'UO2'
@@ -14,43 +44,43 @@ calibration <- function(lr,dc=NULL,dat=NULL,type="U-Pb",oxide,plot=1,t=0,...){
         y <- c('Pb206','U238')
     }
     B <- beta2york(lr=lr,t=t,x=x,y=y)
-    fit <- IsoplotR:::york(B)
     if (plot>0){
         xlab <- paste0('log[',x[1],'/',x[2],']')
         ylab <- paste0('log[',y[1],'/',y[2],']')
-    }
-    if (plot==1){
-        IsoplotR:::isochron(B,xlab=xlab,ylab=ylab,...)
-    }
-    if (plot>1 & !is.null(dat)){
-        if (methods::is(dat,'standards')) d <- dat$x
-        else d <- dat
-        X <- NULL
-        Y <- NULL
-        snames <- names(d)
-        for (sname in snames){
-            spot <- d[[sname]]
-            Nxp <- betapars(spot=spot,ion=x[1],dc=dc[[sname]])
-            Dxp <- betapars(spot=spot,ion=x[2],dc=dc[[sname]])
-            Nyp <- betapars(spot=spot,ion=y[1],dc=dc[[sname]])
-            Dyp <- betapars(spot=spot,ion=y[2],dc=dc[[sname]])
-            X <- cbind(X,log(Nxp$sig - Nxp$bkg) - log(Dxp$sig - Dxp$bkg))
-            Y <- cbind(Y,log(Nyp$sig - Nyp$bkg) - log(Dyp$sig - Dyp$bkg))
+        if (plot==1){
+            fit <- IsoplotR:::isochron(B,xlab=xlab,ylab=ylab,...)
+        } else if (!is.null(dat)){
+            X <- NULL
+            Y <- NULL
+            snames <- names(dat)
+            for (sname in snames){
+                sp <- spot(dat=dat,sname=sname)
+                Nxp <- betapars(spot=sp,ion=x[1],dc=dc[[sname]])
+                Dxp <- betapars(spot=sp,ion=x[2],dc=dc[[sname]])
+                Nyp <- betapars(spot=sp,ion=y[1],dc=dc[[sname]])
+                Dyp <- betapars(spot=sp,ion=y[2],dc=dc[[sname]])
+                X <- cbind(X,log(Nxp$sig - Nxp$bkg) - log(Dxp$sig - Dxp$bkg))
+                Y <- cbind(Y,log(Nyp$sig - Nyp$bkg) - log(Dyp$sig - Dyp$bkg))
+            }
+            Xlim <- rep(0,2)
+            Ylim <- rep(0,2)
+            Xlim[1] <- min(B[,'X']-2*B[,'sX'],X)
+            Xlim[2] <- max(B[,'X']+2*B[,'sX'],X)
+            Ylim[1] <- min(B[,'Y']-2*B[,'sY'],Y)
+            Ylim[2] <- max(B[,'Y']+2*B[,'sY'],Y)
+            fit <- IsoplotR:::isochron(B,xlim=Xlim,ylim=Ylim,xlab=xlab,ylab=ylab)
+            matlines(X,Y,lty=1,col='darkgrey')
+            if (plot>2){
+                points(X[1,],Y[1,],pch=21,bg='black')
+                points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
+            }
+        } else {
+            stop("Can't plot the data.")
         }
-        Xlim <- rep(0,2)
-        Ylim <- rep(0,2)
-        Xlim[1] <- min(B[,'X']-2*B[,'sX'],X)
-        Xlim[2] <- max(B[,'X']+2*B[,'sX'],X)
-        Ylim[1] <- min(B[,'Y']-2*B[,'sY'],Y)
-        Ylim[2] <- max(B[,'Y']+2*B[,'sY'],Y)
-        fit <- IsoplotR:::isochron(B,xlim=Xlim,ylim=Ylim,xlab=xlab,ylab=ylab)
-        matlines(X,Y,lty=1,col='darkgrey')
-        if (plot>2){
-            points(X[1,],Y[1,],pch=21,bg='black')
-            points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
-        }
+    } else {
+        fit <- IsoplotR:::york(B)
     }
-    invisible(fit)
+    fit
 }
 
 beta2york <- function(lr,t=0,x=c('UO2','U238'),y=c('Pb206','U238')){

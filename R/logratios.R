@@ -11,14 +11,10 @@ logratios.simplex <- function(x,num,den,dc=NULL,...){
     out <- list()
     for (sname in snames){
         print(sname)
-        out[[sname]] <- logratios(x=x[[sname]],num=num,den=den,dc=dc[[sname]],...)
+        sp <- spot(dat=x,sname=sname)
+        out[[sname]] <- logratios(x=sp,num=num,den=den,dc=dc[[sname]],...)
     }
     out
-}
-#' @rdname alpha
-#' @export
-logratios.standards <- function(x,num,den,dc=NULL,...){
-    logratios(x=x$x,num=num,den=den,dc=dc,...)
 }
 #' @rdname logratios
 #' @export

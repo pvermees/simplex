@@ -19,7 +19,6 @@
 #' @export
 standards <- function(dat,prefix,invert=FALSE,type='U-Pb',
                       val,cov=matrix(0,length(val),length(val)),tst){
-    out <- list()
     if (missing(val)){
         if (missing(tst)){
             warning('No standard age or composition was supplied.')
@@ -29,8 +28,8 @@ standards <- function(dat,prefix,invert=FALSE,type='U-Pb',
     } else {
         out <- lrstand(val=val,cov=cov,type=type)
     }
-    out$x <- subset_samples(dat=dat,prefix=prefix,invert=invert)
-    class(out) <- 'standards'
+    out <- c(out,subset_samples(dat=dat,prefix=prefix,invert=invert))
+    class(out) <- append('standards',class(dat))
     out
 }
 lrstand <- function(val,cov=matrix(0,length(val),length(val)),type="U-Pb"){
@@ -69,7 +68,7 @@ age2lr <- function(tst,type='U-Pb'){
     if (type=='U-Pb'){
         r <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
     } else {
-        stop('Invalid type argument supplied to age2ratios')
+        stop('Invalid type argument supplied to age2lr')
     }
     out <- list()
     out$lr <- log(r$x)

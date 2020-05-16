@@ -6,18 +6,14 @@ drift <- function(x,...){ UseMethod("drift",x) }
 drift.default <- function(x,...){ stop('No default method.') }
 #' @rdname drift
 #' @export
-drift.simplex <- function(x,ions,...){
+drift.simplex <- function(x,ions=x$ions,...){
     snames <- names(x)
     out <- list()
     for (sname in snames){
-        out[[sname]] <- drift(x=x[[sname]],ions=ions,...)
+        sp <- spot(dat=x,sname=sname)
+        out[[sname]] <- drift(x=sp,ions=ions,...)
     }
     out
-}
-#' @rdname drift
-#' @export
-drift.standards <- function(x,ions,...){
-    drift(x=x$x,ions=ions,...)
 }
 #' @rdname drift
 #' @export

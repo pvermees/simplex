@@ -59,3 +59,13 @@ VSMOW <- function(){
     colnames(out$cov) <- labels
     out
 }
+
+stable <- function(type){
+    if (type %in% c("d18O")) return(TRUE)
+    else if (type %in% c("U-Pb")) return(FALSE)
+    else stop("Invalid data type.")
+}
+
+names.simplex <- function(x){
+    names(x$x)
+}

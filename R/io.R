@@ -19,54 +19,58 @@
 #' }
 #' @export
 read_data <- function(dorf,method='IGG-zircon',suffix){
+    out <- list()
     instrument <- get_instrument(method)
+    ions <- get_ions(method)
     if (instrument == 'Cameca') {
         if (missing(suffix)) suffix <- 'asc'
-        out <- read_directory(dorf,suffix=suffix,method=method)
+        out$x <- read_directory(dorf,suffix=suffix,
+                                instrument=instrument,ions=ions)
     } else if (instrument== 'SHRIMP') {
         if (missing(suffix)) suffix <- 'pd'
-        out <- read_file(dorf,suffix=suffix,method=method)
+        out$x <- read_file(dorf,suffix=suffix,instrument=instrument,ions=ions)
     } else {
         stop('Unsupported instrument')
     }
-    class(out) <- c('simplex',instrument)
+    out$instrument <- instrument
+    out$ions <- ions
+    out$type <- get_type(method)
+    out$nominalblank <- nominalblank(method)
+    class(out) <- 'simplex'
     out
 }
 
-read_directory <- function(dname,suffix,method){
+read_directory <- function(dname,suffix,instrument,ions){
     out <- list()
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
     for (i in 1:nf){ # loop through the files
         fname <- fnames[i]
         sname <- tools::file_path_sans_ext(fname)
-        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,method=method)
+        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,
+                                  instrument=instrument,ions=ions)
     }
     out
 }
 
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,suffix,method){
-    instrument <- get_instrument(method)
+read_file <- function(fname,suffix,instrument,ions){
     if (instrument=='Cameca' & suffix=='asc'){
-        out <- read_Cameca_asc(fname=fname,method=method)
+        out <- read_Cameca_asc(fname=fname,ions=ions)
     } else if (instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname=fname,method=method)
+        out <- read_SHRIMP_op(fname=fname,ions=ions)
     } else if (instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname=fname,method=method)
+        out <- read_SHRIMP_pd(fname=fname,ions=ions)
     } else {
         stop('Unrecognised file extension.')
     }
     out
 }
 
-read_Cameca_asc <- function(fname,method){
+read_Cameca_asc <- function(fname,ions){
     f <- file(fname)
     open(f);
     out <- list()
-    out$ions <- get_ions(method)
-    out$nominalblank <- nominalblank(method)
-    out$instrument <- 'Cameca'
     while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
         if (grepl("ACQUISITION PARAMETERS",line)){
             junk <- readLines(f,n=6,warn=FALSE)
@@ -74,9 +78,9 @@ read_Cameca_asc <- function(fname,method){
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
             out$type <- read_text(f,remove=1)
-            names(out$dwelltime) <- out$ions
-            names(out$detector) <- out$ions
-            names(out$type) <- out$ions
+            names(out$dwelltime) <- ions
+            names(out$detector) <- ions
+            names(out$type) <- ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
             junk <- readLines(f,n=3,warn=FALSE)
@@ -101,36 +105,29 @@ read_Cameca_asc <- function(fname,method){
             names(out$deadtime) <- detectors
         }
         if (grepl("RAW DATA",line)) {
-            out$signal <- read_asc_block(f,ions=out$ions)
+            out$signal <- read_asc_block(f,ions=ions)
         }
         if (grepl("PRIMARY INTENSITY",line)) {
-            out$sbm <- read_asc_block(f,ions=out$ions)
+            out$sbm <- read_asc_block(f,ions=ions)
         }
         if (grepl("TIMING",line)) {
-            out$time <- read_asc_block(f,ions=out$ions)
+            out$time <- read_asc_block(f,ions=ions)
         }
     }
     close(f)
-    class(out) <- 'spot'
     out
 }
 
-read_SHRIMP_op <- function(fname,method){
+read_SHRIMP_op <- function(fname,ions){
     f <- file(fname)
     open(f);
     out <- list()
-    ions <- get_ions(method)
-    nominalblank <- nominalblank(method)
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
         if (length(line)<1){
             break
         } else if (nchar(line)>0){
             spot <- list()
-            spot$ions <- ions
-            spot$nominalblank <- nominalblank
-            class(spot) <- 'spot'
-            spot$instrument <- 'SHRIMP'
             sname <- line
             spot$date <- readLines(f,n=1,warn=FALSE)
             spot$set <- read_numbers(f)
@@ -163,12 +160,10 @@ read_SHRIMP_op <- function(fname,method){
     out
 }
 
-read_SHRIMP_pd <- function(fname,ions,method){
+read_SHRIMP_pd <- function(fname,ions){
     f <- file(fname)
     open(f);
     out <- list()
-    ions <- get_ions(method)
-    nominalblank <- nominalblank(method)
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
         if (length(line)<1){
@@ -176,10 +171,6 @@ read_SHRIMP_pd <- function(fname,ions,method){
         } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
             header <- readLines(f,n=4,warn=FALSE)
             spot <- list()
-            spot$ions <- ions
-            spot$nominalblank <- nominalblank
-            class(spot) <- 'spot'
-            spot$instrument <- 'SHRIMP'
             namedate <- strsplit(header[[1]],split=', ')[[1]]
             sname <- namedate[1]
             spot$date <- paste(namedate[2:3],collapse=' ')
@@ -248,14 +239,6 @@ read_asc_block <- function(f,ions){
     out
 }
 
-subset_samples <- function(dat,prefix='Plesovice',...){
-    snames <- names(dat)
-    matches <- grep(prefix,snames,...)
-    out <- dat[matches]
-    class(out) <- class(dat)
-    out
-}
-
 #' @title define the samples in a dataset
 #' @description select a subset of samples of unknown age from a
 #'     \code{simplex} dataset.
@@ -273,5 +256,30 @@ samples <- function(dat,prefix,invert=FALSE){
     for (sname in names(out)){
         class(out[[sname]]) <- append(class(out),'samples')
     }
+    out
+}
+
+subset_samples <- function(dat,prefix='Plesovice',...){
+    out <- dat
+    snames <- names(dat)
+    matches <- grep(prefix,snames,...)
+    out$x <- dat$x[matches]
+    class(out) <- class(dat)
+    out
+}
+
+spot <- function(dat,sname,i=1,...){
+    if (missing(sname)){
+        out <- dat$x[[i]]
+        sname <- names(dat)[i]
+    } else {
+        out <- dat$x[[sname]]
+    }
+    out$sname <- sname
+    out$instrument <- dat$instrument
+    out$ions <- dat$ions
+    out$type <- dat$type
+    out$nominalblank <- dat$nominalblank
+    class(out) <- 'spot'
     out
 }
