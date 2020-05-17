@@ -69,13 +69,6 @@ stable <- function(dat){
     else stop("Invalid data type.")
 }
 
-names.simplex <- function(x){
-    names(x$x)
-}
-names.logratios <- function(x){
-    names(x$x)
-}
-
 #' @rdname datatype
 #' @export
 datatype <- function(x,...){ UseMethod("datatype",x) }

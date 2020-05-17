@@ -1,42 +1,26 @@
-#' @rdname logratios
-#' @export
-logratios <- function(x,...){ UseMethod("logratios",x) }
-#' @rdname logratios
-#' @export
-logratios.default <- function(x,...){ stop('No default method.') }
-#' @rdname logratios
-#' @export
-logratios.simplex <- function(x,num,den,dc=NULL,...){
-    snames <- names(x)
-    out <- list()
+logratios <- function(x,num,den){
+    out <- x
     out$num <- num
     out$den <- den
-    out$x <- list()
+    snames <- names(x$x)
     for (sname in snames){
         print(sname)
         sp <- spot(dat=x,sname=sname)
-        out$x[[sname]] <- logratios(x=sp,num=num,den=den,dc=dc[[sname]],...)
+        out$x[[sname]]$lr <- logratios.spot(x=sp,num=num,den=den)
     }
-    class(out) <- "logratios"
+    class(out) <- append(class(out),"logratios")
     out
 }
-#' @rdname logratios
-#' @export
-logratios.spot <- function(x,num,den,dc=NULL,plot=0,...){
+
+logratios.spot <- function(x,num,den){
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
-    init <- init_logratios(spot=x,groups=groups,dc=dc)
+    init <- init_logratios(spot=x,groups=groups)
     fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
                  lower=init-2,upper=init+2,spot=x,
-                 groups=groups,dc=dc,hessian=TRUE)
-    fit$mse <- SS_b0g(fit$par,spot=x,groups=groups,dc=dc,mse=TRUE)
-    if (plot==2){
-        plot_signals(spot=x,b0g=fit$par,groups=groups,dc=dc,...)
-    }
+                 groups=groups,hessian=TRUE)
+    fit$mse <- SS_b0g(fit$par,spot=x,groups=groups,mse=TRUE)
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
-    if (plot==1){
-        plot_logratios(spot=x,groups=groups,b0g=out$b0g,dc=dc,...)
-    }
     invisible(out)
 }
 
@@ -106,14 +90,14 @@ common_denominator <- function(ions){
     out
 }
 
-init_logratios <- function(spot,groups,dc=NULL){
+init_logratios <- function(spot,groups){
     b0 <- NULL
     g <- NULL
     b0names <- NULL
     gnames <- NULL
     den <- groups$den
     for (nums in groups$num){
-        if (is.null(dc)){
+        if (is.null(spot$dc)){
             for (num in nums){
                 Np <- alphapars(spot,num)
                 Dp <- alphapars(spot,den)
@@ -121,7 +105,7 @@ init_logratios <- function(spot,groups,dc=NULL){
                 b0 <- c(b0,mean(log(absND[absND>0])))
             }
         } else {
-            b0 <- c(b0,log(dc['exp_a0',nums]/dc['exp_a0',den]))
+            b0 <- c(b0,log(spot$dc['exp_a0',nums]/spot$dc['exp_a0',den]))
         }
         b0names <- c(b0names,nums)
         nele <- unique(element(nums))
@@ -136,22 +120,22 @@ init_logratios <- function(spot,groups,dc=NULL){
     out
 }
 
-SS_b0g <- function(b0g,spot,groups,dc=NULL,mse=FALSE){
+SS_b0g <- function(b0g,spot,groups,mse=FALSE){
     den <- groups$den
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
     g <- B0G$g
     nb <- length(b0)
     nele <- names(groups$num)
-    Dp <- betapars(spot=spot,ion=den,dc=dc)
-    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups,dc=dc)
+    Dp <- betapars(spot=spot,ion=den)
+    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups)
     SS <- (Dp$bkg + exp_a0D - Dp$sig)^2
     for (ele in nele){
         num <- groups$num[[ele]]
         ni <- length(num)
         for (i in 1:ni){
             ion <- num[i]
-            Np <- betapars(spot=spot,ion=ion,dc=dc)
+            Np <- betapars(spot=spot,ion=ion)
             bND <- b0[ion] + g[ele]*Dp$t + Np$g*(Np$t-Dp$t)
             exp_a0N <- exp_a0D*exp(bND)
             SS <- SS + (Np$bkg + exp_a0N - Np$sig)^2
@@ -168,7 +152,7 @@ SS_b0g <- function(b0g,spot,groups,dc=NULL,mse=FALSE){
 }
 
 # analytical solution for (D - bkg) where D is the common denominator
-get_exp_a0D <- function(b0g,spot,groups,dc=NULL){
+get_exp_a0D <- function(b0g,spot,groups){
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
     g <- B0G$g
@@ -178,7 +162,7 @@ get_exp_a0D <- function(b0g,spot,groups,dc=NULL){
     NUM <- 0
     DEN <- 0
     for (ion in num){
-        bpX <- betapars(spot=spot,ion=ion,dc=dc)
+        bpX <- betapars(spot=spot,ion=ion)
         ebXD <- exp( b0[ion] + g[element(ion)]*tD + bpX$g*(bpX$t-tD) )
         NUM <- NUM + (bpX$sig-bpX$bkg)*ebXD
         DEN <- DEN + ebXD^2
@@ -204,10 +188,10 @@ b0g2list <- function(b0g,groups){
 }
 
 # extract data from a spot for logratios calculation
-betapars <- function(spot,ion,dc=NULL){
+betapars <- function(spot,ion){
     out <- alphapars(spot=spot,ion=ion)
-    if (is.null(dc) || !(ion%in%colnames(dc))) out$g <- 0
-    else out$g <- dc['g',ion]
+    if (!(ion%in%colnames(spot$dc))) out$g <- 0
+    else out$g <- spot$dc['g',ion]
     out
 }
 
@@ -227,7 +211,18 @@ groupbypairs <- function(B){
     out
 }
 
-plot_logratios <- function(spot,groups,b0g,dc=NULL,...){
+plot.logratios <- function(x,sname,i=1,option=1,...){
+    spot <- spot(x,sname,i=1)
+    if (option==1){
+        plot_logratios(spot=x,...)
+    } else if (option==2){
+        plot_signals(spot=x,...)
+    } else {
+        stop("Invalid plot option.")
+    }
+}
+
+plot_logratios <- function(spot,groups,...){
     np <- length(num) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
@@ -236,8 +231,8 @@ plot_logratios <- function(spot,groups,b0g,dc=NULL,...){
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:np){
         ratio <- paste0(num[i],'/',den[i])
-        Np <- betapars(spot=spot,ion=num[i],dc=dc)
-        Dp <- betapars(spot=spot,ion=den[i],dc=dc)
+        Np <- betapars(spot=spot,ion=num[i])
+        Dp <- betapars(spot=spot,ion=den[i])
         X <- Dp$t
         Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g[paste0('b0[',ratio,']')]
@@ -253,17 +248,17 @@ plot_logratios <- function(spot,groups,b0g,dc=NULL,...){
     graphics::par(oldpar)
 }
 
-plot_signals <- function(spot,b0g,groups,dc=NULL,...){
+plot_signals <- function(spot,b0g,groups,...){
     np <- length(spot$ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups,dc=dc)
-    Dp <- betapars(spot=spot,ion=groups$den,dc=dc)
+    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups)
+    Dp <- betapars(spot=spot,ion=groups$den)
     B0G <- b0g2list(b0g=b0g,groups=groups)
     ions <- names(B0G$b0)
     for (ion in spot$ions){
-        Np <- betapars(spot=spot,ion=ion,dc=dc)
+        Np <- betapars(spot=spot,ion=ion)
         ylab <- paste0(ion,'- b')
         graphics::plot(Np$t,Np$sig-Np$bkg,type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)

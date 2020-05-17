@@ -275,9 +275,7 @@ spot <- function(dat,sname,i=1,...){
         out <- dat$x[[sname]]
     }
     out$sname <- sname
-    out$instrument <- dat$instrument
-    out$ions <- dat$ions
-    out$nominalblank <- dat$nominalblank
+    out <- c(out,dat[dat!='x'])
     class(out) <- 'spot'
     out
 }

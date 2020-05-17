@@ -1,23 +1,15 @@
-#' @rdname drift
-#' @export
-drift <- function(x,...){ UseMethod("drift",x) }
-#' @rdname drift
-#' @export
-drift.default <- function(x,...){ stop('No default method.') }
-#' @rdname drift
-#' @export
-drift.simplex <- function(x,ions=x$ions,...){
-    snames <- names(x)
-    out <- list()
+drift <- function(x,ions=x$ions){
+    out <- x
+    snames <- names(x$x)
     for (sname in snames){
         sp <- spot(dat=x,sname=sname)
-        out[[sname]] <- drift(x=sp,ions=ions,...)
+        out$x[[sname]]$dc <- drift.spot(spot=sp,ions=ions)
     }
+    class(out) <- append(class(out),'drift')
     out
 }
-#' @rdname drift
-#' @export
-drift.spot <- function(x,ions=x$ions,plot=FALSE,...){
+
+drift.spot <- function(spot,ions=spot$ions){
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
@@ -28,12 +20,9 @@ drift.spot <- function(x,ions=x$ions,plot=FALSE,...){
     for (i in 1:nEL){ # loop through the elements
         j <- which(el %in% EL[i])
         ni <- length(j)
-        fit <- optim(par=0,f=SS_g,method='BFGS',spot=x,ions=ions[j])
+        fit <- optim(par=0,f=SS_g,method='BFGS',spot=spot,ions=ions[j])
         out['g',ions[j]] <- fit$par
-        out['exp_a0',ions[j]] <- get_exp_a0(g=fit$par,spot=x,ions=ions[j])
-    }
-    if (plot){
-        plot_drift(spot=x,ea0g=out,ions=ions,...)
+        out['exp_a0',ions[j]] <- get_exp_a0(g=fit$par,spot=spot,ions=ions[j])
     }
     out
 }
@@ -78,7 +67,8 @@ SS_g <- function(par,spot,ions=spot$ions){
     sum(D^2)
 }
 
-plot_drift <- function(spot,ions=spot$ions,ea0g,...){
+plot.drift <- function(x,sname,i=1,...){
+    spot <- spot(x,sname,i=1)
     np <- length(spot$ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
@@ -91,8 +81,8 @@ plot_drift <- function(spot,ions=spot$ions,ea0g,...){
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
         if (ion %in% ions){
-            exp_a0 <- ea0g['exp_a0',ion]
-            g <- ea0g['g',ion]
+            exp_a0 <- spot$dc['exp_a0',ion]
+            g <- spot$dc['g',ion]
             predsig <- exp_a0*exp(g*ap$t)
             graphics::lines(ap$t,predsig)
         }
