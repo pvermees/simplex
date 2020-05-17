@@ -5,7 +5,7 @@ drift <- function(x,ions=x$ions){
         sp <- spot(dat=x,sname=sname)
         out$x[[sname]]$dc <- drift.spot(spot=sp,ions=ions)
     }
-    class(out) <- append(class(out),'drift')
+    class(out) <- append('drift',class(out))
     out
 }
 

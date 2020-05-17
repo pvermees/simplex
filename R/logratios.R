@@ -8,11 +8,13 @@ logratios <- function(x,num,den){
         sp <- spot(dat=x,sname=sname)
         out$x[[sname]]$lr <- logratios.spot(x=sp,num=num,den=den)
     }
-    class(out) <- append(class(out),"logratios")
+    class(out) <- append("logratios",class(out))
     out
 }
 
-logratios.spot <- function(x,num,den){
+logratios.spot <- function(x,num,den,common=FALSE){
+    if (missing(num)) num <- x$num
+    if (missing(den)) den <- x$den
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
     init <- init_logratios(spot=x,groups=groups)
@@ -20,7 +22,16 @@ logratios.spot <- function(x,num,den){
                  lower=init-2,upper=init+2,spot=x,
                  groups=groups,hessian=TRUE)
     fit$mse <- SS_b0g(fit$par,spot=x,groups=groups,mse=TRUE)
-    out <- common2original(fit=fit,num=num,den=den,groups=groups)
+    if (common){ # used by plot_signals
+        out <- list()
+        out$D <- betapars(spot=x,ion=groups$den)
+        out$B0G <- b0g2list(b0g=fit$par,groups=groups)
+        out$ions <- names(out$B0G$b0)
+        out$den <- groups$den
+        out$exp_a0D <- get_exp_a0D(spot=x,b0g=fit$par,groups=groups)
+    } else {
+        out <- common2original(fit=fit,num=num,den=den,groups=groups)
+    }
     invisible(out)
 }
 
@@ -128,7 +139,7 @@ SS_b0g <- function(b0g,spot,groups,mse=FALSE){
     nb <- length(b0)
     nele <- names(groups$num)
     Dp <- betapars(spot=spot,ion=den)
-    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups)
+    exp_a0D <- get_exp_a0D(spot=spot,b0g=b0g,groups=groups)
     SS <- (Dp$bkg + exp_a0D - Dp$sig)^2
     for (ele in nele){
         num <- groups$num[[ele]]
@@ -152,7 +163,7 @@ SS_b0g <- function(b0g,spot,groups,mse=FALSE){
 }
 
 # analytical solution for (D - bkg) where D is the common denominator
-get_exp_a0D <- function(b0g,spot,groups){
+get_exp_a0D <- function(spot,b0g,groups){
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
     g <- B0G$g
@@ -214,31 +225,32 @@ groupbypairs <- function(B){
 plot.logratios <- function(x,sname,i=1,option=1,...){
     spot <- spot(x,sname,i=1)
     if (option==1){
-        plot_logratios(spot=x,...)
+        plot_logratios(spot=spot,...)
     } else if (option==2){
-        plot_signals(spot=x,...)
+        plot_signals(spot=spot,...)
     } else {
         stop("Invalid plot option.")
     }
 }
 
-plot_logratios <- function(spot,groups,...){
-    np <- length(num) # number of plot panels
+plot_logratios <- function(spot,...){
+    b0g <- spot$lr$b0g
+    nb <- length(b0g)/2
+    np <- length(spot$num) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     nt <- nrow(spot$time)
-    nb <- length(b0g)/2
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:np){
-        ratio <- paste0(num[i],'/',den[i])
-        Np <- betapars(spot=spot,ion=num[i])
-        Dp <- betapars(spot=spot,ion=den[i])
+        ratio <- paste0(spot$num[i],'/',spot$den[i])
+        Np <- betapars(spot=spot,ion=spot$num[i])
+        Dp <- betapars(spot=spot,ion=spot$den[i])
         X <- Dp$t
         Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g[paste0('b0[',ratio,']')]
         g <- b0g[paste0('g[',ratio,']')]
         Ypred <- exp(b0 + g*Dp$t + Np$g*(Np$t-Dp$t))
-        ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
+        ylab <- paste0('(',spot$num[i],'-b)/(',spot$den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
         graphics::points(X,Y)
         graphics::lines(X,Ypred)
@@ -248,28 +260,25 @@ plot_logratios <- function(spot,groups,...){
     graphics::par(oldpar)
 }
 
-plot_signals <- function(spot,b0g,groups,...){
+plot_signals <- function(spot,...){
     np <- length(spot$ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
+    common <- logratios.spot(x=spot,common=TRUE)
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-    exp_a0D <- get_exp_a0D(b0g=b0g,spot=spot,groups=groups)
-    Dp <- betapars(spot=spot,ion=groups$den)
-    B0G <- b0g2list(b0g=b0g,groups=groups)
-    ions <- names(B0G$b0)
     for (ion in spot$ions){
         Np <- betapars(spot=spot,ion=ion)
         ylab <- paste0(ion,'- b')
         graphics::plot(Np$t,Np$sig-Np$bkg,type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
-        if (ion %in% ions){
-            b0 <- B0G$b0[ion]
-            g <- B0G$g[element(ion)]
-            predsig <- exp_a0D*exp(b0+g*Dp$t+Np$g*(Np$t-Dp$t))
+        if (ion %in% common$ions){
+            b0 <- common$B0G$b0[ion]
+            g <- common$B0G$g[element(ion)]
+            predsig <- common$exp_a0D*exp(b0+g*common$D$t+Np$g*(Np$t-common$D$t))
             graphics::lines(Np$t,predsig)
-        } else if (ion == groups$den){
-            graphics::lines(Dp$t,exp_a0D)
+        } else if (ion == common$den){
+            graphics::lines(common$D$t,common$exp_a0D)
         } else {
             # don't plot lines
         }

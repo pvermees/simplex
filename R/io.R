@@ -269,13 +269,15 @@ subset_samples <- function(dat,prefix='Plesovice',...){
 
 spot <- function(dat,sname,i=1,...){
     if (missing(sname)){
-        out <- dat$x[[i]]
+        x <- dat$x[[i]]
         sname <- names(dat)[i]
     } else {
-        out <- dat$x[[sname]]
+        x <- dat$x[[sname]]
     }
+    out <- dat
+    out$x <- NULL
     out$sname <- sname
-    out <- c(out,dat[dat!='x'])
+    out <- c(out,x)
     class(out) <- 'spot'
     out
 }
