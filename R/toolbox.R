@@ -69,24 +69,8 @@ stable <- function(dat){
     else stop("Invalid data type.")
 }
 
-#' @rdname datatype
-#' @export
-datatype <- function(x,...){ UseMethod("datatype",x) }
-#' @rdname datatype
-#' @export
-datatype.default <- function(x,...){ stop('No default method.') }
-#' @rdname datatype
-#' @export
-datatype.simplex <- function(x){
-    ions2type(ions=x$ions)
-}
-#' @rdname datatype
-#' @export
-datatype.logratios <- function(x){
-    ions2type(ions=c(x$num,x$den))
-}
-
-ions2type <- function(ions){
+datatype <- function(x){
+    ions <- x$ions
     if (all(c("U238","Pb206","Pb206","Pb207")%in%ions) &&
         any(c("UO","UO2")%in%ions)){
         out <- "U-Pb"

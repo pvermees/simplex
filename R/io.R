@@ -238,32 +238,12 @@ read_asc_block <- function(f,ions){
     out
 }
 
-#' @title define the samples in a dataset
-#' @description select a subset of samples of unknown age from a
-#'     \code{simplex} dataset.
-#' @param dat an object of class \code{simplex}
-#' @param prefix text string to match
-#' @param invert logical.  If \code{TRUE} return samples whose names
-#'     do _not_ match
-#' @return a list of objects of class \code{unknown}
-#' @examples
-#' data(Cameca,package="simplex")
-#' samp <- samples(Cameca,prefix='Plesovice',invert=TRUE)
-#' @export
-samples <- function(dat,prefix,invert=FALSE){
-    out <- subset_samples(dat=dat,prefix=prefix,invert=invert)
-    for (sname in names(out)){
-        class(out[[sname]]) <- append(class(out),'samples')
-    }
-    out
-}
-
-subset_samples <- function(dat,prefix='Plesovice',...){
-    out <- dat
-    snames <- names(dat)
+subset.simplex <- function(x,prefix='Plesovice',...){
+    out <- x
+    snames <- names(x$x)
     matches <- grep(prefix,snames,...)
-    out$x <- dat$x[matches]
-    class(out) <- class(dat)
+    out$x <- x$x[matches]
+    class(out) <- class(x)
     out
 }
 
