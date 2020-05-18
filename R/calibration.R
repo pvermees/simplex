@@ -1,8 +1,10 @@
-calibration <- function(lr,prefix=NULL,snames=NULL,i=NULL,
-                        invert=FALSE,oxide=NULL,t=0,...){
+calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,
+                        invert=FALSE,oxide=NULL,t=0){
+    if (is.null(prefix) && is.null(snames) && is.null(i)) prefix <- stand$prefix
     dat <- subset(x=lr,prefix=prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out <- stable_calibration(lr=dat)
     else out <- geochron_calibration(lr=dat,oxide=oxide,t=t)
+    out$stand <- stand
     class(out) <- append('calibration',class(out))
     out
 }

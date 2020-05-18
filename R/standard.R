@@ -17,23 +17,48 @@
 #' data(Cameca,package="simplex")
 #' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' @export
-standards <- function(dat,prefix,invert=FALSE,val,
-                      cov=matrix(0,length(val),length(val)),tst){
-    type <- datatype(dat)
-    if (missing(val)){
-        if (missing(tst)){
-            warning('No standard age or composition was supplied.')
-            tst <- dat2age(dat,type=type)
+standard <- function(preset,prefix=preset,tst,val,
+                     cov=matrix(0,length(val),length(val))){
+    if (missing(preset)){
+        out <- list()
+        if (missing(prefix)) out$prefix <- NA
+        else out$prefix <- prefix
+        if (missing(val)){
+            if (missing(tst)){
+                out$fetch <- function(dat){
+                    temp <- dat
+                    temp$tst <- dat2age(dat)
+                    age2lr(temp)
+                }
+            } else {
+                out$tst <- tst
+                out$fetch <- function(dat){
+                    age2lr(dat)
+                }
+            }
+        } else {
+            out$val <- val
+            out$cov <- cov
+            out$fetch <- function(dat){
+                lrstand(dat)
+            }
         }
-        out <- age2lr(tst=tst,type=type)
+        class(out) <- 'standard'
+    } else if (preset=='Plesovice'){
+        out <- standard(prefix=prefix,tst=c(337.13,0.18))
+    } else if (preset=='Temora'){
+        out <- standard(prefix=prefix,tst=c(416.75,0.12))
+    } else if (preset=='NBS28'){
+        out <- standard(prefix=prefix,val=c(9.56,4.79),cov=diag(c(0.11,0.05))^2)
     } else {
-        out <- lrstand(val=val,cov=cov,type=type)
+        stop("Invalid input to standard(...).")
     }
-    out <- c(out,subset_samples(dat=dat,prefix=prefix,invert=invert))
-    class(out) <- append('standards',class(dat))
     out
 }
-lrstand <- function(val,cov=matrix(0,length(val),length(val)),type="U-Pb"){
+lrstand <- function(dat){
+    val <- dat$stand$val
+    cov <- dat$stand$cov
+    type <- datatype(dat)
     out <- list()
     if (type=="U-Pb"){
         labels <- c("Pb206U238","Pb208Th232")
@@ -57,7 +82,7 @@ lrstand <- function(val,cov=matrix(0,length(val),length(val)),type="U-Pb"){
     colnames(out$cov) <- labels
     out
 }
-dat2age <- function(dat,type='U-Pb'){
+dat2age <- function(dat){
     if (type=='U-Pb'){
         out <- Pb76_to_age(dat)
     } else {
@@ -65,7 +90,9 @@ dat2age <- function(dat,type='U-Pb'){
     }
     out
 }
-age2lr <- function(tst,type='U-Pb'){
+age2lr <- function(dat){
+    type <- datatype(dat)
+    tst <- dat$stand$tst
     if (type=='U-Pb'){
         r <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
     } else {
