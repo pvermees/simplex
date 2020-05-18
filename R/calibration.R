@@ -1,5 +1,6 @@
-calibration <- function(lr,prefix,invert=FALSE,oxide=NULL,t=0,...){
-    dat <- subset(x=lr,prefix=prefix,invert=invert)
+calibration <- function(lr,prefix=NULL,snames=NULL,i=NULL,
+                        invert=FALSE,oxide=NULL,t=0,...){
+    dat <- subset(x=lr,prefix=prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out <- stable_calibration(lr=dat)
     else out <- geochron_calibration(lr=dat,oxide=oxide,t=t)
     class(out) <- append('calibration',class(out))
@@ -55,8 +56,10 @@ geochron_calibration <- function(lr,oxide=NULL,t=0,...){
     out
 }
 
-beta2york <- function(lr,t=0,num=c('UO2','Pb206'),den=c('U238','U238')){
-    snames <- names(lr$x)
+beta2york <- function(lr,t=0,num=c('UO2','Pb206'),
+                      den=c('U238','U238'),snames=NULL,i=NULL){
+    if (is.null(snames)) snames <- names(lr$x)
+    if (!is.null(i)) snames <- snames[i]
     ns <- length(snames)
     out <- matrix(0,nrow=ns,ncol=5)
     colnames(out) <- c('X','sX','Y','sY','rXY')
@@ -95,59 +98,67 @@ b0gt2b <- function(LR,t=0,xlab,ylab){
     out
 }
 
-plot.calibration <- function(cal,option=1,...){
-    if (stable(cal)) calplot_stable(cal,...)
-    else calplot_geochronology(cal,option=option,...)
+plot.calibration <- function(cal,option=1,snames=NULL,i=NULL,...){
+    if (stable(cal)) calplot_stable(dat=cal,snames=snames,i=i,...)
+    else calplot_geochronology(dat=cal,option=option,snames=snames,i=i,...)
 }
 
-calplot_stable <- function(cal){
-    np <- length(cal$num)-1  # number of plot panels
+calplot_stable <- function(dat,snames=NULL,i=NULL,...){
+    np <- length(dat$num)-1  # number of plot panels
     nr <- ceiling(sqrt(np))  # number of rows
     nc <- ceiling(np/nr)     # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:nr){
         for (j in (i+1):max(nc,nr+1)){
-            b0names <- names(cal$x)
-            xlab <- paste0(cal$num[i],'/',cal$den[i])
-            ylab <- paste0(cal$num[j],'/',cal$den[j])
-            B <- beta2york(lr=cal,
-                           x=c(cal$num[i],cal$den[i]),
-                           y=c(cal$num[j],cal$den[j]))
-            IsoplotR::scatterplot(B)
+            b0names <- names(dat$x)
+            xlab <- paste0(dat$num[i],'/',dat$den[i])
+            ylab <- paste0(dat$num[j],'/',dat$den[j])
+            B <- beta2york(lr=dat,snames=snames,i=i,
+                           num=dat$num[c(i,j)],den=dat$den[c(i,j)])
+            IsoplotR::scatterplot(B,...)
             graphics::mtext(side=1,text=xlab,line=2)
             graphics::mtext(side=2,text=ylab,line=2)
-            ell <- IsoplotR::ellipse(cal$cal$x[i],cal$cal$x[j],
-                                     cal$cal$cov[c(i,j),c(i,j)])
+            ell <- IsoplotR::ellipse(dat$cal$x[i],dat$cal$x[j],
+                                     dat$cal$cov[c(i,j),c(i,j)])
             graphics::polygon(ell,col='white')
         }
     }
 }
 
-calplot_geochronology <- function(cal,option=1,...){
-    xlab <- paste0('log[',cal$cal$num[1],'/',cal$cal$den[1],']')
-    ylab <- paste0('log[',cal$cal$num[2],'/',cal$cal$den[2],']')
+calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,...){
+    if (is.null(snames)) snames <- rownames(dat$cal$york)
+    if (!is.null(i)) snames <- rownames(dat$cal$york)[i]
+    yd <- dat$cal$york[snames,,drop=FALSE]
+    num <- dat$cal$num
+    den <- dat$cal$den
+    xlab <- paste0('log[',num[1],'/',den[1],']')
+    ylab <- paste0('log[',num[2],'/',den[2],']')
     if (option==1){
-        IsoplotR:::isochron(cal$cal$york,xlab=xlab,ylab=ylab,...)
+        IsoplotR:::scatterplot(yd,fit=dat$cal$fit,...)
     } else {
         X <- NULL
         Y <- NULL
-        snames <- names(cal$x)
         for (sname in snames){
-            sp <- spot(dat=cal,sname=sname)
-            Nxp <- betapars(spot=sp,ion=cal$cal$num[1])
-            Dxp <- betapars(spot=sp,ion=cal$cal$den[1])
-            Nyp <- betapars(spot=sp,ion=cal$cal$num[2])
-            Dyp <- betapars(spot=sp,ion=cal$cal$den[2])
-            X <- cbind(X,log(Nxp$sig - Nxp$bkg) - log(Dxp$sig - Dxp$bkg))
-            Y <- cbind(Y,log(Nyp$sig - Nyp$bkg) - log(Dyp$sig - Dyp$bkg))
+            sp <- spot(dat=dat,sname=sname)
+            Nxp <- betapars(spot=sp,ion=num[1])
+            Dxp <- betapars(spot=sp,ion=den[1])
+            Nyp <- betapars(spot=sp,ion=num[2])
+            Dyp <- betapars(spot=sp,ion=den[2])
+            newX <- Nxp$g*(Dxp$t-Nxp$t) +
+                log(Nxp$sig - Nxp$bkg) - log(Dxp$sig - Dxp$bkg)
+            newY <- Nyp$g*(Dyp$t-Nyp$t) +
+                log(Nyp$sig - Nyp$bkg) - log(Dyp$sig - Dyp$bkg)
+            X <- cbind(X,newX)
+            Y <- cbind(Y,newY)
         }
         Xlim <- rep(0,2)
         Ylim <- rep(0,2)
-        Xlim[1] <- min(cal$cal$york[,'X']-2*cal$cal$york[,'sX'],X)
-        Xlim[2] <- max(cal$cal$york[,'X']+2*cal$cal$york[,'sX'],X)
-        Ylim[1] <- min(cal$cal$york[,'Y']-2*cal$cal$york[,'sY'],Y)
-        Ylim[2] <- max(cal$cal$york[,'Y']+2*cal$cal$york[,'sY'],Y)
-        IsoplotR:::isochron(cal$cal$york,xlim=Xlim,ylim=Ylim,xlab=xlab,ylab=ylab)
+        Xlim[1] <- min(yd[,'X']-2*yd[,'sX'],X)
+        Xlim[2] <- max(yd[,'X']+2*yd[,'sX'],X)
+        Ylim[1] <- min(yd[,'Y']-2*yd[,'sY'],Y)
+        Ylim[2] <- max(yd[,'Y']+2*yd[,'sY'],Y)
+        IsoplotR:::scatterplot(yd,fit=dat$cal$fit,xlim=Xlim,
+                               ylim=Ylim,xlab=xlab,ylab=ylab,...)
         matlines(X,Y,lty=1,col='darkgrey')
         if (option>2){
             points(X[1,],Y[1,],pch=21,bg='black')

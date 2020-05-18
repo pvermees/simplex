@@ -238,11 +238,14 @@ read_asc_block <- function(f,ions){
     out
 }
 
-subset.simplex <- function(x,prefix='Plesovice',...){
+subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- x
-    snames <- names(x$x)
-    matches <- grep(prefix,snames,...)
-    out$x <- x$x[matches]
+    if (is.null(snames)) snames <- names(dat$x)
+    if (!is.null(i)) snames <- snames[i]
+    if (!is.null(prefix)){
+        snames <- snames[grep(prefix,snames,...)]
+    }
+    out$x <- x$x[snames]
     class(out) <- class(x)
     out
 }
