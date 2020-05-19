@@ -1,9 +1,9 @@
 calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,
                         invert=FALSE,oxide=NULL,t=0){
-    if (is.null(prefix) && is.null(snames) && is.null(i)) prefix <- stand$prefix
+    out <- lr
     dat <- subset(x=lr,prefix=prefix,snames=snames,i=i,invert=invert)
-    if (stable(lr)) out <- stable_calibration(lr=dat)
-    else out <- geochron_calibration(lr=dat,oxide=oxide,t=t)
+    if (stable(lr)) out$cal <- stable_calibration(lr=dat)
+    else out$cal <- geochron_calibration(lr=dat,oxide=oxide,t=t)
     out$stand <- stand
     class(out) <- append('calibration',class(out))
     out
@@ -25,10 +25,9 @@ stable_calibration <- function(lr){
     ni <- length(lr$num)
     init <- lr$x[[1]]$lr$b0g[1:ni]
     wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
-    out <- lr
-    out$cal <- list()
-    out$cal$x <- wtdmean$par
-    out$cal$cov <- solve(wtdmean$hessian)
+    out <- list()
+    out$x <- wtdmean$par
+    out$cov <- solve(wtdmean$hessian)
     out
 }
 
@@ -48,13 +47,11 @@ geochron_calibration <- function(lr,oxide=NULL,t=0,...){
     } else {
         stop("Invalid data type.")
     }
-    cal <- list()
-    cal$num <- num
-    cal$den <- den
-    cal$york <- beta2york(lr=lr,t=t,num=num,den=den)
-    cal$fit <- IsoplotR:::york(cal$york)
-    out <- lr
-    out$cal <- cal
+    out <- list()
+    out$num <- num
+    out$den <- den
+    out$york <- beta2york(lr=lr,t=t,num=num,den=den)
+    out$fit <- IsoplotR:::york(cal$york)
     out
 }
 

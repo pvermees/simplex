@@ -3,12 +3,9 @@
 #'     dataset. The true isotopic composition of the standard can be
 #'     supplied either explicitly, or via its age.
 #' @param dat an object of class \code{simplex}
-#' @param prefix text string to match
-#' @param invert logical.  If \code{TRUE} return samples whose names
-#'     do _not_ match
-#' @param ratios (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U- and
+#' @param val (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U- and
 #'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the age standard
-#' @param ratios.cov (optional) the covariance matrix of \code{DP}
+#' @param cov (optional) the covariance matrix of \code{DP}
 #' @param tst (optional) two-element vector with the age and standard
 #'     error of the (presumed concordant) age standard and its
 #'     analytical uncertainty
@@ -17,12 +14,9 @@
 #' data(Cameca,package="simplex")
 #' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' @export
-standard <- function(preset,prefix=preset,tst,val,
-                     cov=matrix(0,length(val),length(val))){
+standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val))){
     if (missing(preset)){
         out <- list()
-        if (missing(prefix)) out$prefix <- NA
-        else out$prefix <- prefix
         if (missing(val)){
             if (missing(tst)){
                 out$fetch <- function(dat){
@@ -45,11 +39,11 @@ standard <- function(preset,prefix=preset,tst,val,
         }
         class(out) <- 'standard'
     } else if (preset=='Plesovice'){
-        out <- standard(prefix=prefix,tst=c(337.13,0.18))
+        out <- standard(tst=c(337.13,0.18))
     } else if (preset=='Temora'){
-        out <- standard(prefix=prefix,tst=c(416.75,0.12))
+        out <- standard(tst=c(416.75,0.12))
     } else if (preset=='NBS28'){
-        out <- standard(prefix=prefix,val=c(9.56,4.79),cov=diag(c(0.11,0.05))^2)
+        out <- standard(val=c(9.56,4.79),cov=diag(c(0.11,0.05))^2)
     } else {
         stop("Invalid input to standard(...).")
     }
