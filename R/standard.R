@@ -43,7 +43,7 @@ standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val))){
     } else if (preset=='Temora'){
         out <- standard(tst=c(416.75,0.12))
     } else if (preset=='NBS28'){
-        out <- standard(val=c(9.56,4.79),cov=diag(c(0.11,0.05))^2)
+        out <- standard(val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2)
     } else {
         stop("Invalid input to standard(...).")
     }
@@ -60,11 +60,11 @@ lrstand <- function(dat){
         J <- diag(1/val)
     } else if (type=="oxygen"){
         if (length(val)==1){ # if d17O is missing
-            val <- c(val,val/2)
-            J <- matrix(c(1,0.5),2,1)
+            val <- c(val/2,val)
+            J <- matrix(c(0.5,1),2,1)
             cov <- J %*% cov %*% t(J)
         }
-        labels <- c("O18O16","O17O16")
+        labels <- c("O17O16","O18O16")
         out$lr <- log(1 + val/1000) + VSMOW()$lr
         J <- diag(1/(1000 + val))
     } else {

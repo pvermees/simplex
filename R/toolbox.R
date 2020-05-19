@@ -50,8 +50,8 @@ elements <- function(){
 
 VSMOW <- function(){
     out <- list()
-    out$lr <- c(2.00520e-3,0.3799e-3)
-    relerr <- c(0.43e-3,1.6e-3)/c(2.00520,0.3799)
+    out$lr <- log(c(0.3799e-3,2.00520e-3))
+    relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
     out$cov <- diag(relerr^2)
     labels <- c("O18O16","O17O16")
     names(out$lr) <- labels

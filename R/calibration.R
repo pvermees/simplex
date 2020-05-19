@@ -48,6 +48,7 @@ geochron_calibration <- function(lr,oxide=NULL,t=0,...){
         stop("Invalid data type.")
     }
     out <- list()
+    out$t <- t
     out$num <- num
     out$den <- den
     out$york <- beta2york(lr=lr,t=t,num=num,den=den)
