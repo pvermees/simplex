@@ -49,10 +49,11 @@ geochron_calibration <- function(lr,oxide=NULL,t=0,...){
     }
     out <- list()
     out$t <- t
+    out$oxide <- oxide
     out$num <- num
     out$den <- den
     out$york <- beta2york(lr=lr,t=t,num=num,den=den)
-    out$fit <- IsoplotR:::york(cal$york)
+    out$fit <- IsoplotR:::york(out$york)
     out
 }
 
