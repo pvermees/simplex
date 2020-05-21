@@ -70,6 +70,8 @@ lrstand <- function(dat){
     } else {
         stop('Invalid type argument supplied to lrstand')
     }
+    ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@3@"]]));##:ess-bp-end:##
     out$cov <- J %*% cov %*% t(J)
     names(out$lr) <- labels
     rownames(out$cov) <- labels
@@ -95,6 +97,7 @@ age2lr <- function(dat){
     out <- list()
     out$lr <- log(r$x)
     J <- diag(1/r$x)
+    rownames(J) <- names(r$x)
     out$cov <- J %*% r$cov %*% t(J)
     out
 }
