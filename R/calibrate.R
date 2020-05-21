@@ -40,28 +40,33 @@ calibrate_geochron <- function(dat,exterr=FALSE){
     out$snames <- names(dat$x)
     type <- datatype(dat)
     if (type=="U-Pb"){
-        out$PbU <- fractical(dat,num='Pb206',den='U238',exterr=exterr)
-        out$PbPb <- nofractical(dat,num=c('Pb204','Pb207'),
-                                den=c('Pb206','Pb206'))
+        out$PbU <- fractical(dat,type="U-Pb",exterr=exterr)
+        out$PbPb <- nofractical(dat,type="U-Pb")
     } else if (type=="U-Th-Pb"){
-        out$PbU <- fractical(dat,num='Pb206',den='U238',exterr=exterr)
-        out$PbPb <- nofractical(dat,num=c('Pb204','Pb207'),
-                                den=c('Pb206','Pb206'))
-        out$ThU <- fractical(dat,num='Pb208',den='Th232',exterr=exterr)
+        out$PbU <- fractical(dat,type="U-Pb",exterr=exterr)
+        out$PbPb <- nofractical(dat,type="U-Th-Pb")
+        out$ThU <- fractical(dat,type="Th-Pb",exterr=exterr)
     } else {
         stop("Invalid data type supplied to calibrate function.")
     }
     out
 }
 
-fractical <- function(dat,num='Pb206',den='U238',exterr=FALSE){
+fractical <- function(dat,type="U-Pb",exterr=FALSE){
     cal <- dat$stand$fetch(dat)
+    if (type=='U-Pb'){
+        num='Pb206'
+        den='U238'
+    } else if (type=='Th-Pb'){
+        num='Pb208'
+        den='Th232'
+    }
     snames <- names(dat$x)
     ns <- length(snames)
     out <- list()
     out$num <- num
     out$den <- den
-    fit <- dat$cal$fit
+    fit <- dat$cal[[type]]$fit
     fitcov <- diag(c(fit$a[2],fit$b[2]))^2
     fitcov[1,2] <- fit$cov.ab/(fit$a[2]*fit$b[2])
     DP <- paste0(num,den)
@@ -75,8 +80,8 @@ fractical <- function(dat,num='Pb206',den='U238',exterr=FALSE){
     for (i in 1:ns){
         sp <- spot(dat,i=i)
         b0g <- sp$lr$b0g
-        bXlab <- paste0('b0[',sp$cal$oxide,'/',den,']')
-        gXlab <- paste0('g[',sp$cal$oxide,'/',den,']')
+        bXlab <- paste0('b0[',sp$cal[[type]]$oxide,'/',den,']')
+        gXlab <- paste0('g[',sp$cal[[type]]$oxide,'/',den,']')
         bYlab <- paste0('b0[',num,'/',den,']')
         gYlab <- paste0('g[',num,'/',den,']')
         tt <- sp$cal$t
@@ -104,7 +109,14 @@ fractical <- function(dat,num='Pb206',den='U238',exterr=FALSE){
     out
 }
 
-nofractical <- function(dat,num=c('Pb204','Pb207'),den=c('Pb206','Pb206')){
+nofractical <- function(dat,type="U-Pb"){
+    if (type=='U-Pb'){
+        num=c('Pb204','Pb207')
+        den=c('Pb206','Pb206')
+    } else if (type=='U-Th-Pb'){
+        num=c('Pb204','Pb207','Pb208')
+        den=c('Pb206','Pb206','Pb206')
+    }    
     snames <- names(dat$x)
     ns <- length(snames)
     nr <- length(num)

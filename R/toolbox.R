@@ -71,14 +71,14 @@ stable <- function(dat){
 
 datatype <- function(x){
     ions <- x$ions
-    if (all(c("U238","Pb206","Pb206","Pb207")%in%ions) &&
-        any(c("UO","UO2")%in%ions)){
-        out <- "U-Pb"
-    } else if (all(c("U238","Th232","Pb204",
-                     "Pb206","Pb207","Pb208")%in%ions) &&
+    if (all(c("U238","Th232","Pb204",
+              "Pb206","Pb207","Pb208")%in%ions) &&
                any(c("UO","UO2")%in%ions) &&
                any(c("ThO","ThO2")%in%ions)){
         out <- "U-Th-Pb"
+    } else if (all(c("U238","Pb206","Pb206","Pb207")%in%ions) &&
+        any(c("UO","UO2")%in%ions)){
+        out <- "U-Pb"
     } else if (all(c("O16","O17","O18")%in%ions)){
         out <- "oxygen"
     } else if (all(c('S32','S33','S34','S36')%in%ions)){

@@ -89,7 +89,7 @@ dat2age <- function(dat){
 age2lr <- function(dat){
     type <- datatype(dat)
     tst <- dat$stand$tst
-    if (type=='U-Pb'){
+    if (type%in%c('U-Pb','U-Th-Pb')){
         r <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
     } else {
         stop('Invalid type argument supplied to age2lr')

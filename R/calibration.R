@@ -32,7 +32,22 @@ stable_calibration <- function(lr){
 }
 
 geochron_calibration <- function(lr,oxide=NULL,t=0,...){
-    if (datatype(lr)=="U-Pb"){
+    out <- list()
+    out$t <- t
+    type <- datatype(lr)
+    if (type=="U-Pb"){
+        out[[type]] <- add_geochron_calibration(lr,oxide=oxide,t=t,type)
+    } else if (datatype(lr)=="U-Th-Pb"){
+        out[['U-Pb']] <- add_geochron_calibration(lr,oxide=oxide,t=t,type="U-Pb")
+        out[['Th-Pb']] <- add_geochron_calibration(lr,oxide=oxide,t=t,type="Th-Pb")
+    } else {
+        stop("Invalid data type.")
+    }
+    out
+}
+
+add_geochron_calibration <- function(lr,oxide=NULL,t=0,type='U-Pb'){
+    if (type=='U-Pb'){
         if (is.null(oxide)){
             if ('UO2'%in%lr$num){
                 oxide <- 'UO2'
@@ -44,14 +59,20 @@ geochron_calibration <- function(lr,oxide=NULL,t=0,...){
         }
         num <- c(oxide,'Pb206')
         den <- c('U238','U238')
+    } else if (type=='Th-Pb'){
+        if ('ThO2'%in%lr$num){
+            oxide <- 'ThO2'
+        } else if ('ThO'%in%lr$num){
+            oxide <- 'ThO'
+        } else {
+            stop('No valid Th oxide was measured.')
+        }
+        num <- c(oxide,'Pb208')
+        den <- c('Th232','Th232')
     } else {
         stop("Invalid data type.")
     }
-    out <- list()
-    out$t <- t
-    out$oxide <- oxide
-    out$num <- num
-    out$den <- den
+    out <- list(num=num,den=den,oxide=oxide)
     out$york <- beta2york(lr=lr,t=t,num=num,den=den)
     out$fit <- IsoplotR:::york(out$york)
     out
