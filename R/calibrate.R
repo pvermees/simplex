@@ -101,9 +101,17 @@ fractical <- function(dat,num='Pb206',den='U238'){
 
 nofractical <- function(dat,num=c('Pb204','Pb207'),den=c('Pb206','Pb206')){
     out <- list()
+    snames <- names(dat$x)
+    ns <- length(snames)
     nr <- length(num)
-    out$lr <- rep(0,nr)
+    out$lr <- rep(0,nr*ns)
+    out$cov <- matrix(0,nr*ns,nr*ns)
     for (i in 1:ns){
+        sp <- spot(dat,i=i)
+        j <- (i-1)*nr
+        lr <- paste0('b0[',num,'/',den,']')
+        out$lr[j+(1:nr)] <- sp$lr$b0g[lr]
+        out$cov[j+(1:nr),j+(1:nr)] <- sp$lr$cov[lr,lr]
     }
     out
 }
