@@ -7,14 +7,14 @@ set_method <- function(method,instrument,ions,nominalblank){
                                        nominalblank=nominalblank)
 }
 
-set_method(method='IGG-zircon',
+set_method(method='IGG-UPb',
            instrument='Cameca',
            ions=c('Zr90','Zr92','200.5','Zr94',
                   'Pb204','Pb206','Pb207','Pb208',
                   'U238','ThO2','UO2','270.1'),
            nominalblank=TRUE)
 
-set_method(method='IGG-monazite',
+set_method(method='IGG-UThPb',
            instrument='Cameca',
            ions=c('La139','202.5','Pb204','Pb206',
                   'Pb207','Pb208','Th232','U238',
@@ -31,7 +31,7 @@ set_method(method='IGG-sulfur',
            ions=c('S32','S33','33.96','S34','S36'),
            nominalblank=TRUE)
 
-set_method(method='GA-zircon',
+set_method(method='GA-UPb',
            instrument='SHRIMP',
            ions=c('Zr2O','Pb204','bkg','Pb206','Pb207',
                   'Pb208','U238','ThO','UO','UO2'),

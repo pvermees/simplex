@@ -37,30 +37,33 @@ calibrate_stable <- function(dat,exterr=FALSE){
 
 calibrate_geochron <- function(dat,exterr=FALSE){
     out <- list()
+    out$snames <- names(dat$x)
     type <- datatype(dat)
     if (type=="U-Pb"){
-        out$PbU <- fractical(dat,num='Pb206',den='U238')
+        out$PbU <- fractical(dat,num='Pb206',den='U238',exterr=exterr)
         out$PbPb <- nofractical(dat,num=c('Pb204','Pb207'),
-                                    den=c('Pb206','Pb206'))
+                                den=c('Pb206','Pb206'))
     } else if (type=="U-Th-Pb"){
-        out$PbU <- rep(0,ns)    # U238/Pb206
-        out$PbPb <- rep(0,ns*3) # Pb204/Pb206, Pb207/Pb206, Pb208/Pb206
-        out$ThPb <- rep(0,ns)   # Th232/Pb208
+        out$PbU <- fractical(dat,num='Pb206',den='U238',exterr=exterr)
+        out$PbPb <- nofractical(dat,num=c('Pb204','Pb207'),
+                                den=c('Pb206','Pb206'))
+        out$ThU <- fractical(dat,num='Pb208',den='Th232',exterr=exterr)
     } else {
         stop("Invalid data type supplied to calibrate function.")
     }
     out
 }
 
-fractical <- function(dat,num='Pb206',den='U238'){
+fractical <- function(dat,num='Pb206',den='U238',exterr=FALSE){
     cal <- dat$stand$fetch(dat)
-    out <- list()
     snames <- names(dat$x)
     ns <- length(snames)
+    out <- list()
+    out$num <- num
+    out$den <- den
     fit <- dat$cal$fit
     fitcov <- diag(c(fit$a[2],fit$b[2]))^2
     fitcov[1,2] <- fit$cov.ab/(fit$a[2]*fit$b[2])
-    ns <- length(snames)
     DP <- paste0(num,den)
     E <- matrix(0,ns+3,ns+3)
     E[ns+1,ns+1] <- cal$cov[DP,DP]
@@ -91,19 +94,23 @@ fractical <- function(dat,num='Pb206',den='U238'){
         out$lr[i] <- XY[2] + cal$lr[DP] - (fit$a[1]+fit$b[1]*XY[1])
         J[i,i] <- -fit$b[1]  # dlrdX
         J[i,i+1] <- 1        # dlrdY
-        J[i,ns+1] <- 1       # dlrdcal68
-        J[i,ns+2] <- -1      # dlrda
-        J[i,ns+3] <- -XY[1]  # dlrdb
+        if (exterr){
+            J[i,ns+1] <- 1       # dlrdcal68
+            J[i,ns+2] <- -1      # dlrda
+            J[i,ns+3] <- -XY[1]  # dlrdb
+        }    
     }
     out$cov <- J %*% E %*% t(J)
     out
 }
 
 nofractical <- function(dat,num=c('Pb204','Pb207'),den=c('Pb206','Pb206')){
-    out <- list()
     snames <- names(dat$x)
     ns <- length(snames)
     nr <- length(num)
+    out <- list()
+    out$num <- num
+    out$den <- den
     out$lr <- rep(0,nr*ns)
     out$cov <- matrix(0,nr*ns,nr*ns)
     for (i in 1:ns){

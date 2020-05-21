@@ -40,6 +40,8 @@ standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val))){
         class(out) <- 'standard'
     } else if (preset=='Plesovice'){
         out <- standard(tst=c(337.13,0.18))
+    } else if (preset=='44069'){
+        out <- standard(tst=c(424.86,0.25))
     } else if (preset=='Temora'){
         out <- standard(tst=c(416.75,0.12))
     } else if (preset=='NBS28'){
@@ -70,8 +72,6 @@ lrstand <- function(dat){
     } else {
         stop('Invalid type argument supplied to lrstand')
     }
-    ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@3@"]]));##:ess-bp-end:##
     out$cov <- J %*% cov %*% t(J)
     names(out$lr) <- labels
     rownames(out$cov) <- labels

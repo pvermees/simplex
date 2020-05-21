@@ -2,8 +2,8 @@
 #' @description read a file or folder with ASCII data
 #' @param dorf directory or file name
 #' @param method the name of a data acquisition protocol. One of
-#'     \code{instrument='IGG-zircon'}, \code{instrument='GA-zircon'},
-#'     \code{instrument='IGG-monazite'},
+#'     \code{instrument='IGG-UPb'}, \code{instrument='GA-zircon'},
+#'     \code{instrument='IGG-UThPb'},
 #'     \code{instrument='IGG-oxygen'}, or
 #'     \code{instrument='IGG-sulfur'}. To create new methods, see
 #'     \link{\code{set_method}}.
@@ -18,7 +18,7 @@
 #' plot_timeresolved(camdat[[1]])
 #' }
 #' @export
-read_data <- function(dorf,method='IGG-zircon',suffix){
+read_data <- function(dorf,method='IGG-UPb',suffix){
     out <- list()
     instrument <- get_instrument(method)
     ions <- get_ions(method)
