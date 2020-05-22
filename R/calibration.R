@@ -25,6 +25,7 @@ stable_calibration <- function(lr){
     init <- lr$x[[1]]$lr$b0g[1:ni]
     wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
     out <- list()
+    out$snames <- names(lr$x)
     out$x <- wtdmean$par
     out$cov <- solve(wtdmean$hessian)
     out
@@ -104,11 +105,13 @@ b0gt2b <- function(LR,t=0,xlab,ylab){
 }
 
 plot.calibration <- function(cal,option=1,snames=NULL,i=NULL,...){
-    if (stable(cal)) calplot_stable(dat=cal,snames=snames,i=i,...)
-    else calplot_geochronology(dat=cal,option=option,snames=snames,i=i,...)
+    if (is.null(snames)) snames <- cal$cal$snames
+    if (!is.null(i)) snames <- snames[i]
+    if (stable(cal)) calplot_stable(dat=cal,snames=snames,...)
+    else calplot_geochronology(dat=cal,option=option,snames=snames,...)
 }
 
-calplot_stable <- function(dat,snames=NULL,i=NULL,...){
+calplot_stable <- function(dat,snames=NULL,...){
     num <- dat$m$num
     den <- dat$m$den
     np <- length(num)-1     # number of plot panels
@@ -120,7 +123,7 @@ calplot_stable <- function(dat,snames=NULL,i=NULL,...){
             b0names <- names(dat$x)
             xlab <- paste0(num[i],'/',den[i])
             ylab <- paste0(num[j],'/',den[j])
-            B <- beta2york(lr=dat,snames=snames,i=i,
+            B <- beta2york(lr=dat,snames=snames,
                            num=num[c(i,j)],den=den[c(i,j)])
             IsoplotR::scatterplot(B,...)
             graphics::mtext(side=1,text=xlab,line=2)
@@ -132,11 +135,9 @@ calplot_stable <- function(dat,snames=NULL,i=NULL,...){
     }
 }
 
-calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
+calplot_geochronology <- function(dat,option=1,snames=NULL,type,...){
     if (missing(type)) cal <- dat$cal[[1]]
     else cal <- dat$cal[[type]]
-    if (is.null(snames)) snames <- rownames(cal$york)
-    if (!is.null(i)) snames <- rownames(cal$york)[i]
     yd <- cal$york[snames,,drop=FALSE]
     num <- cal$num
     den <- cal$den

@@ -7,12 +7,15 @@ calibrate <- function(cal,exterr=FALSE){
 calibrate_stable <- function(dat,exterr=FALSE){
     out <- list()
     scal <- dat$stand$fetch(dat)
+    dcal <- dat$cal
+    num <- dat$m$num
+    den <- dat$m$den
     snames <- names(dat$x)
     ns <- length(snames)
-    nr <- length(dat$num)
+    nr <- length(num)
     out$snames <- snames
-    out$num <- dat$m$num
-    out$den <- dat$m$den
+    out$num <- num
+    out$den <- den
     out$lr <- rep(0,nr*ns)
     E <- matrix(0,nr*(ns+2),nr*(ns+2))
     J <- matrix(0,nr*ns,nr*(ns+2))
@@ -21,7 +24,7 @@ calibrate_stable <- function(dat,exterr=FALSE){
         sname <- snames[i]
         selected <- (i-1)*nr + (1:nr)
         sp <- spot(dat,sname=sname)
-        out$lr[selected] <- sp$lr$b0g[1:nr] + scal$lr - dat$cal$x
+        out$lr[selected] <- sp$lr$b0g[1:nr] + scal$lr - dcal$x
         E[selected,selected] <- sp$lr$cov[1:nr,1:nr]
         if (exterr){
             J[selected,ns*nr+(1:nr)] <- diag(nr)
@@ -29,7 +32,7 @@ calibrate_stable <- function(dat,exterr=FALSE){
         }
     }
     E[ns*nr+(1:nr),ns*nr+(1:nr)] <- scal$cov
-    E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dat$cal$cov
+    E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dcal$cov
     out$cov <- J %*% E %*% t(J)
     out
 }

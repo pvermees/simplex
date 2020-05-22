@@ -138,7 +138,7 @@ SS_b0g <- function(b0g,spot,groups,mse=FALSE){
     nele <- names(groups$num)
     Dp <- betapars(spot=spot,ion=den)
     exp_a0D <- get_exp_a0D(spot=spot,b0g=b0g,groups=groups)
-    SS <- (Dp$bkg + exp_a0D - Dp$sig)^2
+    SS <- (log(Dp$bkg + exp_a0D) - log(Dp$sig))^2
     for (ele in nele){
         num <- groups$num[[ele]]
         ni <- length(num)
@@ -147,7 +147,7 @@ SS_b0g <- function(b0g,spot,groups,mse=FALSE){
             Np <- betapars(spot=spot,ion=ion)
             bND <- b0[ion] + g[ele]*Dp$t + Np$g*(Np$t-Dp$t)
             exp_a0N <- exp_a0D*exp(bND)
-            SS <- SS + (Np$bkg + exp_a0N - Np$sig)^2
+            SS <- SS + (log(Np$bkg + exp_a0N) - log(Np$sig))^2
         }
     }
     out <- sum(SS)
