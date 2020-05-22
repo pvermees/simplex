@@ -1,9 +1,8 @@
-calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,
-                        invert=FALSE,oxide=NULL,t=0){
+calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,invert=FALSE,t=0){
     out <- lr
     dat <- subset(x=lr,prefix=prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out$cal <- stable_calibration(lr=dat)
-    else out$cal <- geochron_calibration(lr=dat,oxide=oxide,t=t)
+    else out$cal <- geochron_calibration(lr=dat,t=t)
     out$stand <- stand
     class(out) <- append('calibration',class(out))
     out
@@ -22,7 +21,7 @@ stable_calibration <- function(lr){
         }
         out
     }
-    ni <- length(lr$num)
+    ni <- length(lr$m$num)
     init <- lr$x[[1]]$lr$b0g[1:ni]
     wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
     out <- list()
@@ -31,48 +30,32 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,oxide=NULL,t=0,...){
+geochron_calibration <- function(lr,t=0,...){
     out <- list()
-    out$t <- t
+    oxide <- lr$m$oxide
     type <- datatype(lr)
     if (type=="U-Pb"){
-        out[[type]] <- add_geochron_calibration(lr,oxide=oxide,t=t,type)
+        out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,type)
     } else if (datatype(lr)=="U-Th-Pb"){
-        out[['U-Pb']] <- add_geochron_calibration(lr,oxide=oxide,t=t,type="U-Pb")
-        out[['Th-Pb']] <- add_geochron_calibration(lr,oxide=oxide,t=t,type="Th-Pb")
+        out[['U-Pb']] <- geocal(lr,oxide=oxide['U'],t=t,type="U-Pb")
+        out[['Th-Pb']] <- geocal(lr,oxide=oxide['Th'],t=t,type="Th-Pb")
     } else {
         stop("Invalid data type.")
     }
     out
 }
 
-add_geochron_calibration <- function(lr,oxide=NULL,t=0,type='U-Pb'){
+geocal <- function(lr,oxide=NULL,t=0,type='U-Pb'){
     if (type=='U-Pb'){
-        if (is.null(oxide)){
-            if ('UO2'%in%lr$num){
-                oxide <- 'UO2'
-            } else if ('UO'%in%lr$num){
-                oxide <- 'UO'
-            } else {
-                stop('No valid oxide was measured.')
-            }
-        }
         num <- c(oxide,'Pb206')
         den <- c('U238','U238')
     } else if (type=='Th-Pb'){
-        if ('ThO2'%in%lr$num){
-            oxide <- 'ThO2'
-        } else if ('ThO'%in%lr$num){
-            oxide <- 'ThO'
-        } else {
-            stop('No valid Th oxide was measured.')
-        }
         num <- c(oxide,'Pb208')
         den <- c('Th232','Th232')
     } else {
         stop("Invalid data type.")
     }
-    out <- list(num=num,den=den,oxide=oxide)
+    out <- list(num=num,den=den,oxide=oxide,t=t)
     out$york <- beta2york(lr=lr,t=t,num=num,den=den)
     out$fit <- IsoplotR:::york(out$york)
     out
@@ -126,17 +109,19 @@ plot.calibration <- function(cal,option=1,snames=NULL,i=NULL,...){
 }
 
 calplot_stable <- function(dat,snames=NULL,i=NULL,...){
-    np <- length(dat$num)-1  # number of plot panels
-    nr <- ceiling(sqrt(np))  # number of rows
-    nc <- ceiling(np/nr)     # number of columns
+    num <- dat$m$num
+    den <- dat$m$den
+    np <- length(num)-1     # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:nr){
         for (j in (i+1):max(nc,nr+1)){
             b0names <- names(dat$x)
-            xlab <- paste0(dat$num[i],'/',dat$den[i])
-            ylab <- paste0(dat$num[j],'/',dat$den[j])
+            xlab <- paste0(num[i],'/',den[i])
+            ylab <- paste0(num[j],'/',den[j])
             B <- beta2york(lr=dat,snames=snames,i=i,
-                           num=dat$num[c(i,j)],den=dat$den[c(i,j)])
+                           num=num[c(i,j)],den=den[c(i,j)])
             IsoplotR::scatterplot(B,...)
             graphics::mtext(side=1,text=xlab,line=2)
             graphics::mtext(side=2,text=ylab,line=2)
@@ -147,16 +132,18 @@ calplot_stable <- function(dat,snames=NULL,i=NULL,...){
     }
 }
 
-calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,...){
-    if (is.null(snames)) snames <- rownames(dat$cal$york)
-    if (!is.null(i)) snames <- rownames(dat$cal$york)[i]
-    yd <- dat$cal$york[snames,,drop=FALSE]
-    num <- dat$cal$num
-    den <- dat$cal$den
+calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
+    if (missing(type)) cal <- dat$cal[[1]]
+    else cal <- dat$cal[[type]]
+    if (is.null(snames)) snames <- rownames(cal$york)
+    if (!is.null(i)) snames <- rownames(cal$york)[i]
+    yd <- cal$york[snames,,drop=FALSE]
+    num <- cal$num
+    den <- cal$den
     xlab <- paste0('log[',num[1],'/',den[1],']')
     ylab <- paste0('log[',num[2],'/',den[2],']')
     if (option==1){
-        IsoplotR:::scatterplot(yd,fit=dat$cal$fit,...)
+        IsoplotR:::scatterplot(yd,fit=cal$fit,...)
     } else {
         X <- NULL
         Y <- NULL
@@ -179,7 +166,7 @@ calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,...){
         Xlim[2] <- max(yd[,'X']+2*yd[,'sX'],X)
         Ylim[1] <- min(yd[,'Y']-2*yd[,'sY'],Y)
         Ylim[2] <- max(yd[,'Y']+2*yd[,'sY'],Y)
-        IsoplotR:::scatterplot(yd,fit=dat$cal$fit,xlim=Xlim,
+        IsoplotR:::scatterplot(yd,fit=cal$fit,xlim=Xlim,
                                ylim=Ylim,xlab=xlab,ylab=ylab,...)
         matlines(X,Y,lty=1,col='darkgrey')
         if (option>2){

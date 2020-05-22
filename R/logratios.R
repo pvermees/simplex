@@ -1,20 +1,18 @@
-logratios <- function(x,num,den){
+logratios <- function(x){
     out <- x
-    out$num <- num
-    out$den <- den
     snames <- names(x$x)
     for (sname in snames){
         print(sname)
         sp <- spot(dat=x,sname=sname)
-        out$x[[sname]]$lr <- logratios.spot(x=sp,num=num,den=den)
+        out$x[[sname]]$lr <- logratios.spot(x=sp)
     }
     class(out) <- append("logratios",class(out))
     out
 }
 
-logratios.spot <- function(x,num,den,common=FALSE){
-    if (missing(num)) num <- x$num
-    if (missing(den)) den <- x$den
+logratios.spot <- function(x,common=FALSE){
+    num <- x$m$num
+    den <- x$m$den
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
     init <- init_logratios(spot=x,groups=groups)
@@ -234,23 +232,25 @@ plot.logratios <- function(x,sname,i=1,option=1,...){
 }
 
 plot_logratios <- function(spot,...){
+    num <- spot$m$num
+    den <- spot$m$den
     b0g <- spot$lr$b0g
     nb <- length(b0g)/2
-    np <- length(spot$num) # number of plot panels
+    np <- length(num)       # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     nt <- nrow(spot$time)
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:np){
-        ratio <- paste0(spot$num[i],'/',spot$den[i])
-        Np <- betapars(spot=spot,ion=spot$num[i])
-        Dp <- betapars(spot=spot,ion=spot$den[i])
+        ratio <- paste0(num[i],'/',den[i])
+        Np <- betapars(spot=spot,ion=num[i])
+        Dp <- betapars(spot=spot,ion=den[i])
         X <- Dp$t
         Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g[paste0('b0[',ratio,']')]
         g <- b0g[paste0('g[',ratio,']')]
         Ypred <- exp(b0 + g*Dp$t + Np$g*(Np$t-Dp$t))
-        ylab <- paste0('(',spot$num[i],'-b)/(',spot$den[i],'-b)')
+        ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
         graphics::points(X,Y)
         graphics::lines(X,Ypred)
@@ -261,12 +261,13 @@ plot_logratios <- function(spot,...){
 }
 
 plot_signals <- function(spot,...){
-    np <- length(spot$ions) # number of plot panels
+    ions <- spot$m$ions
+    np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     common <- logratios.spot(x=spot,common=TRUE)
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-    for (ion in spot$ions){
+    for (ion in ions){
         Np <- betapars(spot=spot,ion=ion)
         ylab <- paste0(ion,'- b')
         graphics::plot(Np$t,Np$sig-Np$bkg,type='p',xlab='',ylab='',...)

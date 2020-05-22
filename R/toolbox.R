@@ -1,8 +1,8 @@
 # calculate effective dwell time correcting for the dead time
 effective_dwelltime <- function(spot){
-    if (spot$instrument=='Cameca'){
+    if (spot$m$instrument=='Cameca'){
         deadtime <- spot$deadtime[spot$detector]
-    } else if (spot$instrument=='SHRIMP'){
+    } else if (spot$m$instrument=='SHRIMP'){
         deadtime <- rep(spot$deadtime,ncol(spot$signal))
     } else {
         stop('Invalid instrument type.')
@@ -27,7 +27,7 @@ hours <- function(tt){
 
 background <- function(spot,ions){
     detector <- spot$detector[ions]
-    if (spot$nominalblank){
+    if (spot$m$nominalblank){
         out <- spot$background[detector]
     } else {
         out <- spot$signal[,'bkg']
@@ -70,7 +70,7 @@ stable <- function(dat){
 }
 
 datatype <- function(x){
-    ions <- x$ions
+    ions <- x$m$ions
     if (all(c("U238","Th232","Pb204",
               "Pb206","Pb207","Pb208")%in%ions) &&
                any(c("UO","UO2")%in%ions) &&

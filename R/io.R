@@ -18,48 +18,43 @@
 #' plot_timeresolved(camdat[[1]])
 #' }
 #' @export
-read_data <- function(dorf,method='IGG-UPb',suffix){
+read_data <- function(dorf,suffix,m='IGG-UPb'){
     out <- list()
-    instrument <- get_instrument(method)
-    ions <- get_ions(method)
-    if (instrument == 'Cameca') {
+    if (is.character(m)) m <- method(m)
+    if (m$instrument == 'Cameca') {
         if (missing(suffix)) suffix <- 'asc'
-        out$x <- read_directory(dorf,suffix=suffix,
-                                instrument=instrument,ions=ions)
-    } else if (instrument== 'SHRIMP') {
+        out$x <- read_directory(dorf,suffix=suffix,m=m)
+    } else if (m$instrument== 'SHRIMP') {
         if (missing(suffix)) suffix <- 'pd'
-        out$x <- read_file(dorf,suffix=suffix,instrument=instrument,ions=ions)
+        out$x <- read_file(dorf,suffix=suffix,m=m)
     } else {
         stop('Unsupported instrument')
     }
-    out$instrument <- instrument
-    out$ions <- ions
-    out$nominalblank <- nominalblank(method)
+    out$m <- m
     class(out) <- 'simplex'
     out
 }
 
-read_directory <- function(dname,suffix,instrument,ions){
+read_directory <- function(dname,suffix,m){
     out <- list()
     fnames <- list.files(dname,pattern=suffix)
     nf <- length(fnames)
     for (i in 1:nf){ # loop through the files
         fname <- fnames[i]
         sname <- tools::file_path_sans_ext(fname)
-        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,
-                                  instrument=instrument,ions=ions)
+        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,m=m)
     }
     out
 }
 
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,suffix,instrument,ions){
-    if (instrument=='Cameca' & suffix=='asc'){
-        out <- read_Cameca_asc(fname=fname,ions=ions)
-    } else if (instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname=fname,ions=ions)
-    } else if (instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname=fname,ions=ions)
+read_file <- function(fname,suffix,m){
+    if (m$instrument=='Cameca' & suffix=='asc'){
+        out <- read_Cameca_asc(fname=fname,ions=m$ions)
+    } else if (m$instrument=='SHRIMP' & suffix=='op'){
+        out <- read_SHRIMP_op(fname=fname,ions=m$ions)
+    } else if (m$instrument=='SHRIMP' & suffix=='pd'){
+        out <- read_SHRIMP_pd(fname=fname,ions=m$ions)
     } else {
         stop('Unrecognised file extension.')
     }

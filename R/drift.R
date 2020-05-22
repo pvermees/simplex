@@ -1,15 +1,16 @@
-drift <- function(x,ions=x$ions){
+drift <- function(x){
     out <- x
     snames <- names(x$x)
     for (sname in snames){
         sp <- spot(dat=x,sname=sname)
-        out$x[[sname]]$dc <- drift.spot(spot=sp,ions=ions)
+        out$x[[sname]]$dc <- drift.spot(spot=sp)
     }
     class(out) <- append('drift',class(out))
     out
 }
 
-drift.spot <- function(spot,ions=spot$ions){
+drift.spot <- function(spot){
+    ions <- spot$m$ions
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
@@ -49,7 +50,7 @@ alphapars <- function(spot,ion){
     out
 }
 
-SS_g <- function(par,spot,ions=spot$ions){
+SS_g <- function(par,spot,ions){
     nions <- length(ions)
     g <- par
     exp_a0 <- get_exp_a0(g=g,spot=spot,ions=ions)
@@ -58,7 +59,7 @@ SS_g <- function(par,spot,ions=spot$ions){
     gt <- sweep(tt,2,g,'*')
     exp_a <- sweep(exp(gt),2,exp_a0,'*')
     bkg <- background(spot,ions)
-    if (spot$nominalblank){
+    if (spot$m$nominalblank){
         predsig <- sweep(exp_a,2,bkg,'+')
     } else {
         predsig <- sweep(exp_a,1,bkg,'+')
@@ -68,24 +69,23 @@ SS_g <- function(par,spot,ions=spot$ions){
 }
 
 plot.drift <- function(x,sname,i=1,...){
-    spot <- spot(x,sname,i=1)
-    np <- length(spot$ions) # number of plot panels
+    spot <- spot(x,sname=sname,i=i)
+    ions <- spot$m$ions
+    np <- length(ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-    for (ion in spot$ions){
+    for (ion in ions){
         ap <- alphapars(spot,ion)
         sb <- ap$sig - ap$bkg
         ylab <- paste0(ion,'- b')
         graphics::plot(ap$t,sb,type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
-        if (ion %in% ions){
-            exp_a0 <- spot$dc['exp_a0',ion]
-            g <- spot$dc['g',ion]
-            predsig <- exp_a0*exp(g*ap$t)
-            graphics::lines(ap$t,predsig)
-        }
+        exp_a0 <- spot$dc['exp_a0',ion]
+        g <- spot$dc['g',ion]
+        predsig <- exp_a0*exp(g*ap$t)
+        graphics::lines(ap$t,predsig)
     }
     graphics::par(oldpar)
 }
