@@ -86,3 +86,7 @@ datatype <- function(x){
     }
     out
 }
+
+faraday <- function(spot){
+    all(spot$m$type=='Fc')
+}

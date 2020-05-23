@@ -10,27 +10,22 @@ logratios <- function(x){
     out
 }
 
-logratios.spot <- function(x,common=FALSE){
+logratios.spot <- function(x){
     num <- x$m$num
     den <- x$m$den
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
     init <- init_logratios(spot=x,groups=groups)
-    fit <- optim(par=init,f=SS_b0g,method='L-BFGS-B',
-                 lower=init-2,upper=init+2,spot=x,
-                 groups=groups,hessian=TRUE)
-    fit$mse <- SS_b0g(fit$par,spot=x,groups=groups,mse=TRUE)
-    if (common){ # used by plot_signals
-        out <- list()
-        out$D <- betapars(spot=x,ion=groups$den)
-        out$B0G <- b0g2list(b0g=fit$par,groups=groups)
-        out$ions <- names(out$B0G$b0)
-        out$den <- groups$den
-        out$exp_a0D <- get_exp_a0D(spot=x,b0g=fit$par,groups=groups)
-        out$outliers <- SS_b0g(fit$par,spot=x,groups=groups,outliers=TRUE)
-    } else {
-        out <- common2original(fit=fit,num=num,den=den,groups=groups)
+    if (faraday(x)){
+        fit <- optim(par=init,f=misfit_b0g,method='L-BFGS-B',
+                     lower=init-2,upper=init+2,spot=x,
+                     groups=groups,hessian=TRUE)
+        fit$cov <- solve(fit$hessian)
+    } else { # SEM
+        
     }
+    out <- common2original(fit=fit,num=num,den=den,groups=groups)
+    out <- c(out,misfit_b0g(fit$par,spot=x,groups=groups,predict=TRUE))
     invisible(out)
 }
 
@@ -83,10 +78,9 @@ common2original <- function(fit,num,den,groups){
             }
         }
     }
-    E <- MASS::ginv(fit$hessian/2)*fit$mse
     out <- list()
     out$b0g <- b0gout
-    out$cov <- J %*% E %*% t(J)
+    out$cov <- J %*% fit$cov %*% t(J)
     out
 }
 
@@ -130,61 +124,48 @@ init_logratios <- function(spot,groups){
     out
 }
 
-SS_b0g <- function(b0g,spot,groups,mse=FALSE,outliers=FALSE){
-    den <- groups$den
+misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
     g <- B0G$g
-    nb <- length(b0)
-    nele <- names(groups$num)
-    Dp <- betapars(spot=spot,ion=den)
-    exp_a0D <- get_exp_a0D(spot=spot,b0g=b0g,groups=groups)
-    Derr <- Dp$bkg + exp_a0D - Dp$sig
-    bad <- (Derr %in% boxplot.stats(Derr)$out)
-    good <- which(!bad)
-    SS <- (Derr[good])^2
+    D <- betapars(spot=spot,ion=groups$den)
+    nele <- length(groups$num)
+    obsb <- NULL
+    predb <- NULL
+    ions <- groups$den
+    meas <- (D$sig-D$bkg)
+    tt <- D$t
     for (ele in nele){
         num <- groups$num[[ele]]
         ni <- length(num)
         for (i in 1:ni){
             ion <- num[i]
-            Np <- betapars(spot=spot,ion=ion)
-            bND <- b0[ion] + g[ele]*Dp$t + Np$g*(Np$t-Dp$t)
-            exp_a0N <- exp_a0D*exp(bND)
-            Nerr <- Np$bkg + exp_a0N - Np$sig
-            SS <- SS + (Nerr[good])^2
+            N <- betapars(spot=spot,ion=ion)
+            bND <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t)
+            predb <- cbind(predb,bND)
+            obsb <- cbind(obsb, log(N$sig-N$bkg) - log(D$sig-D$bkg))
+            ions <- c(ions,ion)
+            meas <- cbind(meas,N$sig-N$bkg)
+            tt <- cbind(tt,N$t)
         }
     }
-    out <- sum(SS)
-    if (mse){
-        np <- length(b0g)  # number of parameters
-        ne <- length(b0)   # number of equations
-        nm <- length(good) # number of measurements per equation
-        out <- out/(ne*nm-np)
-    }
-    if (outliers){
-        out <- bad
+    if (predict){
+        colnames(meas) <- ions
+        colnames(tt) <- ions
+        expb <- cbind(1,exp(predb))
+        frac <- sweep(expb,1,rowSums(expb),'/')
+        colnames(frac) <- ions
+        out <- list()
+        out$t <- tt
+        out$obs <- meas
+        out$pred <- sweep(frac,1,rowSums(meas),'*')
+        out$outliers <- rep(FALSE,length(D$t))
+    } else {
+        misfit <- obsb-predb
+        covmat <- cov(misfit)
+        out <- sum(mahalanobis(x=misfit,center=0*b0,cov=covmat))/2
     }
     out
-}
-
-# analytical solution for (D - bkg) where D is the common denominator
-get_exp_a0D <- function(spot,b0g,groups){
-    B0G <- b0g2list(b0g=b0g,groups=groups)
-    b0 <- B0G$b0
-    g <- B0G$g
-    num <- names(b0)
-    den <- groups$den
-    tD <- hours(spot$time[,den])
-    NUM <- 0
-    DEN <- 0
-    for (ion in num){
-        bpX <- betapars(spot=spot,ion=ion)
-        ebXD <- exp( b0[ion] + g[element(ion)]*tD + bpX$g*(bpX$t-tD) )
-        NUM <- NUM + (bpX$sig-bpX$bkg)*ebXD
-        DEN <- DEN + ebXD^2
-    }
-    NUM/DEN
 }
 
 # splits a pooled logratio slope and intercept vector into two
@@ -240,7 +221,7 @@ plot.logratios <- function(x,sname,i=1,option=1,...){
 }
 
 plot_logratios <- function(spot,...){
-    bad <- logratios.spot(x=spot,common=TRUE)$outliers
+    bad <- logratios.spot(x=spot)$outliers
     num <- spot$m$num
     den <- spot$m$den
     b0g <- spot$lr$b0g
@@ -271,31 +252,21 @@ plot_logratios <- function(spot,...){
 }
 
 plot_signals <- function(spot,...){
-    bad <- logratios.spot(x=spot,common=TRUE)$outliers
     ions <- spot$m$ions
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
-    common <- logratios.spot(x=spot,common=TRUE)
+    lr <- logratios.spot(x=spot)
+    bad <- lr$outliers
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in ions){
-        Np <- betapars(spot=spot,ion=ion)
         ylab <- paste0(ion,'- b')
-        graphics::plot(Np$t,(Np$sig-Np$bkg),type='n',xlab='',ylab='',...)
-        graphics::points(Np$t[!bad],(Np$sig-Np$bkg)[!bad],pch=21)
-        graphics::points(Np$t[bad],(Np$sig-Np$bkg)[bad],pch=4)
+        graphics::plot(lr$t[!bad,ion],lr$obs[!bad,ion],type='n',xlab='',ylab='',...)
+        graphics::points(lr$t[!bad,ion],lr$obs[!bad,ion],pch=21)
+        graphics::points(lr$t[bad,ion],lr$obs[bad,ion],pch=4)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
-        if (ion %in% common$ions){
-            b0 <- common$B0G$b0[ion]
-            g <- common$B0G$g[element(ion)]
-            predsig <- common$exp_a0D*exp(b0+g*common$D$t+Np$g*(Np$t-common$D$t))
-            graphics::lines(Np$t[!bad],predsig[!bad])
-        } else if (ion == common$den){
-            graphics::lines(common$D$t[!bad],common$exp_a0D[!bad])
-        } else {
-            # don't plot lines
-        }
+        graphics::lines(lr$t[!bad,ion],lr$pred[!bad,ion])
     }
     graphics::par(oldpar)
 }
