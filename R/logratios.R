@@ -27,6 +27,7 @@ logratios.spot <- function(x,common=FALSE){
         out$ions <- names(out$B0G$b0)
         out$den <- groups$den
         out$exp_a0D <- get_exp_a0D(spot=x,b0g=fit$par,groups=groups)
+        out$outliers <- SS_b0g(fit$par,spot=x,groups=groups,outliers=TRUE)
     } else {
         out <- common2original(fit=fit,num=num,den=den,groups=groups)
     }
@@ -129,7 +130,7 @@ init_logratios <- function(spot,groups){
     out
 }
 
-SS_b0g <- function(b0g,spot,groups,mse=FALSE){
+SS_b0g <- function(b0g,spot,groups,mse=FALSE,outliers=FALSE){
     den <- groups$den
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
@@ -138,7 +139,10 @@ SS_b0g <- function(b0g,spot,groups,mse=FALSE){
     nele <- names(groups$num)
     Dp <- betapars(spot=spot,ion=den)
     exp_a0D <- get_exp_a0D(spot=spot,b0g=b0g,groups=groups)
-    SS <- (log(Dp$bkg + exp_a0D) - log(Dp$sig))^2
+    Derr <- Dp$bkg + exp_a0D - Dp$sig
+    bad <- (Derr %in% boxplot.stats(Derr)$out)
+    good <- which(!bad)
+    SS <- (Derr[good])^2
     for (ele in nele){
         num <- groups$num[[ele]]
         ni <- length(num)
@@ -147,15 +151,19 @@ SS_b0g <- function(b0g,spot,groups,mse=FALSE){
             Np <- betapars(spot=spot,ion=ion)
             bND <- b0[ion] + g[ele]*Dp$t + Np$g*(Np$t-Dp$t)
             exp_a0N <- exp_a0D*exp(bND)
-            SS <- SS + (log(Np$bkg + exp_a0N) - log(Np$sig))^2
+            Nerr <- Np$bkg + exp_a0N - Np$sig
+            SS <- SS + (Nerr[good])^2
         }
     }
     out <- sum(SS)
     if (mse){
         np <- length(b0g)  # number of parameters
         ne <- length(b0)   # number of equations
-        nm <- length(Np$t) # number of measurements per equation
+        nm <- length(good) # number of measurements per equation
         out <- out/(ne*nm-np)
+    }
+    if (outliers){
+        out <- bad
     }
     out
 }
@@ -232,6 +240,7 @@ plot.logratios <- function(x,sname,i=1,option=1,...){
 }
 
 plot_logratios <- function(spot,...){
+    bad <- logratios.spot(x=spot,common=TRUE)$outliers
     num <- spot$m$num
     den <- spot$m$den
     b0g <- spot$lr$b0g
@@ -252,7 +261,8 @@ plot_logratios <- function(spot,...){
         Ypred <- exp(b0 + g*Dp$t + Np$g*(Np$t-Dp$t))
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
-        graphics::points(X,Y)
+        graphics::points(X[!bad],Y[!bad],pch=21)
+        graphics::points(X[bad],Y[bad],pch=4)
         graphics::lines(X,Ypred)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
@@ -261,6 +271,7 @@ plot_logratios <- function(spot,...){
 }
 
 plot_signals <- function(spot,...){
+    bad <- logratios.spot(x=spot,common=TRUE)$outliers
     ions <- spot$m$ions
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
@@ -270,16 +281,18 @@ plot_signals <- function(spot,...){
     for (ion in ions){
         Np <- betapars(spot=spot,ion=ion)
         ylab <- paste0(ion,'- b')
-        graphics::plot(Np$t,Np$sig-Np$bkg,type='p',xlab='',ylab='',...)
+        graphics::plot(Np$t,(Np$sig-Np$bkg),type='n',xlab='',ylab='',...)
+        graphics::points(Np$t[!bad],(Np$sig-Np$bkg)[!bad],pch=21)
+        graphics::points(Np$t[bad],(Np$sig-Np$bkg)[bad],pch=4)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
         if (ion %in% common$ions){
             b0 <- common$B0G$b0[ion]
             g <- common$B0G$g[element(ion)]
             predsig <- common$exp_a0D*exp(b0+g*common$D$t+Np$g*(Np$t-common$D$t))
-            graphics::lines(Np$t,predsig)
+            graphics::lines(Np$t[!bad],predsig[!bad])
         } else if (ion == common$den){
-            graphics::lines(common$D$t,common$exp_a0D)
+            graphics::lines(common$D$t[!bad],common$exp_a0D[!bad])
         } else {
             # don't plot lines
         }

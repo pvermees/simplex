@@ -105,7 +105,10 @@ b0gt2b <- function(LR,t=0,xlab,ylab){
 }
 
 plot.calibration <- function(cal,option=1,snames=NULL,i=NULL,...){
-    if (is.null(snames)) snames <- cal$cal$snames
+    if (is.null(snames)){
+        if (stable(cal)) snames <- cal$cal$snames
+        else snames <- rownames(cal$cal[[1]]$york)
+    }
     if (!is.null(i)) snames <- snames[i]
     if (stable(cal)) calplot_stable(dat=cal,snames=snames,...)
     else calplot_geochronology(dat=cal,option=option,snames=snames,...)
