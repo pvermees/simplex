@@ -44,9 +44,24 @@ get_exp_a0 <- function(g,spot,ions){
 
 alphapars <- function(spot,ion){
     out <- list()
-    out$sig <- spot$signal[,ion]
     out$bkg <- background(spot,ion)
     out$t <- hours(spot$time[,ion])
+    if (faraday(spot,ion)){
+        out$sig <- spot$signal[,ion]
+    } else {
+        if (spot$m$instrument=='Cameca'){
+            detector <- spot$detector[ion]
+            deadtime <- spot$deadtime[detector]
+            dwelltime <- spot$dwelltime[ion]
+            out$counts <- spot$signal[,ion]*dwelltime
+            out$edt <- dwelltime-deadtime*out$counts*1e-9
+            out$sig <- out$counts/out$edt
+            out$bkgcounts <- out$bkg*dwelltime
+        } else {
+            out$counts <- out$sig
+            out$bkgcounts <- out$bkg
+        }
+    }
     out
 }
 

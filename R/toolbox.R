@@ -87,6 +87,8 @@ datatype <- function(x){
     out
 }
 
-faraday <- function(spot){
-    all(spot$m$type=='Fc')
+faraday <- function(spot,ion=NULL){
+    if (is.null(ion)) out <- all(spot$type[spot$m$ions]=='Fc')
+    else out <- spot$type[ion]=='Fc'
+    out
 }

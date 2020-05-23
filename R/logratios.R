@@ -16,16 +16,16 @@ logratios.spot <- function(x){
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
     init <- init_logratios(spot=x,groups=groups)
-    if (faraday(x)){
-        fit <- optim(par=init,f=misfit_b0g,method='L-BFGS-B',
-                     lower=init-2,upper=init+2,spot=x,
-                     groups=groups,hessian=TRUE)
-        fit$cov <- solve(fit$hessian)
-    } else { # SEM
-        
-    }
+    if (faraday(x)) fn <- faraday_misfit_b0g
+    else fn <- sem_misfit_b0g
+    fit <- optim(par=init,f=fn,method='L-BFGS-B',
+                 lower=init-2,upper=init+2,spot=x,
+                 groups=groups,hessian=TRUE)
+    fit$cov <- solve(fit$hessian)
+    pred <- do.call(what=fn,
+                    args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
-    out <- c(out,misfit_b0g(fit$par,spot=x,groups=groups,predict=TRUE))
+    out <- c(out,pred)
     invisible(out)
 }
 
@@ -124,7 +124,7 @@ init_logratios <- function(spot,groups){
     out
 }
 
-misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
+faraday_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
     B0G <- b0g2list(b0g=b0g,groups=groups)
     b0 <- B0G$b0
     g <- B0G$g
@@ -164,6 +164,48 @@ misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         misfit <- obsb-predb
         covmat <- cov(misfit)
         out <- sum(mahalanobis(x=misfit,center=0*b0,cov=covmat))/2
+    }
+    out
+}
+
+sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
+    B0G <- b0g2list(b0g=b0g,groups=groups)
+    b0 <- B0G$b0
+    g <- B0G$g
+    D <- betapars(spot=spot,ion=groups$den)
+    obsb <- NULL
+    predb <- NULL
+    ions <- groups$den
+    counts <- D$counts
+    tt <- D$t
+    for (ele in names(groups$num)){
+        num <- groups$num[[ele]]
+        ni <- length(num)
+        for (i in 1:ni){
+            ion <- num[i]
+            N <- betapars(spot=spot,ion=ion)
+            bND <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t)
+            predb <- cbind(predb,bND)
+            ions <- c(ions,ion)
+            counts <- cbind(counts,N$counts)
+            tt <- cbind(tt,N$t)
+        }
+    }
+    colnames(counts) <- ions
+    if (predict){
+        colnames(tt) <- ions
+        expb <- cbind(1,exp(predb))
+        frac <- sweep(expb,1,rowSums(expb),'/')
+        colnames(frac) <- ions
+        out <- list()
+        out$t <- tt
+        out$obs <- counts
+        out$pred <- sweep(frac,1,rowSums(counts),'*')
+        out$outliers <- rep(FALSE,length(D$t))
+    } else {
+        theta <- D$bkgcounts/(D$bkgcounts+rowSums(counts))
+        nb <- length(b0)
+        
     }
     out
 }
