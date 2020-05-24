@@ -193,7 +193,7 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
     thetabkg <- D$bkgcounts/(D$bkgcounts+rowSums(counts))
     nb <- length(b0)
     expbc <- cbind(1-nb*thetabkg,exp(pbc))
-    theta <- sweep(sweep(expbc,1,rowSums(expbc),'/'),1,thetabkg)
+    theta <- sweep(sweep(expbc,1,rowSums(expbc),'/'),1,thetabkg,'+')
     colnames(tt) <- ions
     colnames(counts) <- ions
     colnames(theta) <- ions

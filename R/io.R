@@ -50,18 +50,18 @@ read_directory <- function(dname,suffix,m){
 # fname is the complete path to an .asc or .op file
 read_file <- function(fname,suffix,m){
     if (m$instrument=='Cameca' & suffix=='asc'){
-        out <- read_Cameca_asc(fname=fname,ions=m$ions)
+        out <- read_Cameca_asc(fname=fname,m=m)
     } else if (m$instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname=fname,ions=m$ions)
+        out <- read_SHRIMP_op(fname=fname,m=m)
     } else if (m$instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname=fname,ions=m$ions)
+        out <- read_SHRIMP_pd(fname=fname,m=m)
     } else {
         stop('Unrecognised file extension.')
     }
     out
 }
 
-read_Cameca_asc <- function(fname,ions){
+read_Cameca_asc <- function(fname,m){
     f <- file(fname)
     open(f);
     out <- list()
@@ -71,10 +71,10 @@ read_Cameca_asc <- function(fname,ions){
             out$dwelltime <- read_numbers(f,remove=1)
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
-            out$type <- read_text(f,remove=1)
-            names(out$dwelltime) <- ions
-            names(out$detector) <- ions
-            names(out$type) <- ions
+            out$dtype <- read_text(f,remove=1)
+            names(out$dwelltime) <- m$ions
+            names(out$detector) <- m$ions
+            names(out$dtype) <- m$ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
             junk <- readLines(f,n=3,warn=FALSE)
@@ -99,20 +99,20 @@ read_Cameca_asc <- function(fname,ions){
             names(out$deadtime) <- detectors
         }
         if (grepl("RAW DATA",line)) {
-            out$signal <- read_asc_block(f,ions=ions)
+            out$signal <- read_asc_block(f,ions=m$ions)
         }
         if (grepl("PRIMARY INTENSITY",line)) {
-            out$sbm <- read_asc_block(f,ions=ions)
+            out$sbm <- read_asc_block(f,ions=m$ions)
         }
         if (grepl("TIMING",line)) {
-            out$time <- read_asc_block(f,ions=ions)
+            out$time <- read_asc_block(f,ions=m$ions)
         }
     }
     close(f)
     out
 }
 
-read_SHRIMP_op <- function(fname,ions){
+read_SHRIMP_op <- function(fname,m){
     f <- file(fname)
     open(f);
     out <- list()
@@ -129,20 +129,21 @@ read_SHRIMP_op <- function(fname,ions){
             nions <- read_numbers(f)
             spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
-            names(spot$dwelltime) <- ions
+            names(spot$dwelltime) <- m$ions
+            spot$dtype <- m$dtype
             spot$time <- matrix(0,nscans,nions)
-            colnames(spot$time) <- ions
+            colnames(spot$time) <- m$ions
             for (i in 1:nions){
                 spot$time[,i] <- read_numbers(f)
             }
             spot$signal <- matrix(0,nscans,nions)
-            colnames(spot$signal) <- ions
+            colnames(spot$signal) <- m$ions
             for (i in 1:nions){
                 spot$signal[,i] <- read_numbers(f)
             }
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
-            colnames(spot$sbm) <- ions
+            colnames(spot$sbm) <- m$ions
             for (i in 1:nions){
                 spot$sbm[,i] <- read_numbers(f)
             }
@@ -154,7 +155,7 @@ read_SHRIMP_op <- function(fname,ions){
     out
 }
 
-read_SHRIMP_pd <- function(fname,ions){
+read_SHRIMP_pd <- function(fname,m){
     f <- file(fname)
     open(f);
     out <- list()
@@ -175,17 +176,17 @@ read_SHRIMP_pd <- function(fname,ions){
             spot$deadtime <- split_mixed(header[[2]],4,1)
             block <- read.table(text=readLines(f,n=nions,warn=FALSE))
             spot$dwelltime <- block[,4]
-            names(spot$dwelltime) <- ions
-            spot$type <- rep('Fc',length(ions))
-            spot$type[block[,11]=='COUNTER'] <- 'Em'
-            names(spot$type) <- ions
+            names(spot$dwelltime) <- m$ions
+            spot$dtype <- rep('Fc',length(m$ions))
+            spot$dtype[block[,11]=='COUNTER'] <- 'Em'
+            names(spot$dtype) <- m$ions
             spot$time <- matrix(0,nscans,nions)
             spot$signal <- matrix(0,nscans,nions)
             spot$sbm <- matrix(0,nscans,nions)
             block <- readLines(f,n=1+nscans*nions*2,warn=FALSE)[-1]
-            colnames(spot$time) <- ions
-            colnames(spot$signal) <- ions
-            colnames(spot$sbm) <- ions
+            colnames(spot$time) <- m$ions
+            colnames(spot$signal) <- m$ions
+            colnames(spot$sbm) <- m$ions
             for (i in 1:nscans){
                 for (j in 1:nions){
                     ii <- (i-1)*nions*2 + (j-1)*2 + 1

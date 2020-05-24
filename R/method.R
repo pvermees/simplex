@@ -52,6 +52,7 @@ defaultmethod <- function(m){
         out$instrument='SHRIMP'
         out$ions=c('Zr2O','Pb204','bkg','Pb206','Pb207',
                    'Pb208','U238','ThO','UO','UO2')
+        out$dtype <- rep('Em',length(out$ions))
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238')
         out$oxide <- c(U='UO')
