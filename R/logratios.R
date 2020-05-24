@@ -293,7 +293,7 @@ plot_logratios <- function(spot,...){
 }
 
 plot_signals <- function(spot,...){
-    ions <- spot$m$ions
+    ions <- colnames(spot$lr$obs)
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns

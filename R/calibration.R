@@ -138,9 +138,15 @@ calplot_stable <- function(dat,snames=NULL,...){
     }
 }
 
-calplot_geochronology <- function(dat,option=1,snames=NULL,type,...){
+calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
     if (missing(type)) cal <- dat$cal[[1]]
     else cal <- dat$cal[[type]]
+    if (is.null(snames)){
+        snames <- names(dat$x)
+        if (!is.null(i)){
+            snames <- snames[i]
+        }
+    }
     yd <- cal$york[snames,,drop=FALSE]
     num <- cal$num
     den <- cal$den
@@ -166,16 +172,44 @@ calplot_geochronology <- function(dat,option=1,snames=NULL,type,...){
         }
         Xlim <- rep(0,2)
         Ylim <- rep(0,2)
-        Xlim[1] <- min(yd[,'X']-2*yd[,'sX'],X)
-        Xlim[2] <- max(yd[,'X']+2*yd[,'sX'],X)
-        Ylim[1] <- min(yd[,'Y']-2*yd[,'sY'],Y)
-        Ylim[2] <- max(yd[,'Y']+2*yd[,'sY'],Y)
-        IsoplotR:::scatterplot(yd,fit=cal$fit,xlim=Xlim,
-                               ylim=Ylim,xlab=xlab,ylab=ylab,...)
+        Xlim[1] <- min(yd[snames,'X']-2*yd[snames,'sX'],X)
+        Xlim[2] <- max(yd[snames,'X']+2*yd[snames,'sX'],X)
+        Ylim[1] <- min(yd[snames,'Y']-2*yd[snames,'sY'],Y)
+        Ylim[2] <- max(yd[snames,'Y']+2*yd[snames,'sY'],Y)
+        IsoplotR::scatterplot(yd,fit=cal$fit,xlim=Xlim,ylim=Ylim,...)
         matlines(X,Y,lty=1,col='darkgrey')
         if (option>2){
             points(X[1,],Y[1,],pch=21,bg='black')
             points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
         }
     }
+    title(caltitle(fit=cal$fit),xlab=xlab,ylab=ylab)
+}
+
+caltitle <- function(fit,sigdig=2,type=NA,...){
+    args1 <- quote(a%+-%b~'(n='*n*')')
+    args2 <- quote(a%+-%b)
+    if (is.na(type)){
+        intercept <- IsoplotR:::roundit(fit$a[1],fit$a[2],sigdig=sigdig)
+        slope <- IsoplotR:::roundit(fit$b[1],fit$b[2],sigdig=sigdig)
+        expr1 <- 'slope ='
+        expr2 <- 'intercept ='
+        list1 <- list(a=slope[1],
+                      b=slope[2],
+                      u='',
+                      n=fit$df+2)
+        list2 <- list(a=intercept[1],
+                      b=intercept[2],
+                      u='')
+    }
+    call1 <- substitute(e~a,list(e=expr1,a=args1))
+    call2 <- substitute(e~a,list(e=expr2,a=args2))
+    line1 <- do.call(substitute,list(eval(call1),list1))
+    line2 <- do.call(substitute,list(eval(call2),list2))
+    line3 <- substitute('MSWD ='~a*', p('*chi^2*')='~b,
+                        list(a=signif(fit$mswd,sigdig),
+                             b=signif(fit$p.value,sigdig)))
+    IsoplotR:::mymtext(line1,line=2,...)
+    IsoplotR:::mymtext(line2,line=1,...)
+    IsoplotR:::mymtext(line3,line=0,...)
 }
