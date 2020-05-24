@@ -14,7 +14,7 @@
 #' data(Cameca,package="simplex")
 #' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
 #' @export
-standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val))){
+standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val)),DC0){
     if (missing(preset)){
         out <- list()
         if (missing(val)){
@@ -49,6 +49,8 @@ standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val))){
     } else {
         stop("Invalid input to standard(...).")
     }
+    out$DC0 <- rep(0,2) # TODO
+    names(out$DC0) <- c('Pb206Pb204','Pb208Pb204')
     out
 }
 lrstand <- function(dat){

@@ -2,7 +2,7 @@ calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,invert=FALSE,t=0
     out <- lr
     dat <- subset(x=lr,prefix=prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out$cal <- stable_calibration(lr=dat)
-    else out$cal <- geochron_calibration(lr=dat,t=t)
+    else out$cal <- geochron_calibration(lr=dat,t=t,DC0=stand$DC0)
     out$stand <- stand
     class(out) <- append('calibration',class(out))
     out
@@ -31,39 +31,44 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,t=0,...){
+geochron_calibration <- function(lr,t=0,DC0,...){
     out <- list()
     oxide <- lr$m$oxide
     type <- datatype(lr)
     if (type=="U-Pb"){
-        out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,type)
+        out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,
+                              type=type,DC0=DC0['Pb206Pb204'])
     } else if (datatype(lr)=="U-Th-Pb"){
-        out[['U-Pb']] <- geocal(lr,oxide=oxide['U'],t=t,type="U-Pb")
-        out[['Th-Pb']] <- geocal(lr,oxide=oxide['Th'],t=t,type="Th-Pb")
+        out[['U-Pb']] <- geocal(lr,oxide=oxide['U'],t=t,
+                                type="U-Pb",DC0=DC0['Pb206Pb204'])
+        out[['Th-Pb']] <- geocal(lr,oxide=oxide['Th'],t=t,
+                                 type="Th-Pb",DC0=DC0['Pb208Pb204'])
     } else {
         stop("Invalid data type.")
     }
     out
 }
 
-geocal <- function(lr,oxide=NULL,t=0,type='U-Pb'){
+geocal <- function(lr,oxide,t,type,DC0){
     if (type=='U-Pb'){
-        num <- c(oxide,'Pb206')
-        den <- c('U238','U238')
+        num <- c(oxide,'Pb206','Pb204')
+        den <- c('U238','U238','Pb206')
     } else if (type=='Th-Pb'){
-        num <- c(oxide,'Pb208')
-        den <- c('Th232','Th232')
+        num <- c(oxide,'Pb208','Pb204')
+        den <- c('Th232','Th232','Pb208')
     } else {
         stop("Invalid data type.")
     }
     out <- list(num=num,den=den,oxide=oxide,t=t)
-    out$york <- beta2york(lr=lr,t=t,num=num,den=den)
+    out$DC0 <- DC0
+    out$york <- beta2york(lr=lr,t=t,num=num,den=den,DC0=DC0)
     out$fit <- IsoplotR:::york(out$york)
     out
 }
 
-beta2york <- function(lr,t=0,num=c('UO2','Pb206'),
-                      den=c('U238','U238'),snames=NULL,i=NULL){
+beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
+                      den=c('U238','U238','Pb206'),
+                      snames=NULL,i=NULL,DC0=0){
     if (is.null(snames)) snames <- names(lr$x)
     if (!is.null(i)) snames <- snames[i]
     ns <- length(snames)
@@ -71,36 +76,41 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206'),
     colnames(out) <- c('X','sX','Y','sY','rXY')
     rownames(out) <- snames
     for (sname in snames){
-        b <- b0gt2b(LR=lr$x[[sname]]$lr,t=t,
-                    xlab=paste0(num[1],'/',den[1]),
-                    ylab=paste0(num[2],'/',den[2]))
-        out[sname,'X'] <- b$x[1]
-        out[sname,'Y'] <- b$x[2]
-        out[sname,'sX'] <- sqrt(b$cov[1,1])
-        out[sname,'sY'] <- sqrt(b$cov[2,2])
-        out[sname,'rXY'] <- b$cov[1,2]/(out[sname,'sX']*out[sname,'sY'])
+        LR <- lr$x[[sname]]$lr
+        b0g <- LR$b0g
+        b0gnames <- names(b0g)
+        nb0g <- length(b0gnames)
+        OP <- paste0(num[1],'/',den[1])
+        DP <- paste0(num[2],'/',den[2])
+        ib0OP <- which(b0gnames %in% paste0('b0[',OP,']'))
+        ib0DP <- which(b0gnames %in% paste0('b0[',DP,']'))
+        igOP <- which(b0gnames %in% paste0('g[',OP,']'))
+        igDP <- which(b0gnames %in% paste0('g[',DP,']'))
+        bOP <- b0g[ib0OP] + b0g[igOP]*hours(t)
+        bDP <- b0g[ib0DP] + b0g[igDP]*hours(t)
+        X <- bOP
+        Y <- bDP
+        J <- matrix(0,2,length(LR$b0g))
+        J[1,ib0OP] <- 1
+        J[1,igOP] <- hours(t)
+        J[2,ib0DP] <- 1
+        J[2,igDP] <- hours(t)
+        if (length(num)>2){
+            CD <- paste0(num[3],'/',den[3])
+            ib0CD <- which(b0gnames %in% paste0('b0[',CD,']'))
+            igCD <- which(b0gnames %in% paste0('g[',CD,']'))
+            bCD <- b0g[ib0CD] + b0g[igCD]*hours(t)
+            Y <- Y + log(1-exp(bCD)*DC0)
+            J[2,ib0CD] <- -exp(bCD)*DC0/(1-exp(bCD)*DC0)
+            J[2,igCD] <- -exp(bCD)*DC0*hours(t)/(1-exp(bCD)*DC0)
+        }
+        E <- J %*% LR$cov %*% t(J)
+        out[sname,'X'] <- X
+        out[sname,'Y'] <- Y
+        out[sname,'sX'] <- sqrt(E[1,1])
+        out[sname,'sY'] <- sqrt(E[2,2])
+        out[sname,'rXY'] <- E[1,2]/(out[sname,'sX']*out[sname,'sY'])
     }
-    out
-}
-
-b0gt2b <- function(LR,t=0,xlab,ylab){
-    b0g <- LR$b0g
-    b0gnames <- names(b0g)
-    nb0g <- length(b0gnames)
-    out <- list()
-    out$x <- rep(0,2)
-    J <- matrix(0,2,nb0g)
-    ibx <- which(b0gnames %in% paste0('b0[',xlab,']'))
-    iby <- which(b0gnames %in% paste0('b0[',ylab,']'))
-    igx <- which(b0gnames %in% paste0('g[',xlab,']'))
-    igy <- which(b0gnames %in% paste0('g[',ylab,']'))
-    out$x[1] <- b0g[ibx] + b0g[igx]*hours(t)
-    out$x[2] <- b0g[iby] + b0g[igy]*hours(t)
-    J[1,ibx] <- 1
-    J[1,igx] <- hours(t)
-    J[2,iby] <- 1
-    J[2,igy] <- hours(t)
-    out$cov <- J %*% LR$cov %*% t(J)
     out
 }
 
@@ -159,14 +169,13 @@ calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
         Y <- NULL
         for (sname in snames){
             sp <- spot(dat=dat,sname=sname)
-            Nxp <- betapars(spot=sp,ion=num[1])
-            Dxp <- betapars(spot=sp,ion=den[1])
-            Nyp <- betapars(spot=sp,ion=num[2])
-            Dyp <- betapars(spot=sp,ion=den[2])
-            newX <- Nxp$g*(Dxp$t-Nxp$t) +
-                log(Nxp$sig - Nxp$bkg) - log(Dxp$sig - Dxp$bkg)
-            newY <- Nyp$g*(Dyp$t-Nyp$t) +
-                log(Nyp$sig - Nyp$bkg) - log(Dyp$sig - Dyp$bkg)
+            Op <- betapars(spot=sp,ion=num[1])
+            Pp <- betapars(spot=sp,ion=den[1])
+            Dp <- betapars(spot=sp,ion=num[2])
+            Cp <- betapars(spot=sp,ion=num[3])
+            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Op$t-Pp$t)
+            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Dp$t-Pp$t) +
+                log(1 - cal$DC0*(Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg))
             X <- cbind(X,newX)
             Y <- cbind(Y,newY)
         }
