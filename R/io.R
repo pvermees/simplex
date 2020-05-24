@@ -173,8 +173,12 @@ read_SHRIMP_pd <- function(fname,ions){
             nions <- split_mixed(header[[2]],3,1)
             spot$sbmbkg <- split_mixed(header[[2]],5,3)
             spot$deadtime <- split_mixed(header[[2]],4,1)
-            spot$dwelltime <- read.table(text=readLines(f,n=nions,warn=FALSE))[,4]
+            block <- read.table(text=readLines(f,n=nions,warn=FALSE))
+            spot$dwelltime <- block[,4]
             names(spot$dwelltime) <- ions
+            spot$type <- rep('Fc',length(ions))
+            spot$type[block[,11]=='COUNTER'] <- 'Em'
+            names(spot$type) <- ions
             spot$time <- matrix(0,nscans,nions)
             spot$signal <- matrix(0,nscans,nions)
             spot$sbm <- matrix(0,nscans,nions)

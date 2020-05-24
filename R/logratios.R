@@ -21,7 +21,7 @@ logratios.spot <- function(x){
     fit <- optim(par=init,f=fn,method='L-BFGS-B',
                  lower=init-2,upper=init+2,spot=x,
                  groups=groups,hessian=TRUE)
-    fit$cov <- solve(fit$hessian)
+    fit$cov <- MASS::ginv(fit$hessian)
     pred <- do.call(what=fn,
                     args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
@@ -173,8 +173,7 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
     b0 <- B0G$b0
     g <- B0G$g
     D <- betapars(spot=spot,ion=groups$den)
-    obsb <- NULL
-    predb <- NULL
+    pbc <- NULL # predicted count logratios
     ions <- groups$den
     counts <- D$counts
     tt <- D$t
@@ -184,28 +183,28 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         for (i in 1:ni){
             ion <- num[i]
             N <- betapars(spot=spot,ion=ion)
-            bND <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t)
-            predb <- cbind(predb,bND)
+            bc <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t) + log(N$edt) - log(D$edt)
+            pbc <- cbind(pbc,bc)
             ions <- c(ions,ion)
             counts <- cbind(counts,N$counts)
             tt <- cbind(tt,N$t)
         }
     }
+    thetabkg <- D$bkgcounts/(D$bkgcounts+rowSums(counts))
+    nb <- length(b0)
+    expbc <- cbind(1-nb*thetabkg,exp(pbc))
+    theta <- sweep(sweep(expbc,1,rowSums(expbc),'/'),1,thetabkg)
+    colnames(tt) <- ions
     colnames(counts) <- ions
+    colnames(theta) <- ions
     if (predict){
-        colnames(tt) <- ions
-        expb <- cbind(1,exp(predb))
-        frac <- sweep(expb,1,rowSums(expb),'/')
-        colnames(frac) <- ions
         out <- list()
         out$t <- tt
         out$obs <- counts
-        out$pred <- sweep(frac,1,rowSums(counts),'*')
+        out$pred <- sweep(theta,1,rowSums(counts),'*')
         out$outliers <- rep(FALSE,length(D$t))
     } else {
-        theta <- D$bkgcounts/(D$bkgcounts+rowSums(counts))
-        nb <- length(b0)
-        
+        out <- -sum(log(theta)*counts)
     }
     out
 }
