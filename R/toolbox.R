@@ -11,6 +11,7 @@ effective_dwelltime <- function(spot){
     -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
 }
 
+
 element <- function(ion){
     txt <- gsub("[^a-zA-Z]", "", ion)
     empty <- which(txt %in% "")
@@ -19,6 +20,10 @@ element <- function(ion){
     out <- ion
     out[good] <- txt[good]
     out
+}
+
+isotope <- function(ion){
+    as.numeric(gsub("[^0-9]", "", ion))
 }
 
 hours <- function(tt){
@@ -57,7 +62,7 @@ VSMOW <- function(){
     out$lr <- log(c(0.3799e-3,2.00520e-3))
     relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
     out$cov <- diag(relerr^2)
-    labels <- c("O18O16","O17O16")
+    labels <- c("O17O16","O18O16")
     names(out$lr) <- labels
     rownames(out$cov) <- labels
     colnames(out$cov) <- labels

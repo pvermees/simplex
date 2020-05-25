@@ -71,6 +71,7 @@ lrstand <- function(dat){
             cov <- J %*% cov %*% t(J)
         }
         labels <- c("O17O16","O18O16")
+        out$ref <- VSMOW()$lr
         out$lr <- log(1 + val/1000) + VSMOW()$lr
         J <- diag(1/(1000 + val))
     } else {

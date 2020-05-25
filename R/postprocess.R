@@ -1,3 +1,64 @@
-delta <- function(x){
+delta <- function(x,log=TRUE){
+    out <- x
+    logd <- x$lr - rep(x$ref,length(x$snames))
+    nd <- length(logd)
+    if (log){
+        out$d <- 1000*logd
+        J <- 1000*diag(nd)
+    } else {
+        out$d <- 1000*(exp(logd)-1)
+        J <- 1000*exp(logd)*diag(nd)
+    }
+    out$cov <- J %*% x$cov %*% t(J)
+    out$ref <- NULL
+    class(out) <- append('delta',class(x))
+    out
+}
+
+data2table <- function(x){
+    snames <- x$snames
+    ns <- length(snames)
+    ni <- length(x$num)
+    out <- matrix(0,ns,ni)
+    rownames(out) <- snames
+    for (i in ns){
+        id <- (i-1)*ni+(1:ni)
+    }
+}
+
+plot.delta <- function(d,...){
+    np <- length(d$num)-1     # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    for (i in 1:nr){
+        for (j in (i+1):max(nc,nr+1)){
+            y <- delta2york(d=d,i=i,j=j)
+            xlab <- substitute(delta^{a}*b,
+                               list(a=isotope(ion=d$num[i]),
+                                    b=element(ion=d$num[i])))
+            ylab <- substitute(delta^{a}*b,
+                               list(a=isotope(ion=d$num[j]),
+                                    b=element(ion=d$num[j])))
+            IsoplotR::scatterplot(y,...)
+            mtext(xlab,side=1,line=2)
+            mtext(ylab,side=2,line=2)
+        }
+    }
+}
+
+delta2york <- function(d,i,j){
+    ns <- length(d$snames)
+    ni <- length(d$num)
+    ii <- (1:ns)*ni-ni+i
+    jj <- (1:ns)*ni-ni+j
+    X <- d$d[ii]
+    Y <- d$d[jj]
+    sX <- sqrt(diag(d$cov)[ii])
+    sY <- sqrt(diag(d$cov)[jj])
+    rXY <- d$cov[cbind(ii,jj)]/(sX*sY)
+    out <- cbind(X,sX,Y,sY,rXY)
+    colnames(out) <- c('X','sX','Y','sY','rXY')
+    rownames(out) <- d$snames
     out
 }

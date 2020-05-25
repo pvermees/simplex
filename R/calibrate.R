@@ -13,6 +13,7 @@ calibrate_stable <- function(dat,exterr=FALSE){
     snames <- names(dat$x)
     ns <- length(snames)
     nr <- length(num)
+    out$ref <- scal$ref
     out$snames <- snames
     out$num <- num
     out$den <- den

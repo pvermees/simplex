@@ -96,7 +96,7 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
         J[1,igOP] <- hours(t)
         J[2,ib0DP] <- 1
         J[2,igDP] <- hours(t)
-        if (length(num)>2){
+        if (length(num)>2){ # for U-Pb and Th-Pb
             CD <- paste0(num[3],'/',den[3])
             ib0CD <- which(b0gnames %in% paste0('b0[',CD,']'))
             igCD <- which(b0gnames %in% paste0('g[',CD,']'))
