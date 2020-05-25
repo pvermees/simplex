@@ -35,6 +35,7 @@ calibrate_stable <- function(dat,exterr=FALSE){
     E[ns*nr+(1:nr),ns*nr+(1:nr)] <- scal$cov
     E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dcal$cov
     out$cov <- J %*% E %*% t(J)
+    class(out) <- c("calibrated","stable")
     out
 }
 
@@ -52,6 +53,7 @@ calibrate_geochron <- function(dat,exterr=FALSE){
     } else {
         stop("Invalid data type supplied to calibrate function.")
     }
+    class(out) <- c("calibrated")
     out
 }
 
@@ -71,8 +73,8 @@ fractical <- function(dat,type="U-Pb",exterr=FALSE){
     out$num <- num
     out$den <- den
     fit <- dcal$fit
-    fitcov <- diag(c(fit$a[2],fit$b[2]))^2
-    fitcov[1,2] <- fit$cov.ab/(fit$a[2]*fit$b[2])
+    fitcov <- matrix(c(fit$a[2]^2,fit$cov.ab,
+                       fit$cov.ab,fit$b[2]^2),2,2)
     DP <- paste0(num,den)
     E <- matrix(0,ns+3,ns+3)
     E[ns+1,ns+1] <- scal$cov[DP,DP]
@@ -104,7 +106,7 @@ fractical <- function(dat,type="U-Pb",exterr=FALSE){
         J[i,i] <- -fit$b[1]  # dlrdX
         J[i,i+1] <- 1        # dlrdY
         if (exterr){
-            J[i,ns+1] <- 1       # dlrdcal68
+            J[i,ns+1] <- 1       # dlrdscalDP
             J[i,ns+2] <- -1      # dlrda
             J[i,ns+3] <- -XY[1]  # dlrdb
         }    
