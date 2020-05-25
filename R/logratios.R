@@ -276,7 +276,7 @@ plot_logratios <- function(spot,...){
         ratio <- paste0(num[i],'/',den[i])
         Np <- betapars(spot=spot,ion=num[i])
         Dp <- betapars(spot=spot,ion=den[i])
-        X <- Dp$t
+        X <- seconds(Dp$t)
         Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
         b0 <- b0g[paste0('b0[',ratio,']')]
         g <- b0g[paste0('g[',ratio,']')]
@@ -302,12 +302,13 @@ plot_signals <- function(spot,...){
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in ions){
         ylab <- paste0(ion,'- b')
-        graphics::plot(lr$t[!bad,ion],lr$obs[!bad,ion],type='n',xlab='',ylab='',...)
-        graphics::points(lr$t[!bad,ion],lr$obs[!bad,ion],pch=21)
-        graphics::points(lr$t[bad,ion],lr$obs[bad,ion],pch=4)
+        tt <- seconds(lr$t[,ion])
+        graphics::plot(tt[!bad],lr$obs[!bad,ion],type='n',xlab='',ylab='',...)
+        graphics::points(tt[!bad],lr$obs[!bad,ion],pch=21)
+        graphics::points(tt[bad],lr$obs[bad,ion],pch=4)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
-        graphics::lines(lr$t[!bad,ion],lr$pred[!bad,ion])
+        graphics::lines(tt[!bad],lr$pred[!bad,ion])
     }
     graphics::par(oldpar)
 }

@@ -2,7 +2,7 @@ calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,invert=FALSE,t=0
     out <- lr
     dat <- subset(x=lr,prefix=prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out$cal <- stable_calibration(lr=dat)
-    else out$cal <- geochron_calibration(lr=dat,t=t,DC0=stand$DC0)
+    else out$cal <- geochron_calibration(lr=dat,t=t,common=stand$common)
     out$stand <- stand
     class(out) <- append('calibration',class(out))
     out
@@ -31,25 +31,25 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,t=0,DC0,...){
+geochron_calibration <- function(lr,t=0,common,...){
     out <- list()
     oxide <- lr$m$oxide
     type <- datatype(lr)
     if (type=="U-Pb"){
         out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,
-                              type=type,DC0=DC0['Pb206Pb204'])
+                              type=type,common=common['Pb206Pb204'])
     } else if (datatype(lr)=="U-Th-Pb"){
         out[['U-Pb']] <- geocal(lr,oxide=oxide['U'],t=t,
-                                type="U-Pb",DC0=DC0['Pb206Pb204'])
+                                type="U-Pb",common=common['Pb206Pb204'])
         out[['Th-Pb']] <- geocal(lr,oxide=oxide['Th'],t=t,
-                                 type="Th-Pb",DC0=DC0['Pb208Pb204'])
+                                 type="Th-Pb",common=common['Pb208Pb204'])
     } else {
         stop("Invalid data type.")
     }
     out
 }
 
-geocal <- function(lr,oxide,t,type,DC0){
+geocal <- function(lr,oxide,t,type,common){
     if (type=='U-Pb'){
         num <- c(oxide,'Pb206','Pb204')
         den <- c('U238','U238','Pb206')
@@ -60,15 +60,15 @@ geocal <- function(lr,oxide,t,type,DC0){
         stop("Invalid data type.")
     }
     out <- list(num=num,den=den,oxide=oxide,t=t)
-    out$DC0 <- DC0
-    out$york <- beta2york(lr=lr,t=t,num=num,den=den,DC0=DC0)
+    out$common <- common
+    out$york <- beta2york(lr=lr,t=t,num=num,den=den,common=common)
     out$fit <- IsoplotR:::york(out$york)
     out
 }
 
 beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
                       den=c('U238','U238','Pb206'),
-                      snames=NULL,i=NULL,DC0=0){
+                      snames=NULL,i=NULL,common=0){
     if (is.null(snames)) snames <- names(lr$x)
     if (!is.null(i)) snames <- snames[i]
     ns <- length(snames)
@@ -100,9 +100,9 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
             ib0CD <- which(b0gnames %in% paste0('b0[',CD,']'))
             igCD <- which(b0gnames %in% paste0('g[',CD,']'))
             bCD <- b0g[ib0CD] + b0g[igCD]*hours(t)
-            Y <- Y + log(1-exp(bCD)*DC0)
-            J[2,ib0CD] <- -exp(bCD)*DC0/(1-exp(bCD)*DC0)
-            J[2,igCD] <- -exp(bCD)*DC0*hours(t)/(1-exp(bCD)*DC0)
+            Y <- Y + log(1-exp(bCD)*common)
+            J[2,ib0CD] <- -exp(bCD)*common/(1-exp(bCD)*common)
+            J[2,igCD] <- -exp(bCD)*common*hours(t)/(1-exp(bCD)*common)
         }
         E <- J %*% LR$cov %*% t(J)
         out[sname,'X'] <- X
@@ -173,9 +173,11 @@ calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
             Pp <- betapars(spot=sp,ion=den[1])
             Dp <- betapars(spot=sp,ion=num[2])
             Cp <- betapars(spot=sp,ion=num[3])
-            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Op$t-Pp$t)
-            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Dp$t-Pp$t) +
-                log(1 - cal$DC0*(Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg))
+            CD <- (Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg)
+            CDdc <- exp(Dp$g*(Dp$t-Cp$t))
+            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Pp$t-Op$t)
+            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Pp$t-Dp$t) +
+                log(1 - cal$common*CD*CDdc)
             X <- cbind(X,newX)
             Y <- cbind(Y,newY)
         }

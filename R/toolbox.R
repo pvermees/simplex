@@ -25,6 +25,10 @@ hours <- function(tt){
     tt/3600
 }
 
+seconds <- function(tt){
+    tt*3600
+}
+
 background <- function(spot,ions){
     detector <- spot$detector[ions]
     if (spot$m$nominalblank){

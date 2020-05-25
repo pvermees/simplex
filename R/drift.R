@@ -96,14 +96,15 @@ plot.drift <- function(x,sname,i=1,...){
     for (ion in ions){
         ap <- alphapars(spot,ion)
         sb <- ap$sig - ap$bkg
+        tt <- seconds(ap$t)
         ylab <- paste0(ion,'- b')
-        graphics::plot(ap$t,sb,type='p',xlab='',ylab='',...)
+        graphics::plot(tt,sb,type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
         exp_a0 <- spot$dc['exp_a0',ion]
         g <- spot$dc['g',ion]
         predsig <- exp_a0*exp(g*ap$t)
-        graphics::lines(ap$t,predsig)
+        graphics::lines(tt,predsig)
     }
     graphics::par(oldpar)
 }
