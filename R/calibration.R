@@ -1,9 +1,9 @@
 calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,invert=FALSE,t=0){
     out <- lr
-    dat <- subset(x=lr,prefix=prefix,snames=snames,i=i,invert=invert)
-    if (stable(lr)) out$cal <- stable_calibration(lr=dat)
-    else out$cal <- geochron_calibration(lr=dat,t=t,common=stand$common)
     out$stand <- stand
+    dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
+    if (stable(lr)) out$cal <- stable_calibration(lr=dat)
+    else out$cal <- geochron_calibration(lr=dat,t=t)
     class(out) <- append('calibration',class(out))
     out
 }
@@ -31,13 +31,14 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,t=0,common,...){
+geochron_calibration <- function(lr,t=0,...){
     out <- list()
     oxide <- lr$m$oxide
+    common <- lr$stand$fetch(lr)$common
     type <- datatype(lr)
     if (type=="U-Pb"){
-        out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,
-                              type=type,common=common['Pb206Pb204'])
+        out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,type=type,
+                              common=common['Pb206Pb204'])
     } else if (datatype(lr)=="U-Th-Pb"){
         out[['U-Pb']] <- geocal(lr,oxide=oxide['U'],t=t,
                                 type="U-Pb",common=common['Pb206Pb204'])

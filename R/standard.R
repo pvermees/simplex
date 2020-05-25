@@ -33,6 +33,8 @@ standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val)),common
         } else {
             out$val <- val
             out$cov <- cov
+            if (missing(common)) out$common <- val*0
+            else out$common <- common
             out$fetch <- function(dat){
                 lrstand(dat)
             }
@@ -49,8 +51,6 @@ standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val)),common
     } else {
         stop("Invalid input to standard(...).")
     }
-    out$common <- rep(0,2) # TODO
-    names(out$common) <- c('Pb206Pb204','Pb208Pb204')
     out
 }
 lrstand <- function(dat){
@@ -60,6 +60,8 @@ lrstand <- function(dat){
     out <- list()
     if (type=="U-Pb"){
         labels <- c("Pb206U238","Pb208Th232")
+        out$common <- dat$stand$common
+        names(out$common) <- labels
         out$lr <- log(val)
         J <- diag(1/val)
     } else if (type=="oxygen"){
@@ -101,6 +103,8 @@ age2lr <- function(dat){
     J <- diag(1/r$x)
     rownames(J) <- names(r$x)
     out$cov <- J %*% r$cov %*% t(J)
+    out$common <- IsoplotR:::stacey.kramers(tst[1])[,c('i64','i84')]
+    names(out$common) <- c('Pb206Pb204','Pb208Pb204')
     out
 }
 # get geometric mean Pb207/Pb206 ratio to estimate
