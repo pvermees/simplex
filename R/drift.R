@@ -20,10 +20,28 @@ drift.spot <- function(spot){
     rownames(out) <- c('exp_a0','g')
     for (i in 1:nEL){ # loop through the elements
         j <- which(el %in% EL[i])
-        ni <- length(j)
-        fit <- optim(par=0,f=SS_g,method='BFGS',spot=spot,ions=ions[j])
+        fit <- optim(par=0,fn=misfit_g,method='BFGS',spot=spot,ions=ions[j])
         out['g',ions[j]] <- fit$par
         out['exp_a0',ions[j]] <- get_exp_a0(g=fit$par,spot=spot,ions=ions[j])
+    }
+    out
+}
+
+misfit_g <- function(par,spot,ions){
+    g <- par
+    out <- 0
+    exp_a0 <- get_exp_a0(g=g,spot=spot,ions=ions)
+    for (ion in ions){
+        p <- alphapars(spot=spot,ion=ion)
+        exp_a <- exp_a0[ion]*exp(g*p$t)
+        if (spot$dtype[ion]=='Fc'){
+            D <-  log(exp_a) - log(p$sig - p$bkg)
+            out <- out + sum(D^2)
+        } else {
+            obs <- p$counts
+            pred <- p$bkgcounts + exp_a*p$edt
+            out <- out - sum(dpois(x=obs,lambda=pred,log=TRUE))
+        }
     }
     out
 }
@@ -33,7 +51,7 @@ get_exp_a0 <- function(g,spot,ions){
     names(out) <- ions
     for (ion in ions){
         p <- alphapars(spot,ion)
-        if (all(p$sig>p$bkg)){
+        if (spot$dtype[ion]=='Fc'){
             out[ion] <- sum(exp(g*p$t)*(p$sig-p$bkg))/sum(exp(g*p$t)^2)
         } else {
             out[ion] <- 1e-10
@@ -53,37 +71,20 @@ alphapars <- function(spot,ion){
             detector <- spot$detector[ion]
             deadtime <- spot$deadtime[detector]
             dwelltime <- spot$dwelltime[ion]
-            out$counts <- spot$signal[,ion]*dwelltime
-            out$edt <- dwelltime-deadtime*out$counts*1e-9
-            out$sig <- out$counts/out$edt
-            out$bkgcounts <- out$bkg*dwelltime
+            counts <- spot$signal[,ion]*dwelltime
+            out$edt <- dwelltime-deadtime*counts*1e-9
+            out$sig <- counts/out$edt
+            out$counts <- round(counts)
+            out$bkgcounts <- round(out$bkg*dwelltime)
         } else {
             dwelltime <- spot$dwelltime[ion]
-            out$counts <- spot$signal[,ion]*dwelltime
+            out$counts <- spot$signal[,ion]
             out$edt <- dwelltime-spot$deadtime*out$counts*1e-9
             out$sig <- out$counts/out$edt
-            out$bkgcounts <- out$bkg*dwelltime
+            out$bkgcounts <- out$bkg
         }
     }
     out
-}
-
-SS_g <- function(par,spot,ions){
-    nions <- length(ions)
-    g <- par
-    exp_a0 <- get_exp_a0(g=g,spot=spot,ions=ions)
-    tt <- hours(spot$time[,ions,drop=FALSE])
-    nt <- nrow(tt)
-    gt <- sweep(tt,2,g,'*')
-    exp_a <- sweep(exp(gt),2,exp_a0,'*')
-    bkg <- background(spot,ions)
-    if (spot$m$nominalblank){
-        predsig <- sweep(exp_a,2,bkg,'+')
-    } else {
-        predsig <- sweep(exp_a,1,bkg,'+')
-    }
-    D <- predsig - spot$signal[,ions]
-    sum(D^2)
 }
 
 plot.drift <- function(x,sname,i=1,...){
