@@ -1,8 +1,8 @@
 # calculate effective dwell time correcting for the dead time
 effective_dwelltime <- function(spot){
-    if (spot$m$instrument=='Cameca'){
+    if (spot$method$instrument=='Cameca'){
         deadtime <- spot$deadtime[spot$detector]
-    } else if (spot$m$instrument=='SHRIMP'){
+    } else if (spot$method$instrument=='SHRIMP'){
         deadtime <- rep(spot$deadtime,ncol(spot$signal))
     } else {
         stop('Invalid instrument type.')
@@ -36,7 +36,7 @@ seconds <- function(tt){
 
 background <- function(spot,ions){
     detector <- spot$detector[ions]
-    if (spot$m$nominalblank){
+    if (spot$method$nominalblank){
         out <- spot$background[detector]
     } else {
         out <- spot$signal[,'bkg']
@@ -79,7 +79,7 @@ stable <- function(dat){
 }
 
 datatype <- function(x){
-    ions <- x$m$ions
+    ions <- x$method$ions
     if (all(c("U238","Th232","Pb204",
               "Pb206","Pb207","Pb208")%in%ions) &&
                any(c("UO","UO2")%in%ions) &&
@@ -97,7 +97,7 @@ datatype <- function(x){
 }
 
 faraday <- function(spot,ion=NULL){
-    if (is.null(ion)) out <- all(spot$dtype[spot$m$ions]=='Fc')
+    if (is.null(ion)) out <- all(spot$dtype[spot$method$ions]=='Fc')
     else out <- spot$dtype[ion]=='Fc'
     out
 }

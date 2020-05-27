@@ -1,16 +1,16 @@
 drift <- function(x){
     out <- x
-    snames <- names(x$x)
+    snames <- names(x$samples)
     for (sname in snames){
         sp <- spot(dat=x,sname=sname)
-        out$x[[sname]]$dc <- drift.spot(spot=sp)
+        out$samples[[sname]]$dc <- drift.spot(spot=sp)
     }
     class(out) <- append('drift',class(out))
     out
 }
 
 drift.spot <- function(spot){
-    ions <- spot$m$ions
+    ions <- spot$method$ions
     nions <- length(ions)
     el <- element(ions)
     EL <- unique(el)
@@ -67,7 +67,7 @@ alphapars <- function(spot,ion){
     if (faraday(spot,ion)){
         out$sig <- spot$signal[,ion]
     } else {
-        if (spot$m$instrument=='Cameca'){
+        if (spot$method$instrument=='Cameca'){
             detector <- spot$detector[ion]
             deadtime <- spot$deadtime[detector]
             dwelltime <- spot$dwelltime[ion]
@@ -89,7 +89,7 @@ alphapars <- function(spot,ion){
 
 plot.drift <- function(x,sname,i=1,...){
     spot <- spot(x,sname=sname,i=i)
-    ions <- spot$m$ions
+    ions <- spot$method$ions
     np <- length(ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns

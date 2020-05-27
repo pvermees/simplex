@@ -23,14 +23,14 @@ read_data <- function(dorf,suffix,m='IGG-UPb'){
     if (is.character(m)) m <- method(m)
     if (m$instrument == 'Cameca') {
         if (missing(suffix)) suffix <- 'asc'
-        out$x <- read_directory(dorf,suffix=suffix,m=m)
+        out$samples <- read_directory(dorf,suffix=suffix,m=m)
     } else if (m$instrument== 'SHRIMP') {
         if (missing(suffix)) suffix <- 'pd'
-        out$x <- read_file(dorf,suffix=suffix,m=m)
+        out$samples <- read_file(dorf,suffix=suffix,m=m)
     } else {
         stop('Unsupported instrument')
     }
-    out$m <- m
+    out$method <- m
     class(out) <- 'simplex'
     out
 }
@@ -240,25 +240,25 @@ read_asc_block <- function(f,ions){
 
 subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- x
-    if (is.null(snames)) snames <- names(dat$x)
+    if (is.null(snames)) snames <- names(dat$samples)
     if (!is.null(i)) snames <- snames[i]
     if (!is.null(prefix)){
         snames <- snames[grep(prefix,snames,...)]
     }
-    out$x <- x$x[snames]
+    out$samples <- x$samples[snames]
     class(out) <- class(x)
     out
 }
 
 spot <- function(dat,sname,i=1,...){
     if (missing(sname)){
-        x <- dat$x[[i]]
+        x <- dat$samples[[i]]
         sname <- names(dat)[i]
     } else {
-        x <- dat$x[[sname]]
+        x <- dat$samples[[sname]]
     }
     out <- dat
-    out$x <- NULL
+    out$samples <- NULL
     out$sname <- sname
     out <- c(out,x)
     class(out) <- 'spot'

@@ -1,18 +1,18 @@
 logratios <- function(x){
     out <- x
-    snames <- names(x$x)
+    snames <- names(x$samples)
     for (sname in snames){
         print(sname)
         sp <- spot(dat=x,sname=sname)
-        out$x[[sname]]$lr <- logratios.spot(x=sp)
+        out$samples[[sname]]$lr <- logratios.spot(x=sp)
     }
     class(out) <- append("logratios",class(out))
     out
 }
 
 logratios.spot <- function(x){
-    num <- x$m$num
-    den <- x$m$den
+    num <- x$method$num
+    den <- x$method$den
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
     init <- init_logratios(spot=x,groups=groups)
@@ -263,8 +263,8 @@ plot.logratios <- function(x,sname,i=1,option=1,...){
 
 plot_logratios <- function(spot,...){
     bad <- logratios.spot(x=spot)$outliers
-    num <- spot$m$num
-    den <- spot$m$den
+    num <- spot$method$num
+    den <- spot$method$den
     b0g <- spot$lr$b0g
     nb <- length(b0g)/2
     np <- length(num)       # number of plot panels

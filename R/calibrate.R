@@ -5,19 +5,18 @@ calibrate <- function(cal,exterr=FALSE){
 }
 
 calibrate_stable <- function(dat,exterr=FALSE){
-    out <- list()
-    scal <- dat$stand$fetch(dat)
-    dcal <- dat$cal
+    out <- dat
+    scal <- dat$standard$fetch(dat)
+    dcal <- dat$calibration
     num <- dat$m$num
     den <- dat$m$den
-    snames <- names(dat$x)
+    snames <- names(dat$samples)
     ns <- length(snames)
     nr <- length(num)
-    out$ref <- scal$ref
-    out$snames <- snames
-    out$num <- num
-    out$den <- den
-    out$lr <- rep(0,nr*ns)
+    calibrated <- list()
+    calibrated$num <- num
+    calibrated$den <- den
+    calibrated$lr <- rep(0,nr*ns)
     E <- matrix(0,nr*(ns+2),nr*(ns+2))
     J <- matrix(0,nr*ns,nr*(ns+2))
     J[1:(ns*nr),1:(ns*nr)] <- diag(ns*nr)
@@ -25,7 +24,7 @@ calibrate_stable <- function(dat,exterr=FALSE){
         sname <- snames[i]
         selected <- (i-1)*nr + (1:nr)
         sp <- spot(dat,sname=sname)
-        out$lr[selected] <- sp$lr$b0g[1:nr] + scal$lr - dcal$x
+        calibrated$lr[selected] <- sp$lr$b0g[1:nr] + scal$lr - dcal$lr
         E[selected,selected] <- sp$lr$cov[1:nr,1:nr]
         if (exterr){
             J[selected,ns*nr+(1:nr)] <- diag(nr)
@@ -34,32 +33,34 @@ calibrate_stable <- function(dat,exterr=FALSE){
     }
     E[ns*nr+(1:nr),ns*nr+(1:nr)] <- scal$cov
     E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dcal$cov
-    out$cov <- J %*% E %*% t(J)
-    class(out) <- c("calibrated","stable")
-    out
-}
-
-calibrate_geochron <- function(dat,exterr=FALSE){
-    out <- list()
-    out$snames <- names(dat$x)
-    type <- datatype(dat)
-    if (type=="U-Pb"){
-        out$UPb <- fractical(dat,type="U-Pb",exterr=exterr)
-        out$PbPb <- nofractical(dat,type="U-Pb")
-    } else if (type=="U-Th-Pb"){
-        out$UPb <- fractical(dat,type="U-Pb",exterr=exterr)
-        out$PbPb <- nofractical(dat,type="U-Th-Pb")
-        out$ThPb <- fractical(dat,type="Th-Pb",exterr=exterr)
-    } else {
-        stop("Invalid data type supplied to calibrate function.")
-    }
+    calibrated$cov <- J %*% E %*% t(J)
+    out$calibrated <- calibrated
     class(out) <- c("calibrated")
     out
 }
 
+calibrate_geochron <- function(dat,exterr=FALSE){
+    out <- dat
+    type <- datatype(dat)
+    if (type=="U-Pb"){
+        UPb <- fractical(dat,type="U-Pb",exterr=exterr)
+        PbPb <- nofractical(dat,type="U-Pb")
+        out$calibrated <- mergecal(UPb,PbPb)
+    } else if (type=="U-Th-Pb"){
+        UPb <- fractical(dat,type="U-Pb",exterr=exterr)
+        PbPb <- nofractical(dat,type="U-Th-Pb")
+        ThPb <- fractical(dat,type="Th-Pb",exterr=exterr)
+        out$calibrated <- mergecal(UPb,ThPb,PbPb)
+    } else {
+        stop("Invalid data type supplied to calibrate function.")
+    }
+    class(out) <- append("calibrated",class(out))
+    out
+}
+
 fractical <- function(dat,type="U-Pb",exterr=FALSE){
-    scal <- dat$stand$fetch(dat) # standard calibration
-    dcal <- dat$cal[[type]]      # data calibration
+    scal <- dat$standard$fetch(dat) # standard calibration
+    dcal <- dat$calibration[[type]]      # data calibration
     if (type=='U-Pb'){
         num='Pb206'
         den='U238'
@@ -67,7 +68,7 @@ fractical <- function(dat,type="U-Pb",exterr=FALSE){
         num='Pb208'
         den='Th232'
     }
-    snames <- names(dat$x)
+    snames <- names(dat$samples)
     ns <- length(snames)
     out <- list()
     out$num <- num
@@ -123,7 +124,7 @@ nofractical <- function(dat,type="U-Pb"){
         num=c('Pb204','Pb207','Pb208')
         den=c('Pb206','Pb206','Pb206')
     }    
-    snames <- names(dat$x)
+    snames <- names(dat$samples)
     ns <- length(snames)
     nr <- length(num)
     out <- list()
@@ -137,6 +138,30 @@ nofractical <- function(dat,type="U-Pb"){
         lr <- paste0('b0[',num,'/',den,']')
         out$lr[j+(1:nr)] <- sp$lr$b0g[lr]
         out$cov[j+(1:nr),j+(1:nr)] <- sp$lr$cov[lr,lr]
+    }
+    out
+}
+
+mergecal <- function(...){
+    cals <- list(...)
+    num <- NULL
+    den <- NULL
+    for (cal in cals){
+        num <- c(num,cal$num)
+        den <- c(den,cal$den)
+    }
+    ni <- length(num)
+    ns <- length(cal$lr)/length(cal$num)
+    out <- list()
+    out$num <- num
+    out$den <- den
+    out$lr <- rep(0,ni*ns)
+    out$cov <- matrix(0,ni*ns,ni*ns)
+    for (cal in cals){
+        i <- which(num %in% cal$num)
+        ii <- as.vector(sapply((0:(ns-1))*ni,'+',i))
+        out$lr[ii] <- cal$lr
+        out$cov[ii,ii] <- cal$cov
     }
     out
 }

@@ -1,9 +1,9 @@
 calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,invert=FALSE,t=0){
     out <- lr
-    out$stand <- stand
+    out$standard <- stand
     dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
-    if (stable(lr)) out$cal <- stable_calibration(lr=dat)
-    else out$cal <- geochron_calibration(lr=dat,t=t)
+    if (stable(lr)) out$calibration <- stable_calibration(lr=dat)
+    else out$calibration <- geochron_calibration(lr=dat,t=t)
     class(out) <- append('calibration',class(out))
     out
 }
@@ -12,29 +12,29 @@ stable_calibration <- function(lr){
     LL <- function(par,lr){
         out <- 0
         np <- length(par)
-        snames <- names(lr$x)
+        snames <- names(lr$samples)
         for (sname in snames){
-            X <- lr$x[[sname]]$lr$b0g[1:np]
-            E <- lr$x[[sname]]$lr$cov[1:np,1:np]
+            X <- lr$samples[[sname]]$lr$b0g[1:np]
+            E <- lr$samples[[sname]]$lr$cov[1:np,1:np]
             LL <- mahalanobis(x=X,center=par,cov=E)
             out <- out + LL
         }
         out
     }
-    ni <- length(lr$m$num)
-    init <- lr$x[[1]]$lr$b0g[1:ni]
+    ni <- length(lr$method$num)
+    init <- lr$samples[[1]]$lr$b0g[1:ni]
     wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
     out <- list()
-    out$snames <- names(lr$x)
-    out$x <- wtdmean$par
+    out$snames <- names(lr$samples)
+    out$lr <- wtdmean$par
     out$cov <- solve(wtdmean$hessian)
     out
 }
 
 geochron_calibration <- function(lr,t=0,...){
     out <- list()
-    oxide <- lr$m$oxide
-    common <- lr$stand$fetch(lr)$common
+    oxide <- lr$method$oxide
+    common <- lr$standard$fetch(lr)$common
     type <- datatype(lr)
     if (type=="U-Pb"){
         out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,type=type,
@@ -70,14 +70,14 @@ geocal <- function(lr,oxide,t,type,common){
 beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
                       den=c('U238','U238','Pb206'),
                       snames=NULL,i=NULL,common=0){
-    if (is.null(snames)) snames <- names(lr$x)
+    if (is.null(snames)) snames <- names(lr$samples)
     if (!is.null(i)) snames <- snames[i]
     ns <- length(snames)
     out <- matrix(0,nrow=ns,ncol=5)
     colnames(out) <- c('X','sX','Y','sY','rXY')
     rownames(out) <- snames
     for (sname in snames){
-        LR <- lr$x[[sname]]$lr
+        LR <- lr$samples[[sname]]$lr
         b0g <- LR$b0g
         b0gnames <- names(b0g)
         nb0g <- length(b0gnames)
@@ -117,8 +117,8 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
 
 plot.calibration <- function(cal,option=1,snames=NULL,i=NULL,...){
     if (is.null(snames)){
-        if (stable(cal)) snames <- cal$cal$snames
-        else snames <- rownames(cal$cal[[1]]$york)
+        if (stable(cal)) snames <- cal$calibration$snames
+        else snames <- rownames(cal$calibration[[1]]$york)
     }
     if (!is.null(i)) snames <- snames[i]
     if (stable(cal)) calplot_stable(dat=cal,snames=snames,...)
@@ -126,15 +126,15 @@ plot.calibration <- function(cal,option=1,snames=NULL,i=NULL,...){
 }
 
 calplot_stable <- function(dat,snames=NULL,...){
-    num <- dat$m$num
-    den <- dat$m$den
+    num <- dat$method$num
+    den <- dat$method$den
     np <- length(num)-1     # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:nr){
         for (j in (i+1):max(nc,nr+1)){
-            b0names <- names(dat$x)
+            b0names <- names(dat$samples)
             xlab <- paste0(num[i],'/',den[i])
             ylab <- paste0(num[j],'/',den[j])
             B <- beta2york(lr=dat,snames=snames,
@@ -142,18 +142,18 @@ calplot_stable <- function(dat,snames=NULL,...){
             IsoplotR::scatterplot(B,...)
             graphics::mtext(side=1,text=xlab,line=2)
             graphics::mtext(side=2,text=ylab,line=2)
-            ell <- IsoplotR::ellipse(dat$cal$x[i],dat$cal$x[j],
-                                     dat$cal$cov[c(i,j),c(i,j)])
+            ell <- IsoplotR::ellipse(dat$calibration$lr[i],dat$calibration$lr[j],
+                                     dat$calibration$cov[c(i,j),c(i,j)])
             graphics::polygon(ell,col='white')
         }
     }
 }
 
 calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
-    if (missing(type)) cal <- dat$cal[[1]]
-    else cal <- dat$cal[[type]]
+    if (missing(type)) cal <- dat$calibration[[1]]
+    else cal <- dat$calibration[[type]]
     if (is.null(snames)){
-        snames <- names(dat$x)
+        snames <- names(dat$samples)
         if (!is.null(i)){
             snames <- snames[i]
         }
