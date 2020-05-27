@@ -39,7 +39,7 @@ misfit_g <- function(par,spot,ions){
             out <- out + sum(D^2)
         } else {
             obs <- p$counts
-            pred <- p$bkgcounts + exp_a*p$edt
+            pred <- exp_a*p$edt # + p$bkgcounts # approximate
             out <- out - sum(dpois(x=obs,lambda=pred,log=TRUE))
         }
     }
@@ -54,7 +54,7 @@ get_exp_a0 <- function(g,spot,ions){
         if (spot$dtype[ion]=='Fc'){
             out[ion] <- sum(exp(g*p$t)*(p$sig-p$bkg))/sum(exp(g*p$t)^2)
         } else {
-            out[ion] <- 1e-10
+            out[ion] <- sum(p$sig)/sum(exp(g*p$t))
         }
     }
     out
