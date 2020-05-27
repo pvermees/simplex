@@ -1,6 +1,7 @@
-delta <- function(x,log=TRUE){
-    out <- x
-    logd <- x$lr - rep(x$ref,length(x$snames))
+delta <- function(cd,log=TRUE){
+    out <- list()
+    ref <- cd$standard$fetch(cd)$ref
+    logd <- cd$calibrated$lr - rep(ref,length(cd$samples))
     nd <- length(logd)
     if (log){
         out$d <- 1000*logd
@@ -9,39 +10,25 @@ delta <- function(x,log=TRUE){
         out$d <- 1000*(exp(logd)-1)
         J <- 1000*exp(logd)*diag(nd)
     }
-    out$cov <- J %*% x$cov %*% t(J)
+    out$cov <- J %*% cd$calibrated$cov %*% t(J)
     out$ref <- NULL
-    class(out) <- append('delta',class(x))
+    class(out) <- 'delta'
     out
 }
 
-data2table <- function(x){
-    if (methods::is(x,'stable')){
-        out <- addtab(x)
-    } else {
-        lists <- x
-        lists$snames <- NULL # remove the sample names
-        out <- NULL
-        for (item in lists){
-            out <- cbind(out,addtab(dat=item))
-        }
-    }
-    rownames(out) <- x$snames
-    out
-}
-
-addtab <- function(dat){
-    ni <- length(dat$num)
-    ns <- length(dat$lr)/ni
+data2table <- function(x,...){ UseMethod("data2table",x) }
+data2table.default <- function(x,...){
+    ni <- length(x$num)
+    ns <- length(x$lr)/ni
     nc <- 2*ni+ni*(ni-1)/2
     cnames <- rep('',nc)
-    DP <- paste0(dat$num,'/',dat$den)
+    DP <- paste0(x$num,'/',x$den)
     cnames[2*(1:ni)-1] <- DP
     cnames[2*(1:ni)] <- paste0('s[',DP,']')
     if (nc>2*ni){
         for (i in 1:(ni-1)){
             for (j in (i+1):ni){
-                cnames[2*ni+(i-1)*ni+(j-1)] <- paste0('r[',DP[i],',',DP[j],']')
+                cnames[2*ni+(i-1)*(ni-1)+(j-i)] <- paste0('r[',DP[i],',',DP[j],']')
             }
         }
     }
@@ -49,14 +36,17 @@ addtab <- function(dat){
     colnames(out) <- cnames
     for (i in 1:ns){
         ii <- (i-1)*ni+(1:ni)
-        out[i,2*(1:ni)-1] <- exp(dat$lr[ii])
-        J <- exp(dat$lr[ii])*diag(ni)
-        E <- J %*% dat$cov[ii,ii] %*% t(J)
+        out[i,2*(1:ni)-1] <- exp(x$lr[ii])
+        J <- exp(x$lr[ii])*diag(ni)
+        E <- J %*% x$cov[ii,ii] %*% t(J)
         out[i,2*(1:ni)] <- sqrt(diag(E))
         cormat <- cov2cor(E)
-        if (nc>2*ni) out[i,(2*ni):nc] <- cormat[upper.tri(cormat)]
+        if (nc>2*ni) out[i,(2*ni+1):nc] <- cormat[upper.tri(cormat)]
     }
     out
+}
+data2table.calibrated <- function(x,...){
+    data2table.default(x$calibrated)
 }
 
 plot.delta <- function(d,...){

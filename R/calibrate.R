@@ -35,7 +35,7 @@ calibrate_stable <- function(dat,exterr=FALSE){
     E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dcal$cov
     calibrated$cov <- J %*% E %*% t(J)
     out$calibrated <- calibrated
-    class(out) <- c("calibrated")
+    class(out) <- append("calibrated",class(out))
     out
 }
 
