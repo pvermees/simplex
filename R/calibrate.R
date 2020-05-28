@@ -165,3 +165,7 @@ mergecal <- function(...){
     }
     out
 }
+
+plot.calibrated <- function(cd){
+    
+}

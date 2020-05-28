@@ -30,27 +30,19 @@ data2table.delta <- function(x,...){
     data2table_helper(x=x,option='delta',...)
 }
 data2table_helper <- function(x,option,...){
-    if (option == 'calibrated'){
-        X <- x[[option]]
-        lr <- 'lr'
-    } else if (option == 'delta'){
-        X <- x[[option]]
-        lr <- 'd'
-    } else {
-        X <- x
-        lr <- 'lr'
-    }
-    ni <- length(X$num)
-    ns <- length(X[[lr]])/ni
+    p <- data2table_pars(x=x,option=option)
+    ni <- length(p$num)
+    ns <- length(p$lr)/ni
     nc <- 2*ni+ni*(ni-1)/2
     cnames <- rep('',nc)
-    DP <- paste0(X$num,'/',X$den)
+    DP <- paste0(p$num,'/',p$den)
     cnames[2*(1:ni)-1] <- DP
     cnames[2*(1:ni)] <- paste0('s[',DP,']')
     if (nc>2*ni){
         for (i in 1:(ni-1)){
             for (j in (i+1):ni){
-                cnames[2*ni+(i-1)*(ni-1)+(j-i)] <- paste0('r[',DP[i],',',DP[j],']')
+                cnames[2*ni+(i-1)*(ni-1)+(j-i)] <-
+                    paste0('r[',DP[i],',',DP[j],']')
             }
         }
     }
@@ -58,20 +50,60 @@ data2table_helper <- function(x,option,...){
     colnames(out) <- cnames
     for (i in 1:ns){
         ii <- (i-1)*ni+(1:ni)
+        lr <- as.vector(p$J %*% p$lr[ii])
+        covmat <- p$J %*% p$cov[ii,ii] %*% t(p$J)
         if (option=='delta'){
-            out[i,2*(1:ni)-1] <- X[[lr]][ii]
-            J <- diag(ni)
+            out[i,2*(1:ni)-1] <- lr
+            E <- covmat
         } else {
-            out[i,2*(1:ni)-1] <- exp(X[[lr]][ii])
-            J <- exp(X[[lr]][ii])*diag(ni)
+            out[i,2*(1:ni)-1] <- exp(lr)
+            J <- diag(exp(lr),nrow=ni,ncol=ni)
+            E <- J %*% covmat %*% t(J)
         }
-        E <- J %*% X$cov[ii,ii] %*% t(J)
         out[i,2*(1:ni)] <- sqrt(diag(E))
         cormat <- cov2cor(E)
         if (nc>2*ni) out[i,(2*ni+1):nc] <- cormat[upper.tri(cormat)]
     }
     rownames(out) <- names(x$samples)
     out
+}
+
+data2table_pars <- function(x,option){
+    type <- datatype(x)
+    if (type=='oxygen'){
+        num <- c('O17','O18')
+        den <- c('O16','O16')
+        J <- diag(2)
+    } else if (type=='U-Pb'){
+        num <- c('U238','Pb207','Pb204')
+        den <- c('206Pb','Pb206','Pb206')
+        J <- matrix(0,3,3)
+        J[1,1] <- -1
+        J[2,3] <- 1
+        J[3,2] <- 1
+    } else if (type=='U-Th-Pb'){
+        num <- c('U238','Pb207','Pb204','Pb208','Th232')
+        den <- c('206Pb','Pb206','Pb206','Pb206','Pb208')
+        J <- matrix(0,5,5)
+        J[1,1] <- -1
+        J[2,3] <- 1
+        J[3,2] <- 1
+        J[4,4] <- 1
+        J[5,5] <- -1
+    } else {
+        stop('invalid data type')
+    }
+    if (option == 'calibrated'){
+        lr <- x$calibrated$lr
+        covmat <- x$calibrated$cov
+    } else if (option == 'delta'){
+        lr <- x$delta$d
+        covmat <- x$delta$cov
+    } else {
+        lr <- x$lr
+        covmat <- x$cov
+    }
+    list(num=num,den=den,lr=lr,cov=covmat,J=J)
 }
 
 plot.delta <- function(d,...){
