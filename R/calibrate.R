@@ -166,6 +166,9 @@ mergecal <- function(...){
     out
 }
 
-plot.calibrated <- function(cd){
-    
+plot.calibrated <- function(cd,type){
+    if (missing(type)) cal <- cd$calibration[[1]]
+    else cal <- cd$calibration[[type]]
+    y <- beta2york(lr=cd,t=cal$t,num=cal$num,den=cal$den)
+    IsoplotR::scatterplot(y)
 }

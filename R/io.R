@@ -240,14 +240,29 @@ read_asc_block <- function(f,ions){
 
 subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- x
+    snames <- subset2snames(prefix=prefix,snames=snames,i=i,...)
+    out$samples <- x$samples[snames]
+    out
+}
+subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
+    out <- x
+    snames <- subset2snames(prefix=prefix,snames=snames,i=i,...)
+    out$samples <- x$samples[snames]
+    ni <- length(x$calibrated$num)
+    i <- which(snames %in% names(x$samples))
+    ii <- as.vector(sapply((i-1)*ni,'+',1:ni))
+    out$calibrated$lr <- out$calibrated$lr[ii]
+    out$calibrated$cov <- out$calibrated$cov[ii,ii]
+    out
+}
+subset2snames <- function(prefix=NULL,snames=NULL,i=NULL,...){
     if (is.null(snames)) snames <- names(dat$samples)
     if (!is.null(i)) snames <- snames[i]
     if (!is.null(prefix)){
-        snames <- snames[grep(prefix,snames,...)]
+        selected <- unlist(lapply(prefix,'grep',snames,...))
+        snames <- snames[selected]
     }
-    out$samples <- x$samples[snames]
-    class(out) <- class(x)
-    out
+    snames
 }
 
 spot <- function(dat,sname,i=1,...){
