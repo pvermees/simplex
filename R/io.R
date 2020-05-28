@@ -1,21 +1,20 @@
 #' @title read SIMS data
 #' @description read a file or folder with ASCII data
 #' @param dorf directory or file name
-#' @param method the name of a data acquisition protocol. One of
-#'     \code{instrument='IGG-UPb'}, \code{instrument='GA-zircon'},
+#' @param m (method) the name of a data acquisition protocol. One of
+#'     \code{instrument='IGG-UPb'}, \code{instrument='GA-UPb'},
 #'     \code{instrument='IGG-UThPb'},
-#'     \code{instrument='IGG-oxygen'}, or
-#'     \code{instrument='IGG-sulfur'}. To create new methods, see
-#'     \link{\code{set_method}}.
+#'     \code{instrument='IGG-O'}, or
+#'     \code{instrument='IGG-S'}. To create new methods, see
+#'     \link{\code{method}}.
 #' @param suffix the extension of the data files to be loaded. This
 #'     defaults to \code{.asc} if \code{instrument='Cameca'} and
 #'     \code{.pd} if \code{instrument='SHRIMP'}
 #' @return an object of class \code{simplex}
 #' @examples
-#' # not run:
 #' \dontrun{
 #' camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='asc')
-#' plot_timeresolved(camdat[[1]])
+#' plot(camdat,i=1)
 #' }
 #' @export
 read_data <- function(dorf,suffix,m='IGG-UPb'){
@@ -240,22 +239,22 @@ read_asc_block <- function(f,ions){
 
 subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- x
-    snames <- subset2snames(prefix=prefix,snames=snames,i=i,...)
+    snames <- subset2snames(dat=x,prefix=prefix,snames=snames,i=i,...)
     out$samples <- x$samples[snames]
     out
 }
 subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- x
-    snames <- subset2snames(prefix=prefix,snames=snames,i=i,...)
+    snames <- subset2snames(dat=x,prefix=prefix,snames=snames,i=i,...)
     out$samples <- x$samples[snames]
     ni <- length(x$calibrated$num)
-    i <- which(snames %in% names(x$samples))
+    i <- which(names(x$samples) %in% snames)
     ii <- as.vector(sapply((i-1)*ni,'+',1:ni))
     out$calibrated$lr <- out$calibrated$lr[ii]
     out$calibrated$cov <- out$calibrated$cov[ii,ii]
     out
 }
-subset2snames <- function(prefix=NULL,snames=NULL,i=NULL,...){
+subset2snames <- function(dat,prefix=NULL,snames=NULL,i=NULL,...){
     if (is.null(snames)) snames <- names(dat$samples)
     if (!is.null(i)) snames <- snames[i]
     if (!is.null(prefix)){
@@ -265,8 +264,8 @@ subset2snames <- function(prefix=NULL,snames=NULL,i=NULL,...){
     snames
 }
 
-spot <- function(dat,sname,i=1,...){
-    if (missing(sname)){
+spot <- function(dat,sname=NULL,i=1,...){
+    if (is.null(sname)){
         x <- dat$samples[[i]]
         sname <- names(dat)[i]
     } else {
@@ -278,4 +277,22 @@ spot <- function(dat,sname,i=1,...){
     out <- c(out,x)
     class(out) <- 'spot'
     out
+}
+
+plot.simplex <- function(x,sname=NULL,i=1,...){
+    plot.spot(spot=spot(dat=x,sname=sname,i=i),...)
+}
+plot.spot <- function(spot,...){
+    ions <- names(spot$dwelltime)
+    np <- length(ions)      # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    for (ion in ions){
+        graphics::plot(spot$time[,ion],spot$signal[,ion],
+                       type='p',xlab='',ylab='',...)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ion,line=2)
+    }
+    graphics::par(oldpar)
 }
