@@ -29,64 +29,52 @@ install_github('pvermees/simplex')
 
 ## Examples
 
-Enter the following commands at the R prompt to start simplex and load
-some example data into memory:
+Load the *simplex* package into memory:
 
 ```
 library(simplex)
-data(Cameca,package="simplex")
 ```
 
-View the raw time resolved mass spectrometer data of the first SIMS
-spot:
+The `process` function groups all the main data reduction steps,
+including the drift correction, logratio calculation, and calibration:
 
 ```
-plot_timeresolved(Cameca[[1]])
+m <- method('GA-UPb')
+s <- standard(preset="Temora",prefix='TEM')
+cd <- process(f='SHRIMP.pd',method=m,stand=s)
+plot.calibration(cd)
 ```
 
-To view further information about the **plot_timeresolved** function:
+Extracting the results for 91500 zircon, saving the results as a
+`.csv` file and plotting in `IsoplotR`:
 
 ```
-?plot_timeresolved
+Q <- subset(cd,prefix='915')
+tab <- data2table(Q)
+write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
+UPb <- IsoplotR::read.data('91500.csv',method='U-Pb',format=5)
+IsoplotR::concordia(UPb,type=2,show.age=1)
 ```
 
-Plot a calibration curve:
+Stable isotope analysis of a built-in oxygen dataset:
 
 ```
-Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-cal <- calibration(stand=Ples,oxide='UO2')
-calplot(stand=Ples,fit=cal)
+m <- method('IGG-O')
+s <- standard(preset="NBS28")
+cd <- process(f='*.asc',method=m,stand=s)
+del <- delta(cd)
+tab <- data2table(del)
 ```
 
-Apply the calibration to the Qinghu zircon measurements
+Built-in help can be obtained at the command prompt:
 
 ```
-samp <- unknowns(dat=Cameca,prefix='Qinghu')
-UPb <- calibrate(samp,fit=cal)
-```
-
-Calculate the Pb-Pb ratios:
-
-```
-PbPb <- getPbLogRatios(samp)
-```
-
-Merge the results into one data object:
-
-```
-results <- mergecal(calUsamp,calPbsamp)
-```
-
-Export the results to a data table:
-
-```
-tab <- data2table(results)
-write.csv(tab,file='Qinghu.csv',row.names=FALSE)
+?process
 ```
 
 ## Author
 
-[Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve)
+[Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve/)
 
 ## License
 

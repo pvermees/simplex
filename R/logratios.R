@@ -1,172 +1,315 @@
-get_B0G <- function(dat,parent='U238',oxide='UO2'){
-    snames <- names(dat)
-    out <- list()
-    for (sname in snames){
-        spot <- dat[[sname]]
-        out[[sname]] <- get_b0g(spot=spot,parent=parent,oxide=oxide)
-    }
-    out
-}
-get_b0g <- function(spot,parent='U238',oxide='UO2'){
-    p <- pars(spot,parent=parent,oxide=oxide)
-    out <- matrix(0,7,2)
-    colnames(out) <- c('b0','g')
-    rownames(out) <- c(oxide,parent,'Pb204','Pb206','Pb207','Pb208','blank')
-    out[oxide,] <- b0g_helper(p=p[[p$oxide]])
-    out[parent,] <- b0g_helper(p=p[[p$parent]])
-    out['Pb206',] <- b0g_helper(p=p$Pb206)
-    out['Pb207',] <- b0_helper(p=p$Pb207,g=out['Pb206','g'])
-    out['Pb208',] <- b0_helper(p=p$Pb208,g=out['Pb206','g'])
-    out['Pb204',] <- b0_helper(p=p$Pb204,g=out['Pb206','g'])
-    if (sum(p$blank$n)>0)
-        out['blank','b0'] <- log(sum(p$blank$n)) - log(sum(p$blank$d))
-    else
-        out['blank','b0'] <- -Inf
-    out
-}
-
-b0g_helper <- function(p){
-    misfit <- function(par,p){
-        b0 <- par[1]
-        g <- par[2]
-        LL <- p$n*(b0+g*p$t+log(p$d)) - exp(b0+g*p$t)*p$d
-        -sum(LL)
-    }
-    init <- c(0,0)
-    fit <- optim(par=init,fn=misfit,p=p)
-    fit$par
-}
-
-b0_helper <- function(p,g){
-    if (sum(p$n)>0)
-        b0 <- log(sum(p$n)) - log(sum(exp(g*p$t)*p$d))
-    else
-        b0 <- -Inf
-    c(b0,g)
-}
-
-#' @title estimate atomic Pb-Pb logratios from count data
-#' @description turns Pb count data into atomic logratios, using a
-#'     binomial likelihood model
-#' @param dat an object of class \code{simplex}
-#' @return a list with the following items:
-#'
-#' \code{x}: a vector of logratios
-#'
-#' \code{cov}: the covariance matrix of \code{x}
-#'
-#' \code{snames}: the sample names
-#'
-#' \code{num}: the numerator isotopes of \code{x}
-#'
-#' \code{den}: the denominator isotopes of \code{x}
-#' 
-#' @examples
-#' data(Cameca,package="simplex")
-#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-#' calU <- calibration(stand=stand,oxide='UO2',parent='U238',
-#'                     daughter='Pb206',cD4=18.7)
-#' samp <- unknowns(dat=Cameca,prefix='Qinghu')
-#' calUsamp <- calibrate(dat=samp,fit=calU)
-#' calPbsamp <- getPbLogRatios(samp)
-#' calsamp <- mergecal(calUsamp,calPbsamp)
-#' tab <- data2table(calsamp)
 #' @export
-getPbLogRatios <- function(dat){
-    snames <- names(dat)
-    ns <- length(snames)
+logratios <- function(x){
+    out <- x
+    snames <- names(x$samples)
+    for (sname in snames){
+        print(sname)
+        sp <- spot(dat=x,sname=sname)
+        out$samples[[sname]]$lr <- logratios.spot(x=sp)
+    }
+    class(out) <- append("logratios",class(out))
+    out
+}
+
+logratios.spot <- function(x){
+    num <- x$method$num
+    den <- x$method$den
+    B <- common_denominator(c(num,den))
+    groups <- groupbypairs(B)
+    init <- init_logratios(spot=x,groups=groups)
+    if (faraday(x)) fn <- faraday_misfit_b0g
+    else fn <- sem_misfit_b0g
+    fit <- optim(par=init,f=fn,method='L-BFGS-B',
+                 lower=init-2,upper=init+2,spot=x,
+                 groups=groups,hessian=TRUE)
+    fit$cov <- MASS::ginv(fit$hessian)
+    pred <- do.call(what=fn,
+                    args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))
+    out <- common2original(fit=fit,num=num,den=den,groups=groups)
+    out <- c(out,pred)
+    invisible(out)
+}
+
+# converts logratio intercepts and slopes from common
+# denominator to scientifically useful logratios
+common2original <- function(fit,num,den,groups){
+    B0G <- b0g2list(b0g=fit$par,groups=groups)
+    b0in <- B0G$b0
+    gin <- B0G$g
+    bnamesin <- names(b0in)
+    gnamesin <- names(gin)
+    rnames <- paste0(num,'/',den)
+    outnames <- c(paste0('b0[',rnames,']'),
+                  paste0('g[',rnames,']'))
+    ni <- length(rnames)
+    J <- matrix(0,nrow=2*ni,ncol=length(fit$par))
+    colnames(J) <- names(fit$par)
+    rownames(J) <- outnames
+    b0gout <- rep(0,2*ni)
+    names(b0gout) <- outnames
+    for (i in 1:ni){
+        nion <- num[i]
+        dion <- den[i]
+        if (nion == groups$den){
+            iden <- which(bnamesin %in% dion)
+            b0gout[i] <- b0gout[i] - b0in[iden]
+            J[i,iden] <- -1
+        } else {
+            inum <- which(bnamesin %in% nion)
+            b0gout[i] <- b0gout[i] + b0in[inum]
+            J[i,inum] <- 1
+            if (dion != groups$den){
+                iden <- which(bnamesin %in% dion)
+                b0gout[i] <- b0gout[i] - b0in[iden]
+                J[i,iden] <- -1
+            }
+        }
+        nele <- element(num[i])
+        dele <- element(den[i])
+        if (nele == dele){
+            b0gout[ni+i] <- 0
+        } else {
+            inele <- which(gnamesin %in% nele)
+            b0gout[ni+i] <- b0gout[ni+i] + gin[inele]
+            J[ni+i,inele] <- 1
+            if (dele != element(groups$den)){
+                idele <- which(gnamesin %in% dele)
+                b0gout[ni+i] <- b0gout[ni+i] - gin[idele]
+                J[ni+i,idele] <- -1
+            }
+        }
+    }
     out <- list()
-    out$snames <- snames
-    out$x <- rep(0,3*ns)
-    out$cov <- matrix(0,3*ns,3*ns)
-    for (i in 1:ns){
-        spot <- dat[[i]]
-        p <- pars(spot=spot)
-        b0g <- get_b0g(spot=spot)
-        lr <- getPbLogRatio(p,b0g)
-        cormat <- matrix(0,3,3)
-        if (lr$cov[1,1]>0)
-            cormat <- cov2cor(lr$cov)
-        else
-            cormat[2:3,2:3] <- cov2cor(lr$cov[2:3,2:3])
-        j <- c(0,ns,2*ns)+i
-        out$x[j] <- lr$x
-        out$cov[j,j] <- lr$cov
-    }
-    out$num <- lr$num
-    out$den <- lr$den
+    out$b0g <- b0gout
+    out$cov <- J %*% fit$cov %*% t(J)
     out
 }
-getPbLogRatio <- function(p,b0g){
-    misfit_helper <- function(b,p,b0g,num,den){
-        bpc <- b + A2Corr(p=p,b0g=b0g,num=num,den=den)
-        bpn <- bpc + log(p[[num]]$d) - log(p[[den]]$d)
-        LL <- LLbinom(bn=bpn,nnum=p[[num]]$n,nden=p[[den]]$n)
-        -sum(LL)
-    }
-    with204 <- function(b0g,p){
-        all(is.finite(blank_correct(b0g,tt=p$Pb204$t,mass='Pb204')))
-    }
-    misfit4 <- function(par,b0g,p){
-        misfit_helper(b=par,p=p,b0g=b0g,num='Pb204',den='Pb206')
-    }
-    misfit78 <- function(par,b0g,p){
-        out <- misfit_helper(b=par[1],p=p,b0g=b0g,num='Pb207',den='Pb206')
-        out + misfit_helper(b=par[2],p=p,b0g=b0g,num='Pb208',den='Pb206')
-    }
-    misfit478 <- function(par,b0g,p){
-        out <- misfit4(par=par[1],b0g=b0g,p=p)
-        out + misfit78(par=par[2:3],b0g=b0g,p=p)
-    }
+
+# uses the most used ion as a common denominator
+common_denominator <- function(ions){
+    count <- table(ions)
+    i <- which.max(count)
     out <- list()
-    init76 <- log(mean(p$Pb207$c)) - log(mean(p$Pb206$c))
-    init86 <- log(mean(p$Pb208$c)) - log(mean(p$Pb206$c))
-    if (with204(b0g=b0g,p=p)){
-        init46 <- log(mean(p$Pb204$c)) - log(mean(p$Pb206$c))
-        init <- c(init46,init76,init86)
-        fit <- stats::optim(par=init,fn=misfit478,b0g=b0g,p=p,hessian=TRUE)
-        out$x <- fit$par
-        out$cov <- solve(fit$hessian)
-    } else {
-        init <- c(init76,init86)
-        fit <- stats::optim(par=init,fn=misfit78,b0g=b0g,p=p,hessian=TRUE)
-        out$x <- c(-Inf,fit$par)
-        out$cov <- matrix(0,3,3)
-        out$cov[2:3,2:3] <- solve(fit$hessian)
-    }
-    out$num <- c('Pb204','Pb207','Pb208')
-    out$den <- c('Pb206','Pb206','Pb206')
+    out$num <- names(count)[-i]
+    out$den <- names(count)[i]
     out
 }
 
-# atomic to cps correction: 
-# to be added to atomic and subtracted from cps logratios
-A2Corr <- function(p,b0g,num='Pb207',den='Pb206'){
-    tnum <- p[[num]]$t
-    tden <- p[[den]]$t
-    # 1. drift correction
-    if (identical(den,'U238')){
-        dc <- b0g[num,'g']*(tnum-tden)
-    } else {
-        dc <- b0g[num,'g']*tnum - b0g[den,'g']*tden
+init_logratios <- function(spot,groups){
+    b0 <- NULL
+    g <- NULL
+    b0names <- NULL
+    gnames <- NULL
+    den <- groups$den
+    for (nums in groups$num){
+        if (is.null(spot$dc)){
+            for (num in nums){
+                Np <- alphapars(spot,num)
+                Dp <- alphapars(spot,den)
+                absND <- abs((Np$sig-Np$bkg)/(Dp$sig-Dp$bkg))
+                b0 <- c(b0,mean(log(absND[absND>0])))
+            }
+        } else {
+            b0 <- c(b0,log(spot$dc['exp_a0',nums]/spot$dc['exp_a0',den]))
+        }
+        b0names <- c(b0names,nums)
+        nele <- unique(element(nums))
+        dele <- element(den)
+        if (nele!=dele){
+            g <- c(g,0)
+            gnames <- c(gnames,nele)
+        }
     }
-    # 2. blank correction
-    bcnum <- blank_correct(b0g=b0g,tt=tnum,mass=num)
-    bcden <- blank_correct(b0g=b0g,tt=tden,mass=den)
-    dc - bcnum + bcden
-}
-
-blank_correct <- function(b0g,tt,mass){
-    b0 <- b0g[mass,'b0']
-    g <- b0g[mass,'g']
-    bb <- b0g['blank','b0']
-    db <- bb-b0-g*tt
-    if (all(db<0)) out <- log(1-exp(db))
-    else out <- rep(-Inf,length(tt))
+    out <- c(b0,g)
+    names(out) <- c(b0names,gnames)
     out
 }
 
-# bn = logratio of counts, nnum = counts of num, nden = counts of den
-LLbinom <- function(bn,nnum,nden){
-    nnum*bn - (nnum+nden)*log(1+exp(bn))
+faraday_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
+    B0G <- b0g2list(b0g=b0g,groups=groups)
+    b0 <- B0G$b0
+    g <- B0G$g
+    D <- betapars(spot=spot,ion=groups$den)
+    nele <- length(groups$num)
+    obsb <- NULL
+    predb <- NULL
+    ions <- groups$den
+    meas <- (D$sig-D$bkg)
+    tt <- D$t
+    for (ele in nele){
+        num <- groups$num[[ele]]
+        ni <- length(num)
+        for (i in 1:ni){
+            ion <- num[i]
+            N <- betapars(spot=spot,ion=ion)
+            bND <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t)
+            predb <- cbind(predb,bND)
+            obsb <- cbind(obsb, log(N$sig-N$bkg) - log(D$sig-D$bkg))
+            ions <- c(ions,ion)
+            meas <- cbind(meas,N$sig-N$bkg)
+            tt <- cbind(tt,N$t)
+        }
+    }
+    if (predict){
+        colnames(meas) <- ions
+        colnames(tt) <- ions
+        expb <- cbind(1,exp(predb))
+        frac <- sweep(expb,1,rowSums(expb),'/')
+        colnames(frac) <- ions
+        out <- list()
+        out$t <- tt
+        out$obs <- meas
+        out$pred <- sweep(frac,1,rowSums(meas),'*')
+        out$outliers <- rep(FALSE,length(D$t))
+    } else {
+        misfit <- obsb-predb
+        covmat <- cov(misfit)
+        out <- sum(mahalanobis(x=misfit,center=0*b0,cov=covmat))/2
+    }
+    out
+}
+
+sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
+    B0G <- b0g2list(b0g=b0g,groups=groups)
+    b0 <- B0G$b0
+    g <- B0G$g
+    D <- betapars(spot=spot,ion=groups$den)
+    pbc <- NULL # predicted count logratios
+    ions <- groups$den
+    counts <- D$counts
+    tt <- D$t
+    for (ele in names(groups$num)){
+        num <- groups$num[[ele]]
+        ni <- length(num)
+        for (i in 1:ni){
+            ion <- num[i]
+            N <- betapars(spot=spot,ion=ion)
+            bc <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t) + log(N$edt) - log(D$edt)
+            pbc <- cbind(pbc,bc)
+            ions <- c(ions,ion)
+            counts <- cbind(counts,N$counts)
+            tt <- cbind(tt,N$t)
+        }
+    }
+    thetabkg <- D$bkgcounts/(D$bkgcounts+rowSums(counts))
+    nb <- length(b0)
+    expbc <- cbind(1-nb*thetabkg,exp(pbc))
+    theta <- sweep(sweep(expbc,1,rowSums(expbc),'/'),1,thetabkg,'+')
+    colnames(tt) <- ions
+    colnames(counts) <- ions
+    colnames(theta) <- ions
+    if (predict){
+        out <- list()
+        out$t <- tt
+        out$obs <- counts
+        out$pred <- sweep(theta,1,rowSums(counts),'*')
+        out$outliers <- rep(FALSE,length(D$t))
+    } else {
+        out <- -sum(log(theta)*counts)
+    }
+    out
+}
+
+# splits a pooled logratio slope and intercept vector into two
+b0g2list <- function(b0g,groups){
+    dele <- element(groups$den)
+    nele <- element(names(groups$num))
+    if (dele %in% nele) {
+        ng <- length(groups$num) - 1
+        g <- c(0,tail(b0g,n=ng))
+        names(g)[1] <- dele
+    } else {
+        ng <- length(groups$num)
+        g <- tail(b0g,n=ng)
+    }
+    nb <- length(b0g) - ng
+    b0 <- b0g[1:nb]
+    list(b0=b0,g=g)
+}
+
+# extract data from a spot for logratios calculation
+betapars <- function(spot,ion){
+    out <- alphapars(spot=spot,ion=ion)
+    if (!(ion%in%colnames(spot$dc))) out$g <- 0
+    else out$g <- spot$dc['g',ion]
+    out
+}
+
+# B = output of common_denominator
+groupbypairs <- function(B){
+    out <- list()
+    out$num <- list()
+    for (ion in B$num){
+        nele <- element(ion)
+        if (nele %in% names(out$num)){
+            out$num[[nele]] <- c(out$num[[nele]],ion)
+        } else {
+            out$num[[nele]] <- ion
+        }
+    }
+    out$den <- B$den
+    out
+}
+
+plot.logratios <- function(x,sname,i=1,option=1,...){
+    spot <- spot(x,sname,i=1)
+    if (option==1){
+        plot_logratios(spot=spot,...)
+    } else if (option==2){
+        plot_signals(spot=spot,...)
+    } else {
+        stop("Invalid plot option.")
+    }
+}
+
+plot_logratios <- function(spot,...){
+    bad <- logratios.spot(x=spot)$outliers
+    num <- spot$method$num
+    den <- spot$method$den
+    b0g <- spot$lr$b0g
+    nb <- length(b0g)/2
+    np <- length(num)       # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    nt <- nrow(spot$time)
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    for (i in 1:np){
+        ratio <- paste0(num[i],'/',den[i])
+        Np <- betapars(spot=spot,ion=num[i])
+        Dp <- betapars(spot=spot,ion=den[i])
+        X <- seconds(Dp$t)
+        Y <- (Np$sig-Np$bkg)/(Dp$sig-Dp$bkg)
+        b0 <- b0g[paste0('b0[',ratio,']')]
+        g <- b0g[paste0('g[',ratio,']')]
+        Ypred <- exp(b0 + g*Dp$t + Np$g*(Np$t-Dp$t))
+        ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
+        graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
+        graphics::points(X[!bad],Y[!bad],pch=21)
+        graphics::points(X[bad],Y[bad],pch=4)
+        graphics::lines(X,Ypred)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ylab,line=2)
+    }
+    graphics::par(oldpar)
+}
+
+plot_signals <- function(spot,...){
+    ions <- colnames(spot$lr$obs)
+    np <- length(ions)      # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    lr <- logratios.spot(x=spot)
+    bad <- lr$outliers
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    for (ion in ions){
+        ylab <- paste0(ion,'- b')
+        tt <- seconds(lr$t[,ion])
+        graphics::plot(tt[!bad],lr$obs[!bad,ion],type='n',xlab='',ylab='',...)
+        graphics::points(tt[!bad],lr$obs[!bad,ion],pch=21)
+        graphics::points(tt[bad],lr$obs[bad,ion],pch=4)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ylab,line=2)
+        graphics::lines(tt[!bad],lr$pred[!bad,ion])
+    }
+    graphics::par(oldpar)
 }

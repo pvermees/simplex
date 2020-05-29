@@ -5,10 +5,10 @@
 \alias{SHRIMP}
 \title{example SHRIMP dataset}
 \description{
-built-in Cameca dataset containing Temora and 91500
-    zircon
+built-in SHRIMP U-Pb dataset containing Temora and
+    91500 zircon
 }
 \examples{
 data(SHRIMP,package="simplex")
-plot_timeresolved(SHRIMP[[1]])
+plot(SHRIMP,i=1)
 }
