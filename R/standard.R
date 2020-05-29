@@ -33,11 +33,8 @@ standard <- function(preset,prefix=preset,tst,
         out <- list()
         if (missing(val)){
             if (missing(tst)){
-                out$fetch <- function(dat){
-                    temp <- dat
-                    temp$tst <- dat2age(dat)
-                    age2lr(temp)
-                }
+                stop("Both the age and the isotopic composition ",
+                     "of the sample are missing.")
             } else {
                 out$tst <- tst
                 out$fetch <- function(dat){
@@ -98,14 +95,6 @@ lrstand <- function(dat){
     colnames(out$cov) <- labels
     out
 }
-dat2age <- function(dat){
-    if (type=='U-Pb'){
-        out <- Pb76_to_age(dat)
-    } else {
-        stop('Invalid type argument supplied to dat2age')
-    }
-    out
-}
 age2lr <- function(dat){
     type <- datatype(dat)
     tst <- dat$stand$tst
@@ -122,20 +111,4 @@ age2lr <- function(dat){
     out$common <- IsoplotR:::stacey.kramers(tst[1])[,c('i64','i84')]
     names(out$common) <- c('Pb206Pb204','Pb208Pb204')
     out
-}
-# get geometric mean Pb207/Pb206 ratio to estimate
-# the standard age if not supplied by the user
-Pb76_to_age <- function(dat){
-    snames <- names(dat)
-    ns <- length(snames)
-    lPb76 <- rep(0,ns)
-    for (i in 1:ns){
-        p <- pars(dat[[i]])
-        lPb76[i] <- log(sum(p$c7)/sum(p$c6))
-    }
-    lPb76 <- mean(lPb76)
-    slPb76 <- stats::sd(lPb76)/sqrt(ns)
-    Pb76 <- exp(lPb76)
-    sPb76 <- Pb76*slPb76
-    IsoplotR:::get.Pb207Pb206.age.default(x=Pb76,sx=sPb76)
 }

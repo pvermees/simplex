@@ -181,9 +181,24 @@ mergecal <- function(...){
     out
 }
 
-plot.calibrated <- function(cd,type,...){
-    if (missing(type)) cal <- cd$calibration[[1]]
-    else cal <- cd$calibration[[type]]
-    y <- beta2york(lr=cd,t=cal$t,num=cal$num,den=cal$den)
+#' @title plot calibrated data
+#' @description shows the calibrated data on a logratio plot.
+#' @param x an object of class \code{calibrated}
+#' @param type for U-Pb or U-Th-Pb data, either \code{'U-Pb'} or
+#'     \code{'Th-Pb'}.
+#' @param ... optional arguments to be passed on to the generic
+#'     \code{plot} function
+#' @examples
+#' data('Cameca')
+#' dc <- drift(x=Cameca)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
+#' cd <- calibrate(cal)
+#' plot(cd,type='U-Pb')
+#' @export
+plot.calibrated <- function(x,type,...){
+    if (missing(type)) cal <- x$calibration[[1]]
+    else cal <- x$calibration[[type]]
+    y <- beta2york(lr=x,t=cal$t,num=cal$num,den=cal$den)
     IsoplotR::scatterplot(y,...)
 }

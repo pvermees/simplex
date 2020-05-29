@@ -165,7 +165,7 @@ read_SHRIMP_pd <- function(fname,m){
             nions <- split_mixed(header[[2]],3,1)
             spot$sbmbkg <- split_mixed(header[[2]],5,3)
             spot$deadtime <- split_mixed(header[[2]],4,1)
-            block <- read.table(text=readLines(f,n=nions,warn=FALSE))
+            block <- utils::read.table(text=readLines(f,n=nions,warn=FALSE))
             spot$dwelltime <- block[,4]
             names(spot$dwelltime) <- m$ions
             spot$dtype <- rep('Fc',length(m$ions))
@@ -181,10 +181,10 @@ read_SHRIMP_pd <- function(fname,m){
             for (i in 1:nscans){
                 for (j in 1:nions){
                     ii <- (i-1)*nions*2 + (j-1)*2 + 1
-                    dat <- read.table(text=block[[ii]])
+                    dat <- utils::read.table(text=block[[ii]])
                     spot$time[i,j] <- as.numeric(dat[3])
                     spot$signal[i,j] <- sum(as.numeric(dat[-(1:4)]))
-                    dat <- read.table(text=block[[ii+1]])
+                    dat <- utils::read.table(text=block[[ii+1]])
                     spot$sbm[i,j] <- sum(as.numeric(dat))
                 }
             }
@@ -271,6 +271,16 @@ spot <- function(dat,sname=NULL,i=1,...){
     out
 }
 
+#' @title plot simplex data
+#' @description plot time resolved SIMS data
+#' @param x an object of class \code{simplex}
+#' @param sname the sample name to be shown
+#' @param i the sample number to be shown
+#' @param ... optional arguments to be passed on to the generic
+#'     \code{plot} function.
+#' @examples
+#' data('SHRIMP',package='simplex')
+#' plot(SHRIMP,i=1)
 #' @export
 plot.simplex <- function(x,sname=NULL,i=1,...){
     plot.spot(x=spot(dat=x,sname=sname,i=i),...)

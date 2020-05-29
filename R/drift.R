@@ -1,3 +1,11 @@
+#' @title drift correction
+#' @description fits a generalised linear model to time resolved SIMS data
+#' @param x an object of class \code{simplex}
+#' @return an object of class \code{drift}
+#' @examples
+#' data('SHRIMP',package='simplex')
+#' dc <- drift(x=SHRIMP)
+#' plot(dc,i=1)
 #' @export
 drift <- function(x){
     out <- x
@@ -21,7 +29,7 @@ drift.spot <- function(spot){
     rownames(out) <- c('exp_a0','g')
     for (i in 1:nEL){ # loop through the elements
         j <- which(el %in% EL[i])
-        fit <- optim(par=0,fn=misfit_g,method='BFGS',spot=spot,ions=ions[j])
+        fit <- stats::optim(par=0,fn=misfit_g,method='BFGS',spot=spot,ions=ions[j])
         out['g',ions[j]] <- fit$par
         out['exp_a0',ions[j]] <- get_exp_a0(g=fit$par,spot=spot,ions=ions[j])
     }
@@ -41,7 +49,7 @@ misfit_g <- function(par,spot,ions){
         } else {
             obs <- p$counts
             pred <- exp_a*p$edt # + p$bkgcounts # approximate
-            out <- out - sum(dpois(x=obs,lambda=pred,log=TRUE))
+            out <- out - sum(stats::dpois(x=obs,lambda=pred,log=TRUE))
         }
     }
     out

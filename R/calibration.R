@@ -1,3 +1,24 @@
+#' @title standard calibration
+#' @description calibration of SIMS data using reference standards
+#' @param lr an object of class \code{logratios}
+#' @param stand an object of class \code{standard}
+#' @param snames a vector with the sample names of selected standard
+#'     analyses to be used for the calibration
+#' @param i a vector of indices of selected standard analyses to be
+#'     used for the calibration
+#' @param invert if \code{TRUE}, inverts the selection made by
+#'     \code{snames} or \code{i}
+#' @param t analysis time that the signal should be regressed to
+#' @return an object of class \code{calibration}
+#' @examples
+#' \dontrun{
+#' data('SHRIMP',package='simplex')
+#' st <- standard(preset='Temora',prefix=TEM)
+#' dc <- drift(x=SHRIMP)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=st)
+#' plot(cal,option=3)
+#' }
 #' @export
 calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=0){
     out <- lr
@@ -17,14 +38,14 @@ stable_calibration <- function(lr){
         for (sname in snames){
             X <- lr$samples[[sname]]$lr$b0g[1:np]
             E <- lr$samples[[sname]]$lr$cov[1:np,1:np]
-            LL <- mahalanobis(x=X,center=par,cov=E)
+            LL <- stats::mahalanobis(x=X,center=par,cov=E)
             out <- out + LL
         }
         out
     }
     ni <- length(lr$method$num)
     init <- lr$samples[[1]]$lr$b0g[1:ni]
-    wtdmean <- optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
+    wtdmean <- stats::optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
     out <- list()
     out$snames <- names(lr$samples)
     out$lr <- wtdmean$par
@@ -116,6 +137,26 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
     out
 }
 
+#' @title plot calibration data
+#' @description shows the calibration data on a logratio plot.
+#' @param x an object of class \code{logratios}
+#' @param snames the sample names to be shown
+#' @param i the sample number to be shown
+#' @param option if \code{option=1}, plots the best fit line through
+#'     U-Pb and Th-Pb data. If \code{option=2}, adds the time-resolved
+#'     raw data to the plot. If \code{option=3}, marks the first and
+#'     last measurement by black and white circles, respectively.
+#' @param ... optional arguments to be passed on to the generic
+#'     \code{plot} function.
+#' @examples
+#' \dontrun{
+#' data('SHRIMP',package='simplex')
+#' st <- standard(preset='Temora',prefix=TEM)
+#' dc <- drift(x=SHRIMP)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=st)
+#' plot(cal,option=3)
+#' }
 #'@export
 plot.calibration <- function(x,option=1,snames=NULL,i=NULL,...){
     if (is.null(snames)){
@@ -191,13 +232,13 @@ calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
         Ylim[1] <- min(yd[snames,'Y']-2*yd[snames,'sY'],Y)
         Ylim[2] <- max(yd[snames,'Y']+2*yd[snames,'sY'],Y)
         IsoplotR::scatterplot(yd,fit=cal$fit,xlim=Xlim,ylim=Ylim,...)
-        matlines(X,Y,lty=1,col='darkgrey')
+        graphics::matlines(X,Y,lty=1,col='darkgrey')
         if (option>2){
-            points(X[1,],Y[1,],pch=21,bg='black')
-            points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
+            graphics::points(X[1,],Y[1,],pch=21,bg='black')
+            graphics::points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
         }
     }
-    title(caltitle(fit=cal$fit),xlab=xlab,ylab=ylab)
+    graphics::title(caltitle(fit=cal$fit),xlab=xlab,ylab=ylab)
 }
 
 caltitle <- function(fit,sigdig=2,type=NA,...){
