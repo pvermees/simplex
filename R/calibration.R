@@ -1,8 +1,8 @@
 #' @export
-calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,invert=FALSE,t=0){
+calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=0){
     out <- lr
     out$standard <- stand
-    dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
+    dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out$calibration <- stable_calibration(lr=dat)
     else out$calibration <- geochron_calibration(lr=dat,t=t)
     class(out) <- append('calibration',class(out))

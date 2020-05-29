@@ -22,7 +22,7 @@ convert signal logratios to atomic logratios
 data('oxygen')
 dc <- drift(x=oxygen)
 lr <- logratios(x=dc)
-cal <- calibration(lr=lr,stand=standard(preset='NBS28'),prefix='NBS28')
+cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
 cd <- calibrate(cal)
 del <- delta(cd,log=FALSE)
 tab <- data2table(del)

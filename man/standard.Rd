@@ -4,12 +4,22 @@
 \alias{standard}
 \title{define an isotopic reference standards}
 \usage{
-standard(preset, tst, val, cov = matrix(0, length(val), length(val)), common)
+standard(
+  preset,
+  prefix = preset,
+  tst,
+  val,
+  cov = matrix(0, length(val), length(val)),
+  common
+)
 }
 \arguments{
 \item{preset}{(optional) text string. One of either
 \code{'Plesovice'}, \code{'44069'}, \code{'Temora'}, or
 \code{'NBS28'}.}
+
+\item{prefix}{text string marking the first characters of the
+sample names that mark the standard analyses}
 
 \item{tst}{(optional) two-element vector with the age and standard
 error of the (presumed concordant) age standard and its
@@ -39,6 +49,6 @@ data(Cameca,package="simplex")
 dc <- drift(x=Cameca)
 lr <- logratios(x=dc)
 st <- standard(preset="Plesovice")
-cal <- calibration(lr=lr,stand=st,prefix="Plesovice")
+cal <- calibration(lr=lr,stand=st)
 plot(cal,option=3)
 }

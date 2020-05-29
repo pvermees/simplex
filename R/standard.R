@@ -4,6 +4,8 @@
 #' @param preset (optional) text string. One of either
 #'     \code{'Plesovice'}, \code{'44069'}, \code{'Temora'}, or
 #'     \code{'NBS28'}.
+#' @param prefix text string marking the first characters of the
+#'     sample names that mark the standard analyses
 #' @param tst (optional) two-element vector with the age and standard
 #'     error of the (presumed concordant) age standard and its
 #'     analytical uncertainty.
@@ -22,10 +24,11 @@
 #' dc <- drift(x=Cameca)
 #' lr <- logratios(x=dc)
 #' st <- standard(preset="Plesovice")
-#' cal <- calibration(lr=lr,stand=st,prefix="Plesovice")
+#' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val)),common){
+standard <- function(preset,prefix=preset,tst,
+                     val,cov=matrix(0,length(val),length(val)),common){
     if (missing(preset)){
         out <- list()
         if (missing(val)){
@@ -50,15 +53,16 @@ standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val)),common
                 lrstand(dat)
             }
         }
+        out$prefix <- prefix
         class(out) <- 'standard'
     } else if (preset=='Plesovice'){
-        out <- standard(tst=c(337.13,0.18))
+        out <- standard(tst=c(337.13,0.18),prefix=prefix)
     } else if (preset=='44069'){
-        out <- standard(tst=c(424.86,0.25))
+        out <- standard(tst=c(424.86,0.25),prefix=prefix)
     } else if (preset=='Temora'){
-        out <- standard(tst=c(416.75,0.12))
+        out <- standard(tst=c(416.75,0.12),prefix=prefix)
     } else if (preset=='NBS28'){
-        out <- standard(val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2)
+        out <- standard(val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2,prefix=prefix)
     } else {
         stop("Invalid input to standard(...).")
     }
