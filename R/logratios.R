@@ -1,3 +1,14 @@
+#' @title logratio calculation
+#' @description extracts logratio averages from time resolved SIMS data
+#' @param x an object of class \code{drift}
+#' @return an object of class \code{logratios}
+#' @examples
+#' \dontrun{
+#' data('SHRIMP',package='simplex')
+#' dc <- drift(x=SHRIMP)
+#' lr <- logratios(dc)
+#' plot(lr,i=1,option=2)
+#' }
 #' @export
 logratios <- function(x){
     out <- x
@@ -19,9 +30,9 @@ logratios.spot <- function(x){
     init <- init_logratios(spot=x,groups=groups)
     if (faraday(x)) fn <- faraday_misfit_b0g
     else fn <- sem_misfit_b0g
-    fit <- optim(par=init,f=fn,method='L-BFGS-B',
-                 lower=init-2,upper=init+2,spot=x,
-                 groups=groups,hessian=TRUE)
+    fit <- stats::optim(par=init,f=fn,method='L-BFGS-B',
+                        lower=init-2,upper=init+2,spot=x,
+                        groups=groups,hessian=TRUE)
     fit$cov <- MASS::ginv(fit$hessian)
     pred <- do.call(what=fn,
                     args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))
@@ -163,8 +174,8 @@ faraday_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         out$outliers <- rep(FALSE,length(D$t))
     } else {
         misfit <- obsb-predb
-        covmat <- cov(misfit)
-        out <- sum(mahalanobis(x=misfit,center=0*b0,cov=covmat))/2
+        covmat <- stats::cov(misfit)
+        out <- sum(stats::mahalanobis(x=misfit,center=0*b0,cov=covmat))/2
     }
     out
 }
@@ -216,11 +227,11 @@ b0g2list <- function(b0g,groups){
     nele <- element(names(groups$num))
     if (dele %in% nele) {
         ng <- length(groups$num) - 1
-        g <- c(0,tail(b0g,n=ng))
+        g <- c(0,utils::tail(b0g,n=ng))
         names(g)[1] <- dele
     } else {
         ng <- length(groups$num)
-        g <- tail(b0g,n=ng)
+        g <- utils::tail(b0g,n=ng)
     }
     nb <- length(b0g) - ng
     b0 <- b0g[1:nb]
@@ -251,8 +262,26 @@ groupbypairs <- function(B){
     out
 }
 
-plot.logratios <- function(x,sname,i=1,option=1,...){
-    spot <- spot(x,sname,i=1)
+#' @title plot logratios
+#' @description plot time resolved logratio data
+#' @param x an object of class \code{logratios}
+#' @param sname the sample name to be shown
+#' @param i the sample number to be shown
+#' @param option if 1, plots the logratios against time, if 2, plots
+#'     the raw signals versus time. Both plots show the fitted values
+#'     as a solid line.
+#' @param ... optional arguments to be passed on to the generic
+#'     \code{plot} function.
+#' @examples
+#' \dontrun{
+#' data('SHRIMP',package='simplex')
+#' dc <- drift(x=SHRIMP)
+#' lr <- logratios(dc)
+#' plot(lr,i=1,option=2)
+#' }
+#' @export
+plot.logratios <- function(x,sname=NULL,i=1,option=1,...){
+    spot <- spot(x,sname=sname,i=1)
     if (option==1){
         plot_logratios(spot=spot,...)
     } else if (option==2){

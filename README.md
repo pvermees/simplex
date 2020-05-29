@@ -29,7 +29,7 @@ install_github('pvermees/simplex')
 
 ## Examples
 
-Load the *simplex* package into memory:
+Load the **simplex** package into memory:
 
 ```
 library(simplex)

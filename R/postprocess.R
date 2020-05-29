@@ -1,3 +1,17 @@
+#' @title calculate delta values
+#' @description convert stable isotope logratio data to delta notation
+#' @param cd an object of class \code{calibrated}
+#' @param log use traditional delta notaion (\code{log=FALSE}) or the
+#'     logratio definition (\code{log=TRUE})?
+#' @return an object of class \code{delta}
+#' @examples
+#' data('oxygen',package='simplex')
+#' dc <- drift(x=oxygen)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
+#' cd <- calibrate(cal)
+#' del <- delta(cd)
+#' tab <- data2table(del)
 #' @export
 delta <- function(cd,log=TRUE){
     out <- cd
@@ -20,21 +34,36 @@ delta <- function(cd,log=TRUE){
     out
 }
 
+#' @title export to table
+#' @description convert calibrated SIMS data objects to a flat table
+#' @param x an object of class \code{calibrated} or \code{delta}
+#' @param ... optional arguments
+#' @return a matrix
+#' @examples
+#' data('Cameca',package='simplex')
+#' dc <- drift(x=Cameca)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
+#' cd <- calibrate(cal)
+#' tab <- data2table(cd)
+#' @rdname data2table
 #' @export
 data2table <- function(x,...){ UseMethod("data2table",x) }
+#' @rdname data2table
 #' @export
 data2table.default <- function(x,...){
     data2table_helper(x=x,option='default',...)
 }
+#' @rdname data2table
 #' @export
 data2table.calibrated <- function(x,...){
     data2table_helper(x=x,option='calibrated',...)
 }
+#' @rdname data2table
 #' @export
 data2table.delta <- function(x,...){
     data2table_helper(x=x,option='delta',...)
 }
-#' @export
 data2table_helper <- function(x,option,...){
     p <- data2table_pars(x=x,option=option)
     ni <- length(p$num)
@@ -67,7 +96,7 @@ data2table_helper <- function(x,option,...){
             E <- J %*% covmat %*% t(J)
         }
         out[i,2*(1:ni)] <- sqrt(diag(E))
-        cormat <- cov2cor(E)
+        cormat <- stats::cov2cor(E)
         if (nc>2*ni) out[i,(2*ni+1):nc] <- cormat[upper.tri(cormat)]
     }
     rownames(out) <- names(x$samples)
@@ -129,8 +158,8 @@ plot.delta <- function(x,...){
                                list(a=isotope(ion=del$num[j]),
                                     b=element(ion=del$num[j])))
             IsoplotR::scatterplot(y,...)
-            mtext(xlab,side=1,line=2)
-            mtext(ylab,side=2,line=2)
+            graphics::mtext(xlab,side=1,line=2)
+            graphics::mtext(ylab,side=2,line=2)
         }
     }
 }
