@@ -1,3 +1,4 @@
+#' @export
 logratios <- function(x){
     out <- x
     snames <- names(x$samples)

@@ -1,3 +1,26 @@
+#' @title read or define SIMS acquisition details
+#' @description get or set a list of data acquisition properties
+#' @param method the name of a data acquisition protocol. Pre-defined
+#'     values include \code{'IGG-UPb'}, \code{'GA-UPb'},
+#'     \code{'IGG-UThPb'}, \code{'IGG-O'}, and \code{'IGG-S'}).
+#' @param instrument one of either \code{SHRIMP} or \code{Cameca}.
+#' @param ions vector of labels to be attached to the different ionic
+#'     masses that are visited during each sweep.
+#' @param num numerator ions of the logratios to be processed in
+#'     subsequent data reduction steps.
+#' @param den denominator ions of the logratios to be processed in
+#'     subsequent data reduction steps.
+#' @param oxide the ion label to be used as a uranium or thorium oxide
+#'     reference for U-Pb and U-Th-Pb calibration.
+#' @param nominalblank logical flag indicating whether the blank is
+#'     measured during every sweep, or whether to use a nominal blank
+#'     value for each detector.
+#' @return an object of class \code{method}
+#' @examples
+#' fname <- system.file('SHRIMP.pd',package='simplex')
+#' shrimpdat <- read_data(fname,method='GA-UPb')
+#' plot(shrimpdat,i=1)
+#' @export
 method <- function(method='IGG-UPb',instrument,ions,num,den,oxide,nominalblank){
     if (method%in%c('IGG-UPb','IGG-UThPb','IGG-O','IGG-S','GA-UPb')){
         out <- defaultmethod(method)

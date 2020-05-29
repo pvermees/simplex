@@ -5,10 +5,10 @@
 \alias{Cameca}
 \title{example Cameca dataset}
 \description{
-built-in Cameca dataset containing Plesovice and
+built-in Cameca U-Pb dataset containing Plesovice and
     Qinghu zircon
 }
 \examples{
 data(Cameca,package="simplex")
-plot_timeresolved(Cameca[[1]])
+plot(Cameca,i=1)
 }

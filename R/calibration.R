@@ -1,3 +1,4 @@
+#' @export
 calibration <- function(lr,stand,prefix=NULL,snames=NULL,i=NULL,invert=FALSE,t=0){
     out <- lr
     out$standard <- stand
@@ -63,7 +64,7 @@ geocal <- function(lr,oxide,t,type,common){
     out <- list(num=num,den=den,oxide=oxide,t=t)
     out$common <- common
     out$york <- beta2york(lr=lr,t=t,num=num,den=den,common=common)
-    out$fit <- IsoplotR:::york(out$york)
+    out$fit <- IsoplotR::york(out$york)
     out
 }
 
@@ -115,14 +116,15 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
     out
 }
 
-plot.calibration <- function(cal,option=1,snames=NULL,i=NULL,...){
+#'@export
+plot.calibration <- function(x,option=1,snames=NULL,i=NULL,...){
     if (is.null(snames)){
-        if (stable(cal)) snames <- cal$calibration$snames
-        else snames <- rownames(cal$calibration[[1]]$york)
+        if (stable(x)) snames <- x$calibration$snames
+        else snames <- rownames(x$calibration[[1]]$york)
     }
     if (!is.null(i)) snames <- snames[i]
-    if (stable(cal)) calplot_stable(dat=cal,snames=snames,...)
-    else calplot_geochronology(dat=cal,option=option,snames=snames,...)
+    if (stable(x)) calplot_stable(dat=x,snames=snames,...)
+    else calplot_geochronology(dat=x,option=option,snames=snames,...)
 }
 
 calplot_stable <- function(dat,snames=NULL,...){
@@ -164,7 +166,7 @@ calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
     xlab <- paste0('log[',num[1],'/',den[1],']')
     ylab <- paste0('log[',num[2],'/',den[2],']')
     if (option==1){
-        IsoplotR:::scatterplot(yd,fit=cal$fit,...)
+        IsoplotR::scatterplot(yd,fit=cal$fit,...)
     } else {
         X <- NULL
         Y <- NULL

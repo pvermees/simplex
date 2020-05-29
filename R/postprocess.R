@@ -1,3 +1,4 @@
+#' @export
 delta <- function(cd,log=TRUE){
     out <- cd
     del <- list()
@@ -19,16 +20,21 @@ delta <- function(cd,log=TRUE){
     out
 }
 
+#' @export
 data2table <- function(x,...){ UseMethod("data2table",x) }
+#' @export
 data2table.default <- function(x,...){
     data2table_helper(x=x,option='default',...)
 }
+#' @export
 data2table.calibrated <- function(x,...){
     data2table_helper(x=x,option='calibrated',...)
 }
+#' @export
 data2table.delta <- function(x,...){
     data2table_helper(x=x,option='delta',...)
 }
+#' @export
 data2table_helper <- function(x,option,...){
     p <- data2table_pars(x=x,option=option)
     ni <- length(p$num)
@@ -106,15 +112,16 @@ data2table_pars <- function(x,option){
     list(num=num,den=den,lr=lr,cov=covmat,J=J)
 }
 
-plot.delta <- function(d,...){
-    del <- d$delta
+#' @export
+plot.delta <- function(x,...){
+    del <- x$delta
     np <- length(del$num)-1     # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:nr){
         for (j in (i+1):max(nc,nr+1)){
-            y <- delta2york(d=d,i=i,j=j)
+            y <- delta2york(d=x,i=i,j=j)
             xlab <- substitute(delta^{a}*b,
                                list(a=isotope(ion=del$num[i]),
                                     b=element(ion=del$num[i])))

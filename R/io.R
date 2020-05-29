@@ -1,26 +1,25 @@
 #' @title read SIMS data
-#' @description read a file or folder with ASCII data
-#' @param dorf directory or file name
-#' @param m (method) the name of a data acquisition protocol. One of
-#'     \code{instrument='IGG-UPb'}, \code{instrument='GA-UPb'},
-#'     \code{instrument='IGG-UThPb'},
-#'     \code{instrument='IGG-O'}, or
-#'     \code{instrument='IGG-S'}. To create new methods, see
-#'     \link{\code{method}}.
+#' @description read ASCII data files
+#' @param f file name(s), may include wildcards (\code{*.asc},
+#'     \code{*.op} or \code{*.pd}).
+#' @param method an object of class \code{method} OR the name of a
+#'     data acquisition protocol (one of \code{'IGG-UPb'},
+#'     \code{'GA-UPb'}, \code{'IGG-UThPb'}, \code{'IGG-O'}, or
+#'     \code{'IGG-S'}). To create new methods, see \code{method}.
 #' @return an object of class \code{simplex}
 #' @examples
-#' \dontrun{
-#' camdat <- read_data('/path/to/asc/files/*.asc',method='IGG-UPb')
-#' plot(camdat,i=1)
-#' }
+#' fname <- system.file('SHRIMP.pd',package='simplex')
+#' shrimpdat <- read_data(fname,method='GA-UPb')
+#' plot(shrimpdat,i=1)
 #' @export
-read_data <- function(dorf,m='IGG-UPb'){
+read_data <- function(f,method='IGG-UPb'){
     out <- list()
     s <- list()
-    if (is.character(m)) m <- method(m)
-    fnames <- Sys.glob(dorf)
-    for (fname in fnames){
+    if (is.character(method)) m <- method(method=method)
+    else m <- method
+    for (fname in Sys.glob(f)){
         if (m$instrument == 'Cameca') {
+            sname <- tools::file_path_sans_ext(fname)
             s[[sname]] <- read_file(fname,m=m)
         } else if (m$instrument== 'SHRIMP') {
             s <- c(s,read_file(fname,m=m))
@@ -272,17 +271,19 @@ spot <- function(dat,sname=NULL,i=1,...){
     out
 }
 
+#' @export
 plot.simplex <- function(x,sname=NULL,i=1,...){
-    plot.spot(spot=spot(dat=x,sname=sname,i=i),...)
+    plot.spot(x=spot(dat=x,sname=sname,i=i),...)
 }
-plot.spot <- function(spot,...){
-    ions <- names(spot$dwelltime)
+#' @export
+plot.spot <- function(x,...){
+    ions <- names(x$dwelltime)
     np <- length(ions)      # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in ions){
-        graphics::plot(spot$time[,ion],spot$signal[,ion],
+        graphics::plot(x$time[,ion],x$signal[,ion],
                        type='p',xlab='',ylab='',...)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)

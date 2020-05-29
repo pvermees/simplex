@@ -1,18 +1,29 @@
-#' @title define the standards in a dataset
-#' @description select a subset of standards from a \code{simplex}
-#'     dataset. The true isotopic composition of the standard can be
-#'     supplied either explicitly, or via its age.
-#' @param dat an object of class \code{simplex}
-#' @param val (optional) true \eqn{^{206}}Pb/\eqn{^{238}}U- and
-#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the age standard
-#' @param cov (optional) the covariance matrix of \code{DP}
+#' @title define an isotopic reference standards
+#' @description specify the isotopic composition of a reference
+#'     material for SIMS data calibration.
+#' @param preset (optional) text string. One of either
+#'     \code{'Plesovice'}, \code{'44069'}, \code{'Temora'}, or
+#'     \code{'NBS28'}.
 #' @param tst (optional) two-element vector with the age and standard
 #'     error of the (presumed concordant) age standard and its
-#'     analytical uncertainty
+#'     analytical uncertainty.
+#' @param val (optional) true isotopic composition of
+#'     \eqn{^{206}}Pb/\eqn{^{238}}U- and
+#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
+#'     or true \eqn{\delta^{18}O} and \eqn{\delta^{16}O} values of the
+#'     oxygen isotope reference material.
+#' @param cov (optional) the covariance matrix of \code{val}
+#' @param common (optional) the common-Pb composition
+#'     (\eqn{^{206}}Pb/\eqn{^{204}}Pb and
+#'     \eqn{^{208}}Pb/\eqn{^{204}}Pb).
 #' @return an object of class \code{standard}
 #' @examples
 #' data(Cameca,package="simplex")
-#' stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
+#' dc <- drift(x=Cameca)
+#' lr <- logratios(x=dc)
+#' st <- standard(preset="Plesovice")
+#' cal <- calibration(lr=lr,stand=st,prefix="Plesovice")
+#' plot(cal,option=3)
 #' @export
 standard <- function(preset,tst,val,cov=matrix(0,length(val),length(val)),common){
     if (missing(preset)){
@@ -124,6 +135,3 @@ Pb76_to_age <- function(dat){
     sPb76 <- Pb76*slPb76
     IsoplotR:::get.Pb207Pb206.age.default(x=Pb76,sx=sPb76)
 }
-
-
-

@@ -1,3 +1,18 @@
+#' @title calibrate SIMS data
+#' @description convert signal logratios to atomic logratios
+#' @param cal an object of class \code{calibration}
+#' @param exterr logical flag indicating whether the uncertainty of
+#'     the calibration should be propagated.
+#' @return an object of class \code{calibrated}
+#' @examples
+#' data('oxygen')
+#' dc <- drift(x=oxygen)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=standard(preset='NBS28'),prefix='NBS28')
+#' cd <- calibrate(cal)
+#' del <- delta(cd,log=FALSE)
+#' tab <- data2table(del)
+#' @export
 calibrate <- function(cal,exterr=FALSE){
     if (stable(cal)) out <- calibrate_stable(dat=cal,exterr=exterr)
     else out <- calibrate_geochron(dat=cal,exterr=exterr)

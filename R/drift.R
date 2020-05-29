@@ -1,3 +1,4 @@
+#' @export
 drift <- function(x){
     out <- x
     snames <- names(x$samples)
