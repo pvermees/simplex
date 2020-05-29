@@ -7,53 +7,45 @@
 #'     \code{instrument='IGG-O'}, or
 #'     \code{instrument='IGG-S'}. To create new methods, see
 #'     \link{\code{method}}.
-#' @param suffix the extension of the data files to be loaded. This
-#'     defaults to \code{.asc} if \code{instrument='Cameca'} and
-#'     \code{.pd} if \code{instrument='SHRIMP'}
 #' @return an object of class \code{simplex}
 #' @examples
 #' \dontrun{
-#' camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='asc')
+#' camdat <- read_data('/path/to/asc/files/*.asc',method='IGG-UPb')
 #' plot(camdat,i=1)
 #' }
 #' @export
-read_data <- function(dorf,suffix,m='IGG-UPb'){
+read_data <- function(dorf,m='IGG-UPb'){
     out <- list()
+    s <- list()
     if (is.character(m)) m <- method(m)
-    if (m$instrument == 'Cameca') {
-        if (missing(suffix)) suffix <- 'asc'
-        out$samples <- read_directory(dorf,suffix=suffix,m=m)
-    } else if (m$instrument== 'SHRIMP') {
-        if (missing(suffix)) suffix <- 'pd'
-        out$samples <- read_file(dorf,suffix=suffix,m=m)
-    } else {
-        stop('Unsupported instrument')
+    fnames <- Sys.glob(dorf)
+    for (fname in fnames){
+        if (m$instrument == 'Cameca') {
+            s[[sname]] <- read_file(fname,m=m)
+        } else if (m$instrument== 'SHRIMP') {
+            s <- c(s,read_file(fname,m=m))
+        } else {
+            stop('Unsupported instrument')
+        }
     }
+    out$samples <- s
     out$method <- m
     class(out) <- 'simplex'
     out
 }
 
-read_directory <- function(dname,suffix,m){
-    out <- list()
-    fnames <- list.files(dname,pattern=suffix)
-    nf <- length(fnames)
-    for (i in 1:nf){ # loop through the files
-        fname <- fnames[i]
-        sname <- tools::file_path_sans_ext(fname)
-        out[[sname]] <- read_file(paste0(dname,fname),suffix=suffix,m=m)
-    }
-    out
-}
-
 # fname is the complete path to an .asc or .op file
-read_file <- function(fname,suffix,m){
-    if (m$instrument=='Cameca' & suffix=='asc'){
+read_file <- function(fname,m){
+    if (m$instrument=='Cameca'){
         out <- read_Cameca_asc(fname=fname,m=m)
-    } else if (m$instrument=='SHRIMP' & suffix=='op'){
-        out <- read_SHRIMP_op(fname=fname,m=m)
-    } else if (m$instrument=='SHRIMP' & suffix=='pd'){
-        out <- read_SHRIMP_pd(fname=fname,m=m)
+    } else if (m$instrument=='SHRIMP'){
+        ext <- tools::file_ext(fname)
+        if (ext=='op')
+            out <- read_SHRIMP_op(fname=fname,m=m)
+        else if (ext=='pd')
+            out <- read_SHRIMP_pd(fname=fname,m=m)
+        else
+            stop('Invalid file extension')
     } else {
         stop('Unrecognised file extension.')
     }
@@ -130,6 +122,7 @@ read_SHRIMP_op <- function(fname,m){
             spot$dwelltime <- read_numbers(f)
             names(spot$dwelltime) <- m$ions
             spot$dtype <- m$dtype
+            names(spot$dtype) <- m$ions
             spot$time <- matrix(0,nscans,nions)
             colnames(spot$time) <- m$ions
             for (i in 1:nions){
