@@ -9,12 +9,12 @@
 \arguments{
 \item{x}{an object of class \code{drift}}
 
-\item{i}{the sample number to be shown}
+\item{sname}{the name of the sample to be shown}
+
+\item{i}{the number of the sample to be shown}
 
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function.}
-
-\item{snames}{the sample names to be shown}
 }
 \description{
 shows the time resolved mass spectrometer signals
