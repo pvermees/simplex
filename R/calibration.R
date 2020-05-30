@@ -82,7 +82,7 @@ geocal <- function(lr,oxide,t,type,common){
     } else {
         stop("Invalid data type.")
     }
-    out <- list(num=num,den=den,oxide=oxide,t=t)
+    out <- list(num=num,den=den,oxide=oxide,t=hours(t))
     out$common <- common
     out$york <- beta2york(lr=lr,t=t,num=num,den=den,common=common)
     out$fit <- IsoplotR::york(out$york)
