@@ -5,7 +5,7 @@
 \alias{simplex}
 \alias{_PACKAGE}
 \alias{simplex-package}
-\title{library(simplex)}
+\title{simplex: a SIMS data reduction package}
 \description{
 \code{simplex} is a data reduction package for Secondary Ion Mass
 Spectrometry (SIMS), with functionality for both stable isotope
@@ -15,7 +15,10 @@ operations take place in logratio space (aka the simplex) to ensure
 positivity and keep track of correlated uncertainties.
 }
 \details{
-
+A list of documented functions may be viewed by typing
+\code{help(package='simplex')}.  Source code and further
+instructions are provided at
+\url{https://github.com/pvermees/simplex/}.
 }
 \seealso{
 Useful links:
