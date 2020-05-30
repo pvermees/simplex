@@ -49,8 +49,8 @@ Extracting the results for 91500 zircon, saving the results as a
 `.csv` file and plotting in `IsoplotR`:
 
 ```
-Q <- subset(cd,prefix='915')
-tab <- data2table(Q)
+samp <- subset(cd,prefix='915')
+tab <- data2table(samp)
 write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
 UPb <- IsoplotR::read.data('91500.csv',method='U-Pb',format=5)
 IsoplotR::concordia(UPb,type=2,show.age=1)

@@ -75,7 +75,7 @@ calibrate_geochron <- function(dat,exterr=FALSE){
 
 fractical <- function(dat,type="U-Pb",exterr=FALSE){
     scal <- dat$standard$fetch(dat) # standard calibration
-    dcal <- dat$calibration[[type]]      # data calibration
+    dcal <- dat$calibration[[type]] # data calibration
     if (type=='U-Pb'){
         num='Pb206'
         den='U238'
