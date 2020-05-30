@@ -72,6 +72,12 @@ Built-in help can be obtained at the command prompt:
 ?process
 ```
 
+To view a full list of functions:
+
+```
+help(package='simplex')
+```
+
 ## Author
 
 [Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve/)
