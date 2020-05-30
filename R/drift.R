@@ -96,6 +96,20 @@ alphapars <- function(spot,ion){
     out
 }
 
+#' @title plot drift corrected data
+#' @description shows the time resolved mass spectrometer signals
+#'     fitted by a generalised linear model
+#' @param x an object of class \code{drift}
+#' @param snames the sample names to be shown
+#' @param i the sample number to be shown
+#' @param ... optional arguments to be passed on to the generic
+#'     \code{plot} function.
+#' @examples
+#' data('Cameca',package='simplex')
+#' dc <- drift(x=Cameca)
+#' plot(dc,i=1)
+#' @method plot drift
+#' @export
 plot.drift <- function(x,sname,i=1,...){
     spot <- spot(x,sname=sname,i=i)
     ions <- spot$method$ions

@@ -141,6 +141,21 @@ data2table_pars <- function(x,option){
     list(num=num,den=den,lr=lr,cov=covmat,J=J)
 }
 
+#' @title plot delta values
+#' @description visualises stable isotope data as error ellipses in
+#'     delta notation
+#' @param x an object of class \code{delta}
+#' @param ... optional arguments to be passed on to the generic
+#'     \code{plot} function.
+#' @examples
+#' data('oxygen',package='simplex')
+#' dc <- drift(x=oxygen)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
+#' cd <- calibrate(cal)
+#' del <- delta(cd)
+#' plot(del)
+#' @method plot delta
 #' @export
 plot.delta <- function(x,...){
     del <- x$delta
