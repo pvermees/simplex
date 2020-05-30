@@ -39,7 +39,7 @@ background <- function(spot,ions){
     if (spot$method$nominalblank){
         out <- spot$background[detector]
     } else {
-        out <- spot$signal[,'bkg']
+        out <- spot$signal[,'bkg']/spot$dwelltime['bkg']
     }
     out
 }

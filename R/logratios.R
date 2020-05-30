@@ -44,7 +44,7 @@ logratios.spot <- function(x){
 # converts logratio intercepts and slopes from common
 # denominator to scientifically useful logratios
 common2original <- function(fit,num,den,groups){
-    B0G <- b0g2list(b0g=fit$par,groups=groups)
+    B0G <- b0g2list(b0g=fit$par,groups=groups,cov=fit$cov)
     b0in <- B0G$b0
     gin <- B0G$g
     bnamesin <- names(b0in)
@@ -53,8 +53,8 @@ common2original <- function(fit,num,den,groups){
     outnames <- c(paste0('b0[',rnames,']'),
                   paste0('g[',rnames,']'))
     ni <- length(rnames)
-    J <- matrix(0,nrow=2*ni,ncol=length(fit$par))
-    colnames(J) <- names(fit$par)
+    J <- matrix(0,nrow=2*ni,ncol=ncol(B0G$cov))
+    colnames(J) <- colnames(B0G$cov)
     rownames(J) <- outnames
     b0gout <- rep(0,2*ni)
     names(b0gout) <- outnames
@@ -82,17 +82,17 @@ common2original <- function(fit,num,den,groups){
         } else {
             inele <- which(gnamesin %in% nele)
             b0gout[ni+i] <- b0gout[ni+i] + gin[inele]
-            J[ni+i,inele] <- 1
+            J[ni+i,ni+inele] <- 1
             if (dele != element(groups$den)){
                 idele <- which(gnamesin %in% dele)
                 b0gout[ni+i] <- b0gout[ni+i] - gin[idele]
-                J[ni+i,idele] <- -1
+                J[ni+i,ni+idele] <- -1
             }
         }
     }
     out <- list()
     out$b0g <- b0gout
-    out$cov <- J %*% fit$cov %*% t(J)
+    out$cov <- J %*% B0G$cov %*% t(J)
     out
 }
 
@@ -216,13 +216,13 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         out$pred <- sweep(theta,1,rowSums(counts),'*')
         out$outliers <- rep(FALSE,length(D$t))
     } else {
-        out <- -sum(log(theta)*counts)
+        out <- -stats::dmultinom(counts,prob=theta,log=TRUE)
     }
     out
 }
 
 # splits a pooled logratio slope and intercept vector into two
-b0g2list <- function(b0g,groups){
+b0g2list <- function(b0g,groups,cov){
     dele <- element(groups$den)
     nele <- element(names(groups$num))
     if (dele %in% nele) {
@@ -235,7 +235,17 @@ b0g2list <- function(b0g,groups){
     }
     nb <- length(b0g) - ng
     b0 <- b0g[1:nb]
-    list(b0=b0,g=g)
+    out <- list(b0=b0,g=g)
+    if (!missing(cov)){
+        nc <- length(b0) + length(g)
+        out$cov <- matrix(0,nc,nc)
+        out$cov[1:nb,1:nb] <- cov[1:nb,1:nb]
+        out$cov[nc-ng+(1:ng),nc-ng+(1:ng)] <- cov[nb+(1:ng),nb+(1:ng)]
+        outnames <- c(names(b0),names(g))
+        colnames(out$cov) <- outnames
+        rownames(out$cov) <- outnames
+    }
+    out
 }
 
 # extract data from a spot for logratios calculation
@@ -282,7 +292,7 @@ groupbypairs <- function(B){
 #' @method plot logratios
 #' @export
 plot.logratios <- function(x,sname=NULL,i=1,option=1,...){
-    spot <- spot(x,sname=sname,i=1)
+    spot <- spot(x,sname=sname,i=i)
     if (option==1){
         plot_logratios(spot=spot,...)
     } else if (option==2){

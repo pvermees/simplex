@@ -122,13 +122,15 @@ plot.drift <- function(x,sname=NULL,i=1,...){
         sb <- ap$sig - ap$bkg
         tt <- seconds(ap$t)
         ylab <- paste0(ion,'- b')
-        graphics::plot(tt,sb,type='p',xlab='',ylab='',...)
-        graphics::mtext(side=1,text='t',line=2)
-        graphics::mtext(side=2,text=ylab,line=2)
         exp_a0 <- spot$dc['exp_a0',ion]
         g <- spot$dc['g',ion]
         predsig <- exp_a0*exp(g*ap$t)
+        graphics::plot(rep(tt,2),c(sb,predsig),
+                       type='n',xlab='',ylab='',...)
+        graphics::points(tt,sb,type='p')
         graphics::lines(tt,predsig)
+        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=2,text=ylab,line=2)
     }
     graphics::par(oldpar)
 }
