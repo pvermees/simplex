@@ -28,7 +28,7 @@ NULL
 #' plot(SHRIMP,i=1)
 NULL
 
-#' library(simplex)
+#' simplex: a SIMS data reduction package
 #'
 #' \code{simplex} is a data reduction package for Secondary Ion Mass
 #' Spectrometry (SIMS), with functionality for both stable isotope
@@ -38,8 +38,10 @@ NULL
 #' positivity and keep track of correlated uncertainties.
 #'
 #' A list of documented functions may be viewed by typing
-#' \code{help(package='simplex')}.  Detailed instructions are provided
-#' at \url{https://github.com/pvermees/simplex.
+#' \code{help(package='simplex')}.  Source code and further
+#' instructions are provided at
+#' \url{https://github.com/pvermees/simplex/}.
+#' 
 #' @name simplex
 #' @docType package
 #' @aliases simplex-package

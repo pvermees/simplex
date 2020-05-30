@@ -110,7 +110,7 @@ alphapars <- function(spot,ion){
 #' plot(dc,i=1)
 #' @method plot drift
 #' @export
-plot.drift <- function(x,sname,i=1,...){
+plot.drift <- function(x,sname=NULL,i=1,...){
     spot <- spot(x,sname=sname,i=i)
     ions <- spot$method$ions
     np <- length(ions) # number of plot panels

@@ -4,7 +4,7 @@
 \alias{plot.drift}
 \title{plot drift corrected data}
 \usage{
-\method{plot}{drift}(x, sname, i = 1, ...)
+\method{plot}{drift}(x, sname = NULL, i = 1, ...)
 }
 \arguments{
 \item{x}{an object of class \code{drift}}
