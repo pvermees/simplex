@@ -281,6 +281,7 @@ spot <- function(dat,sname=NULL,i=1,...){
 #' @examples
 #' data('SHRIMP',package='simplex')
 #' plot(SHRIMP,i=1)
+#' @method plot simplex
 #' @export
 plot.simplex <- function(x,sname=NULL,i=1,...){
     plot.spot(x=spot(dat=x,sname=sname,i=i),...)

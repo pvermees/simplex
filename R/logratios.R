@@ -279,6 +279,7 @@ groupbypairs <- function(B){
 #' lr <- logratios(dc)
 #' plot(lr,i=1,option=2)
 #' }
+#' @method plot logratios
 #' @export
 plot.logratios <- function(x,sname=NULL,i=1,option=1,...){
     spot <- spot(x,sname=sname,i=1)

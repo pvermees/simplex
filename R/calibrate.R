@@ -195,6 +195,7 @@ mergecal <- function(...){
 #' cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
 #' cd <- calibrate(cal)
 #' plot(cd,type='U-Pb')
+#' @method plot calibrated
 #' @export
 plot.calibrated <- function(x,type,...){
     if (missing(type)) cal <- x$calibration[[1]]

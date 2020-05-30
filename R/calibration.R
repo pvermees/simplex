@@ -157,6 +157,7 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' }
+#' @method plot calibration
 #'@export
 plot.calibration <- function(x,option=1,snames=NULL,i=NULL,...){
     if (is.null(snames)){
