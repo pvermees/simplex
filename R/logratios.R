@@ -121,7 +121,7 @@ init_logratios <- function(spot,groups){
                 b0 <- c(b0,mean(log(absND[absND>0])))
             }
         } else {
-            b0 <- c(b0,log(spot$dc['exp_a0',nums]/spot$dc['exp_a0',den]))
+            b0 <- c(b0,spot$dc['a0',nums]-spot$dc['a0',den])
         }
         b0names <- c(b0names,nums)
         nele <- unique(element(nums))
@@ -342,13 +342,12 @@ plot_signals <- function(spot,...){
     bad <- lr$outliers
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in ions){
-        ylab <- paste0(ion,'- b')
         tt <- seconds(lr$t[,ion])
         graphics::plot(tt[!bad],lr$obs[!bad,ion],type='n',xlab='',ylab='',...)
         graphics::points(tt[!bad],lr$obs[!bad,ion],pch=21)
         graphics::points(tt[bad],lr$obs[bad,ion],pch=4)
         graphics::mtext(side=1,text='t',line=2)
-        graphics::mtext(side=2,text=ylab,line=2)
+        graphics::mtext(side=2,text=ion,line=2)
         graphics::lines(tt[!bad],lr$pred[!bad,ion])
     }
     graphics::par(oldpar)
