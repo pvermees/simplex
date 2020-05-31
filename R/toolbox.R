@@ -38,8 +38,12 @@ background <- function(spot,ions){
     detector <- spot$detector[ions]
     if (spot$method$nominalblank){
         out <- spot$background[detector]
-    } else {
+    } else if (spot$m$instrument=='Cameca'){
+        out <- spot$signal[,'bkg']
+    } else if (spot$m$instrument=='SHRIMP'){
         out <- spot$signal[,'bkg']/spot$dwelltime['bkg']
+    } else {
+        stop('Illegal background option')
     }
     out
 }

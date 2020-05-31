@@ -121,7 +121,7 @@ init_logratios <- function(spot,groups){
                 b0 <- c(b0,mean(log(absND[absND>0])))
             }
         } else {
-            b0 <- c(b0,log(spot$dc['exp_a0',nums]/spot$dc['exp_a0',den]))
+            b0 <- c(b0,spot$dc['a0',nums]-spot$dc['a0',den])
         }
         b0names <- c(b0names,nums)
         nele <- unique(element(nums))
