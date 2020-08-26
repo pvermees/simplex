@@ -10,7 +10,7 @@
 #'     \code{'IGG-S'}). To create new methods, see \code{method}.
 #' @param stand an object of class \code{standard}
 #' @param t the analysis time to which the logratio signals should be
-#'     regressed to.
+#'     regressed.
 #' @param exterr include the uncertainty associated with the
 #'     standard calibration in the error propagation?
 #' @return an object of class \code{calibrated}
