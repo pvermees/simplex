@@ -198,7 +198,7 @@ delta2york <- function(d,i,j){
 
 # TEMPORARY SOLUTION FOR PAPER. NEEDS TIDYING UP AND GENERALING
 age <- function(cd){
-    l38 <- IsoplotR::settings('lambda','U238')
+    l38 <- IsoplotR::settings('lambda','U238')[1]
     num <- cd$calibrated$num
     den <- cd$calibrated$den
     ni <- length(num)
@@ -206,9 +206,10 @@ age <- function(cd){
     iPbU <- which(num %in% 'Pb206' & den %in% 'U238')
     i <- (1:ns)*ni-ni+iPbU
     out <- list()
-    out$t68 <- log(exp(cd$calibrated$lr[i])+1)/l38[1]
-    J <- diag(out$t68*exp(cd$calibrated$lr[i]))
-    out$E68 <- J %*% exp(cd$calibrated$cov[i,i]) %*% t(J)
+    elr <- exp(cd$calibrated$lr[i])
+    out$t68 <- log(elr+1)/l38
+    J <- diag(elr/(elr+1))/l38
+    out$E68 <- J %*% cd$calibrated$cov[i,i] %*% t(J)
     snames <- names(cd$samples)
     names(out$t68) <- snames
     rownames(out$E68) <- snames
