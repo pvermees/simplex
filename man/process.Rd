@@ -18,7 +18,7 @@ data acquisition protocol (one of \code{'IGG-UPb'},
 \item{stand}{an object of class \code{standard}}
 
 \item{t}{the analysis time to which the logratio signals should be
-regressed to.}
+regressed.}
 
 \item{exterr}{include the uncertainty associated with the
 standard calibration in the error propagation?}
