@@ -21,7 +21,7 @@ function selectButton(i){
     simplex.selected = i;
 }
 
-async function loadPage(url) {
+function loadPage(url) {
     fetch(url)
 	.then(response => response.text())
 	.then(text => {
@@ -29,19 +29,20 @@ async function loadPage(url) {
 	});
 }
 
-async function setup(){
+function setup(){
     selectButton(0);
     loadPage("setup.html"); // TODO: load presets when page has loaded
 }
 
 function loadPresets(){
     let m = document.getElementById("methods").value;
-    shinylight.call('presets', {method: m}, null).then(function(result) {
-	simplex.method = result.data;
-	showPresets();
-    }).catch(function(reason) {
-        alert(reason);
-    });
+    shinylight.call('presets', {method: m}, null).then(
+	result => {
+	    simplex.method = result.data;
+	    showPresets();
+	},
+	error => alert(reason)
+    );
 }
 
 function showPresets(){
@@ -66,18 +67,18 @@ function readFile(file) {
     });
 }
 
-function upload(){
+async function upload(){
     let f = document.getElementById('upload').files;
+    let status = document.getElementById('upload-status');
+    let txt = null;
     for (let i=0; i<f.length; i++){
-	readFile(f[i]).then(
+	status.innerHTML = " Loading file " + (i+1) + " of " + f.length;
+	txt = await readFile(f[i]);
+	shinylight.call('upload', {f: txt}, null).then(
 	    result => {
-
-		shinylight.call('upload', {f: result}, null).then(function(result2) {
-		    simplex.data = result2.data;
-		}).catch(function(reason) {
-		    alert(reason);
-		});
-
+		simplex.data = result.data;
+		status.innerHTML = (i==f.length-1) ? "" :
+		    " Loaded file " + (i+1) + " of " + f.length;
 	    },
 	    error => alert(error)
 	);
