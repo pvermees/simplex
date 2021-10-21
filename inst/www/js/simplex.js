@@ -3,7 +3,8 @@ var simplex = {
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
     'oncol': 'yellow',
     'offcol': 'white',
-    'method': null
+    'method': null,
+    'data': null
 }
 
 function start() {
@@ -53,9 +54,34 @@ function showPresets(){
     document.getElementById('nominalblank').checked = simplex.method.nominalblank[0];
 }
 
-function chooseFile(t){
-    const selectedFile = document.getElementById(t.id).files[0];
-    alert(selectedFile.length)
+// From https://masteringjs.io/tutorials/fundamentals/filereader
+function readFile(file) {
+    return new Promise((resolve, reject) => {
+	const reader = new FileReader();
+	reader.onload = res => {
+	    resolve(res.target.result);
+	};
+	reader.onerror = err => reject(err);
+	reader.readAsText(file);
+    });
+}
+
+function upload(){
+    let f = document.getElementById('upload').files;
+    for (let i=0; i<f.length; i++){
+	readFile(f[i]).then(
+	    result => {
+
+		shinylight.call('upload', {f: result}, null).then(function(result2) {
+		    simplex.data = result2.data;
+		}).catch(function(reason) {
+		    alert(reason);
+		});
+
+	    },
+	    error => alert(error)
+	);
+    }
 }
 
 function drift(){
