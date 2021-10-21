@@ -1,5 +1,7 @@
+source("method.R")
+
 presets <- function(method){
-    simplex:::defaultmethod(method)
+    defaultmethod(method)
 }
 
 freeformServer <- function(port=NULL) {

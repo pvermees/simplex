@@ -35,17 +35,35 @@ right {
 }
 
 main {
-    overflow:auto;
-    position:fixed;
-    top:50px; 
-    padding:20px;
-    z-index:2;
+    overflow: auto;
+    position: fixed;
+    top: 50px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    padding: 20px;
+    z-index: 2;
     font-family: sans-serif;
     font-size: 16px;
 }
 
 div {
+    //border: 1px solid black;
+    padding: 10px;
+}
+#presets {
+    width: auto;
+    overflow: hidden;
+}
+#preset-menu {
     float: left;
+}
+#preset-details {
+    float: left;
+    overflow: hidden;
+}
+.preset {
+    width: calc(100vw - 450px);
 }
 
 .button {

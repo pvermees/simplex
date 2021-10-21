@@ -28,9 +28,9 @@ async function loadPage(url) {
 	});
 }
 
-function setup(){
+async function setup(){
     selectButton(0);
-    loadPage("setup.html");
+    loadPage("setup.html"); // TODO: load presets when page has loaded
 }
 
 function loadPresets(){
@@ -48,7 +48,9 @@ function showPresets(){
     assign('description');
     assign('instrument');
     assign('ions');
-    assign('nominalblank');
+    assign('num');
+    assign('den');
+    document.getElementById('nominalblank').checked = simplex.method.nominalblank[0];
 }
 
 function chooseFile(t){
