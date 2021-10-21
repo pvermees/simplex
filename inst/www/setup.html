@@ -1,7 +1,28 @@
-Presets: <select id="methods">
-  <option>IGG-UPb</option>
-  <option>IGG-UThPb</option>
-  <option>IGG-O</option>
-  <option>IGG-S</option>
-  <option>GA-UPb</option>
-</select>
+<div id="presets">
+  Presets: <select id="methods" onchange="loadPresets()">
+    <option id="IGG-UPb">IGG-UPb</option>
+    <option id="IGG-UThPb">IGG-UThPb</option>
+    <option id="IGG-O">IGG-O</option>
+    <option id="IGG-S">IGG-S</option>
+    <option id="GA-UPb">GA-UPb</option>
+  </select>
+</div>
+<div>&nbsp;&nbsp;</div>
+<div id="preset-settings">
+  <table>
+    <tr><td>Description:</td><td><input type="text" id="description"></td></tr>
+    <tr><td>Instrument:</td><td><input type="text" id="instrument"></td></tr>
+    <tr><td>Ions:</td><td><input type="text" id="ions"></td></tr>
+    <tr><td>Ratios:</td><td><input type="text" id="ratios"></td></tr>
+    <tr><td>Blank:</td><td><input type="text" id="nominalblank"></td></tr>
+  </table>
+</div>
+
+<p></p>
+
+Load SIMS data:
+<label class="custom-file-upload">
+  <input type="file" id="upload" accept=".op, .pd, .asc" onchange="chooseFile(this)">
+  Browse...
+  </input>
+</label>

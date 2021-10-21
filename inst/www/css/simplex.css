@@ -44,6 +44,10 @@ main {
     font-size: 16px;
 }
 
+div {
+    float: left;
+}
+
 .button {
     border: none;
     padding: 8px 16px;
@@ -55,17 +59,22 @@ main {
     cursor: pointer;
     background: white;
 }
-
 .button:hover {
     color: red;
 }
 
 select {
     font-size: 16px;
-    background-color: lightblue;
+    background-color: #ffdddd;
 }
 
-option {
-    font-size: 16px;
-    background-color: lightblue;
+input[type="file"] {
+    display: none;
+}
+.custom-file-upload {
+    border: 1px solid #c;
+    display: inline-block;
+    padding: 4px 8px;
+    cursor: pointer;
+    background-color: #ffdddd;
 }

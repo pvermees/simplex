@@ -12,15 +12,6 @@ function start() {
     setup();
 }
 
-function loaddefaults(fn){
-    shinylight.call('loadTable', {fn: fn}, null).then(function(result) {
-	result.data = result.data.tab;
-        shinylight.setGridResult(inputTable, result);
-    }).catch(function(reason) {
-        shinylight.setElementText('error', reason);
-    });
-}
-
 function selectButton(i){
     document.getElementById(simplex.buttonIDs[simplex.selected]).style.background =
 	simplex.offcol;
@@ -39,10 +30,30 @@ async function loadPage(url) {
 
 function setup(){
     selectButton(0);
-    loadPage("setup.html")
-	.then(
-	    () => { if (simplex.method==null) { alert('empty') } }
-	);
+    loadPage("setup.html");
+}
+
+function loadPresets(){
+    let m = document.getElementById("methods").value;
+    shinylight.call('presets', {method: m}, null).then(function(result) {
+	simplex.method = result.data;
+	showPresets();
+    }).catch(function(reason) {
+        alert(reason);
+    });
+}
+
+function showPresets(){
+    let assign = (id) => document.getElementById(id).value = simplex.method[id];
+    assign('description');
+    assign('instrument');
+    assign('ions');
+    assign('nominalblank');
+}
+
+function chooseFile(t){
+    const selectedFile = document.getElementById(t.id).files[0];
+    alert(selectedFile.length)
 }
 
 function drift(){
