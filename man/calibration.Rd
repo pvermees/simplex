@@ -2,38 +2,39 @@
 % Please edit documentation in R/calibration.R
 \name{calibration}
 \alias{calibration}
-\title{create a calibration curve}
+\title{standard calibration}
 \usage{
-calibration(stand, oxide = "UO2", omit = NULL)
+calibration(lr, stand, snames = NULL, i = NULL, invert = FALSE, t = 0)
 }
 \arguments{
-\item{stand}{a dataset of class \code{simplex}}
+\item{lr}{an object of class \code{logratios}}
 
-\item{oxide}{either \code{'UO'} or \code{'UO2'}}
+\item{stand}{an object of class \code{standard}}
 
-\item{omit}{indices of measurements to be omitted from the
-calibration}
+\item{snames}{a vector with the sample names of selected standard
+analyses to be used for the calibration}
+
+\item{i}{a vector of indices of selected standard analyses to be
+used for the calibration}
+
+\item{invert}{if \code{TRUE}, inverts the selection made by
+\code{snames} or \code{i}}
+
+\item{t}{analysis time that the signal should be regressed to}
 }
 \value{
-a list with the following items:
-
-\code{AB} a vector with the intercept (\code{'A'}) and slope
-(\code{'B'}) of the power law
-
-\code{cov} the covariance matrix of \code{AB}
+an object of class \code{calibration}
 }
 \description{
-fit a straight line to log[Pb/U] vs. log[UOx/U] data
-}
-\details{
-Regresses a line through
-    X=\eqn{^{238}}U\eqn{^{16}}O\eqn{_x}/\eqn{^{238}}U and
-    Y=(\eqn{^{206}}Pb-\eqn{^{204}}Pb[\eqn{^{206}}Pb/
-    \eqn{^{204}}Pb]\eqn{_{\circ}})/\eqn{^{238}}U
+calibration of SIMS data using reference standards
 }
 \examples{
-data(Cameca,package="simplex")
-stand <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-fit <- calibration(stand,oxide='UO2',omit=2)
-calplot(stand,fit)
+\dontrun{
+data('SHRIMP',package='simplex')
+st <- standard(preset='Temora',prefix=TEM)
+dc <- drift(x=SHRIMP)
+lr <- logratios(x=dc)
+cal <- calibration(lr=lr,stand=st)
+plot(cal,option=3)
+}
 }

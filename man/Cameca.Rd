@@ -3,11 +3,12 @@
 \docType{data}
 \name{Cameca}
 \alias{Cameca}
-\title{example datasets for \code{simplex}}
+\title{example Cameca dataset}
 \description{
-built-in Cameca dataset
+built-in Cameca U-Pb dataset containing Plesovice and
+    Qinghu zircon
 }
 \examples{
 data(Cameca,package="simplex")
-plot_timeresolved(Cameca[[1]])
+plot(Cameca,i=1)
 }

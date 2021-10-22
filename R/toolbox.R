@@ -1,88 +1,107 @@
-pars <- function(spot,oxide='UO2'){
-    out <- list()
-    out$t4 <- hours(spot$time[,'Pb204'])
-    out$t6 <- hours(spot$time[,'Pb206'])
-    out$t7 <- hours(spot$time[,'Pb207'])
-    out$tU <- hours(spot$time[,'U238'])
-    out$tO <- hours(spot$time[,oxide])
-    out$n4 <- spot$counts[,'Pb204']
-    out$n6 <- spot$counts[,'Pb206']
-    out$n7 <- spot$counts[,'Pb207']
-    out$nU <- spot$counts[,'U238']
-    out$nO <- spot$counts[,oxide]
-    out$d4 <- spot$edt[,'Pb204']
-    out$d6 <- spot$edt[,'Pb206']
-    out$d7 <- spot$edt[,'Pb207']
-    out$dU <- spot$edt[,'U238']
-    out$dO <- spot$edt[,oxide]
-    out$c4 <- out$n4/out$d4
-    out$c6 <- out$n6/out$d6
-    out$c7 <- out$n7/out$d7
-    out$cU <- out$nU/out$dU
-    out$cO <- out$nO/out$dO
-    if (spot$instrument=='Cameca'){
-        bkg <- spot$background[spot$detector]
-        if (all(bkg==0)){
-            out$zeroblank <- TRUE
-        } else {
-            out$zeroblank <- FALSE
-            names(bkg) <- names(spot$detector)
-            nt <- length(out$t4)
-            out$bc4 <- rep(bkg['Pb204'],nt)
-            out$bc6 <- rep(bkg['Pb206'],nt)
-            out$bc7 <- rep(bkg['Pb207'],nt)
-            out$bcU <- rep(bkg['U238'],nt)
-            out$bcO <- rep(bkg[oxide],nt)
-            out$bd4 <- rep(1,nt)
-            out$bd6 <- rep(1,nt)
-            out$bd7 <- rep(1,nt)
-            out$bdU <- rep(1,nt)
-            out$bdO <- rep(1,nt)
-            out$bt4 <- out$t4
-            out$bt6 <- out$t6
-            out$bt7 <- out$t7
-            out$btU <- out$tU
-            out$btO <- out$tO
-            out$bn4 <- out$bc4*out$bt4
-            out$bn6 <- out$bc6*out$bt6
-            out$bn7 <- out$bc7*out$bt7
-            out$bnU <- out$bcU*out$btU
-            out$bnO <- out$bcO*out$btO
-        }
+# calculate effective dwell time correcting for the dead time
+effective_dwelltime <- function(spot){
+    if (spot$method$instrument=='Cameca'){
+        deadtime <- spot$deadtime[spot$detector]
+    } else if (spot$method$instrument=='SHRIMP'){
+        deadtime <- rep(spot$deadtime,ncol(spot$signal))
     } else {
-        bn <- spot$counts[,'bkg']
-        if (all(bn==0)){
-            out$zeroblank <- TRUE
-        } else {
-            out$zeroblank <- FALSE
-            bt <- hours(spot$time[,'bkg'])
-            bd <- spot$edt[,'bkg']
-            bc <- bn/bd
-            out$bc4 <- bc
-            out$bc6 <- bc
-            out$bc7 <- bc
-            out$bcU <- bc
-            out$bcO <- bc
-            out$bd4 <- bd
-            out$bd6 <- bd
-            out$bd7 <- bd
-            out$bdU <- bd
-            out$bdO <- bd
-            out$bt4 <- bt
-            out$bt6 <- bt
-            out$bt7 <- bt
-            out$btU <- bt
-            out$btO <- bt
-            out$bn4 <- bn
-            out$bn6 <- bn
-            out$bn7 <- bn
-            out$bnU <- bn
-            out$bnO <- bn
-        }
+        stop('Invalid instrument type.')
     }
+    lost_time <- sweep(spot$signal,MARGIN=2,FUN='*',deadtime)*1e-9
+    -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
+}
+
+
+element <- function(ion){
+    txt <- gsub("[^a-zA-Z]", "", ion)
+    empty <- which(txt %in% "")
+    txt[empty] <- ion[empty]
+    good <- which(txt %in% elements())
+    out <- ion
+    out[good] <- txt[good]
     out
+}
+
+isotope <- function(ion){
+    as.numeric(gsub("[^0-9]", "", ion))
 }
 
 hours <- function(tt){
     tt/3600
+}
+
+seconds <- function(tt){
+    tt*3600
+}
+
+background <- function(spot,ions){
+    detector <- spot$detector[ions]
+    if (spot$method$nominalblank){
+        out <- spot$background[detector]
+    } else if (spot$m$instrument=='Cameca'){
+        out <- spot$signal[,'bkg']
+    } else if (spot$m$instrument=='SHRIMP'){
+        out <- spot$signal[,'bkg']/spot$dwelltime['bkg']
+    } else {
+        stop('Illegal background option')
+    }
+    out
+}
+
+elements <- function(){
+    c('H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg',
+      'Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr',
+      'Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br',
+      'Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd',
+      'Ag','Cd','In','Sn','Sb','Te','I','Xe','Cs','Ba','La',
+      'Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er',
+      'Tm','Yb','Lu','Hf','Ta','W','Re','Os','Ir','Pt','Au',
+      'Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th',
+      'Pa','U','Np','Pu','Am','Cm','Bk','Cf','Es','Fm','Md',
+      'No','Lr','Rf','Db','Sg','Bh','Hs','Mt')
+}
+
+VSMOW <- function(){
+    out <- list()
+    out$lr <- log(c(0.3799e-3,2.00520e-3))
+    relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
+    out$cov <- diag(relerr^2)
+    labels <- c("O17O16","O18O16")
+    names(out$lr) <- labels
+    rownames(out$cov) <- labels
+    colnames(out$cov) <- labels
+    out
+}
+
+stable <- function(dat){
+    type <- datatype(dat)
+    if (type %in% c("oxygen")) return(TRUE)
+    else if (type %in% c("sulphur")) return(TRUE)
+    else if (type %in% c("U-Pb")) return(FALSE)
+    else if (type %in% c("U-Th-Pb")) return(FALSE)
+    else stop("Invalid data type.")
+}
+
+datatype <- function(x){
+    ions <- x$method$ions
+    if (all(c("U238","Th232","Pb204",
+              "Pb206","Pb207","Pb208")%in%ions) &&
+               any(c("UO","UO2")%in%ions) &&
+               any(c("ThO","ThO2")%in%ions)){
+        out <- "U-Th-Pb"
+    } else if (all(c("U238","Pb206","Pb206","Pb207")%in%ions) &&
+        any(c("UO","UO2")%in%ions)){
+        out <- "U-Pb"
+    } else if (all(c("O16","O17","O18")%in%ions)){
+        out <- "oxygen"
+    } else if (all(c('S32','S33','S34','S36')%in%ions)){
+        out <- "sulphur"
+    }
+    out
+}
+
+faraday <- function(spot,ion=NULL){
+    if (is.null(ion)) out <- all(spot$dtype[spot$method$ions]=='Fc')
+    else out <- spot$dtype[ion]=='Fc'
+    out
 }

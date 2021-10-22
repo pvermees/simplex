@@ -1,0 +1,102 @@
+header {
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    line-height:50px;
+    background-color:lightblue;
+    vertical-align:middle;
+    text-align:center;
+    padding:0;
+    z-index:4;
+}
+
+left {
+    overflow-x:auto;
+    overflow-y:auto;
+    position:fixed;
+    left:0;
+    right:50%;
+    top:50px; 
+    bottom:50px; 
+    padding:0;
+    z-index:2;
+}
+
+right {
+    overflow:auto;
+    position:fixed;
+    left:50%;
+    width:50%;
+    top:50px; 
+    bottom:50px; 
+    padding:0;
+    z-index:2;
+}
+
+main {
+    overflow: auto;
+    position: fixed;
+    top: 50px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    padding: 20px;
+    z-index: 2;
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+div {
+    //border: 1px solid black;
+    padding: 10px;
+}
+#presets {
+    width: auto;
+    overflow: hidden;
+}
+#preset-menu {
+    float: left;
+}
+#preset-details {
+    float: left;
+    overflow: hidden;
+}
+.preset {
+    width: calc(100vw - 450px);
+}
+
+.button {
+    border: none;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    background: white;
+}
+.button:hover {
+    color: red;
+}
+
+.button.on {
+    background: yellow;
+}
+
+select {
+    font-size: 16px;
+    background-color: #ffdddd;
+}
+
+input[type="file"] {
+    display: none;
+}
+.custom-file-upload {
+    border: 1px solid black;
+    display: inline-block;
+    padding: 4px 8px;
+    cursor: pointer;
+    background-color: #ffdddd;
+}

@@ -2,31 +2,35 @@
 % Please edit documentation in R/postprocess.R
 \name{data2table}
 \alias{data2table}
-\title{convert to a flat data table}
+\alias{data2table.default}
+\alias{data2table.calibrated}
+\alias{data2table.delta}
+\title{export to table}
 \usage{
-data2table(x)
+data2table(x, ...)
+
+\method{data2table}{default}(x, ...)
+
+\method{data2table}{calibrated}(x, ...)
+
+\method{data2table}{delta}(x, ...)
 }
 \arguments{
-\item{x}{the output of \code{calibrate}}
+\item{x}{an object of class \code{calibrated} or \code{delta}}
+
+\item{...}{optional arguments}
 }
 \value{
-a table n \code{IsoplotR} object of class \code{UPb}
-    (\code{format=5})
+a matrix
 }
 \description{
-trims the data to an \code{IsoplotR} \code{UPb}
-    \code{type=5} table
-}
-\details{
-converts an \code{IsoplotR} \code{type=9} object to a data
-    table that is formatted as a \code{type=5} input table
+convert calibrated SIMS data objects to a flat table
 }
 \examples{
-data(Cameca,package="simplex")
-stand <- standards(dat=Cameca,prefix='Plesovice')
-fit <- calibration(stand=stand,oxide='UO2')
-samp <- unknowns(dat=Cameca,prefix='Qinghu')
-cal <- calibrate(samp,fit)
-tab <- data2table(cal)
-write.csv(tab,file='Qinghu.csv')
+data('Cameca',package='simplex')
+dc <- drift(x=Cameca)
+lr <- logratios(x=dc)
+cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
+cd <- calibrate(cal)
+tab <- data2table(cd)
 }

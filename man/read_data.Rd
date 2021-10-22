@@ -4,27 +4,25 @@
 \alias{read_data}
 \title{read SIMS data}
 \usage{
-read_data(dorf, instrument = "Cameca", suffix = NULL)
+read_data(f, method = "IGG-UPb")
 }
 \arguments{
-\item{dorf}{directory or file name}
+\item{f}{file name(s), may include wildcards (\code{*.asc},
+\code{*.op} or \code{*.pd}).}
 
-\item{instrument}{either \code{'Cameca'} or \code{'SHRIMP'}}
-
-\item{suffix}{the extension of the data files to be loaded. This
-defaults to \code{.asc} if \code{instrument='Cameca'} and
-\code{.op} if \code{instrument='SHRIMP'}.}
+\item{method}{an object of class \code{method} OR the name of a
+data acquisition protocol (one of \code{'IGG-UPb'},
+\code{'GA-UPb'}, \code{'IGG-UThPb'}, \code{'IGG-O'}, or
+\code{'IGG-S'}). To create new methods, see \code{method}.}
 }
 \value{
 an object of class \code{simplex}
 }
 \description{
-read a file or folder with ASCII data
+read ASCII data files
 }
 \examples{
-# not run:
-\dontrun{
-camdat <- read_data('/path/to/asc/files/',instrument='Cameca',suffix='.asc')
-plot_timeresolved(camdat[[1]])
-}
+fname <- system.file('SHRIMP.pd',package='simplex')
+shrimpdat <- read_data(fname,method='GA-UPb')
+plot(shrimpdat,i=1)
 }

@@ -29,71 +29,58 @@ install_github('pvermees/simplex')
 
 ## Examples
 
-Enter the following commands at the R prompt to start simplex and load
-some example data into memory:
+Load the **simplex** package into memory:
 
 ```
 library(simplex)
-data(Cameca,package="simplex")
 ```
 
-View the raw time resolved mass spectrometer data of the first SIMS
-spot:
+The `process` function groups all the main data reduction steps,
+including the drift correction, logratio calculation, and calibration:
 
 ```
-plot_timeresolved(Cameca[[1]])
+m <- method('GA-UPb')
+s <- standard(preset="Temora",prefix='TEM')
+cd <- process(f='SHRIMP.pd',method=m,stand=s)
+plot.calibration(cd)
 ```
 
-To view further information about the **plot_timeresolved** function:
+Extracting the results for 91500 zircon, saving the results as a
+`.csv` file and plotting in `IsoplotR`:
 
 ```
-?plot_timeresolved
+samp <- subset(cd,prefix='915')
+tab <- data2table(samp)
+write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
+UPb <- IsoplotR::read.data('91500.csv',method='U-Pb',format=5)
+IsoplotR::concordia(UPb,type=2,show.age=1)
 ```
 
-Plot a calibration curve:
+Stable isotope analysis of a built-in oxygen dataset:
 
 ```
-Ples <- standards(dat=Cameca,prefix='Plesovice',tst=c(337.13,0.18))
-cal <- calibration(stand=Ples,oxide='UO2')
-calplot(stand=Ples,fit=cal)
+m <- method('IGG-O')
+s <- standard(preset="NBS28")
+cd <- process(f='*.asc',method=m,stand=s)
+del <- delta(cd)
+tab <- data2table(del)
 ```
 
-Plot the time resolved data again, but now showing the data fit:
+Built-in help can be obtained at the command prompt:
 
 ```
-plot_timeresolved(Cameca[[1]],fit=cal)
+?process
 ```
 
-Apply the calibration to the Qinghu zircon measurements
+To view a full list of functions:
 
 ```
-samp <- unknowns(dat=Cameca,prefix='Qinghu')
-UPb <- calibrate(samp,fit=cal)
+help(package='simplex')
 ```
-
-Export the results to a data table:
-
-```
-tab <- data2table(UPb)
-write.csv(tab,file='Qinghu.csv',row.names=FALSE)
-```
-
-To plot the data on a concordia diagram with [IsoplotR](https://github.com/pvermees/IsoplotR):
-
-```
-library(IsoplotR)
-Qinghu <- read.data('Qinghu.csv',method='U-Pb',format=5)
-concordia(Qinghu)
-```
-
-Note that simplex is able to propagate the systematic uncertainties
-associated with the calibration curve. However this feature has been
-disabled in this release, until the necessary post-processing
-functions have been added to IsoplotR.
 
 ## Author
 
-[Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve)
+[Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve/)
 
 ## License
 
