@@ -5,8 +5,8 @@ presets <- function(method){
     defaultmethod(method)
 }
 
-upload <- function(f){
-    print(f)
+upload <- function(f,m){
+    read_SHRIMP_op(f=textConnection(f),m=method(m))
 }
 
 freeformServer <- function(port=NULL) {

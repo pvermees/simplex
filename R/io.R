@@ -38,13 +38,16 @@ read_file <- function(fname,m){
     if (m$instrument=='Cameca'){
         out <- read_Cameca_asc(fname=fname,m=m)
     } else if (m$instrument=='SHRIMP'){
+        f <- file(fname)
+        open(f);
         ext <- tools::file_ext(fname)
         if (ext=='op')
-            out <- read_SHRIMP_op(fname=fname,m=m)
+            out <- read_SHRIMP_op(f=f,m=m)
         else if (ext=='pd')
-            out <- read_SHRIMP_pd(fname=fname,m=m)
+            out <- read_SHRIMP_pd(f=f,m=m)
         else
             stop('Invalid file extension')
+        close(f)
     } else {
         stop('Unrecognised file extension.')
     }
@@ -102,9 +105,7 @@ read_Cameca_asc <- function(fname,m){
     out
 }
 
-read_SHRIMP_op <- function(fname,m){
-    f <- file(fname)
-    open(f);
+read_SHRIMP_op <- function(f,m){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
@@ -142,13 +143,10 @@ read_SHRIMP_op <- function(fname,m){
             junk <- readLines(f,n=1,warn=FALSE)
         }
     }
-    close(f)
     out
 }
 
 read_SHRIMP_pd <- function(fname,m){
-    f <- file(fname)
-    open(f);
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
@@ -191,7 +189,6 @@ read_SHRIMP_pd <- function(fname,m){
             out[[sname]] <- spot
         }
     }
-    close(f)
     out
 }
 

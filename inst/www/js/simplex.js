@@ -74,10 +74,11 @@ async function upload(){
     let f = document.getElementById('upload').files;
     let status = document.getElementById('upload-status');
     let txt = null;
+    const m = document.getElementById("methods").value;
     for (let i=0; i<f.length; i++){
 	status.innerHTML = " Loading file " + (i+1) + " of " + f.length;
 	txt = await readFile(f[i]);
-	shinylight.call('upload', {f: txt}, null).then(
+	shinylight.call('upload', {f: txt, m: m}, null).then(
 	    result => {
 		simplex.data = result.data;
 		status.innerHTML = (i==f.length-1) ? "" :
