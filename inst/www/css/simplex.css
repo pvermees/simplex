@@ -81,6 +81,10 @@ div {
     color: red;
 }
 
+.button.on {
+    background: yellow;
+}
+
 select {
     font-size: 16px;
     background-color: #ffdddd;
@@ -90,7 +94,7 @@ input[type="file"] {
     display: none;
 }
 .custom-file-upload {
-    border: 1px solid #c;
+    border: 1px solid black;
     display: inline-block;
     padding: 4px 8px;
     cursor: pointer;

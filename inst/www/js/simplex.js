@@ -1,48 +1,51 @@
 var simplex = {
     'selected': 0,
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
-    'oncol': 'yellow',
-    'offcol': 'white',
     'method': null,
     'data': null
 }
 
 function start() {
-    rrpc.initialize();
-    shinylight.initialize();
-    setup();
+    // This will be moved into shinylight.initialize()
+    new Promise((resolve, reject) => {
+        rrpc.initialize(() => resolve(), error => reject(error));
+    }).then(() =>
+        setup()
+    );
+}
+
+function selectedButton() {
+    return document.getElementById(
+        simplex.buttonIDs[simplex.selected]
+    );
 }
 
 function selectButton(i){
-    document.getElementById(simplex.buttonIDs[simplex.selected]).style.background =
-	simplex.offcol;
-    document.getElementById(simplex.buttonIDs[i]).style.background =
-	simplex.oncol;
+    selectedButton().classList.remove('on')
     simplex.selected = i;
+    selectedButton().classList.add('on')
 }
 
-function loadPage(url) {
-    fetch(url)
-	.then(response => response.text())
-	.then(text => {
-	    document.getElementById("contents").innerHTML = text;
-	});
+async function loadPage(url) {
+    let response = await fetch(url);
+	let text = await response.text();
+	document.getElementById("contents").innerHTML = text;
 }
 
 function setup(){
     selectButton(0);
-    loadPage("setup.html"); // TODO: load presets when page has loaded
+    loadPage("setup.html").then(
+        () => loadPresets()
+    ).catch(
+        error => alert(error)
+    );
 }
 
-function loadPresets(){
-    let m = document.getElementById("methods").value;
-    shinylight.call('presets', {method: m}, null).then(
-	result => {
-	    simplex.method = result.data;
-	    showPresets();
-	},
-	error => alert(reason)
-    );
+async function loadPresets(){
+    const m = document.getElementById("methods").value;
+    const result = await shinylight.call('presets', { method: m }, null);
+    simplex.method = result.data;
+    showPresets();
 }
 
 function showPresets(){
