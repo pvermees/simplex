@@ -22,7 +22,7 @@ read_data <- function(f,m='IGG-UPb'){
     if ("textConnection" %in% class(f[[1]])){
         out$samples <- read_samples_tc(tc=f,m=out$method)
     } else {
-        out$samples <- read_samples_f(fname=f,m=out$method)
+        out$samples <- read_samples_fn(fn=f,m=out$method)
     }
     class(out) <- 'simplex'
     out
@@ -43,22 +43,22 @@ read_samples_tc <- function(tc,m){
     }
     out
 }
-read_samples_f <- function(fname,m){
+read_samples_fn <- function(fn,m){
     out <- list()
-    f <- file(fname)
-    open(f);
-    for (fname in Sys.glob(f)){
+    for (fname in Sys.glob(fn)){
+        f <- file(fname)
+        open(f);
         if (m$instrument == 'Cameca') {
             sname <- tools::file_path_sans_ext(fname)
-            out[[sname]] <- read_file(f,m=m,fn=fn)
+            out[[sname]] <- read_file(f,m=m)
         } else if (m$instrument== 'SHRIMP') {
             ext <- tools::file_ext(fname)
-            out <- c(out,read_file(fname,m=m,ext=ext))
+            out <- c(out,read_file(f,m=m,ext=ext))
         } else {
             stop('Unsupported instrument')
         }
+        close(f)
     }
-    close(f)
     out
 }
 

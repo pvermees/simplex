@@ -26,12 +26,6 @@ function selectButton(i){
     selectedButton().classList.add('on')
 }
 
-async function loadPage(url) {
-    let response = await fetch(url);
-	let text = await response.text();
-	document.getElementById("contents").innerHTML = text;
-}
-
 function setup(){
     selectButton(0);
     loadPage("setup.html").then(
@@ -41,13 +35,27 @@ function setup(){
     );
 }
 
+function drift(){
+    selectButton(1);
+    loadPage("drift.html").then(
+        () => loadSamples()
+    ).catch(
+        error => alert(error)
+    );
+}
+
+async function loadPage(url) {
+    let response = await fetch(url);
+	let text = await response.text();
+	document.getElementById("contents").innerHTML = text;
+}
 async function loadPresets(){
     const m = document.getElementById("methods").value;
     const result = await shinylight.call('presets', { method: m }, null);
-    simplex.method = result.data;
+    simplex.samples = result.data.samples;
+    simplex.method = result.data.method;
     showPresets();
 }
-
 function showPresets(){
     let assign = (id) => document.getElementById(id).value = simplex.method[id];
     assign('description');
@@ -101,9 +109,15 @@ async function upload(){
     )
 }
 
-function drift(){
-    selectButton(1);
-    loadPage("drift.html");
+function loadSamples(){
+    var select = document.getElementById("aliquots");
+    var keys = Object.keys(simplex.samples);
+    for(var i = 0; i<keys.length; i++) {
+	var el = document.createElement("option");
+	el.textContent = keys[i];
+	el.value = keys[i];
+	select.appendChild(el);
+    }
 }
 
 function logratios(){
