@@ -4,14 +4,20 @@ source("R/method.R")
 
 presets <- function(method){
     if (method=='IGG-UPb'){
-        load('data/Cameca.rda')
-        out <- Cameca
+        load('data/Cameca_UPb.rda')
+        out <- Cameca_UPb
+    } else if (method=='IGG-UThPb'){
+        load('data/Cameca_UThPb.rda')
+        out <- Cameca_UThPb
     } else if (method=='IGG-O'){
-        load('data/oxygen.rda')
-        out <- oxygen
+        load('data/Cameca_oxygen.rda')
+        out <- Cameca_oxygen
+    } else if (method=='IGG-S'){
+        load('data/Cameca_sulphur.rda')
+        out <- Cameca_sulphur
     } else if (method=='GA-UPb'){
-        load('data/SHRIMP.rda')
-        out <- SHRIMP
+        load('data/SHRIMP_UPb.rda')
+        out <- SHRIMP_UPb
     } else {
         out <- list()
         out$samples <- NULL

@@ -33,7 +33,8 @@ read_samples_tc <- function(tc,m){
     fn <- names(tc)
     for (i in 1:ntc){
         if (m$instrument == 'Cameca') {
-            out[[fn[i]]] <- read_file(tc[[i]],m=m)
+            sname <- tools::file_path_sans_ext(fn[i])
+            out[[sname]] <- read_file(tc[[i]],m=m)
         } else if (m$instrument== 'SHRIMP') {
             ext <- tools::file_ext(fn[i])
             out <- c(out,read_file(tc[[i]],m=m,ext=ext))

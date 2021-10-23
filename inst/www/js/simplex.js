@@ -55,6 +55,7 @@ async function loadPresets(){
     simplex.samples = result.data.samples;
     simplex.method = result.data.method;
     showPresets();
+    fileFormats();
 }
 function showPresets(){
     let assign = (id) => document.getElementById(id).value = simplex.method[id];
@@ -63,8 +64,30 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
+    let stabset = document.querySelector('.hide4stable');
+    if (stable()) {
+	stabset.classList.add('hidden')
+    } else {
+	stabset.classList.remove('hidden')
+	assign('oxide');
+    }
     document.getElementById('nominalblank').checked =
 	simplex.method.nominalblank[0];
+}
+function stable(){
+    let m = simplex.method.method;
+    return(["IGG-O","IGG-S","GA-O"].includes(m[0]))
+}
+function fileFormats(){
+    let accept = ['.asc','.op','.pd'];
+    if (simplex.method.instrument='Cameca'){
+	accept = '.asc';
+    } else if (simplex.method.instrument='SHRIMP'){
+	accept = ['.op','.pd'];
+    } else {
+	alert('Unrecognised instrument.')
+    }
+    document.getElementById('upload').accept = accept;
 }
 
 // From https://masteringjs.io/tutorials/fundamentals/filereader
