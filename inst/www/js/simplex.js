@@ -1,8 +1,15 @@
+// 1. Startup
+
 var simplex = {
     'selected': 0,
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
     'method': null,
     'samples': null
+}
+
+var elements = {
+    'driftime': null,
+    'driftsig': null
 }
 
 function start() {
@@ -26,6 +33,14 @@ function selectButton(i){
     selectedButton().classList.add('on')
 }
 
+async function loadPage(url) {
+    let response = await fetch(url);
+	let text = await response.text();
+	document.getElementById("contents").innerHTML = text;
+}
+
+// 2. Setup
+
 function setup(){
     selectButton(0);
     loadPage("setup.html").then(
@@ -35,20 +50,6 @@ function setup(){
     );
 }
 
-function drift(){
-    selectButton(1);
-    loadPage("drift.html").then(
-        () => loadSamples()
-    ).catch(
-        error => alert(error)
-    );
-}
-
-async function loadPage(url) {
-    let response = await fetch(url);
-	let text = await response.text();
-	document.getElementById("contents").innerHTML = text;
-}
 async function loadPresets(){
     const m = document.getElementById("methods").value;
     const result = await shinylight.call('presets', { method: m }, null);
@@ -57,6 +58,7 @@ async function loadPresets(){
     showPresets();
     fileFormats();
 }
+
 function showPresets(){
     let assign = (id) => document.getElementById(id).value = simplex.method[id];
     assign('description');
@@ -74,10 +76,12 @@ function showPresets(){
     document.getElementById('nominalblank').checked =
 	simplex.method.nominalblank[0];
 }
+
 function stable(){
     let m = simplex.method.method;
     return(["IGG-O","IGG-S","GA-O"].includes(m[0]))
 }
+
 function fileFormats(){
     let accept = ['.asc','.op','.pd'];
     if (simplex.method.instrument='Cameca'){
@@ -132,16 +136,64 @@ async function upload(){
     )
 }
 
+// 3. Drift
+
+function drift(){
+    selectButton(1);
+    loadPage("drift.html").then(
+        () => loadSamples()
+    ).catch(
+        error => alert(error)
+    );
+}
+
 function loadSamples(){
-    var select = document.getElementById("aliquots");
-    var keys = Object.keys(simplex.samples);
-    for(var i = 0; i<keys.length; i++) {
-	var el = document.createElement("option");
+    let select = document.getElementById("aliquots");
+    let samples = simplex.samples;
+    let keys = Object.keys(samples);
+    for(let i = 0; i<keys.length; i++) {
+	let el = document.createElement("option");
 	el.textContent = keys[i];
-	el.value = keys[i];
+	el.value = i;
 	select.appendChild(el);
     }
+    let nr = samples[keys[0]].signal.length;
+    let header = simplex.method.ions;
+    elements.driftime = createDataEntryGrid('drift-time-table',header, nr);
+    elements.driftsig = createDataEntryGrid('drift-signal-table',header,nr);
+    driftTable(0);
 }
+
+function driftTable(i){
+    let samples = simplex.samples;
+    let keys = Object.keys(samples);
+    let nr = elements.driftime.rowCount();
+    let nc = elements.driftsig.columnCount();
+    let tim = stringtab(samples[keys[i]].time);
+    let sig = stringtab(samples[keys[i]].signal);
+    elements.driftime.putCells(0,nr+1,0,nc+1,tim);
+    elements.driftsig.putCells(0,nr+1,0,nc+1,sig);
+}
+
+function stringtab(dat){
+    let nr = dat.length;
+    let nc = dat[0].length;
+    let arr = new Array(nr);
+    for (let i=0; i<nr; i++){
+	arr[i] = new Array(nc);
+	for (let j=0; j<nc; j++){
+	    arr[i][j] = parseFloat(dat[i][j]);
+	}
+    }
+    return(arr)
+}
+
+function showAliquot(){
+    let aliquot = document.getElementById("aliquots").value;
+    driftTable(aliquot);
+}
+
+// 3. Logratios
 
 function logratios(){
     selectButton(2);
