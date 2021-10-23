@@ -143,7 +143,7 @@ read_SHRIMP_op <- function(f,m){
             spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
             names(spot$dwelltime) <- m$ions
-            spot$dtype <- m$dtype
+            spot$dtype <- rep(m$detectors,length(m$ions))
             names(spot$dtype) <- m$ions
             spot$time <- matrix(0,nscans,nions)
             colnames(spot$time) <- m$ions

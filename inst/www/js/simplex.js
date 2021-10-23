@@ -84,9 +84,9 @@ function stable(){
 
 function fileFormats(){
     let accept = ['.asc','.op','.pd'];
-    if (simplex.method.instrument='Cameca'){
+    if (simplex.method.instrument=='Cameca'){
 	accept = '.asc';
-    } else if (simplex.method.instrument='SHRIMP'){
+    } else if (simplex.method.instrument=='SHRIMP'){
 	accept = ['.op','.pd'];
     } else {
 	alert('Unrecognised instrument.')
@@ -141,9 +141,13 @@ async function upload(){
 function drift(){
     selectButton(1);
     loadPage("drift.html").then(
-        () => loadSamples()
-    ).catch(
-        error => alert(error)
+	() => loadSamples(),
+	error => alert(error)
+    ).then(
+	shinylight.call("driftCorr", {x:simplex}, null).then(
+	    result => simplex.samples = result.data.samples,
+	    error => alert(error)
+	)
     );
 }
 
@@ -191,6 +195,14 @@ function stringtab(dat){
 function showAliquot(){
     let aliquot = document.getElementById("aliquots").value;
     driftTable(aliquot);
+}
+
+function driftPlot(){
+    let i = document.getElementById("aliquots").value;
+    shinylight.call('driftPlot', {x:simplex, i:i}, 'drift-plot').then(
+	result => shinylight.setElementPlot('drift-plot', result.plot),
+	error => alert(error)
+    );
 }
 
 // 3. Logratios

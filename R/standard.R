@@ -54,6 +54,8 @@ standard <- function(preset,prefix=preset,tst,
         class(out) <- 'standard'
     } else if (preset=='Plesovice'){
         out <- standard(tst=c(337.13,0.18),prefix=prefix)
+    } else if (preset=='Qinghu'){
+        out <- standard(tst=c(159.5,0.1),prefix=prefix)
     } else if (preset=='44069'){
         out <- standard(tst=c(424.86,0.25),prefix=prefix)
     } else if (preset=='Temora'){

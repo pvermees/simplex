@@ -22,7 +22,7 @@
 #' shrimpdat <- read_data(fname,m='GA-UPb')
 #' plot(shrimpdat,i=1)
 #' @export
-method <- function(m='IGG-UPb',instrument,ions,
+method <- function(m='IGG-UPb',instrument,ions,detectors,
                    num,den,oxide,nominalblank,description){
     if (m%in%c('IGG-UPb','IGG-UThPb','IGG-O','IGG-S','GA-UPb')){
         out <- defaultmethod(m)
@@ -32,6 +32,7 @@ method <- function(m='IGG-UPb',instrument,ions,
     }
     if (!missing(instrument)) out$instrument <- instrument
     if (!missing(ions)) out$ions <- ions
+    if (!missing(detectors)) out$detectors <- detectors
     if (!missing(num)) out$num <- num
     if (!missing(den)) out$den <- den
     if (!missing(oxide)) out$oxide <- oxide
@@ -49,6 +50,7 @@ defaultmethod <- function(m){
         out$ions <- c('Zr90','Zr92','200.5','Zr94',
                       'Pb204','Pb206','Pb207','Pb208',
                       'U238','ThO2','UO2','270.1')
+        out$detectors <- c('FC1','EM','FC2')
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO2')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238')
         out$oxide <- c(U='UO2')
@@ -59,6 +61,7 @@ defaultmethod <- function(m){
         out$ions=c('La139','202.5','Pb204','Pb206',
                    'Pb207','Pb208','Th232','U238',
                    'ThO2','UO2')
+        out$detectors <- c('FC1','EM','FC2')
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO2','Pb208','ThO2')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238','Th232','Th232')
         out$oxide <- c(U='UO2',Th='ThO2')
@@ -67,6 +70,7 @@ defaultmethod <- function(m){
     } else if (m=='IGG-O'){
         out$instrument <- 'Cameca'
         out$ions <- c('O16','O17','O18')
+        out$detectors <- c("L'2","L2","L1","C","H1","H2","H'2","FC1","EM","FC2")
         out$num <- c('O17','O18')
         out$den <- c('O16','O16')
         out$nominalblank <- TRUE
@@ -74,6 +78,7 @@ defaultmethod <- function(m){
     } else if (m=='IGG-S'){
         out$instrument='Cameca'
         out$ions <- c('S32','S33','33.96','S34','S36')
+        out$detectors <- c("L'2","L2","L1","C","H1","H2","H'2","FC1","EM","FC2")
         out$num <- c('S33','S34','S36')
         out$den <- c('S32','S32','S32')
         out$nominalblank <- TRUE
@@ -82,7 +87,7 @@ defaultmethod <- function(m){
         out$instrument <- 'SHRIMP'
         out$ions <- c('Zr2O','Pb204','bkg','Pb206','Pb207',
                       'Pb208','U238','ThO','UO','UO2')
-        out$dtype <- rep('Em',length(out$ions))
+        out$detectors <- 'Em'
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238')
         out$oxide <- c(U='UO')
