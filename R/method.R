@@ -1,6 +1,6 @@
 #' @title read or define SIMS acquisition details
 #' @description get or set a list of data acquisition properties
-#' @param method the name of a data acquisition protocol. Pre-defined
+#' @param m the name of a data acquisition protocol. Pre-defined
 #'     values include \code{'IGG-UPb'}, \code{'GA-UPb'},
 #'     \code{'IGG-UThPb'}, \code{'IGG-O'}, and \code{'IGG-S'}).
 #' @param instrument one of either \code{SHRIMP} or \code{Cameca}.
@@ -19,16 +19,16 @@
 #' @return an object of class \code{method}
 #' @examples
 #' fname <- system.file('SHRIMP.pd',package='simplex')
-#' shrimpdat <- read_data(fname,method='GA-UPb')
+#' shrimpdat <- read_data(fname,m='GA-UPb')
 #' plot(shrimpdat,i=1)
 #' @export
-method <- function(method='IGG-UPb',instrument,ions,
+method <- function(m='IGG-UPb',instrument,ions,
                    num,den,oxide,nominalblank,description){
-    if (method%in%c('IGG-UPb','IGG-UThPb','IGG-O','IGG-S','GA-UPb')){
-        out <- defaultmethod(method)
+    if (m%in%c('IGG-UPb','IGG-UThPb','IGG-O','IGG-S','GA-UPb')){
+        out <- defaultmethod(m)
     } else {
         out <- list()
-        out$method <- method
+        out$method <- m
     }
     if (!missing(instrument)) out$instrument <- instrument
     if (!missing(ions)) out$ions <- ions

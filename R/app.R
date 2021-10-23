@@ -5,8 +5,15 @@ presets <- function(method){
     defaultmethod(method)
 }
 
+# f = list of two lists with blocks of text and corresponding filenames
+# m = method (currently a string, will be modified to accept lists)
 upload <- function(f,m){
-    read_SHRIMP_op(f=textConnection(f),m=method(m))
+    ntcs <- length(f$tcs)
+    tcs <- list()
+    for (i in 1:ntcs){
+        tcs[[f$fns[[i]]]] <- textConnection(f$tcs[[i]])
+    }
+    read_data(f=tcs,m=m)
 }
 
 freeformServer <- function(port=NULL) {

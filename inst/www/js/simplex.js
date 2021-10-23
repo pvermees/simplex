@@ -2,7 +2,7 @@ var simplex = {
     'selected': 0,
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
     'method': null,
-    'data': null
+    'samples': null
 }
 
 function start() {
@@ -55,7 +55,8 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
-    document.getElementById('nominalblank').checked = simplex.method.nominalblank[0];
+    document.getElementById('nominalblank').checked =
+	simplex.method.nominalblank[0];
 }
 
 // From https://masteringjs.io/tutorials/fundamentals/filereader
@@ -70,23 +71,34 @@ function readFile(file) {
     });
 }
 
-async function upload(){
-    let f = document.getElementById('upload').files;
+// read all files for conversion to textConnection
+async function readFiles(){
     let status = document.getElementById('upload-status');
-    let txt = null;
-    const m = document.getElementById("methods").value;
+    let f = document.getElementById('upload').files;
+    let fns = {};
+    let tcs = {};
     for (let i=0; i<f.length; i++){
 	status.innerHTML = " Loading file " + (i+1) + " of " + f.length;
-	txt = await readFile(f[i]);
-	shinylight.call('upload', {f: txt, m: m}, null).then(
-	    result => {
-		simplex.data = result.data;
-		status.innerHTML = (i==f.length-1) ? "" :
-		    " Loaded file " + (i+1) + " of " + f.length;
-	    },
-	    error => alert(error)
-	);
+	fns[i] = f[i].name;
+	tcs[i] = await readFile(f[i]);
+	status.innerHTML = (i==f.length-1) ? "" :
+	    " Loaded file " + (i+1) + " of " + f.length;
+
     }
+    return({fns:fns, tcs:tcs})
+}
+
+async function upload(){
+    const m = document.getElementById("methods").value;
+    readFiles().then(
+	f => {
+	    shinylight.call('upload', {f:f, m:m}, null).then(
+		result => simplex.samples = result.data.samples,
+		error => alert(error)
+	    )
+	},
+	err => alert(err)
+    )
 }
 
 function drift(){

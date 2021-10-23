@@ -2,61 +2,83 @@
 #' @description read ASCII data files
 #' @param f file name(s), may include wildcards (\code{*.asc},
 #'     \code{*.op} or \code{*.pd}).
-#' @param method an object of class \code{method} OR the name of a
-#'     data acquisition protocol (one of \code{'IGG-UPb'},
-#'     \code{'GA-UPb'}, \code{'IGG-UThPb'}, \code{'IGG-O'}, or
-#'     \code{'IGG-S'}). To create new methods, see \code{method}.
+#' @param m an object of class \code{method} OR the name of a data
+#'     acquisition protocol (one of \code{'IGG-UPb'}, \code{'GA-UPb'},
+#'     \code{'IGG-UThPb'}, \code{'IGG-O'}, or \code{'IGG-S'}). To
+#'     create new methods, see \code{method}.
 #' @return an object of class \code{simplex}
 #' @examples
 #' fname <- system.file('SHRIMP.pd',package='simplex')
-#' shrimpdat <- read_data(fname,method='GA-UPb')
+#' shrimpdat <- read_data(fname,m='GA-UPb')
 #' plot(shrimpdat,i=1)
 #' @export
-read_data <- function(f,method='IGG-UPb'){
+read_data <- function(f,m='IGG-UPb'){
     out <- list()
-    s <- list()
-    if (is.character(method)) m <- method(method=method)
-    else m <- method
-    for (fname in Sys.glob(f)){
+    if (is.character(m)){
+        out$method <- method(m=m)
+    } else {
+        out$method <- m
+    }
+    if ("textConnection" %in% class(f[[1]])){
+        out$samples <- read_samples_tc(tc=f,m=out$method)
+    } else {
+        out$samples <- read_samples_f(fname=f,m=out$method)
+    }
+    class(out) <- 'simplex'
+    out
+}
+read_samples_tc <- function(tc,m){
+    out <- list()
+    ntc <- length(tc)
+    fn <- names(tc)
+    for (i in 1:ntc){
         if (m$instrument == 'Cameca') {
-            sname <- tools::file_path_sans_ext(fname)
-            s[[sname]] <- read_file(fname,m=m)
+            out[[fn[i]]] <- read_file(tc[[i]],m=m)
         } else if (m$instrument== 'SHRIMP') {
-            s <- c(s,read_file(fname,m=m))
+            ext <- tools::file_ext(fn[i])
+            out <- c(out,read_file(tc[[i]],m=m,ext=ext))
         } else {
             stop('Unsupported instrument')
         }
     }
-    out$samples <- s
-    out$method <- m
-    class(out) <- 'simplex'
+    out
+}
+read_samples_f <- function(fname,m){
+    out <- list()
+    f <- file(fname)
+    open(f);
+    for (fname in Sys.glob(f)){
+        if (m$instrument == 'Cameca') {
+            sname <- tools::file_path_sans_ext(fname)
+            out[[sname]] <- read_file(f,m=m,fn=fn)
+        } else if (m$instrument== 'SHRIMP') {
+            ext <- tools::file_ext(fname)
+            out <- c(out,read_file(fname,m=m,ext=ext))
+        } else {
+            stop('Unsupported instrument')
+        }
+    }
+    close(f)
     out
 }
 
-# fname is the complete path to an .asc or .op file
-read_file <- function(fname,m){
+read_file <- function(f,m,ext=NA){
     if (m$instrument=='Cameca'){
-        out <- read_Cameca_asc(fname=fname,m=m)
+        out <- read_Cameca_asc(f=f,m=m)
     } else if (m$instrument=='SHRIMP'){
-        f <- file(fname)
-        open(f);
-        ext <- tools::file_ext(fname)
-        if (ext=='op')
+        if (identical(ext,'op'))
             out <- read_SHRIMP_op(f=f,m=m)
-        else if (ext=='pd')
+        else if (identical(ext,'pd'))
             out <- read_SHRIMP_pd(f=f,m=m)
         else
             stop('Invalid file extension')
-        close(f)
     } else {
         stop('Unrecognised file extension.')
     }
     out
 }
 
-read_Cameca_asc <- function(fname,m){
-    f <- file(fname)
-    open(f);
+read_Cameca_asc <- function(f,m){
     out <- list()
     while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
         if (grepl("ACQUISITION PARAMETERS",line)){
@@ -101,7 +123,6 @@ read_Cameca_asc <- function(fname,m){
             out$time <- read_asc_block(f,ions=m$ions)
         }
     }
-    close(f)
     out
 }
 
@@ -146,7 +167,7 @@ read_SHRIMP_op <- function(f,m){
     out
 }
 
-read_SHRIMP_pd <- function(fname,m){
+read_SHRIMP_pd <- function(f,m){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
