@@ -68,9 +68,9 @@ function showPresets(){
     assign('den');
     let stabset = document.querySelector('.hide4stable');
     if (stable()) {
-	stabset.classList.add('hidden')
+	stabset.classList.add('hidden');
     } else {
-	stabset.classList.remove('hidden')
+	stabset.classList.remove('hidden');
 	assign('oxide');
     }
     document.getElementById('nominalblank').checked =
@@ -141,16 +141,34 @@ async function upload(){
 function drift(){
     selectButton(1);
     loadPage("drift.html").then(
-	() => loadSamples(),
+	() => loader(),
 	error => alert(error)
     ).then(
 	shinylight.call("driftCorr", {x:simplex}, null).then(
 	    result => simplex.samples = result.data.samples,
 	    error => alert(error)
+	).then(
+	    () => loadSamples(),
+	    error => alert(error)
+	).then(
+	    () => shower(),
+	    error => alert(error)
 	)
-    );
+    )
 }
 
+function loader(){
+    let show = document.querySelector('.show4loading');
+    let hide = document.querySelector('.hide4loading');
+    show.classList.remove('hidden');
+    hide.classList.add('hidden');
+}
+function shower(){
+    let show = document.querySelector('.show4loading');
+    let hide = document.querySelector('.hide4loading');
+    show.classList.add('hidden');
+    hide.classList.remove('hidden');
+}
 function loadSamples(){
     let select = document.getElementById("aliquots");
     let samples = simplex.samples;

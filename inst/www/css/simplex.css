@@ -104,6 +104,14 @@ select {
     font-size: 16px;
     background-color: #ffdddd;
 }
+.blink {
+  animation: blinker 1s linear infinite;
+}
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
 
 input[type="file"] {
     display: none;

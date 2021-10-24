@@ -45,8 +45,9 @@ misfit_g <- function(par,spot,ions){
         p <- alphapars(spot=spot,ion=ion)
         a <- exp(a0[ion]+g*p$t)
         if (spot$dtype[ion]=='Fc'){
-            D <-  a - log(p$sig - p$bkg)
-            out <- out + sum(D^2)
+            obs <- p$sig - p$bkg
+            pred <- a
+            out <- out + sum((obs-pred)^2)
         } else {
             obs <- p$counts
             pred <- a*p$edt # + p$bkgcounts # approximate
@@ -57,18 +58,36 @@ misfit_g <- function(par,spot,ions){
 }
 
 get_a0 <- function(g,spot,ions){
+    far_misfit <- function(par,g,ap){
+        expected <- ap$bkg + exp(par+g*ap$t)
+        sum((expected - ap$sig)^2)
+    }
     sem_misfit <- function(par,g,ap){
         expected <- ap$bkgcounts + exp(par+g*ap$t)*ap$edt
         LL <- dpois(x=ap$counts,lambda=expected,log=TRUE)
         -sum(LL)
+    }
+    init_far <- function(ap){
+        dap <- ap$sig-ap$bkg
+        if (any(dap>0)){
+            map <- mean(dap)
+            if (map>0) init <- log(map)
+            else init <- log(min(dap[dap>0]))
+        } else {
+            flap <- -max(dap)
+            if (flap>0) init <- log(flap)
+            else init <- -5
+        }
+        init
     }
     out <- rep(0,length(ions))
     names(out) <- ions
     for (ion in ions){
         ap <- alphapars(spot,ion)
         if (spot$dtype[ion]=='Fc'){
-            out[ion] <- log(sum(exp(g*ap$t)*(ap$sig-ap$bkg))) -
-                log(sum(exp(g*ap$t)^2))
+            init <- init_far(ap)
+            out[ion] <- optimise(far_misfit,interval=init+c(-5,2),
+                                 g=g,ap=ap)$minimum
         } else {
             init <- log(max(0.5,sum(ap$counts))) -
                 log(sum(exp(g*ap$t)*ap$edt))
