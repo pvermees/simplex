@@ -12,6 +12,9 @@
 #'     subsequent data reduction steps.
 #' @param oxide the ion label to be used as a uranium or thorium oxide
 #'     reference for U-Pb and U-Th-Pb calibration.
+#' @param multicollector logical flag indicating whether the
+#'     measurements were made in multicollection mode. If \code{TRUE},
+#'     removes the need to apply a drift correction.
 #' @param nominalblank logical flag indicating whether the blank is
 #'     measured during every sweep, or whether to use a nominal blank
 #'     value for each detector.
@@ -23,7 +26,8 @@
 #' plot(shrimpdat,i=1)
 #' @export
 method <- function(m='IGG-UPb',instrument,ions,detectors,
-                   num,den,oxide,nominalblank,description){
+                   num,den,oxide,multicollector,
+                   nominalblank,description){
     if (m%in%c('IGG-UPb','IGG-UThPb','IGG-O','IGG-S','GA-UPb')){
         out <- defaultmethod(m)
     } else {
@@ -36,6 +40,7 @@ method <- function(m='IGG-UPb',instrument,ions,detectors,
     if (!missing(num)) out$num <- num
     if (!missing(den)) out$den <- den
     if (!missing(oxide)) out$oxide <- oxide
+    if (!missing(multicollector)) out$multicollector <- multicollector
     if (!missing(nominalblank)) out$nominalblank <- nominalblank
     if (!missing(description)) out$description <- description
     class(out) <- "method"
@@ -54,6 +59,7 @@ defaultmethod <- function(m){
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO2')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238')
         out$oxide <- c(U='UO2')
+        out$multicollector <- FALSE
         out$nominalblank <- TRUE
         out$description <- "Single collector U-Pb dating at CAS-IGG (Beijing)."
     } else if (m=='IGG-UThPb'){
@@ -65,6 +71,7 @@ defaultmethod <- function(m){
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO2','Pb208','ThO2')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238','Th232','Th232')
         out$oxide <- c(U='UO2',Th='ThO2')
+        out$multicollector <- FALSE
         out$nominalblank <- TRUE
         out$description <- "Single collector U-Th-Pb dating at CAS-IGG (Beijing)."
     } else if (m=='IGG-O'){
@@ -73,6 +80,7 @@ defaultmethod <- function(m){
         out$detectors <- c("L'2","L2","L1","C","H1","H2","H'2","FC1","EM","FC2")
         out$num <- c('O17','O18')
         out$den <- c('O16','O16')
+        out$multicollector <- TRUE
         out$nominalblank <- TRUE
         out$description <- "Multicollector oxygen isotope analyses at CAS-IGG (Beijing)."
     } else if (m=='IGG-S'){
@@ -81,6 +89,7 @@ defaultmethod <- function(m){
         out$detectors <- c("L'2","L2","L1","C","H1","H2","H'2","FC1","EM","FC2")
         out$num <- c('S33','S34','S36')
         out$den <- c('S32','S32','S32')
+        out$multicollector <- TRUE
         out$nominalblank <- TRUE
         out$description <- "Multicollector sulphur isotope analyses at CAS-IGG (Beijing)."
     } else if (m=='GA-UPb'){
@@ -91,6 +100,7 @@ defaultmethod <- function(m){
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238')
         out$oxide <- c(U='UO')
+        out$multicollector <- FALSE
         out$nominalblank <- FALSE
         out$description <- "Single collector U-Pb dating at Geoscience Australia."
     } else {

@@ -46,7 +46,9 @@ main {
     font-family: sans-serif;
     font-size: 16px;
 }
-
+.normalfont {
+    font-size: 12px;
+}
 div {
     //border: 1px solid black;
     padding: 10px;

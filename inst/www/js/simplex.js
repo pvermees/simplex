@@ -66,20 +66,37 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
-    let stabset = document.querySelector('.hide4stable');
-    if (stable()) {
-	stabset.classList.add('hidden');
-    } else {
-	stabset.classList.remove('hidden');
-	assign('oxide');
-    }
+    showOrHide('.hide4stable',stable(),assign,'oxide');
+    showOrHide('.hide4multi',simplex.method.multicollector[0]);
+    labelButtons();
+    document.getElementById('multicollector').checked =
+	simplex.method.multicollector[0];
     document.getElementById('nominalblank').checked =
 	simplex.method.nominalblank[0];
+}
+
+function showOrHide(cls,condition,callback,arg){
+    let set = document.querySelector(cls);
+    if (condition) {
+	set.classList.add('hidden');
+    } else {
+	set.classList.remove('hidden');
+	if (callback !== undefined && arg !== undefined) callback(arg)
+    }
 }
 
 function stable(){
     let m = simplex.method.method;
     return(["IGG-O","IGG-S","GA-O"].includes(m[0]))
+}
+
+function labelButtons(){
+    let labelNums = simplex.method.multicollector[0] ? [1,0,2,3,4,5] : [1,2,3,4,5,6];
+    let id = null;
+    for (let i=0; i<labelNums.length; i++){
+	id = simplex.buttonIDs[i];
+	document.getElementById(id).innerText = labelNums[i] + '. ' + simplex.buttonIDs[i];
+    }
 }
 
 function fileFormats(){
