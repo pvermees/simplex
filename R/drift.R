@@ -123,6 +123,9 @@ alphapars <- function(spot,ion){
 plot.drift <- function(x,sname=NULL,i=1,...){
     spot <- spot(x,sname=sname,i=i)
     ions <- spot$method$ions
+    tlim <- range(spot$time)
+    tm <- apply(spot$time,1,min)
+    tM <- apply(spot$time,1,max)
     np <- length(ions) # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
@@ -134,11 +137,14 @@ plot.drift <- function(x,sname=NULL,i=1,...){
         ylab <- paste0(ion,'- b')
         a0 <- spot$dc['a0',ion]
         g <- spot$dc['g',ion]
-        predsig <- exp(a0+g*ap$t)
-        graphics::plot(rep(tt,2),c(sb,predsig),
-                       type='n',xlab='',ylab='',...)
-        graphics::points(tt,sb,type='p')
-        graphics::lines(tt,predsig)
+        predsig <- exp(a0+g*hours(tlim))
+        sbm <- sb*exp(g*hours(tm-tt))
+        sbM <- sb*exp(g*hours(tM-tt))
+        ylim <- c(sbm[1],sbM[nr])
+        graphics::matplot(rbind(tm,tM),rbind(sbm,sbM),type='l',
+                          col='black',lty=1,xlab='',ylab='',...)
+        graphics::points(tt,sb,type='p',pch=21,bg='black')
+        graphics::lines(tlim,predsig,lty=3)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
     }
