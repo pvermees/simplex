@@ -86,8 +86,8 @@ getlogratios <- function(x){
     out
 }
 
-logratioPlot <- function(x,i){
-    plot.logratios(x=as.simplex(x),i=as.numeric(i)+1)
+logratioPlot <- function(x,i,logratios){
+    plot.logratios(x=as.simplex(x),i=as.numeric(i)+1,logratios=logratios)
 }
 
 # f = list of two lists with blocks of text and corresponding filenames

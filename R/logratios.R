@@ -277,9 +277,9 @@ groupbypairs <- function(B){
 #' @param x an object of class \code{logratios}
 #' @param sname the sample name to be shown
 #' @param i the sample number to be shown
-#' @param option if 1, plots the logratios against time, if 2, plots
-#'     the raw signals versus time. Both plots show the fitted values
-#'     as a solid line.
+#' @param logratios logical. If \code{TRUE}, plots the logratios
+#'     against time, if \code{FALSE}, plots the raw signals versus
+#'     time. Both plots show the fitted values as a solid line.
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
@@ -287,18 +287,16 @@ groupbypairs <- function(B){
 #' data('SHRIMP',package='simplex')
 #' dc <- drift(x=SHRIMP)
 #' lr <- logratios(dc)
-#' plot(lr,i=1,option=2)
+#' plot(lr,i=1,logratios=TRUE)
 #' }
 #' @method plot logratios
 #' @export
-plot.logratios <- function(x,sname=NULL,i=1,option=1,...){
+plot.logratios <- function(x,sname=NULL,i=1,logratios=TRUE,...){
     spot <- spot(x,sname=sname,i=i)
-    if (option==1){
+    if (logratios){
         plot_logratios(spot=spot,...)
-    } else if (option==2){
-        plot_signals(spot=spot,...)
     } else {
-        stop("Invalid plot option.")
+        plot_signals(spot=spot,...)
     }
 }
 

@@ -3,10 +3,11 @@
   <left>
     <div>Aliquots:<select id="aliquots" onchange="showAliquot()"></select>
       &nbsp;<button class="mainbutton" onclick="logratioPlot()">Plot</button>
+      <input type="checkbox" id="logratiocheckbox"
+	     onchange="checkLogratios()">logratios
     </div>
     <div>Signal: <table id="signal-table" class="normalfont"></table></div>
     <div>Time: <table id="time-table" class="normalfont"></table></div>
   </left>
-
   <right><img class="plot" id="logratio-plot"></right>
 </div>

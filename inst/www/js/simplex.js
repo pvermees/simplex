@@ -5,7 +5,8 @@ var simplex = {
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
     'method': null,
     'names': null,
-    'samples': null
+    'samples': null,
+    'logratios': false
 }
 
 var elements = {
@@ -217,23 +218,10 @@ function dataTable(i,samples){
     let keys = Object.keys(samples);
     let nr = elements.time.rowCount();
     let nc = elements.sig.columnCount();
-    let tim = stringtab(samples[keys[i]].time);
-    let sig = stringtab(samples[keys[i]].signal);
+    let tim = samples[keys[i]].time;
+    let sig = samples[keys[i]].signal;
     elements.time.putCells(0,nr+1,0,nc+1,tim);
     elements.sig.putCells(0,nr+1,0,nc+1,sig);
-}
-
-function stringtab(dat){
-    let nr = dat.length;
-    let nc = dat[0].length;
-    let arr = new Array(nr);
-    for (let i=0; i<nr; i++){
-	arr[i] = new Array(nc);
-	for (let j=0; j<nc; j++){
-	    arr[i][j] = parseFloat(dat[i][j]);
-	}
-    }
-    return(arr)
 }
 
 function showAliquot(){
@@ -266,8 +254,15 @@ function logratios(){
 	).then(
 	    () => shower(),
 	    error => alert(error)
+	).then(
+	    () => document.getElementById("logratios").checked =
+		simplex.logratios
 	)
     )
+}
+
+function checkLogratios(){
+    simplex.logratios = document.getElementById("logratiocheckbox").checked;
 }
 
 function loadLogratioSamples(){
@@ -289,7 +284,9 @@ function loadLogratioSamples(){
 
 function logratioPlot(){
     let i = document.getElementById("aliquots").value;
-    shinylight.call('logratioPlot', {x:simplex, i:i}, 'logratio-plot').then(
+    shinylight.call('logratioPlot',
+		    {x:simplex, i:i, logratios:simplex.logratios},
+		    'logratio-plot').then(
 	result => shinylight.setElementPlot('logratio-plot', result.plot),
 	error => alert(error)
     );
