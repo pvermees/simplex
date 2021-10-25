@@ -32,42 +32,62 @@ presets <- function(method){
         out$samples <- NULL
         out$method <- defaultmethod(method)
     }
+    out$names <- rcnames(out$samples)
     out
 }
 
-as.simplex <- function(dat){
-    out <- dat
-    ns <- length(dat$samples)
-    dc <- "dc"%in%names(out$samples[[1]])
-    cameca <- identical(dat$method$instrument,"Cameca")
-    for (i in 1:ns){
-        if (cameca) {
-            names(out$samples[[i]]$detector) <- dat$method$ions
-            names(out$samples[[i]]$yield) <- dat$method$detectors
-            names(out$samples[[i]]$background) <- dat$method$detectors
+rcnames <- function(dat){
+    if (is.list(dat)){
+        out <- list()
+        for (nm in names(dat)){
+            out[[nm]] <- rcnames(dat[[nm]])
         }
-        names(out$samples[[i]]$dwelltime) <- dat$method$ions
-        names(out$samples[[i]]$dtype) <- dat$method$ions
-        names(out$samples[[i]]$deadtime) <- dat$method$detectors
-        colnames(out$samples[[i]]$signal) <- dat$method$ions
-        colnames(out$samples[[i]]$sbm) <- dat$method$ions
-        colnames(out$samples[[i]]$time) <- dat$method$ions
-        if (dc) {
-            rownames(out$samples[[i]]$dc) <- c('a0','g')
-            colnames(out$samples[[i]]$dc) <- dat$method$ions
-        }
+    } else if (is.matrix(dat)){
+        out <- list(rnames=rownames(dat),cnames=colnames(dat))
+    } else {
+        out <- names(dat)
     }
-    class(out) <- "simplex"
-    if (dc) class(out) <- append('drift',class(out))
+    out
+}
+restorenames <- function(sms,nms){
+    out <- sms
+    if (is.list(sms)){
+        for (nm in names(sms)){
+            out[[nm]] <- restorenames(sms[[nm]],nms[[nm]])
+        }
+    } else if (is.matrix(sms)){
+        rownames(out) <- nms$rnames
+        colnames(out) <- nms$cnames
+    } else {
+        names(out) <- nms
+    }
+    out    
+}
+as.simplex <- function(x){
+    out <- list()
+    out$method <- x$method
+    out$samples <- restorenames(x$samples,x$names)
     out
 }
 
-driftCorr <- function(x){
-    drift(as.simplex(dat=x))
+getdrift <- function(x){
+    out <- drift(x=as.simplex(x))
+    out$names <- rcnames(out$samples)
+    out
 }
 
 driftPlot <- function(x,i){
-    plot.drift(x=as.simplex(dat=x),i=as.numeric(i)+1)
+    plot.drift(x=as.simplex(x),i=as.numeric(i)+1)
+}
+
+getlogratios <- function(x){
+    out <- logratios(as.simplex(x))
+    out$names <- rcnames(out$samples)
+    out
+}
+
+logratioPlot <- function(x,i){
+    plot.logratios(x=as.simplex(x),i=as.numeric(i)+1)
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
@@ -87,8 +107,10 @@ freeformServer <- function(port=NULL) {
         interface=list(
           presets=presets,
           upload=upload,
-          driftCorr=driftCorr,
-          driftPlot=driftPlot
+          getdrift=getdrift,
+          driftPlot=driftPlot,
+          getlogratios=getlogratios,
+          logratioPlot=logratioPlot
         )
     )
 }

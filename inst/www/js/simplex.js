@@ -4,12 +4,13 @@ var simplex = {
     'selected': 0,
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
     'method': null,
+    'names': null,
     'samples': null
 }
 
 var elements = {
-    'driftime': null,
-    'driftsig': null
+    'time': null,
+    'sig': null
 }
 
 function start() {
@@ -53,8 +54,7 @@ function setup(){
 async function loadPresets(){
     const m = document.getElementById("methods").value;
     const result = await shinylight.call('presets', { method: m }, null);
-    simplex.samples = result.data.samples;
-    simplex.method = result.data.method;
+    result2simplex(result);
     showPresets();
     fileFormats();
 }
@@ -91,11 +91,13 @@ function stable(){
 }
 
 function labelButtons(){
-    let labelNums = simplex.method.multicollector[0] ? [1,0,2,3,4,5] : [1,2,3,4,5,6];
+    let labelNums = simplex.method.multicollector[0] ?
+	[1,0,2,3,4,5] : [1,2,3,4,5,6];
     let id = null;
     for (let i=0; i<labelNums.length; i++){
 	id = simplex.buttonIDs[i];
-	document.getElementById(id).innerText = labelNums[i] + '. ' + simplex.buttonIDs[i];
+	document.getElementById(id).innerText =
+	    labelNums[i] + '. ' + simplex.buttonIDs[i];
     }
 }
 
@@ -145,12 +147,18 @@ async function upload(){
     readFiles().then(
 	f => {
 	    shinylight.call('upload', {f:f, m:m}, null).then(
-		result => simplex.samples = result.data.samples,
+		result => result2simplex(result),
 		error => alert(error)
 	    )
 	},
 	err => alert(err)
     )
+}
+
+function result2simplex(result){
+    simplex.samples = result.data.samples;
+    simplex.names = result.data.names;
+    simplex.method = result.data.method;
 }
 
 // 3. Drift
@@ -161,11 +169,11 @@ function drift(){
 	() => loader(),
 	error => alert(error)
     ).then(
-	shinylight.call("driftCorr", {x:simplex}, null).then(
-	    result => simplex.samples = result.data.samples,
+	shinylight.call("getdrift", {x:simplex}, null).then(
+	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
-	    () => loadSamples(),
+	    () => loadDriftSamples(),
 	    error => alert(error)
 	).then(
 	    () => shower(),
@@ -180,13 +188,15 @@ function loader(){
     show.classList.remove('hidden');
     hide.classList.add('hidden');
 }
+
 function shower(){
     let show = document.querySelector('.show4loading');
     let hide = document.querySelector('.hide4loading');
     show.classList.add('hidden');
     hide.classList.remove('hidden');
 }
-function loadSamples(){
+
+function loadDriftSamples(){
     let select = document.getElementById("aliquots");
     let samples = simplex.samples;
     let keys = Object.keys(samples);
@@ -198,20 +208,19 @@ function loadSamples(){
     }
     let nr = samples[keys[0]].signal.length;
     let header = simplex.method.ions;
-    elements.driftime = createDataEntryGrid('drift-time-table',header, nr);
-    elements.driftsig = createDataEntryGrid('drift-signal-table',header,nr);
-    driftTable(0);
+    elements.time = createDataEntryGrid('time-table',header, nr);
+    elements.sig = createDataEntryGrid('signal-table',header,nr);
+    dataTable(0,simplex.samples);
 }
 
-function driftTable(i){
-    let samples = simplex.samples;
+function dataTable(i,samples){
     let keys = Object.keys(samples);
-    let nr = elements.driftime.rowCount();
-    let nc = elements.driftsig.columnCount();
+    let nr = elements.time.rowCount();
+    let nc = elements.sig.columnCount();
     let tim = stringtab(samples[keys[i]].time);
     let sig = stringtab(samples[keys[i]].signal);
-    elements.driftime.putCells(0,nr+1,0,nc+1,tim);
-    elements.driftsig.putCells(0,nr+1,0,nc+1,sig);
+    elements.time.putCells(0,nr+1,0,nc+1,tim);
+    elements.sig.putCells(0,nr+1,0,nc+1,sig);
 }
 
 function stringtab(dat){
@@ -229,7 +238,7 @@ function stringtab(dat){
 
 function showAliquot(){
     let aliquot = document.getElementById("aliquots").value;
-    driftTable(aliquot);
+    dataTable(aliquot,simplex.samples);
 }
 
 function driftPlot(){
@@ -244,7 +253,46 @@ function driftPlot(){
 
 function logratios(){
     selectButton(2);
-    loadPage("logratios.html");
+    loadPage("logratios.html").then(
+	() => loader(),
+	error => alert(error)
+    ).then(
+	shinylight.call("getlogratios", {x:simplex}, null).then(
+	    result => result2simplex(result),
+	    error => alert(error)
+	).then(
+	    () => loadLogratioSamples(),
+	    error => alert(error)
+	).then(
+	    () => shower(),
+	    error => alert(error)
+	)
+    )
+}
+
+function loadLogratioSamples(){
+    let select = document.getElementById("aliquots");
+    let samples = simplex.samples;
+    let keys = Object.keys(samples);
+    for(let i = 0; i<keys.length; i++) {
+	let el = document.createElement("option");
+	el.textContent = keys[i];
+	el.value = i;
+	select.appendChild(el);
+    }
+    let nr = samples[keys[0]].signal.length;
+    let header = simplex.method.ions;
+    elements.time = createDataEntryGrid('time-table',header, nr);
+    elements.sig = createDataEntryGrid('signal-table',header,nr);
+    dataTable(0,simplex.samples);
+}
+
+function logratioPlot(){
+    let i = document.getElementById("aliquots").value;
+    shinylight.call('logratioPlot', {x:simplex, i:i}, 'logratio-plot').then(
+	result => shinylight.setElementPlot('logratio-plot', result.plot),
+	error => alert(error)
+    );
 }
 
 function calibration(){

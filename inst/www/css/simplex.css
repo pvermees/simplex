@@ -93,7 +93,7 @@ div {
     cursor: pointer;
     background-color: #ffdddd;    
 }
-#drift-plot {
+.plot {
     position: relative;
     width: 100%;
     height: 100%;
