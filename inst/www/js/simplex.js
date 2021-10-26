@@ -169,7 +169,7 @@ function drift(){
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
-	    () => loadDriftSamples(),
+	    () => loadSamples(() => driftAliquot()),
 	    error => alert(error)
 	).then(
 	    () => shower(),
@@ -192,7 +192,7 @@ function shower(){
     hide.classList.remove('hidden');
 }
 
-function loadDriftSamples(){
+function loadSamples(callback){
     let select = document.getElementById("aliquots");
     let samples = simplex.samples;
     let keys = Object.keys(samples);
@@ -202,7 +202,7 @@ function loadDriftSamples(){
 	el.value = i;
 	select.appendChild(el);
     }
-    driftAliquot();
+    callback();
 }
 
 function loadTable(dat,header,id){
@@ -240,7 +240,7 @@ function logratios(){
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
-	    () => loadLogratioSamples(),
+	    () => loadSamples(() => logratioAliquot()),
 	    error => alert(error)
 	).then(
 	    () => shower(),
@@ -254,19 +254,6 @@ function logratios(){
 
 function checkLogratios(){
     simplex.logratios = document.getElementById("logratiocheckbox").checked;
-}
-
-function loadLogratioSamples(){
-    let select = document.getElementById("aliquots");
-    let samples = simplex.samples;
-    let keys = Object.keys(samples);
-    for(let i = 0; i<keys.length; i++) {
-	let el = document.createElement("option");
-	el.textContent = keys[i];
-	el.value = i;
-	select.appendChild(el);
-    }
-    logratioAliquot();
 }
 
 function logratioAliquot(){
