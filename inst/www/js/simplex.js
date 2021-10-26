@@ -5,8 +5,7 @@ var simplex = {
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
     'method': null,
     'names': null,
-    'samples': null,
-    'logratios': false
+    'samples': null
 }
 
 function start() {
@@ -205,8 +204,7 @@ function loadSamples(callback){
     callback();
 }
 
-function loadTable(dat,header,id){
-    let nr = dat.length;
+function loadTable(dat,header,id,nr){
     let nc = header.length;
     let tab = createDataEntryGrid(id,header,nr);
     tab.putCells(0,nr+1,0,nc+1,dat);
@@ -216,8 +214,9 @@ function driftAliquot(){
     let i = document.getElementById("aliquots").value;
     let keys = Object.keys(simplex.samples);
     let header = simplex.method.ions;
-    loadTable(simplex.samples[keys[i]].time,header,'time-table');
-    loadTable(simplex.samples[keys[i]].signal,header,'signal-table');
+    let dat = simplex.samples[keys[i]];
+    loadTable(dat.time,header,'time-table',dat.time.length);
+    loadTable(dat.signal,header,'signal-table',dat.signal.length);
 }
 
 function driftPlot(){
@@ -245,30 +244,23 @@ function logratios(){
 	).then(
 	    () => shower(),
 	    error => alert(error)
-	).then(
-	    () => document.getElementById("logratios").checked =
-		simplex.logratios
 	)
     )
 }
 
-function checkLogratios(){
-    simplex.logratios = document.getElementById("logratiocheckbox").checked;
-}
-
 function logratioAliquot(){
     let i = document.getElementById("aliquots").value;
-    let keys = Object.keys(simplex.samples);
-    let header = simplex.method.num;
-    loadTable(simplex.samples[keys[i]].lr.t,header,'time-table');
-    loadTable(simplex.samples[keys[i]].lr.obs,header,'signal-table');
+    let key = Object.keys(simplex.samples)[i];
+    let header = simplex.names[key].lr.b0g;
+    let b0g = simplex.samples[key].lr.b0g;
+    let ns = header.length/2;
+    loadTable([b0g.slice(0,ns)],header.slice(0,ns),'b0',1);
+    loadTable([b0g.slice(ns,2*ns)],header.slice(ns,2*ns),'g',1);
 }
 
 function logratioPlot(){
     let i = document.getElementById("aliquots").value;
-    shinylight.call('logratioPlot',
-		    {x:simplex, i:i, logratios:simplex.logratios},
-		    'logratio-plot').then(
+    shinylight.call('logratioPlot', {x:simplex, i:i}, 'logratio-plot').then(
 	result => shinylight.setElementPlot('logratio-plot', result.plot),
 	error => alert(error)
     );

@@ -277,9 +277,11 @@ groupbypairs <- function(B){
 #' @param x an object of class \code{logratios}
 #' @param sname the sample name to be shown
 #' @param i the sample number to be shown
-#' @param logratios logical. If \code{TRUE}, plots the logratios
-#'     against time, if \code{FALSE}, plots the raw signals versus
-#'     time. Both plots show the fitted values as a solid line.
+#' @param logratios logical. If \code{FALSE}, plots the raw signals
+#' versus time. If \code{TRUE}, plots the logratios against time.
+#' Both plots show the fitted values as a solid line. Note that, for
+#' single collector datasets, the numerator and denominator of the
+#' measured logratios correspond to different times.
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
@@ -291,7 +293,7 @@ groupbypairs <- function(B){
 #' }
 #' @method plot logratios
 #' @export
-plot.logratios <- function(x,sname=NULL,i=1,logratios=TRUE,...){
+plot.logratios <- function(x,sname=NULL,i=1,logratios=FALSE,...){
     spot <- spot(x,sname=sname,i=i)
     if (logratios){
         plot_logratios(spot=spot,...)
