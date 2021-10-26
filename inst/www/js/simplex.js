@@ -196,28 +196,28 @@ function loadDriftSamples(){
     let select = document.getElementById("aliquots");
     let samples = simplex.samples;
     let keys = Object.keys(samples);
-    for(let i = 0; i<keys.length; i++) {
+    for (let i = 0; i<keys.length; i++) {
 	let el = document.createElement("option");
 	el.textContent = keys[i];
 	el.value = i;
 	select.appendChild(el);
     }
-    dataTable(samples[0].time,'time-table');
-    dataTable(samples[0].signal,'signal-table');
+    driftAliquot();
 }
 
-function dataTable(dat,id){
+function loadTable(dat,header,id){
     let nr = dat.length;
-    let header = simplex.method.ions;
     let nc = header.length;
-    let tab = createDataEntryGrid('time-table',header);
+    let tab = createDataEntryGrid(id,header,nr);
     tab.putCells(0,nr+1,0,nc+1,dat);
 }
 
-function showAliquot(){
-    let aliquot = document.getElementById("aliquots").value;
-    dataTable(samples[aliquot].time,'time-table');
-    dataTable(samples[aliquot].signal,'signal-table');
+function driftAliquot(){
+    let i = document.getElementById("aliquots").value;
+    let keys = Object.keys(simplex.samples);
+    let header = simplex.method.ions;
+    loadTable(simplex.samples[keys[i]].time,header,'time-table');
+    loadTable(simplex.samples[keys[i]].signal,header,'signal-table');
 }
 
 function driftPlot(){
@@ -266,11 +266,15 @@ function loadLogratioSamples(){
 	el.value = i;
 	select.appendChild(el);
     }
-    let nr = samples[keys[0]].signal.length;
-    let header = simplex.method.ions;
-    elements.time = createDataEntryGrid('time-table',header, nr);
-    elements.sig = createDataEntryGrid('signal-table',header,nr);
-    dataTable(0,simplex.samples);
+    logratioAliquot();
+}
+
+function logratioAliquot(){
+    let i = document.getElementById("aliquots").value;
+    let keys = Object.keys(simplex.samples);
+    let header = simplex.method.num;
+    loadTable(simplex.samples[keys[i]].lr.t,header,'time-table');
+    loadTable(simplex.samples[keys[i]].lr.obs,header,'signal-table');
 }
 
 function logratioPlot(){
