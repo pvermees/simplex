@@ -9,11 +9,6 @@ var simplex = {
     'logratios': false
 }
 
-var elements = {
-    'time': null,
-    'sig': null
-}
-
 function start() {
     // This will be moved into shinylight.initialize()
     new Promise((resolve, reject) => {
@@ -207,26 +202,22 @@ function loadDriftSamples(){
 	el.value = i;
 	select.appendChild(el);
     }
-    let nr = samples[keys[0]].signal.length;
-    let header = simplex.method.ions;
-    elements.time = createDataEntryGrid('time-table',header, nr);
-    elements.sig = createDataEntryGrid('signal-table',header,nr);
-    dataTable(0,simplex.samples);
+    dataTable(samples[0].time,'time-table');
+    dataTable(samples[0].signal,'signal-table');
 }
 
-function dataTable(i,samples){
-    let keys = Object.keys(samples);
-    let nr = elements.time.rowCount();
-    let nc = elements.sig.columnCount();
-    let tim = samples[keys[i]].time;
-    let sig = samples[keys[i]].signal;
-    elements.time.putCells(0,nr+1,0,nc+1,tim);
-    elements.sig.putCells(0,nr+1,0,nc+1,sig);
+function dataTable(dat,id){
+    let nr = dat.length;
+    let header = simplex.method.ions;
+    let nc = header.length;
+    let tab = createDataEntryGrid('time-table',header);
+    tab.putCells(0,nr+1,0,nc+1,dat);
 }
 
 function showAliquot(){
     let aliquot = document.getElementById("aliquots").value;
-    dataTable(aliquot,simplex.samples);
+    dataTable(samples[aliquot].time,'time-table');
+    dataTable(samples[aliquot].signal,'signal-table');
 }
 
 function driftPlot(){
