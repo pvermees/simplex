@@ -18,13 +18,19 @@
 	<td><input class="preset" type="text" id="instrument"></td></tr>
       <tr>
 	<td>Ions:</td>
-	<td><input class="preset" type="text" class="w-auto"id="ions"></td></tr>
+	<td><input class="preset" type="text" id="ions"></td></tr>
       <tr>
 	<td>Numerators:</td>
 	<td><input class="preset" type="text" id="num"></td></tr>
       <tr>
 	<td>Denominators:</td>
 	<td><input class="preset" type="text" id="den"></td></tr>
+      <tr class="hide4stable">
+	<td>Oxide(s):</td>
+	<td><input class="preset" type="text" id="oxide"></td></tr>
+      <tr>
+	<td>Multicollection?</td>
+	<td><input type="checkbox" id="multicollector"></td></tr>
       <tr>
 	<td>Nominal blank?</td>
 	<td><input type="checkbox" id="nominalblank"></td></tr>
@@ -35,8 +41,7 @@
 <div>
   Load SIMS data:
   <label class="custom-file-upload">
-    <input type="file" id="upload" accept=".op, .pd, .asc"
-	   onchange="upload()" multiple>
+    <input type="file" id="upload" onchange="upload()" multiple>
     Browse...
   </input>
   </label><label id="upload-status"></label>

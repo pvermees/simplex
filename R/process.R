@@ -19,12 +19,12 @@
 #' m <- method('GA-UPb')
 #' s <- standard(preset="Temora",prefix='TEM')
 #' fname <- system.file('SHRIMP.pd',package='simplex')
-#' cd <- process(f=fname,method=m,stand=s)
+#' cd <- process(f=fname,m=m,stand=s)
 #' tab <- data2table(cd)
 #' }
 #' @export
-process <- function(f,method,stand,t=0,exterr=FALSE){
-    dat <- read_data(f=f,method=method)
+process <- function(f,m,stand,t=0,exterr=FALSE){
+    dat <- read_data(f=f,m=m)
     dc <- drift(x=dat)
     lr <- logratios(x=dc)
     cal <- calibration(lr=lr,stand=stand,t=t)
