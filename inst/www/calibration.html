@@ -1,1 +1,30 @@
-calibration
+<div class="show4loading blink">Processing...</div>
+<div class="hide4loading">
+  <left>
+    <div>Choose a standard from this list:
+      <select id="standards" onchange="chooseStandard()">
+	<option id="Plesovice">Plesovice zircon</option>
+	<option id="Qinghu">Qinghu zircon</option>
+	<option id="Temora">Temora zircon</option>
+	<option id="44069">44069 monazite</option>
+	<option id="NBS28">NBS28 quartz</option>
+      </select>
+    </div>
+    <div>Or define your own by specifying its 
+      <select id="standoption" onchange="standOption()">
+	<option id="specify-standard-age">age</option>
+	<option id="specify-standard-composition">composition</option>
+      </select>
+      <table id="tval"></table>
+      <span>&plusmn;<table id="stval"></table></span>
+      <span>Covariance matrix:<table id="cov-tval"></table></span>
+    </div>
+    <div>Prefix:<input type="text" id="prefix">
+      <button class="mainbutton" onclick="calibrationPlot()">Calibrate</button>
+    </div>
+    <div>Aliquots:<table id="aliquots"></table></div>
+  </left>
+  <right>
+    <img class="plot" id="calibration-plot">
+  </right>
+</div>

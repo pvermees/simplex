@@ -12,8 +12,8 @@
 #' @param val (optional) true isotopic composition of
 #'     \eqn{^{206}}Pb/\eqn{^{238}}U- and
 #'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
-#'     or true \eqn{\delta^{18}O} and \eqn{\delta^{16}O} values of the
-#'     oxygen isotope reference material.
+#'     or the true \eqn{\delta}-values of the stable isotope reference
+#'     material.
 #' @param cov (optional) the covariance matrix of \code{val}
 #' @param common (optional) the common-Pb composition
 #'     (\eqn{^{206}}Pb/\eqn{^{204}}Pb and
@@ -62,6 +62,8 @@ standard <- function(preset,prefix=preset,tst,
         out <- standard(tst=c(416.75,0.12),prefix=prefix)
     } else if (preset=='NBS28'){
         out <- standard(val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2,prefix=prefix)
+    } else if (preset=='Sonora'){ # temporary value
+        out <- standard(val=c(0.83,1.61),cov=diag(c(0.05,0.1))^2,prefix=prefix)
     } else {
         stop("Invalid input to standard(...).")
     }

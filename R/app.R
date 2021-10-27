@@ -90,6 +90,10 @@ logratioPlot <- function(x,i){
     plot.logratios(x=as.simplex(x),i=as.numeric(i)+1)
 }
 
+getcalibration <- function(x){
+    x
+}
+
 # f = list of two lists with blocks of text and corresponding filenames
 # m = method (currently a string, will be modified to accept lists)
 upload <- function(f,m){
@@ -110,7 +114,8 @@ freeformServer <- function(port=NULL) {
           getdrift=getdrift,
           driftPlot=driftPlot,
           getlogratios=getlogratios,
-          logratioPlot=logratioPlot
+          logratioPlot=logratioPlot,
+          getcalibration=getcalibration
         )
     )
 }

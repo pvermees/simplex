@@ -266,9 +266,22 @@ function logratioPlot(){
     );
 }
 
+// 4. Calibration
+
 function calibration(){
     selectButton(3);
-    loadPage("calibration.html");
+    loadPage("calibration.html").then(
+	() => loader(),
+	error => alert(error)
+    ).then(
+	shinylight.call("getcalibration", {x:simplex}, null).then(
+	    result => result2simplex(result),
+	    error => alert(error)
+	).then(
+	    () => shower(),
+	    error => alert(error)
+	)
+    );
 }
 
 function samples(){

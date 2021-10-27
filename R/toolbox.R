@@ -101,7 +101,7 @@ datatype <- function(x){
 }
 
 faraday <- function(spot,ion=NULL){
-    if (is.null(ion)) out <- all(spot$dtype[spot$method$ions]=='Fc')
+    if (is.null(ion)) out <- any(spot$dtype[spot$method$ions]=='Fc')
     else out <- spot$dtype[ion]=='Fc'
     out
 }
