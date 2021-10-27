@@ -68,8 +68,8 @@ defaultmethod <- function(m){
                    'Pb207','Pb208','Th232','U238',
                    'ThO2','UO2')
         out$detectors <- c('FC1','EM','FC2')
-        out$num <- c('Pb204','Pb207','Pb208','Pb206','UO2','Pb208','ThO2')
-        out$den <- c('Pb206','Pb206','Pb206','U238','U238','Th232','Th232')
+        out$num <- c('Pb204','Pb207','Pb204','Pb206','UO2','Pb208','ThO2')
+        out$den <- c('Pb206','Pb206','Pb208','U238','U238','Th232','Th232')
         out$oxide <- c(U='UO2',Th='ThO2')
         out$multicollector <- FALSE
         out$nominalblank <- TRUE

@@ -136,8 +136,8 @@ nofractical <- function(dat,type="U-Pb"){
         num=c('Pb204','Pb207')
         den=c('Pb206','Pb206')
     } else if (type=='U-Th-Pb'){
-        num=c('Pb204','Pb207','Pb208')
-        den=c('Pb206','Pb206','Pb206')
+        num=c('Pb204','Pb207','Pb204')
+        den=c('Pb206','Pb206','Pb208')
     }    
     snames <- names(dat$samples)
     ns <- length(snames)

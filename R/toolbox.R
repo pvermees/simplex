@@ -73,6 +73,19 @@ VSMOW <- function(){
     out
 }
 
+troilite <- function(){
+    out <- list()
+    S2346 <- c(126.948,22.6436,6515)
+    out$lr <- -log(S2346)
+    relerr <- c(0.047,0.0020,20)/S2346
+    out$cov <- diag(relerr^2)
+    labels <- c("S33S32","S34S32","S36S32")
+    names(out$lr) <- labels
+    rownames(out$cov) <- labels
+    colnames(out$cov) <- labels
+    out    
+}
+
 stable <- function(dat){
     type <- datatype(dat)
     if (type %in% c("oxygen")) return(TRUE)

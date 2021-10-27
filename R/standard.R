@@ -88,7 +88,17 @@ lrstand <- function(dat){
         }
         labels <- c("O17O16","O18O16")
         out$ref <- VSMOW()$lr
-        out$lr <- log(1 + val/1000) + VSMOW()$lr
+        out$lr <- log(1 + val/1000) + out$ref
+        J <- diag(1/(1000 + val))
+    } else if (type=="sulphur"){
+        if (length(val)==2){ # if d36S is missing
+            val <- c(val,val[2]*2)
+            J <- rbind(c(1,0),c(0,1),c(0,2))
+            cov <- J %*% cov %*% t(J)
+        }
+        labels <- c("S33S32","S34S32","S36S32")
+        out$ref <- troilite()$lr
+        out$lr <- log(1 + val/1000) + out$ref
         J <- diag(1/(1000 + val))
     } else {
         stop('Invalid type argument supplied to lrstand')
