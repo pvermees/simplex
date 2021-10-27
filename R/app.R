@@ -63,6 +63,7 @@ restorenames <- function(sms,nms){
     }
     out    
 }
+
 as.simplex <- function(x){
     out <- list()
     out$method <- x$method

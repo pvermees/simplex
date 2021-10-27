@@ -30,6 +30,7 @@
 standard <- function(preset,prefix=preset,tst,
                      val,cov=matrix(0,length(val),length(val)),common){
     if (missing(preset)){
+        preset <- 'other'
         out <- list()
         if (missing(val)){
             if (missing(tst)){
@@ -37,18 +38,14 @@ standard <- function(preset,prefix=preset,tst,
                      "of the sample are missing.")
             } else {
                 out$tst <- tst
-                out$fetch <- function(dat){
-                    age2lr(dat)
-                }
+                out$fetch <- function(dat){ age2lr(dat) }
             }
         } else {
             out$val <- val
             out$cov <- cov
             if (missing(common)) out$common <- val*0
             else out$common <- common
-            out$fetch <- function(dat){
-                lrstand(dat)
-            }
+            out$fetch <- function(dat){ lrstand(dat) }
         }
         out$prefix <- prefix
         class(out) <- 'standard'
@@ -67,6 +64,7 @@ standard <- function(preset,prefix=preset,tst,
     } else {
         stop("Invalid input to standard(...).")
     }
+    out$name <- preset
     out
 }
 lrstand <- function(dat){

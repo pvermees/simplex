@@ -52,13 +52,14 @@ common2original <- function(fit,num,den,groups){
     rnames <- paste0(num,'/',den)
     outnames <- c(paste0('b0[',rnames,']'),
                   paste0('g[',rnames,']'))
-    ni <- length(rnames)
-    J <- matrix(0,nrow=2*ni,ncol=ncol(B0G$cov))
+    nin <- length(b0in)
+    nout <- length(rnames)
+    J <- matrix(0,nrow=2*nout,ncol=ncol(B0G$cov))
     colnames(J) <- colnames(B0G$cov)
     rownames(J) <- outnames
-    b0gout <- rep(0,2*ni)
+    b0gout <- rep(0,2*nout)
     names(b0gout) <- outnames
-    for (i in 1:ni){
+    for (i in 1:nout){
         nion <- num[i]
         dion <- den[i]
         if (nion == groups$den){
@@ -78,15 +79,15 @@ common2original <- function(fit,num,den,groups){
         nele <- element(num[i])
         dele <- element(den[i])
         if (nele == dele){
-            b0gout[ni+i] <- 0
+            b0gout[nout+i] <- 0
         } else {
             inele <- which(gnamesin %in% nele)
-            b0gout[ni+i] <- b0gout[ni+i] + gin[inele]
-            J[ni+i,ni+inele] <- 1
+            b0gout[nout+i] <- b0gout[nin+i] + gin[inele]
+            J[nout+i,nin+inele] <- 1
             if (dele != element(groups$den)){
                 idele <- which(gnamesin %in% dele)
-                b0gout[ni+i] <- b0gout[ni+i] - gin[idele]
-                J[ni+i,ni+idele] <- -1
+                b0gout[nout+i] <- b0gout[nout+i] - gin[idele]
+                J[nout+i,nin+idele] <- -1
             }
         }
     }
