@@ -1,30 +1,40 @@
 <div class="show4loading blink">Processing...</div>
 <div class="hide4loading">
   <left>
-    <div>Choose a standard from this list:
+    
+    <div>Choose a standard:
       <select id="standards" onchange="chooseStandard()">
-	<option id="Plesovice">Plesovice zircon</option>
-	<option id="Qinghu">Qinghu zircon</option>
-	<option id="Temora">Temora zircon</option>
-	<option id="44069">44069 monazite</option>
-	<option id="NBS28">NBS28 quartz</option>
+	<option value="Plesovice">Plesovice zircon</option>
+	<option value="Qinghu">Qinghu zircon</option>
+	<option value="Temora">Temora zircon</option>
+	<option value="44069">44069 monazite</option>
+	<option value="NBS28">NBS28 quartz</option>
+	<option value="Sonora">Sonora pyrite</option>
+	<option value="other">other</option>
       </select>
+      <div class="hidden show4newstandard">Define a new standard by specifying its 
+	<select id="standoption" onchange="standardType()">
+	  <option id="specify-standard-age">age</option>
+	  <option id="specify-standard-composition">composition</option>
+	</select>
+	<table id="tval"></table>
+	<span>&plusmn;<table id="stval"></table></span>
+	<span>Covariance matrix:<table id="cov-tval"></table></span>
+      </div> 
     </div>
-    <div>Or define your own by specifying its 
-      <select id="standoption" onchange="standOption()">
-	<option id="specify-standard-age">age</option>
-	<option id="specify-standard-composition">composition</option>
-      </select>
-      <table id="tval"></table>
-      <span>&plusmn;<table id="stval"></table></span>
-      <span>Covariance matrix:<table id="cov-tval"></table></span>
-    </div>
-    <div>Prefix:<input type="text" id="prefix">
+    
+    <div>Prefix:<input type="text" id="prefix" onchange="showStandards()">
       <button class="mainbutton" onclick="calibrationPlot()">Calibrate</button>
     </div>
-    <div>Aliquots:<table id="aliquots"></table></div>
+
+    <div>Analyses to use for the calibration:
+      <table id="aliquots" class="normalfont"></table>
+    </div>
+    
   </left>
+  
   <right>
     <img class="plot" id="calibration-plot">
   </right>
+  
 </div>

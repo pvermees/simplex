@@ -14,25 +14,27 @@ source('R/trim.R')
 presets <- function(method){
     if (method=='IGG-UPb'){
         load('data/Cameca_UPb.rda')
-        out <- Cameca_UPb
+        simplex <- Cameca_UPb
     } else if (method=='IGG-UThPb'){
         load('data/Cameca_UThPb.rda')
-        out <- Cameca_UThPb
+        simplex <- Cameca_UThPb
     } else if (method=='IGG-O'){
         load('data/Cameca_oxygen.rda')
-        out <- Cameca_oxygen
+        simplex <- Cameca_oxygen
     } else if (method=='IGG-S'){
         load('data/Cameca_sulphur.rda')
-        out <- Cameca_sulphur
+        simplex <- Cameca_sulphur
     } else if (method=='GA-UPb'){
         load('data/SHRIMP_UPb.rda')
-        out <- SHRIMP_UPb
+        simplex <- SHRIMP_UPb
     } else {
-        out <- list()
-        out$samples <- NULL
-        out$method <- defaultmethod(method)
+        simplex <- list()
+        simplex$samples <- NULL
+        simplex$method <- defaultmethod(method)
     }
-    out$names <- rcnames(out$samples)
+    out <- list()
+    out$simplex <- simplex
+    out$names <- rcnames(simplex)
     out
 }
 
@@ -49,6 +51,7 @@ rcnames <- function(dat){
     }
     out
 }
+
 restorenames <- function(sms,nms){
     out <- sms
     if (is.list(sms)){
@@ -65,26 +68,26 @@ restorenames <- function(sms,nms){
 }
 
 as.simplex <- function(x){
+    restorenames(x$simplex,x$names)
+}
+result2json <- function(x){
     out <- list()
-    out$method <- x$method
-    out$samples <- restorenames(x$samples,x$names)
+    out$simplex <- x
+    out$names <- rcnames(x)
     out
 }
 
 getdrift <- function(x){
-    out <- drift(x=as.simplex(x))
-    out$names <- rcnames(out$samples)
-    out
+    result2json(drift(x=as.simplex(x)))
 }
 
 driftPlot <- function(x,i){
-    plot.drift(x=as.simplex(x),i=as.numeric(i)+1)
+    dat <- as.simplex(x)
+    plot.drift(x=dat,i=as.numeric(i)+1)
 }
 
 getlogratios <- function(x){
-    out <- logratios(as.simplex(x))
-    out$names <- rcnames(out$samples)
-    out
+    result2json(logratios(x=as.simplex(x)))
 }
 
 logratioPlot <- function(x,i){

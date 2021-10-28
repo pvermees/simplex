@@ -1,11 +1,17 @@
 // 1. Startup
 
-var simplex = {
-    'selected': 0,
-    'buttonIDs': ['setup','drift','logratios','calibration','samples','finish'],
-    'method': null,
+var glob = {
+    'simplex': {
+	'method': null,
+	'samples': null,
+	'standard': null,
+	'calibration': null,
+	'calibrated': null
+    },
     'names': null,
-    'samples': null
+    'selected': 0,
+    'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
+
 }
 
 function start() {
@@ -19,20 +25,20 @@ function start() {
 
 function selectedButton() {
     return document.getElementById(
-        simplex.buttonIDs[simplex.selected]
+        glob.buttonIDs[glob.selected]
     );
 }
 
 function selectButton(i){
     selectedButton().classList.remove('on')
-    simplex.selected = i;
+    glob.selected = i;
     selectedButton().classList.add('on')
 }
 
 async function loadPage(url) {
     let response = await fetch(url);
-	let text = await response.text();
-	document.getElementById("contents").innerHTML = text;
+    let text = await response.text();
+    document.getElementById("contents").innerHTML = text;
 }
 
 // 2. Setup
@@ -40,8 +46,7 @@ async function loadPage(url) {
 function setup(){
     selectButton(0);
     loadPage("setup.html").then(
-        () => loadPresets()
-    ).catch(
+        () => loadPresets(),
         error => alert(error)
     );
 }
@@ -55,19 +60,20 @@ async function loadPresets(){
 }
 
 function showPresets(){
-    let assign = (id) => document.getElementById(id).value = simplex.method[id];
+    let assign = (id) => document.getElementById(id).value =
+	glob.simplex.method[id];
     assign('description');
     assign('instrument');
     assign('ions');
     assign('num');
     assign('den');
     showOrHide('.hide4stable',stable(),assign,'oxide');
-    showOrHide('.hide4multi',simplex.method.multicollector[0]);
+    showOrHide('.hide4multi',glob.simplex.method.multicollector[0]);
     labelButtons();
     document.getElementById('multicollector').checked =
-	simplex.method.multicollector[0];
+	glob.simplex.method.multicollector[0];
     document.getElementById('nominalblank').checked =
-	simplex.method.nominalblank[0];
+	glob.simplex.method.nominalblank[0];
 }
 
 function showOrHide(cls,condition,callback,arg){
@@ -81,26 +87,26 @@ function showOrHide(cls,condition,callback,arg){
 }
 
 function stable(){
-    let m = simplex.method.method;
+    let m = glob.simplex.method.method;
     return(["IGG-O","IGG-S","GA-O"].includes(m[0]))
 }
 
 function labelButtons(){
-    let labelNums = simplex.method.multicollector[0] ?
+    let labelNums = glob.simplex.method.multicollector[0] ?
 	[1,0,2,3,4,5] : [1,2,3,4,5,6];
     let id = null;
     for (let i=0; i<labelNums.length; i++){
-	id = simplex.buttonIDs[i];
+	id = glob.buttonIDs[i];
 	document.getElementById(id).innerText =
-	    labelNums[i] + '. ' + simplex.buttonIDs[i];
+	    labelNums[i] + '. ' + glob.buttonIDs[i];
     }
 }
 
 function fileFormats(){
     let accept = ['.asc','.op','.pd'];
-    if (simplex.method.instrument=='Cameca'){
+    if (glob.simplex.method.instrument=='Cameca'){
 	accept = '.asc';
-    } else if (simplex.method.instrument=='SHRIMP'){
+    } else if (glob.simplex.method.instrument=='SHRIMP'){
 	accept = ['.op','.pd'];
     } else {
 	alert('Unrecognised instrument.')
@@ -151,9 +157,8 @@ async function upload(){
 }
 
 function result2simplex(result){
-    simplex.samples = result.data.samples;
-    simplex.names = result.data.names;
-    simplex.method = result.data.method;
+    glob.simplex = result.data.simplex;
+    glob.names = result.data.names;
 }
 
 // 3. Drift
@@ -164,7 +169,7 @@ function drift(){
 	() => loader(),
 	error => alert(error)
     ).then(
-	shinylight.call("getdrift", {x:simplex}, null).then(
+	shinylight.call("getdrift", {x:glob}, null).then(
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
@@ -193,7 +198,7 @@ function shower(){
 
 function loadSamples(callback){
     let select = document.getElementById("aliquots");
-    let samples = simplex.samples;
+    let samples = glob.simplex.samples;
     let keys = Object.keys(samples);
     for (let i = 0; i<keys.length; i++) {
 	let el = document.createElement("option");
@@ -212,16 +217,16 @@ function loadTable(dat,header,id,nr){
 
 function driftAliquot(){
     let i = document.getElementById("aliquots").value;
-    let keys = Object.keys(simplex.samples);
-    let header = simplex.method.ions;
-    let dat = simplex.samples[keys[i]];
+    let keys = Object.keys(glob.simplex.samples);
+    let header = glob.simplex.method.ions;
+    let dat = glob.simplex.samples[keys[i]];
     loadTable(dat.time,header,'time-table',dat.time.length);
     loadTable(dat.signal,header,'signal-table',dat.signal.length);
 }
 
 function driftPlot(){
     let i = document.getElementById("aliquots").value;
-    shinylight.call('driftPlot', {x:simplex, i:i}, 'drift-plot').then(
+    shinylight.call('driftPlot', {x:glob, i:i}, 'drift-plot').then(
 	result => shinylight.setElementPlot('drift-plot', result.plot),
 	error => alert(error)
     );
@@ -235,7 +240,7 @@ function logratios(){
 	() => loader(),
 	error => alert(error)
     ).then(
-	shinylight.call("getlogratios", {x:simplex}, null).then(
+	shinylight.call("getlogratios", {x:glob}, null).then(
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
@@ -250,9 +255,9 @@ function logratios(){
 
 function logratioAliquot(){
     let i = document.getElementById("aliquots").value;
-    let key = Object.keys(simplex.samples)[i];
-    let header = simplex.names[key].lr.b0g;
-    let b0g = simplex.samples[key].lr.b0g;
+    let key = Object.keys(glob.simplex.samples)[i];
+    let header = glob.names.samples[key].lr.b0g;
+    let b0g = glob.simplex.samples[key].lr.b0g;
     let ns = header.length/2;
     loadTable([b0g.slice(0,ns)],header.slice(0,ns),'b0',1);
     loadTable([b0g.slice(ns,2*ns)],header.slice(ns,2*ns),'g',1);
@@ -260,7 +265,7 @@ function logratioAliquot(){
 
 function logratioPlot(){
     let i = document.getElementById("aliquots").value;
-    shinylight.call('logratioPlot', {x:simplex, i:i}, 'logratio-plot').then(
+    shinylight.call('logratioPlot', {x:glob, i:i}, 'logratio-plot').then(
 	result => shinylight.setElementPlot('logratio-plot', result.plot),
 	error => alert(error)
     );
@@ -274,14 +279,42 @@ function calibration(){
 	() => loader(),
 	error => alert(error)
     ).then(
-	shinylight.call("getcalibration", {x:simplex}, null).then(
-	    result => result2simplex(result),
-	    error => alert(error)
-	).then(
-	    () => shower(),
-	    error => alert(error)
-	)
+	() => {
+	    showStandard();
+	    showPrefix();
+	},
+	error => alert(error)
+    ).then(
+	() => showPrefixed(),
+	error => alert(error)
+    ).then(
+	() => shower(),
+	error => alert(error)
     );
+}
+
+function showStandard(){
+    document.getElementById('standards').value = glob.simplex.standard.name[0];
+}
+
+function showPrefix(){
+    document.getElementById('prefix').value = glob.simplex.standard.prefix;
+}
+
+function showPrefixed(){
+    let keys = Object.keys(glob.simplex.samples);
+    let dat = new Array(keys.length);
+    for (let i=0; i<keys.length; i++){
+	dat[i] = [keys[i],'yes'];
+    }
+    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
+}
+
+function chooseStandard(){
+    let i = document.getElementById("standards").value;
+    let key = Object.keys(glob.simplex.samples)[i];
+    loadTable(null,'','aliquots',1);
+    loadTable(dat,header,id,nr)
 }
 
 function samples(){
