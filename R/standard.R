@@ -38,14 +38,14 @@ standard <- function(preset,prefix=preset,tst,
                      "of the sample are missing.")
             } else {
                 out$tst <- tst
-                out$fetch <- function(dat){ age2lr(dat) }
+                out$fetchfun <- "age2lr"
             }
         } else {
             out$val <- val
             out$cov <- cov
             if (missing(common)) out$common <- val*0
             else out$common <- common
-            out$fetch <- function(dat){ lrstand(dat) }
+            out$fetchfun <- "lrstand"
         }
         out$prefix <- prefix
         class(out) <- 'standard'

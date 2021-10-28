@@ -9,6 +9,7 @@ var glob = {
 	'calibrated': null
     },
     'names': null,
+    'class': 'simplex',
     'selected': 0,
     'standards': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
@@ -160,6 +161,7 @@ async function upload(){
 function result2simplex(result){
     glob.simplex = result.data.simplex;
     glob.names = result.data.names;
+    glob.class = result.data.class;
 }
 
 // 3. Drift
@@ -317,6 +319,16 @@ function markByPrefix(){
 function chooseStandard(){
     let stand = document.getElementById("standards").value;
     glob.simplex.standard.name[0] = stand;
+}
+
+function calibrator(){
+    shinylight.call("calibrator", {x:glob}, null).then(
+	result => {
+	    result2simplex(result),
+	    shinylight.setElementPlot('calibration-plot', result.plot)
+	},
+	error => alert(error)
+    )
 }
 
 function samples(){

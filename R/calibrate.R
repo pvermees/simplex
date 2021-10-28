@@ -21,7 +21,7 @@ calibrate <- function(cal,exterr=FALSE){
 
 calibrate_stable <- function(dat,exterr=FALSE){
     out <- dat
-    scal <- dat$standard$fetch(dat)
+    scal <- do.call(dat$standard$fetchfun,args=list(dat=dat))
     dcal <- dat$calibration
     num <- dat$m$num
     den <- dat$m$den
@@ -74,7 +74,7 @@ calibrate_geochron <- function(dat,exterr=FALSE){
 }
 
 fractical <- function(dat,type="U-Pb",exterr=FALSE){
-    scal <- dat$standard$fetch(dat) # standard calibration
+    scal <- do.call(dat$standard$fetch,args=list(dat=dat)) # standard calibration
     dcal <- dat$calibration[[type]] # data calibration
     if (type=='U-Pb'){
         num='Pb206'

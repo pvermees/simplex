@@ -56,7 +56,7 @@ stable_calibration <- function(lr){
 geochron_calibration <- function(lr,t=0,...){
     out <- list()
     oxide <- lr$method$oxide
-    common <- lr$standard$fetch(lr)$common
+    common <- do.call(lr$standard$fetchfun,args=list(dat=lr))$common
     type <- datatype(lr)
     if (type=="U-Pb"){
         out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,type=type,

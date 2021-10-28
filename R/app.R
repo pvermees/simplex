@@ -31,10 +31,12 @@ presets <- function(method){
         simplex <- list()
         simplex$samples <- NULL
         simplex$method <- defaultmethod(method)
+        class(simplex) <- 'simplex'
     }
     out <- list()
     out$simplex <- simplex
     out$names <- rcnames(simplex)
+    out$class <- class(simplex)
     out
 }
 
@@ -68,12 +70,15 @@ restorenames <- function(sms,nms){
 }
 
 as.simplex <- function(x){
-    restorenames(x$simplex,x$names)
+    out <- restorenames(x$simplex,x$names)
+    class(out) <- x$class
+    out
 }
 result2json <- function(x){
     out <- list()
     out$simplex <- x
     out$names <- rcnames(x)
+    out$class <- class(x)
     out
 }
 
@@ -94,8 +99,10 @@ logratioPlot <- function(x,i){
     plot.logratios(x=as.simplex(x),i=as.numeric(i)+1)
 }
 
-getcalibration <- function(x){
-    x
+calibrator <- function(x,t=0,option=3,...){
+    out <- calibration(as.simplex(x),stand=x$simplex$standard,t=t)
+    plot.calibration(out,option=option,...)
+    result2json(out)
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
@@ -119,7 +126,7 @@ freeformServer <- function(port=NULL) {
           driftPlot=driftPlot,
           getlogratios=getlogratios,
           logratioPlot=logratioPlot,
-          getcalibration=getcalibration
+          calibrator=calibrator
         )
     )
 }

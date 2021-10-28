@@ -18,7 +18,7 @@ delta <- function(cd,log=TRUE){
     del <- list()
     del$num <- cd$calibrated$num
     del$den <- cd$calibrated$den
-    ref <- cd$standard$fetch(cd)$ref
+    ref <- do.call(cd$standard$fetchfun,args=list(dat=cd))$ref
     logd <- cd$calibrated$lr - rep(ref,length(cd$samples))
     nd <- length(logd)
     if (log){
