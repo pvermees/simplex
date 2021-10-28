@@ -29,7 +29,7 @@ right {
     left:50%;
     width:50%;
     top:50px; 
-    bottom:50px; 
+    bottom:0px; 
     padding:0;
     z-index:2;
 }

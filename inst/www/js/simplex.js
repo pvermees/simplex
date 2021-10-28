@@ -10,6 +10,7 @@ var glob = {
     },
     'names': null,
     'selected': 0,
+    'standards': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 
 }
@@ -280,12 +281,14 @@ function calibration(){
 	error => alert(error)
     ).then(
 	() => {
-	    showStandard();
-	    showPrefix();
+	    document.getElementById('standards').value =
+		glob.simplex.standard.name[0];
+	    document.getElementById('prefix').value =
+		glob.simplex.standard.prefix;
 	},
 	error => alert(error)
     ).then(
-	() => showPrefixed(),
+	() => markByPrefix(),
 	error => alert(error)
     ).then(
 	() => shower(),
@@ -293,28 +296,27 @@ function calibration(){
     );
 }
 
-function showStandard(){
-    document.getElementById('standards').value = glob.simplex.standard.name[0];
-}
-
-function showPrefix(){
-    document.getElementById('prefix').value = glob.simplex.standard.prefix;
-}
-
-function showPrefixed(){
+function markByPrefix(){
+    let prefix = document.getElementById('prefix').value;
+    glob.simplex.standard.prefix = prefix;
     let keys = Object.keys(glob.simplex.samples);
-    let dat = new Array(keys.length);
-    for (let i=0; i<keys.length; i++){
-	dat[i] = [keys[i],'yes'];
+    let nk = keys.length;
+    let dat = new Array(nk);
+    glob.standards = new Array(nk);
+    for (let i=0; i<nk; i++){
+	if (keys[i].indexOf(prefix) !== -1){
+	    glob.standards[i] = keys[i];
+	    dat[i] = [keys[i],'yes'];
+	} else {
+	    dat[i] = [keys[i],'no'];
+	}
     }
     loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
 }
 
 function chooseStandard(){
-    let i = document.getElementById("standards").value;
-    let key = Object.keys(glob.simplex.samples)[i];
-    loadTable(null,'','aliquots',1);
-    loadTable(dat,header,id,nr)
+    let stand = document.getElementById("standards").value;
+    glob.simplex.standard.name[0] = stand;
 }
 
 function samples(){
