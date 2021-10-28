@@ -95,8 +95,8 @@ getlogratios <- function(x){
     result2json(logratios(x=as.simplex(x)))
 }
 
-logratioPlot <- function(x,i){
-    plot.logratios(x=as.simplex(x),i=as.numeric(i)+1)
+logratioPlot <- function(x,i,ratios){
+    plot.logratios(x=as.simplex(x),i=as.numeric(i)+1,ratios=ratios)
 }
 
 calibrator <- function(x,t=0,option=3,...){

@@ -11,6 +11,7 @@ var glob = {
     'names': null,
     'class': 'simplex',
     'selected': 0,
+    'ratios': false,
     'standards': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 
@@ -185,6 +186,10 @@ function drift(){
     )
 }
 
+function checkratios(){
+    glob.ratios = document.getElementById("ratiocheckbox").checked;
+}
+
 function loader(){
     let show = document.querySelector('.show4loading');
     let hide = document.querySelector('.hide4loading');
@@ -247,7 +252,10 @@ function logratios(){
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
-	    () => loadSamples(() => logratioAliquot()),
+	    () => {
+		loadSamples(() => logratioAliquot());
+		document.getElementById("ratiocheckbox").checked = glob.ratios;
+	    },
 	    error => alert(error)
 	).then(
 	    () => shower(),
@@ -268,10 +276,13 @@ function logratioAliquot(){
 
 function logratioPlot(){
     let i = document.getElementById("aliquots").value;
-    shinylight.call('logratioPlot', {x:glob, i:i}, 'logratio-plot').then(
-	result => shinylight.setElementPlot('logratio-plot', result.plot),
-	error => alert(error)
-    );
+    shinylight.call('logratioPlot',
+		    {x:glob, i:i, ratios:glob.ratios},
+		    'logratio-plot')
+	.then(
+	    result => shinylight.setElementPlot('logratio-plot', result.plot),
+	    error => alert(error)
+	);
 }
 
 // 4. Calibration

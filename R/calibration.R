@@ -142,6 +142,8 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
 #' @param x an object of class \code{logratios}
 #' @param snames the sample names to be shown
 #' @param i the sample number to be shown
+#' @param type for \code{U-Th-Pb} data, if \code{type=2}, produces a
+#'     Th-Pb calibration plot. Otherwise plots the U-Pb calibration.
 #' @param option if \code{option=1}, plots the best fit line through
 #'     U-Pb and Th-Pb data. If \code{option=2}, adds the time-resolved
 #'     raw data to the plot. If \code{option=3}, marks the first and
@@ -159,14 +161,15 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
 #' }
 #' @method plot calibration
 #'@export
-plot.calibration <- function(x,option=1,snames=NULL,i=NULL,...){
+plot.calibration <- function(x,option=1,snames=NULL,i=NULL,type=1,...){
     if (is.null(snames)){
         if (stable(x)) snames <- x$calibration$snames
         else snames <- rownames(x$calibration[[1]]$york)
     }
     if (!is.null(i)) snames <- snames[i]
     if (stable(x)) calplot_stable(dat=x,snames=snames,...)
-    else calplot_geochronology(dat=x,option=option,snames=snames,...)
+    else calplot_geochronology(dat=x,option=option,
+                               snames=snames,type=type,...)
 }
 
 calplot_stable <- function(dat,snames=NULL,...){
@@ -193,9 +196,8 @@ calplot_stable <- function(dat,snames=NULL,...){
     }
 }
 
-calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
-    if (missing(type)) cal <- dat$calibration[[1]]
-    else cal <- dat$calibration[[type]]
+calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type=1,...){
+    cal <- dat$calibration[[type]]
     if (is.null(snames)){
         snames <- names(dat$samples)
         if (!is.null(i)){
