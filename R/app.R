@@ -1,4 +1,3 @@
-setwd('/home/pvermees/Documents/Programming/R/simplex/')
 source('R/calibrate.R')
 source('R/calibration.R')
 source('R/drift.R')
@@ -118,7 +117,8 @@ upload <- function(f,m){
 
 freeformServer <- function(port=NULL) {
     appDir <- R.utils::getAbsolutePath("inst/www")
-    shinylight::slServer(host='0.0.0.0', port=port, appDir=appDir, daemonize=TRUE,
+    shinylight::slServer(host='0.0.0.0', port=port,
+                         appDir=appDir, daemonize=TRUE,
         interface=list(
           presets=presets,
           upload=upload,
@@ -131,4 +131,6 @@ freeformServer <- function(port=NULL) {
     )
 }
 
-freeformServer(8000)
+simplex <- function(){
+    freeformServer(8000)
+}
