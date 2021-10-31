@@ -104,6 +104,12 @@ calibrator <- function(x,t=0,option=3,...){
     result2json(out)
 }
 
+calibrateSamples <- function(x,type=1,...){
+    out <- calibrate(as.simplex(x))
+    plot.calibrated(out,type=type,...)
+    result2json(out)
+}
+
 # f = list of two lists with blocks of text and corresponding filenames
 # m = method (currently a string, will be modified to accept lists)
 upload <- function(f,m){
@@ -126,7 +132,8 @@ freeformServer <- function(port=NULL) {
           driftPlot=driftPlot,
           getlogratios=getlogratios,
           logratioPlot=logratioPlot,
-          calibrator=calibrator
+          calibrator=calibrator,
+          calibrateSamples=calibrateSamples
         )
     )
 }

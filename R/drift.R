@@ -14,7 +14,7 @@ drift <- function(x){
         sp <- spot(dat=x,sname=sname)
         out$samples[[sname]]$dc <- drift.spot(spot=sp)
     }
-    class(out) <- append('drift',class(out))
+    class(out) <- unique(append('drift',class(out)))
     out
 }
 

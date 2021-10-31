@@ -301,7 +301,7 @@ function calibration(){
 	},
 	error => alert(error)
     ).then(
-	() => markByPrefix(),
+	() => markStandardsByPrefix(),
 	error => alert(error)
     ).then(
 	() => shower(),
@@ -309,7 +309,7 @@ function calibration(){
     );
 }
 
-function markByPrefix(){
+function markStandardsByPrefix(){
     let prefix = document.getElementById('prefix').value;
     glob.simplex.standard.prefix = prefix;
     let keys = Object.keys(glob.simplex.samples);
@@ -333,7 +333,7 @@ function chooseStandard(){
 }
 
 function calibrator(){
-    shinylight.call("calibrator", {x:glob}, null).then(
+    shinylight.call("calibrator", {x:glob}, 'calibration-plot').then(
 	result => {
 	    result2simplex(result),
 	    shinylight.setElementPlot('calibration-plot', result.plot)
@@ -342,9 +342,34 @@ function calibrator(){
     )
 }
 
+// 5. samples
+
 function samples(){
     selectButton(4);
-    loadPage("samples.html");
+    loadPage("samples.html").then(
+	() => loader(),
+	error => alert(error)
+    ).then(
+	() => markSamplesByPrefix(),
+	error => alert(error)
+    ).then(
+	() => shower(),
+	error => alert(error)
+    );
+}
+
+function markSamplesByPrefix(){
+}
+
+function calibrate(){
+    shinylight.call("calibrateSamples", {x:glob},
+		    'sample-calibration-plot').then(
+	result => {
+	    result2simplex(result),
+	    shinylight.setElementPlot('sample-calibration-plot', result.plot)
+	},
+	error => alert(error)
+    )
 }
 
 function finish(){

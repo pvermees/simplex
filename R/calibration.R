@@ -26,7 +26,7 @@ calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=0){
     dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out$calibration <- stable_calibration(lr=dat)
     else out$calibration <- geochron_calibration(lr=dat,t=t)
-    class(out) <- append('calibration',class(out))
+    class(out) <- unique(append('calibration',class(out)))
     out
 }
 

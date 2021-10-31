@@ -18,7 +18,7 @@ logratios <- function(x){
         sp <- spot(dat=x,sname=sname)
         out$samples[[sname]]$lr <- logratios.spot(x=sp)
     }
-    class(out) <- append("logratios",class(out))
+    class(out) <- unique(append("logratios",class(out)))
     out
 }
 

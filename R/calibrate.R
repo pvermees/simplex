@@ -50,7 +50,7 @@ calibrate_stable <- function(dat,exterr=FALSE){
     E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dcal$cov
     calibrated$cov <- J %*% E %*% t(J)
     out$calibrated <- calibrated
-    class(out) <- append("calibrated",class(out))
+    class(out) <- unique(append("calibrated",class(out)))
     out
 }
 
@@ -69,7 +69,7 @@ calibrate_geochron <- function(dat,exterr=FALSE){
     } else {
         stop("Invalid data type supplied to calibrate function.")
     }
-    class(out) <- append("calibrated",class(out))
+    class(out) <- unique(append("calibrated",class(out)))
     out
 }
 
@@ -197,9 +197,12 @@ mergecal <- function(...){
 #' plot(cd,type='U-Pb')
 #' @method plot calibrated
 #' @export
-plot.calibrated <- function(x,type,...){
+plot.calibrated <- function(x,type,xlab,ylab,...){
     if (missing(type)) cal <- x$calibration[[1]]
     else cal <- x$calibration[[type]]
     y <- beta2york(lr=x,t=cal$t,num=cal$num,den=cal$den)
-    IsoplotR::scatterplot(y,...)
+    if (missing(xlab)) xlab <- paste0('log[',cal$num[1],'/',cal$den[1],']')
+    if (missing(ylab)) ylab <- paste0('log[',cal$num[2],'/',cal$den[2],']')
+    fit <- x$calibration[[type]]$fit
+    IsoplotR::scatterplot(y,xlab=xlab,ylab=ylab,fit=fit,...)
 }

@@ -30,7 +30,7 @@ delta <- function(cd,log=TRUE){
     }
     del$cov <- J %*% cd$calibrated$cov %*% t(J)
     out$delta <- del
-    class(out) <- append('delta',class(cd))
+    class(out) <- unique(append('delta',class(cd)))
     out
 }
 
