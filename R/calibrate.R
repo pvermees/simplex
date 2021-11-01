@@ -197,12 +197,58 @@ mergecal <- function(...){
 #' plot(cd,type='U-Pb')
 #' @method plot calibrated
 #' @export
-plot.calibrated <- function(x,type,xlab,ylab,...){
-    if (missing(type)) cal <- x$calibration[[1]]
-    else cal <- x$calibration[[type]]
+plot.calibrated <- function(x,type=1,usr=NULL,...){
+    cal <- x$calibration[[type]]
     y <- beta2york(lr=x,t=cal$t,num=cal$num,den=cal$den)
-    if (missing(xlab)) xlab <- paste0('log[',cal$num[1],'/',cal$den[1],']')
-    if (missing(ylab)) ylab <- paste0('log[',cal$num[2],'/',cal$den[2],']')
-    fit <- x$calibration[[type]]$fit
-    IsoplotR::scatterplot(y,xlab=xlab,ylab=ylab,fit=fit,...)
+    usr <- yorklim(y)
+    plot.calibration(x,type=type,title=FALSE,usr=usr,...)
+    IsoplotR::scatterplot(y,add=TRUE)
+}
+
+get_usr <- function(dat){
+    if (stable(dat)) out <- get_usr_stable(dat)
+    else out <- get_usr_geochronology(dat)
+    out
+}
+
+get_usr_stable <- function(dat){
+    num <- dat$method$num
+    den <- dat$method$den
+    nn <- length(num)
+    np <- nn*(nn-1)/2       # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    out <- matrix(NA,nrow=np,nc=4)
+    colnames(out) <- c('x1','x2','y1','y2')
+    ii <- 1
+    for (i in 1:(nn-1)){
+        for (j in (i+1):nn){
+            B <- beta2york(lr=dat,num=num[c(i,j)],den=den[c(i,j)])
+            minx <- min(B[,'X']-3*B[,'sX'])
+            maxx <- max(B[,'X']+3*B[,'sX'])
+            miny <- min(B[,'X']-3*B[,'sX'])
+            maxy <- max(B[,'X']+3*B[,'sX'])
+            out[ii,] <- c(minx,maxx,miny,maxy)
+            ii <- ii + 1
+            if (ii>np) break
+        }
+    }
+    out
+}
+
+get_usr_geochronology <- function(dat){
+    cal <- dat$calibration
+    ncal <- length(cal)
+    out <- matrix(NA,nrow=ncal,ncol=4)
+    rownames(out) <- names(dat$calibration)
+    colnames(out) <- c('x1','x2','y1','y2')
+    for (n in names(cal)){
+        yd <- cal[[n]]$york
+        minx <- min(yd[,'X']-3*yd[,'sX'])
+        maxx <- max(yd[,'X']+3*yd[,'sX'])
+        miny <- min(yd[,'X']-3*yd[,'sX'])
+        maxy <- max(yd[,'X']+3*yd[,'sX'])
+        out[n,] <- c(minx,maxx,miny,maxy)
+    }
+    out
 }
