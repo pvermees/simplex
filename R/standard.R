@@ -27,8 +27,8 @@
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(preset,prefix=preset,tst,
-                     val,cov=matrix(0,length(val),length(val)),common){
+standard <- function(preset,prefix=preset,tst,val,
+                     cov=matrix(0,length(val),length(val)),common){
     if (missing(preset)){
         preset <- 'other'
         out <- list()
@@ -43,26 +43,25 @@ standard <- function(preset,prefix=preset,tst,
         } else {
             out$val <- val
             out$cov <- cov
-            if (missing(common)) out$common <- val*0
-            else out$common <- common
+            if (!is.missing(common)) out$common <- common
             out$fetchfun <- "lrstand"
         }
         out$prefix <- prefix
         class(out) <- 'standard'
     } else if (preset=='Plesovice'){
-        out <- standard(tst=c(337.13,0.18),prefix=prefix)
+        out <- standard(tst=c('t'=337.13,'s[t]'=0.18),prefix=prefix)
     } else if (preset=='Qinghu'){
-        out <- standard(tst=c(159.5,0.1),prefix=prefix)
+        out <- standard(tst=c('t'=159.5,'s[t]'=0.1),prefix=prefix)
     } else if (preset=='44069'){
-        out <- standard(tst=c(424.86,0.25),prefix=prefix)
+        out <- standard(tst=c('t'=424.86,'s[t]'=0.25),prefix=prefix)
     } else if (preset=='Temora'){
-        out <- standard(tst=c(416.75,0.12),prefix=prefix)
+        out <- standard(tst=c('t'=416.75,'s[t]'=0.12),prefix=prefix)
     } else if (preset=='NBS28'){
-        out <- standard(val=c(4.79,9.56),
+        out <- standard(val=c('d17O'=4.79,'d18O'=9.56),
                         cov=diag(c(0.05,0.11))^2,
                         prefix=prefix)
     } else if (preset=='Sonora'){ # temporary value
-        out <- standard(val=c(0.83,1.61,3.25),
+        out <- standard(val=c('d33S'=0.83,'d34S'=1.61,'d36S'=3.25),
                         cov=diag(c(0.03,0.08,0.03))^2,
                         prefix=prefix)
     } else {

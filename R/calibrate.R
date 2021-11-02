@@ -197,11 +197,133 @@ mergecal <- function(...){
 #' plot(cd,type='U-Pb')
 #' @method plot calibrated
 #' @export
-plot.calibrated <- function(x,...){
-    allsnames <- names(x$samples)
-    if (stable(x)) calsnames <- x$calibration$snames
-    else calsnames <- x$calibration[[1]]$snames
-    iscal <- (allsnames %in% calsnames)
-    snames <- allsnames[!iscal]
-    plot.calibration(x,snames=snames,...)
+plot.calibrated <- function(x,option=1,...){
+    if (stable(x)) {
+        out <- caldplot_stable(dat=x,...)
+    } else {
+        out <- caldplot_geochronology(dat=x,option=option,...)
+    }
+    invisible(out)
+}
+
+caldplot_stable <- function(dat,...){
+    cal <- dat$calibration
+    num <- dat$method$num
+    den <- dat$method$den
+    nn <- length(num)
+    np <- nn*(nn-1)/2       # number of plot panels
+    nc <- ceiling(sqrt(np)) # number of rows
+    nr <- ceiling(np/nc)    # number of columns
+    oldpar <- par(mfrow=c(nr,nc))
+    ii <- 1
+    snames <- names(dat$samples)
+    for (i in 1:(nn-1)){
+        for (j in (i+1):nn){
+            xlab <- paste0('log[',num[i],'/',den[i],']')
+            ylab <- paste0('log[',num[j],'/',den[j],']')
+            B <- beta2york(lr=dat,snames=snames,num=num[c(i,j)],den=den[c(i,j)])
+            xlim <- c(min(cal$lr[i]-3*sqrt(cal$cov[i,i]),B[,'X']-3*B[,'sX']),
+                      max(cal$lr[i]+3*sqrt(cal$cov[i,i]),B[,'X']+3*B[,'sX']))
+            ylim <- c(min(cal$lr[j]-3*sqrt(cal$cov[j,j]),B[,'Y']-3*B[,'sY']),
+                      max(cal$lr[j]+3*sqrt(cal$cov[j,j]),B[,'Y']+3*B[,'sY']))
+            plot(xlim,ylim,type='n',ann=FALSE)
+            deltagrid(dat,i,j)
+            IsoplotR::scatterplot(B,xlim=xlim,ylim=ylim,add=TRUE,...)
+            graphics::mtext(side=1,text=xlab,line=2)
+            graphics::mtext(side=2,text=ylab,line=2)
+            ell <- IsoplotR::ellipse(cal$lr[i],cal$lr[j],
+                                     cal$cov[c(i,j),c(i,j)])
+            graphics::polygon(ell,col='white')
+            ii <- ii + 1
+            if (ii>np) break
+       }
+    }
+    par(oldpar)
+}
+
+deltagrid <- function(dat,i,j){
+    usr <- par('usr')
+    xlim <- usr[1:2]
+    ylim <- usr[3:4]
+    xs <- dat$calibration$lr[i]
+    ys <- dat$calibration$lr[j]
+    di <- dat$standard$val[i]
+    dj <- dat$standard$val[j]
+    dxmin <- 1000*(xlim[1]-xs)+di
+    dxmax <- 1000*(xlim[2]-xs)+di
+    dymin <- 1000*(ylim[1]-ys)+dj
+    dymax <- 1000*(ylim[2]-ys)+dj
+    dxticks <- pretty(c(dxmin,dxmax))
+    dyticks <- pretty(c(dymin,dymax))
+    xticks <- (dxticks-di)/1000+xs
+    yticks <- (dyticks-dj)/1000+ys
+    nxt <- length(xticks)
+    nyt <- length(yticks)
+    matlines(rbind(xticks,xticks),matrix(rep(ylim,nxt),ncol=nxt),lty=3,col='black')
+    matlines(matrix(rep(xlim,nyt),ncol=nyt),rbind(yticks,yticks),lty=3,col='black')
+    lines(rep(xs,2),ylim,lty=2)
+    lines(xlim,rep(ys,2),lty=2)
+}
+
+caldplot_geochronology <- function(dat,option=1,...){
+    cal <- dat$calibration
+    np <- length(cal)       # number of plot panels
+    nc <- ceiling(sqrt(np)) # number of columns
+    nr <- ceiling(np/nc)    # number of rows
+    oldpar <- par(mfrow=c(nr,nc))
+    ii <- 1
+    for (i1 in 1:(nr-1)){
+        for (i2 in (i1+1):nc){
+            if (ii>np) break
+            caldplot_geochronology_helper(dat,option=option,type=ii,...)
+            ii <- ii + 1
+        }
+    }
+}
+
+caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
+    cal <- dat$calibration[[type]]
+    num <- cal$num
+    den <- cal$den
+    snames <- names(dat$samples)
+    yd <- beta2york(lr=dat,t=cal$t,snames=snames,num=num,den=den)
+    xlab <- paste0('log[',num[1],'/',den[1],']')
+    ylab <- paste0('log[',num[2],'/',den[2],']')
+    xlim <- rep(0,2)
+    xlim[1] <- min(yd[,'X']-3*yd[,'sX'])
+    xlim[2] <- max(yd[,'X']+3*yd[,'sX'])
+    ylim <- rep(0,2)
+    ylim[1] <- min(yd[,'Y']-3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[1])
+    ylim[2] <- max(yd[,'Y']+3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[2])
+    if (option==1){
+        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,
+                              ylab=ylab,xlim=xlim,ylim=ylim,...)
+    } else {
+        X <- NULL
+        Y <- NULL
+        for (sname in snames){
+            sp <- spot(dat=dat,sname=sname)
+            Op <- betapars(spot=sp,ion=num[1])
+            Pp <- betapars(spot=sp,ion=den[1])
+            Dp <- betapars(spot=sp,ion=num[2])
+            Cp <- betapars(spot=sp,ion=num[3])
+            CD <- (Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg)
+            CDdc <- exp(Dp$g*(Dp$t-Cp$t))
+            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Pp$t-Op$t)
+            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Pp$t-Dp$t)
+            X <- cbind(X,newX)
+            Y <- cbind(Y,newY)
+        }
+        xlim[1] <- min(xlim[1],yd[snames,'X']-3*yd[snames,'sX'],X)
+        xlim[2] <- max(xlim[2],yd[snames,'X']+3*yd[snames,'sX'],X)
+        ylim[1] <- min(ylim[1],yd[snames,'Y']-3*yd[snames,'sY'],Y)
+        ylim[2] <- max(ylim[2],yd[snames,'Y']+3*yd[snames,'sY'],Y)
+        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,
+                              ylab=ylab,xlim=xlim,ylim=ylim,...)
+        graphics::matlines(X,Y,lty=1,col='darkgrey')
+        if (option>2){
+            graphics::points(X[1,],Y[1,],pch=21,bg='black')
+            graphics::points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
+        }
+    }
 }
