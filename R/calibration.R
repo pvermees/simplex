@@ -176,14 +176,28 @@ calplot_stable <- function(dat,snames,...){
     nr <- ceiling(np/nc)    # number of columns
     oldpar <- par(mfrow=c(nr,nc))
     ii <- 1
-    if (missing(snames)) snames <- cal$snames
+    if (missing(snames)){
+        snames <- cal$snames
+        dosamp <- FALSE
+    } else {
+        dosamp <- TRUE
+    }
     for (i in 1:(nn-1)){
         for (j in (i+1):nn){
             xlab <- paste0(num[i],'/',den[i])
             ylab <- paste0(num[j],'/',den[j])
             B <- beta2york(lr=dat,snames=snames,
                            num=num[c(i,j)],den=den[c(i,j)])
-            IsoplotR::scatterplot(B,...)
+            if (dosamp){
+                xlim <- c(min(cal$lr[i]-3*sqrt(cal$cov[i,i]),B[,'X']-3*B[,'sX']),
+                          max(cal$lr[i]+3*sqrt(cal$cov[i,i]),B[,'X']+3*B[,'sX']))
+                ylim <- c(min(cal$lr[j]-3*sqrt(cal$cov[j,j]),B[,'Y']-3*B[,'sY']),
+                          max(cal$lr[j]+3*sqrt(cal$cov[j,j]),B[,'Y']+3*B[,'sY'])) 
+            } else {
+                xlim <- NULL
+                ylim <- NULL
+            }
+            IsoplotR::scatterplot(B,xlim=xlim,ylim=ylim,...)
             graphics::mtext(side=1,text=xlab,line=2)
             graphics::mtext(side=2,text=ylab,line=2)
             ell <- IsoplotR::ellipse(cal$lr[i],cal$lr[j],
@@ -213,6 +227,7 @@ calplot_geochronology <- function(dat,option=1,title=TRUE,...){
     }
 }
 
+# snames is used by plot.calibated
 calplot_geochronology_helper <- function(dat,option=1,type=1,
                                          title=TRUE,snames,...){
     cal <- dat$calibration[[type]]
@@ -221,15 +236,28 @@ calplot_geochronology_helper <- function(dat,option=1,type=1,
     if (missing(snames)){
         snames <- cal$snames
         common <- cal$common
+        dosamp <- FALSE
     } else {
         common <- 0
+        dosamp <- TRUE
     }
     yd <- beta2york(lr=dat,t=cal$t,snames=snames,
                     num=num,den=den,common=common)
     xlab <- paste0('log[',num[1],'/',den[1],']')
     ylab <- paste0('log[',num[2],'/',den[2],']')
+    xlim <- NULL
+    ylim <- NULL
+    if (dosamp){
+        xlim <- rep(0,2)
+        xlim[1] <- min(yd[,'X']-3*yd[,'sX'])
+        xlim[2] <- max(yd[,'X']+3*yd[,'sX'])
+        ylim <- rep(0,2)
+        ylim[1] <- min(yd[,'Y']-3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[1])
+        ylim[2] <- max(yd[,'Y']+3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[2])
+    }
     if (option==1){
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,ylab=ylab,...)
+        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,
+                              ylab=ylab,xlim=xlim,ylim=ylim,...)
     } else {
         X <- NULL
         Y <- NULL
@@ -247,12 +275,10 @@ calplot_geochronology_helper <- function(dat,option=1,type=1,
             X <- cbind(X,newX)
             Y <- cbind(Y,newY)
         }
-        xlim <- rep(0,2)
-        xlim[1] <- min(yd[snames,'X']-3*yd[snames,'sX'],X)
-        xlim[2] <- max(yd[snames,'X']+3*yd[snames,'sX'],X)
-        ylim <- rep(0,2)
-        ylim[1] <- min(yd[snames,'Y']-3*yd[snames,'sY'],Y)
-        ylim[2] <- max(yd[snames,'Y']+3*yd[snames,'sY'],Y)
+        xlim[1] <- min(xlim[1],yd[snames,'X']-3*yd[snames,'sX'],X)
+        xlim[2] <- max(xlim[2],yd[snames,'X']+3*yd[snames,'sX'],X)
+        ylim[1] <- min(ylim[1],yd[snames,'Y']-3*yd[snames,'sY'],Y)
+        ylim[2] <- max(ylim[2],yd[snames,'Y']+3*yd[snames,'sY'],Y)
         IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,
                               ylab=ylab,xlim=xlim,ylim=ylim,...)
         graphics::matlines(X,Y,lty=1,col='darkgrey')

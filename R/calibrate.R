@@ -199,7 +199,8 @@ mergecal <- function(...){
 #' @export
 plot.calibrated <- function(x,...){
     allsnames <- names(x$samples)
-    calsnames <- x$calibration[[1]]$snames
+    if (stable(x)) calsnames <- x$calibration$snames
+    else calsnames <- x$calibration[[1]]$snames
     iscal <- (allsnames %in% calsnames)
     snames <- allsnames[!iscal]
     plot.calibration(x,snames=snames,...)
