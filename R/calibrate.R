@@ -221,7 +221,7 @@ caldplot_stable <- function(dat,...){
         for (j in (i+1):nn){
             xlab <- paste0('log[',num[i],'/',den[i],']')
             ylab <- paste0('log[',num[j],'/',den[j],']')
-            B <- beta2york(lr=dat,snames=snames,num=num[c(i,j)],den=den[c(i,j)])
+            B <- beta2york(lr=dat,num=num[c(i,j)],den=den[c(i,j)])
             xlim <- c(min(cal$lr[i]-3*sqrt(cal$cov[i,i]),B[,'X']-3*B[,'sX']),
                       max(cal$lr[i]+3*sqrt(cal$cov[i,i]),B[,'X']+3*B[,'sX']))
             ylim <- c(min(cal$lr[j]-3*sqrt(cal$cov[j,j]),B[,'Y']-3*B[,'sY']),

@@ -20,7 +20,7 @@
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=0){
+calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
     out$standard <- stand
     dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
@@ -53,7 +53,7 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,t=0,...){
+geochron_calibration <- function(lr,t=NULL,...){
     out <- list()
     oxide <- lr$method$oxide
     common <- do.call(lr$standard$fetchfun,args=list(dat=lr))$common
@@ -72,7 +72,7 @@ geochron_calibration <- function(lr,t=0,...){
     out
 }
 
-geocal <- function(lr,oxide,t,type,common){
+geocal <- function(lr,oxide,t=NULL,type,common){
     if (type=='U-Pb'){
         num <- c(oxide,'Pb206','Pb204')
         den <- c('U238','U238','Pb206')
@@ -82,11 +82,13 @@ geocal <- function(lr,oxide,t,type,common){
     } else {
         stop("Invalid data type.")
     }
+    if (is.null(t)) t <- median(lr$samples[[1]]$time)
     out <- list(num=num,den=den,oxide=oxide,t=hours(t))
     out$common <- common
     out$snames <- names(lr$samples)
-    out$fit <- IsoplotR::york(beta2york(lr=lr,t=t,snames=out$snames,
-                                        num=num,den=den,common=common))
+    yd <- beta2york(lr=lr,t=t,snames=out$snames,
+                    num=num,den=den,common=common)
+    out$fit <- IsoplotR::york(yd)
     out
 }
 
@@ -217,7 +219,7 @@ calplot_geochronology_helper <- function(dat,option=1,type=1,title=TRUE,...){
     cal <- dat$calibration[[type]]
     num <- cal$num
     den <- cal$den
-    yd <- beta2york(lr=dat,t=cal$t,snames=cal$snames,
+    yd <- beta2york(lr=dat,t=seconds(cal$t),snames=cal$snames,
                     num=num,den=den,common=cal$common)
     xlab <- paste0('log[',num[1],'/',den[1],']')
     ylab <- paste0('log[',num[2],'/',den[2],']')

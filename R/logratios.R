@@ -240,8 +240,9 @@ b0g2list <- function(b0g,groups,cov){
     if (!missing(cov)){
         nc <- length(b0) + length(g)
         out$cov <- matrix(0,nc,nc)
-        out$cov[1:nb,1:nb] <- cov[1:nb,1:nb]
-        if (ng>0) out$cov[nc-ng+(1:ng),nc-ng+(1:ng)] <- cov[nb+(1:ng),nb+(1:ng)]
+        if (ng>0) i <- c(1:nb,nc-ng+(1:ng))
+        else i <- 1:nb
+        out$cov[i,i] <- cov
         outnames <- c(names(b0),names(g))
         colnames(out$cov) <- outnames
         rownames(out$cov) <- outnames

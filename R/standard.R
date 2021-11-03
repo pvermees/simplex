@@ -43,7 +43,7 @@ standard <- function(preset,prefix=preset,tst,val,
         } else {
             out$val <- val
             out$cov <- cov
-            if (!is.missing(common)) out$common <- common
+            if (!missing(common)) out$common <- common
             out$fetchfun <- "lrstand"
         }
         out$prefix <- prefix
