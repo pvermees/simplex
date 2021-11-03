@@ -113,6 +113,19 @@ datatype <- function(x){
     out
 }
 
+chronometer <- function(x,type){
+    dt <- datatype(x)
+    if (identical(dt,"U-Pb"))
+        out <- "U238-Pb206"
+    else if (identical(dt,"U-Th-Pb") & type %in% c(1,'UPb'))
+        out <- "U238-Pb206"
+    else if (identical(dt,"U-Th-Pb") & type %in% c(2,'ThPb'))
+        out <- "Th232-Pb208"
+    else
+        stop('Invalid chronometer')
+    out
+}
+
 faraday <- function(spot,ion=NULL){
     if (is.null(ion)) out <- any(spot$dtype[spot$method$ions]=='Fc')
     else out <- spot$dtype[ion]=='Fc'
