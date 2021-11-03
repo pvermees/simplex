@@ -12,6 +12,7 @@ var glob = {
     'class': 'simplex',
     'selected': 0,
     'ratios': false,
+    'sampleprefix': null,
     'standards': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 
@@ -359,15 +360,24 @@ function samples(){
 }
 
 function markSamplesByPrefix(){
+    glob.sampleprefix = document.getElementById('prefix').value;
+    let keys = Object.keys(glob.simplex.samples);
+    let nk = keys.length;
+    let dat = new Array(nk);
+    for (let i=0; i<nk; i++){
+	if (keys[i].indexOf(glob.sampleprefix) !== -1){
+	    dat[i] = [keys[i],'yes'];
+	} else {
+	    dat[i] = [keys[i],'no'];
+	}
+    }
+    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
 }
 
 function calibrate(){
     shinylight.call("calibrateSamples", {x:glob},
 		    'sample-calibration-plot').then(
-	result => {
-	    result2simplex(result),
-	    shinylight.setElementPlot('sample-calibration-plot', result.plot)
-	},
+	result => shinylight.setElementPlot('sample-calibration-plot', result.plot),
 	error => alert(error)
     )
 }

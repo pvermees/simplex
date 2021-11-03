@@ -105,7 +105,9 @@ calibrator <- function(x,t=0,option=3,...){
 }
 
 calibrateSamples <- function(x,...){
-    out <- calibrate(as.simplex(x))
+    dat <- as.simplex(x)
+    calsamples <- subset(dat,prefix=x$sampleprefix)
+    out <- calibrate(calsamples)
     plot.calibrated(out,...)
     result2json(out)
 }

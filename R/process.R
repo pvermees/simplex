@@ -23,7 +23,7 @@
 #' tab <- data2table(cd)
 #' }
 #' @export
-process <- function(f,m,stand,t=0,exterr=FALSE){
+process <- function(f,m,stand,t=NULL,exterr=FALSE){
     dat <- read_data(f=f,m=m)
     dc <- drift(x=dat)
     lr <- logratios(x=dc)

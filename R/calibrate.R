@@ -286,7 +286,7 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
     num <- cal$num
     den <- cal$den
     snames <- names(dat$samples)
-    yd <- beta2york(lr=dat,t=cal$t,snames=snames,num=num,den=den)
+    yd <- beta2york(lr=dat,t=seconds(cal$t),snames=snames,num=num,den=den)
     xlab <- paste0('log[',num[1],'/',den[1],']')
     ylab <- paste0('log[',num[2],'/',den[2],']')
     xlim <- rep(0,2)
