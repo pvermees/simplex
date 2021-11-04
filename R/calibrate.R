@@ -276,7 +276,7 @@ caldplot_geochronology <- function(dat,option=1,...){
     np <- length(cal)       # number of plot panels
     nc <- ceiling(sqrt(np)) # number of columns
     nr <- ceiling(np/nc)    # number of rows
-    oldpar <- par(mfrow=c(nr,nc))
+    oldpar <- par(mfrow=c(nr,nc),mar=rep(4,4))
     ii <- 1
     for (i1 in 1:(nr-1)){
         for (i2 in (i1+1):nc){
@@ -285,6 +285,7 @@ caldplot_geochronology <- function(dat,option=1,...){
             ii <- ii + 1
         }
     }
+    par(oldpar)
 }
 
 caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
@@ -301,11 +302,10 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
     ylim <- rep(0,2)
     ylim[1] <- min(yd[,'Y']-3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[1])
     ylim[2] <- max(yd[,'Y']+3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[2])
-    plot(xlim,ylim,type='n',ann=FALSE)
+    plot(xlim,ylim,xlab=xlab,ylab=ylab,xlim=xlim,ylim=ylim,type='n')
     agegrid(dat,type,xlim,ylim)
     if (option==1){
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,ylab=ylab,
-                              xlim=xlim,ylim=ylim,add=TRUE,...)
+        IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
     } else {
         X <- NULL
         Y <- NULL
@@ -326,8 +326,7 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
         xlim[2] <- max(xlim[2],yd[snames,'X']+3*yd[snames,'sX'],X)
         ylim[1] <- min(ylim[1],yd[snames,'Y']-3*yd[snames,'sY'],Y)
         ylim[2] <- max(ylim[2],yd[snames,'Y']+3*yd[snames,'sY'],Y)
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,ylab=ylab,
-                              xlim=xlim,ylim=ylim,add=TRUE,...)
+        IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
         graphics::matlines(X,Y,lty=1,col='darkgrey')
         if (option>2){
             graphics::points(X[1,],Y[1,],pch=21,bg='black')
@@ -337,6 +336,7 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
 }
 
 agegrid <- function(dat,type,xlim,ylim){
+    usr <- par('usr')
     cal <- dat$calibration[[type]]
     st <- do.call(dat$standard$fetchfun,args=list(dat=dat))
     lrlim <- rep(0,2)
@@ -352,5 +352,20 @@ agegrid <- function(dat,type,xlim,ylim){
     ratio <- names(st$lr)[type]
     lrmin <- log(IsoplotR::age2ratio(tticks,ratio=ratio)[,1]) - adj2
     lrmax <- lrmin + cal$fit$b[1]*diff(xlim)
+    xticks <- list(x=NULL,t=NULL)
+    yticks <- list(y=NULL,t=NULL)
+    for (i in 1:nt){
+        if (lrmax[i]>usr[4]){
+            xticks$x <- c(xticks$x,(usr[4]-lrmin[i])/b+xlim[1])
+            xticks$t <- c(xticks$t,tticks[i])
+        } else {
+            yticks$y <- c(yticks$y,lrmax[i])
+            yticks$t <- c(yticks$t,tticks[i])
+        }
+    }
+    axis(side=3,at=xticks$x,labels=xticks$t)
+    mtext(side=3,line=2,'t (Ma)')
+    axis(side=4,at=yticks$y,labels=yticks$t)
+    mtext(side=4,line=2,'t (Ma)')
     matlines(matrix(rep(xlim,nt),nrow=2),rbind(lrmin,lrmax),lty=2,col='gray50')
 }
