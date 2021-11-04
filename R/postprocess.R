@@ -29,6 +29,10 @@ delta <- function(cd,log=TRUE){
         J <- 1000*exp(logd)*diag(nd)
     }
     del$cov <- J %*% cd$calibrated$cov %*% t(J)
+    nms <- rep(paste0('delta(',del$num,')'),length(cd$samples))
+    rownames(del$cov) <- nms
+    colnames(del$cov) <- nms
+    names(del$d) <- nms
     out$delta <- del
     class(out) <- unique(append('delta',class(cd)))
     out
@@ -70,7 +74,11 @@ data2table_helper <- function(x,option,...){
     ns <- length(p$lr)/ni
     nc <- 2*ni+ni*(ni-1)/2
     cnames <- rep('',nc)
-    DP <- paste0(p$num,'/',p$den)
+    if (option=='delta'){
+        DP <- paste0('d(',p$num,')')
+    } else {
+        DP <- paste0(p$num,'/',p$den)
+    }
     cnames[2*(1:ni)-1] <- DP
     cnames[2*(1:ni)] <- paste0('s[',DP,']')
     if (nc>2*ni){
@@ -109,6 +117,10 @@ data2table_pars <- function(x,option){
         num <- c('O17','O18')
         den <- c('O16','O16')
         J <- diag(2)
+    } else if (type=='sulphur'){
+        num <- c('S33','S34','S36')
+        den <- c('S32','S32','S32')
+        J <- diag(3)
     } else if (type=='U-Pb'){
         num <- c('U238','Pb207','Pb204')
         den <- c('206Pb','Pb206','Pb206')
@@ -159,9 +171,11 @@ data2table_pars <- function(x,option){
 #' @export
 plot.delta <- function(x,...){
     del <- x$delta
-    np <- length(del$num)-1     # number of plot panels
-    nr <- ceiling(sqrt(np)) # number of rows
-    nc <- ceiling(np/nr)    # number of columns
+    nn <- length(del$num)
+    np <- nn*(nn-1)/2       # number of plot panels
+    nc <- ceiling(sqrt(np)) # number of rows
+    nr <- ceiling(np/nc)    # number of columns
+    oldpar <- par(mfrow=c(nr,nc),mar=rep(3.5,4))
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:nr){
         for (j in (i+1):max(nc,nr+1)){
@@ -177,6 +191,7 @@ plot.delta <- function(x,...){
             graphics::mtext(ylab,side=2,line=2)
         }
     }
+    par(oldpar)
 }
 
 delta2york <- function(d,i,j){
