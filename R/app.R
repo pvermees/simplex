@@ -1,15 +1,3 @@
-source('R/calibrate.R')
-source('R/calibration.R')
-source('R/drift.R')
-source('R/io.R')
-source('R/logratios.R')
-source('R/method.R')
-source('R/postprocess.R')
-source('R/process.R')
-source('R/standard.R')
-source('R/toolbox.R')
-source('R/trim.R')
-
 presets <- function(method){
     if (method=='IGG-UPb'){
         load('data/Cameca_UPb.rda')
@@ -104,12 +92,40 @@ calibrator <- function(x,t=0,option=3,...){
     result2json(out)
 }
 
-calibrateSamples <- function(x,...){
+calibrate_it <- function(x){
     dat <- as.simplex(x)
-    calsamples <- subset(dat,prefix=x$sampleprefix)
-    out <- calibrate(calsamples)
-    plot.calibrated(out,...)
-    result2json(out)
+    selection <- subset(dat,prefix=x$sampleprefix)
+    out <- calibrate(selection)
+}
+
+calibrateSamples <- function(x){
+    out <- calibrate_it(x)
+    plot.calibrated(out)
+    out
+}
+
+plotresults <- function(x){
+    cal <- calibrate_it(x)
+    if (stable(cal)){
+        d <- delta(cal)
+        plot.delta(d)
+    } else {
+        tab <- data2table(cal)
+        UPb <- as.UPb(tab,format=7)
+        concordia(UPb)
+    }
+}
+
+resultstable <- function(x){
+    cal <- calibrate_it(x)
+    if (stable(cal)){
+        d <- delta(cal)
+    } else {
+        d <- cal
+    }
+    tab <- data2table(d)
+    rownames(tab) <- NULL
+    as.data.frame(tab)
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
@@ -128,18 +144,20 @@ freeformServer <- function(port=NULL) {
     shinylight::slServer(host='0.0.0.0', port=port,
                          appDir=appDir, daemonize=TRUE,
         interface=list(
-          presets=presets,
-          upload=upload,
-          getdrift=getdrift,
-          driftPlot=driftPlot,
-          getlogratios=getlogratios,
-          logratioPlot=logratioPlot,
-          calibrator=calibrator,
-          calibrateSamples=calibrateSamples
+            presets=presets,
+            upload=upload,
+            getdrift=getdrift,
+            driftPlot=driftPlot,
+            getlogratios=getlogratios,
+            logratioPlot=logratioPlot,
+            calibrator=calibrator,
+            calibrateSamples=calibrateSamples,
+            plotresults=plotresults,
+            resultstable=resultstable
         )
     )
 }
 
 simplex <- function(){
-    freeformServer(8000)
+    freeformServer()
 }

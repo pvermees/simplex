@@ -15,7 +15,6 @@ var glob = {
     'sampleprefix': null,
     'standards': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
-
 }
 
 function start() {
@@ -82,7 +81,8 @@ function showPresets(){
 
 function showOrHide(cls,condition,callback,arg){
     let set = document.querySelector(cls);
-    if (condition) {
+    if (set==null) return
+    if (condition){
 	set.classList.add('hidden');
     } else {
 	set.classList.remove('hidden');
@@ -93,6 +93,11 @@ function showOrHide(cls,condition,callback,arg){
 function stable(){
     let m = glob.simplex.method.method;
     return(["IGG-O","IGG-S","GA-O"].includes(m[0]))
+}
+
+function geochron(){
+    let m = glob.simplex.method.method;
+    return(["IGG-UPb","IGG-UThPb","GA-UPb"].includes(m[0]))
 }
 
 function labelButtons(){
@@ -348,13 +353,7 @@ function calibrator(){
 function samples(){
     selectButton(4);
     loadPage("samples.html").then(
-	() => loader(),
-	error => alert(error)
-    ).then(
 	() => markSamplesByPrefix(),
-	error => alert(error)
-    ).then(
-	() => shower(),
 	error => alert(error)
     );
 }
@@ -382,7 +381,44 @@ function calibrate(){
     )
 }
 
+// 6. finish
+
 function finish(){
     selectButton(5);
-    loadPage("finish.html");
+    loadPage("finish.html").then(
+	() => {
+	    showOrHide('.hide4stable',stable());
+	    document.getElementById('prefix').value = glob.sampleprefix;
+	    markSamplesByPrefix();
+	}, error => alert(error)
+    );
+}
+
+function plotresults(){
+    showOrHide('.hide4plot',true);
+    showOrHide('.hide4table',false);
+    shinylight.call("plotresults", {x:glob}, 'final-plot').then(
+	result => {
+	    shinylight.setElementPlot('final-plot', result.plot)
+	},
+	error => alert(error)
+    );
+}
+
+function resultstable(){
+    showOrHide('.hide4table',true);
+    showOrHide('.hide4plot',false);
+    shinylight.call("resultstable", {x:glob}, null).then(
+	result => {
+	    let nr = result.data.length;
+	    let header = Object.keys(result.data[0]);
+	    let tab = createDataEntryGrid('final-table', header, nr);
+	    shinylight.setGridResult(tab, result);
+	},
+	error => alert(error)
+    );
+}
+
+function export2isoplotr(){
+    
 }
