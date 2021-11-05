@@ -4,16 +4,16 @@
 \alias{plot.calibrated}
 \title{plot calibrated data}
 \usage{
-\method{plot}{calibrated}(x, type, ...)
+\method{plot}{calibrated}(x, option = 1, ...)
 }
 \arguments{
 \item{x}{an object of class \code{calibrated}}
 
-\item{type}{for U-Pb or U-Th-Pb data, either \code{'U-Pb'} or
-\code{'Th-Pb'}.}
-
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function}
+
+\item{type}{for U-Pb or U-Th-Pb data, either \code{'U-Pb'} or
+\code{'Th-Pb'}.}
 }
 \description{
 shows the calibrated data on a logratio plot.

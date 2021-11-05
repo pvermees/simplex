@@ -4,7 +4,7 @@
 \alias{calibration}
 \title{standard calibration}
 \usage{
-calibration(lr, stand, snames = NULL, i = NULL, invert = FALSE, t = 0)
+calibration(lr, stand, snames = NULL, i = NULL, invert = FALSE, t = NULL)
 }
 \arguments{
 \item{lr}{an object of class \code{logratios}}

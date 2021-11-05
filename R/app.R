@@ -1,15 +1,3 @@
-source('R/calibrate.R')
-source('R/calibration.R')
-source('R/drift.R')
-source('R/io.R')
-source('R/logratios.R')
-source('R/method.R')
-source('R/postprocess.R')
-source('R/process.R')
-source('R/standard.R')
-source('R/toolbox.R')
-source('R/trim.R')
-
 presets <- function(method){
     if (method=='IGG-UPb'){
         load('data/Cameca_UPb.rda')
@@ -170,6 +158,11 @@ freeformServer <- function(port=NULL) {
     )
 }
 
+#' @title Graphical User Interface for simplex
+#' @description Shinylight app for simplex
+#' @examples
+#' \donttest{simplex()}
+#' @export
 simplex <- function(){
     freeformServer()
 }

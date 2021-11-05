@@ -4,10 +4,21 @@
 \alias{method}
 \title{read or define SIMS acquisition details}
 \usage{
-method(method = "IGG-UPb", instrument, ions, num, den, oxide, nominalblank)
+method(
+  m = "IGG-UPb",
+  instrument,
+  ions,
+  detectors,
+  num,
+  den,
+  oxide,
+  multicollector,
+  nominalblank,
+  description
+)
 }
 \arguments{
-\item{method}{the name of a data acquisition protocol. Pre-defined
+\item{m}{the name of a data acquisition protocol. Pre-defined
 values include \code{'IGG-UPb'}, \code{'GA-UPb'},
 \code{'IGG-UThPb'}, \code{'IGG-O'}, and \code{'IGG-S'}).}
 
@@ -25,9 +36,15 @@ subsequent data reduction steps.}
 \item{oxide}{the ion label to be used as a uranium or thorium oxide
 reference for U-Pb and U-Th-Pb calibration.}
 
+\item{multicollector}{logical flag indicating whether the
+measurements were made in multicollection mode. If \code{TRUE},
+removes the need to apply a drift correction.}
+
 \item{nominalblank}{logical flag indicating whether the blank is
 measured during every sweep, or whether to use a nominal blank
 value for each detector.}
+
+\item{description}{text string with a description of the contents}
 }
 \value{
 an object of class \code{method}
@@ -37,6 +54,6 @@ get or set a list of data acquisition properties
 }
 \examples{
 fname <- system.file('SHRIMP.pd',package='simplex')
-shrimpdat <- read_data(fname,method='GA-UPb')
+shrimpdat <- read_data(fname,m='GA-UPb')
 plot(shrimpdat,i=1)
 }
