@@ -1,3 +1,15 @@
+source('R/calibrate.R')
+source('R/calibration.R')
+source('R/drift.R')
+source('R/io.R')
+source('R/logratios.R')
+source('R/method.R')
+source('R/postprocess.R')
+source('R/process.R')
+source('R/standard.R')
+source('R/toolbox.R')
+source('R/trim.R')
+
 presets <- function(method){
     if (method=='IGG-UPb'){
         load('data/Cameca_UPb.rda')
@@ -111,8 +123,8 @@ plotresults <- function(x){
         plot.delta(d)
     } else {
         tab <- data2table(cal)
-        UPb <- as.UPb(tab,format=7)
-        concordia(UPb)
+        UPb <- IsoplotR:::as.UPb(tab,format=5)
+        IsoplotR::concordia(UPb)
     }
 }
 

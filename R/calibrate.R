@@ -92,10 +92,10 @@ fractical <- function(dat,type="U-Pb",exterr=FALSE){
     fitcov <- matrix(c(fit$a[2]^2,fit$cov.ab,
                        fit$cov.ab,fit$b[2]^2),2,2)
     DP <- paste0(num,den)
-    E <- matrix(0,ns+3,ns+3)
-    E[ns+1,ns+1] <- scal$cov[DP,DP]
+    E <- matrix(0,2*ns+3,2*ns+3)
+    E[2*ns+1,2*ns+1] <- scal$cov[DP,DP]
     E[ns+(2:3),ns+(2:3)] <- fitcov
-    J <- matrix(0,ns,ns+3)
+    J <- matrix(0,ns,2*ns+3)
     out$lr <- rep(0,ns)
     rownames(J) <- snames
     names(out$lr) <- snames
@@ -117,15 +117,15 @@ fractical <- function(dat,type="U-Pb",exterr=FALSE){
         Jb0g[1,2] <- tt
         Jb0g[2,3] <- 1
         Jb0g[2,4] <- tt
-        E[i+(0:1),i+(0:1)] <- Jb0g %*% Eb0g %*% t(Jb0g)
+        E[2*i-(1:0),2*i-(1:0)] <- Jb0g %*% Eb0g %*% t(Jb0g)
         out$lr[i] <- XY[2] + scal$lr[DP] - (fit$a[1]+fit$b[1]*XY[1])
-        J[i,i] <- -fit$b[1]  # dlrdX
-        J[i,i+1] <- 1        # dlrdY
+        J[i,2*i-1] <- -fit$b[1]  # dlrdX
+        J[i,2*i] <- 1            # dlrdY
         if (exterr){
-            J[i,ns+1] <- 1       # dlrdscalDP
-            J[i,ns+2] <- -1      # dlrda
-            J[i,ns+3] <- -XY[1]  # dlrdb
-        }    
+            J[i,2*ns+1] <- 1       # dlrdscalDP
+            J[i,2*ns+2] <- -1      # dlrda
+            J[i,2*ns+3] <- -XY[1]  # dlrdb
+        }
     }
     out$cov <- J %*% E %*% t(J)
     out
