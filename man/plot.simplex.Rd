@@ -20,6 +20,6 @@
 plot time resolved SIMS data
 }
 \examples{
-data('SHRIMP',package='simplex')
-plot(SHRIMP,i=1)
+data('SHRIMP_UPb',package='simplex')
+plot(SHRIMP_UPb,i=1)
 }

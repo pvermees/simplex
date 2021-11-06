@@ -16,7 +16,7 @@ an object of class \code{drift}
 fits a generalised linear model to time resolved SIMS data
 }
 \examples{
-data('SHRIMP',package='simplex')
-dc <- drift(x=SHRIMP)
+data('SHRIMP_UPb',package='simplex')
+dc <- drift(x=SHRIMP_UPb)
 plot(dc,i=1)
 }

@@ -3,8 +3,8 @@
 #' @param x an object of class \code{simplex}
 #' @return an object of class \code{drift}
 #' @examples
-#' data('SHRIMP',package='simplex')
-#' dc <- drift(x=SHRIMP)
+#' data('SHRIMP_UPb',package='simplex')
+#' dc <- drift(x=SHRIMP_UPb)
 #' plot(dc,i=1)
 #' @export
 drift <- function(x){
@@ -75,7 +75,7 @@ get_a0 <- function(g,spot,ions){
     }
     sem_misfit <- function(par,g,ap){
         expected <- ap$bkgcounts + exp(par+g*ap$t)*ap$edt
-        LL <- dpois(x=ap$counts,lambda=expected,log=TRUE)
+        LL <- stats::dpois(x=ap$counts,lambda=expected,log=TRUE)
         -sum(LL)
     }
     init_far <- function(ap){
@@ -97,13 +97,13 @@ get_a0 <- function(g,spot,ions){
         ap <- alphapars(spot,ion)
         if (spot$dtype[ion]=='Fc'){
             init <- init_far(ap)
-            out[ion] <- optimise(far_misfit,interval=init+c(-5,2),
-                                 g=g,ap=ap)$minimum
+            out[ion] <- stats::optimise(far_misfit,interval=init+c(-5,2),
+                                        g=g,ap=ap)$minimum
         } else {
             init <- log(max(0.5,sum(ap$counts))) -
                 log(sum(exp(g*ap$t)*ap$edt))
-            out[ion] <- optimise(sem_misfit,interval=init+c(-5,2),
-                                 g=g,ap=ap)$minimum
+            out[ion] <- stats::optimise(sem_misfit,interval=init+c(-5,2),
+                                        g=g,ap=ap)$minimum
         }
     }
     out
@@ -145,8 +145,8 @@ alphapars <- function(spot,ion){
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
-#' data('Cameca',package='simplex')
-#' dc <- drift(x=Cameca)
+#' data('Cameca_UPb',package='simplex')
+#' dc <- drift(x=Cameca_UPb)
 #' plot(dc,i=1)
 #' @method plot drift
 #' @export

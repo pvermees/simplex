@@ -82,7 +82,7 @@ geocal <- function(lr,oxide,t=NULL,type,common){
     } else {
         stop("Invalid data type.")
     }
-    if (is.null(t)) t <- median(lr$samples[[1]]$time)
+    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
     out <- list(num=num,den=den,oxide=oxide,t=hours(t))
     out$common <- common
     out$snames <- names(lr$samples)
@@ -140,8 +140,6 @@ beta2york <- function(lr,t=0,snames,num=c('UO2','Pb206','Pb204'),
 #' @title plot calibration data
 #' @description shows the calibration data on a logratio plot.
 #' @param x an object of class \code{logratios}
-#' @param type for \code{U-Th-Pb} data, if \code{type=2}, produces a
-#'     Th-Pb calibration plot. Otherwise plots the U-Pb calibration.
 #' @param option if \code{option=1}, plots the best fit line through
 #'     U-Pb and Th-Pb data. If \code{option=2}, adds the time-resolved
 #'     raw data to the plot. If \code{option=3}, marks the first and
@@ -176,7 +174,7 @@ calplot_stable <- function(dat,...){
     np <- nn*(nn-1)/2       # number of plot panels
     nc <- ceiling(sqrt(np)) # number of rows
     nr <- ceiling(np/nc)    # number of columns
-    oldpar <- par(mfrow=c(nr,nc))
+    oldpar <- graphics::par(mfrow=c(nr,nc))
     ii <- 1
     snames <- cal$snames
     for (i in 1:(nn-1)){
@@ -195,7 +193,7 @@ calplot_stable <- function(dat,...){
             if (ii>np) break
         }
     }
-    par(oldpar)
+    graphics::par(oldpar)
 }
 
 calplot_geochronology <- function(dat,option=1,title=TRUE,...){
@@ -203,7 +201,7 @@ calplot_geochronology <- function(dat,option=1,title=TRUE,...){
     np <- length(cal)       # number of plot panels
     nc <- ceiling(sqrt(np)) # number of columns
     nr <- ceiling(np/nc)    # number of rows
-    oldpar <- par(mfrow=c(nr,nc))
+    oldpar <- graphics::par(mfrow=c(nr,nc))
     ii <- 1
     for (i1 in 1:(nr-1)){
         for (i2 in (i1+1):nc){
@@ -213,6 +211,7 @@ calplot_geochronology <- function(dat,option=1,title=TRUE,...){
             ii <- ii + 1
         }
     }
+    graphics::par(oldpar)
 }
 
 calplot_geochronology_helper <- function(dat,option=1,type=1,title=TRUE,...){

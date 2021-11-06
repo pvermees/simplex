@@ -21,7 +21,7 @@ shows the time resolved mass spectrometer signals
     fitted by a generalised linear model
 }
 \examples{
-data('Cameca',package='simplex')
-dc <- drift(x=Cameca)
+data('Cameca_UPb',package='simplex')
+dc <- drift(x=Cameca_UPb)
 plot(dc,i=1)
 }

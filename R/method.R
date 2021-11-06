@@ -8,6 +8,7 @@
 #'     masses that are visited during each sweep.
 #' @param num numerator ions of the logratios to be processed in
 #'     subsequent data reduction steps.
+#' @param detectors vector of detector labels
 #' @param den denominator ions of the logratios to be processed in
 #'     subsequent data reduction steps.
 #' @param oxide the ion label to be used as a uranium or thorium oxide

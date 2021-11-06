@@ -19,8 +19,8 @@ an object of class \code{calibrated}
 convert signal logratios to atomic logratios
 }
 \examples{
-data('oxygen')
-dc <- drift(x=oxygen)
+data('Cameca_oxygen',package='simplex')
+dc <- drift(x=Cameca_oxygen)
 lr <- logratios(x=dc)
 cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
 cd <- calibrate(cal)

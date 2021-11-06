@@ -45,8 +45,8 @@ specify the isotopic composition of a reference
     material for SIMS data calibration.
 }
 \examples{
-data(Cameca,package="simplex")
-dc <- drift(x=Cameca)
+data(Cameca_UPb,package="simplex")
+dc <- drift(x=Cameca_UPb)
 lr <- logratios(x=dc)
 st <- standard(preset="Plesovice")
 cal <- calibration(lr=lr,stand=st)

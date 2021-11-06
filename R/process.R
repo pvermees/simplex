@@ -4,15 +4,15 @@
 #'     calibration.
 #' @param f file name(s), may include wildcards (\code{*.asc},
 #'     \code{*.op} or \code{*.pd}).
-#' @param method an object of class \code{method} OR the name of a
-#'     data acquisition protocol (one of \code{'IGG-UPb'},
-#'     \code{'GA-UPb'}, \code{'IGG-UThPb'}, \code{'IGG-O'}, or
-#'     \code{'IGG-S'}). To create new methods, see \code{method}.
+#' @param m an object of class \code{method} OR the name of a data
+#'     acquisition protocol (one of \code{'IGG-UPb'}, \code{'GA-UPb'},
+#'     \code{'IGG-UThPb'}, \code{'IGG-O'}, or \code{'IGG-S'}). To
+#'     create new methods, see \code{method}.
 #' @param stand an object of class \code{standard}
 #' @param t the analysis time to which the logratio signals should be
 #'     regressed.
-#' @param exterr include the uncertainty associated with the
-#'     standard calibration in the error propagation?
+#' @param exterr include the uncertainty associated with the standard
+#'     calibration in the error propagation?
 #' @return an object of class \code{calibrated}
 #' @examples
 #' \dontrun{

@@ -5,8 +5,8 @@
 #'     the calibration should be propagated.
 #' @return an object of class \code{calibrated}
 #' @examples
-#' data('oxygen')
-#' dc <- drift(x=oxygen)
+#' data('Cameca_oxygen',package='simplex')
+#' dc <- drift(x=Cameca_oxygen)
 #' lr <- logratios(x=dc)
 #' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
 #' cd <- calibrate(cal)
@@ -184,17 +184,19 @@ mergecal <- function(...){
 #' @title plot calibrated data
 #' @description shows the calibrated data on a logratio plot.
 #' @param x an object of class \code{calibrated}
-#' @param type for U-Pb or U-Th-Pb data, either \code{'U-Pb'} or
-#'     \code{'Th-Pb'}.
+#' @param option for U-Pb or U-Th-Pb data. If \code{1}, plots the data
+#'     as error ellipses; if \code{2}, adds the raw data; if \code{3},
+#'     marks the first and last measurement with a black and white
+#'     circle, respectively.
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function
 #' @examples
-#' data('Cameca')
-#' dc <- drift(x=Cameca)
+#' data('Cameca_UPb')
+#' dc <- drift(x=Cameca_UPb)
 #' lr <- logratios(x=dc)
 #' cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
 #' cd <- calibrate(cal)
-#' plot(cd,type='U-Pb')
+#' plot(cd)
 #' @method plot calibrated
 #' @export
 plot.calibrated <- function(x,option=1,...){
@@ -214,7 +216,7 @@ caldplot_stable <- function(dat,...){
     np <- nn*(nn-1)/2       # number of plot panels
     nc <- ceiling(sqrt(np)) # number of rows
     nr <- ceiling(np/nc)    # number of columns
-    oldpar <- par(mfrow=c(nr,nc),mar=rep(3.5,4))
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(3.5,4))
     ii <- 1
     snames <- names(dat$samples)
     for (i in 1:(nn-1)){
@@ -226,7 +228,7 @@ caldplot_stable <- function(dat,...){
                       max(cal$lr[i]+3*sqrt(cal$cov[i,i]),B[,'X']+3*B[,'sX']))
             ylim <- c(min(cal$lr[j]-3*sqrt(cal$cov[j,j]),B[,'Y']-3*B[,'sY']),
                       max(cal$lr[j]+3*sqrt(cal$cov[j,j]),B[,'Y']+3*B[,'sY']))
-            plot(xlim,ylim,type='n',ann=FALSE)
+            graphics::plot(xlim,ylim,type='n',ann=FALSE)
             deltagrid(dat,i,j)
             IsoplotR::scatterplot(B,xlim=xlim,ylim=ylim,add=TRUE,...)
             graphics::mtext(side=1,text=xlab,line=2)
@@ -238,11 +240,11 @@ caldplot_stable <- function(dat,...){
             if (ii>np) break
        }
     }
-    par(oldpar)
+    graphics::par(oldpar)
 }
 
 deltagrid <- function(dat,i,j){
-    usr <- par('usr')
+    usr <- graphics::par('usr')
     xlim <- usr[1:2]
     ylim <- usr[3:4]
     xs <- dat$calibration$lr[i]
@@ -259,16 +261,18 @@ deltagrid <- function(dat,i,j){
     yticks <- (dyticks-dj)/1000+ys
     nxt <- length(xticks)
     nyt <- length(yticks)
-    matlines(rbind(xticks,xticks),matrix(rep(ylim,nxt),ncol=nxt),lty=3,col='black')
-    matlines(matrix(rep(xlim,nyt),ncol=nyt),rbind(yticks,yticks),lty=3,col='black')
-    axis(side=3,at=xticks,labels=dxticks)
-    mtext(expression(delta*"'"),side=3,line=2)
-    axis(side=4,at=yticks,labels=dyticks)
-    mtext(expression(delta*"'"),side=4,line=2)
-    lines(rep(xs,2),ylim,lty=2,col='red')
-    text(xs,ylim[1],labels=dat$standard$prefix,pos=4,srt=90,offset=0)
-    lines(xlim,rep(ys,2),lty=2,col='red')
-    text(xlim[1],ys,labels=dat$standard$prefix,pos=4,offset=0)
+    graphics::matlines(rbind(xticks,xticks),matrix(rep(ylim,nxt),ncol=nxt),
+                       lty=3,col='black')
+    graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
+                       rbind(yticks,yticks),lty=3,col='black')
+    graphics::axis(side=3,at=xticks,labels=dxticks)
+    graphics::mtext(expression(delta*"'"),side=3,line=2)
+    graphics::axis(side=4,at=yticks,labels=dyticks)
+    graphics::mtext(expression(delta*"'"),side=4,line=2)
+    graphics::lines(rep(xs,2),ylim,lty=2,col='red')
+    graphics::text(xs,ylim[1],labels=dat$standard$prefix,pos=4,srt=90,offset=0)
+    graphics::lines(xlim,rep(ys,2),lty=2,col='red')
+    graphics::text(xlim[1],ys,labels=dat$standard$prefix,pos=4,offset=0)
 }
 
 caldplot_geochronology <- function(dat,option=1,...){
@@ -276,7 +280,7 @@ caldplot_geochronology <- function(dat,option=1,...){
     np <- length(cal)       # number of plot panels
     nc <- ceiling(sqrt(np)) # number of columns
     nr <- ceiling(np/nc)    # number of rows
-    oldpar <- par(mfrow=c(nr,nc),mar=rep(4,4))
+    oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(4,4))
     ii <- 1
     for (i1 in 1:(nr-1)){
         for (i2 in (i1+1):nc){
@@ -285,7 +289,7 @@ caldplot_geochronology <- function(dat,option=1,...){
             ii <- ii + 1
         }
     }
-    par(oldpar)
+    graphics::par(oldpar)
 }
 
 caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
@@ -302,7 +306,7 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
     ylim <- rep(0,2)
     ylim[1] <- min(yd[,'Y']-3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[1])
     ylim[2] <- max(yd[,'Y']+3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[2])
-    plot(xlim,ylim,xlab=xlab,ylab=ylab,xlim=xlim,ylim=ylim,type='n')
+    graphics::plot(xlim,ylim,xlab=xlab,ylab=ylab,xlim=xlim,ylim=ylim,type='n')
     agegrid(dat,type,xlim,ylim)
     if (option==1){
         IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
@@ -336,7 +340,7 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
 }
 
 agegrid <- function(dat,type,xlim,ylim){
-    usr <- par('usr')
+    usr <- graphics::par('usr')
     cal <- dat$calibration[[type]]
     st <- do.call(dat$standard$fetchfun,args=list(dat=dat))
     lrlim <- rep(0,2)
@@ -363,9 +367,10 @@ agegrid <- function(dat,type,xlim,ylim){
             yticks$t <- c(yticks$t,tticks[i])
         }
     }
-    axis(side=3,at=xticks$x,labels=xticks$t)
-    mtext(side=3,line=2,'t (Ma)')
-    axis(side=4,at=yticks$y,labels=yticks$t)
-    mtext(side=4,line=2,'t (Ma)')
-    matlines(matrix(rep(xlim,nt),nrow=2),rbind(lrmin,lrmax),lty=2,col='gray50')
+    graphics::axis(side=3,at=xticks$x,labels=xticks$t)
+    graphics::mtext(side=3,line=2,'t (Ma)')
+    graphics::axis(side=4,at=yticks$y,labels=yticks$t)
+    graphics::mtext(side=4,line=2,'t (Ma)')
+    graphics::matlines(matrix(rep(xlim,nt),nrow=2),
+                       rbind(lrmin,lrmax),lty=2,col='gray50')
 }

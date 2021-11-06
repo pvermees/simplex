@@ -27,6 +27,8 @@ values include \code{'IGG-UPb'}, \code{'GA-UPb'},
 \item{ions}{vector of labels to be attached to the different ionic
 masses that are visited during each sweep.}
 
+\item{detectors}{vector of detector labels}
+
 \item{num}{numerator ions of the logratios to be processed in
 subsequent data reduction steps.}
 

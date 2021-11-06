@@ -16,9 +16,6 @@ last measurement by black and white circles, respectively.}
 
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function.}
-
-\item{type}{for \code{U-Th-Pb} data, if \code{type=2}, produces a
-Th-Pb calibration plot. Otherwise plots the U-Pb calibration.}
 }
 \description{
 shows the calibration data on a logratio plot.
