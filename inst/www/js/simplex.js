@@ -2,7 +2,7 @@
 
 var glob = {
     'simplex': {
-	'method': null,
+	'method': { 'method': ['IGG-UPb'] },
 	'samples': null,
 	'standard': null,
 	'calibration': null,
@@ -49,13 +49,21 @@ async function loadPage(url) {
 function setup(){
     selectButton(0);
     loadPage("setup.html").then(
-        () => loadPresets(),
+        () => {
+	    initpreset();
+	    loadPresets()
+	},
         error => alert(error)
     );
 }
 
+function initpreset(){
+    document.getElementById("methods").value = glob.simplex.method.method[0];
+}
+
 async function loadPresets(){
     const m = document.getElementById("methods").value;
+    glob.simplex.method.method[0] = m;
     const result = await shinylight.call('presets', { method: m }, null);
     result2simplex(result);
     showPresets();
@@ -240,7 +248,10 @@ function driftAliquot(){
 
 function driftPlot(){
     let i = document.getElementById("aliquots").value;
-    shinylight.call('driftPlot', {x:glob, i:i}, 'drift-plot').then(
+    shinylight.call('driftPlot',
+		    {x:glob, i:i},
+		    'drift-plot',
+		    {'imgType': 'svg'}).then(
 	result => shinylight.setElementPlot('drift-plot', result.plot),
 	error => alert(error)
     );
@@ -282,7 +293,8 @@ function extra(){
 	    let done = '|'.repeat(ndone);
 	    let todo = '.'.repeat(nbars-ndone);
             shinylight.setElementText('progress', done + todo + ' ' + pc + '%');
-        }
+        },
+	'imgType': 'svg'
     }
     return(extra)
 }
@@ -301,7 +313,8 @@ function logratioPlot(){
     let i = document.getElementById("aliquots").value;
     shinylight.call('logratioPlot',
 		    {x:glob, i:i, ratios:glob.ratios},
-		    'logratio-plot')
+		    'logratio-plot',
+		    {'imgType': 'svg'})
 	.then(
 	    result => shinylight.setElementPlot('logratio-plot', result.plot),
 	    error => alert(error)
@@ -364,7 +377,8 @@ function chooseStandard(){
 }
 
 function calibrator(){
-    shinylight.call("calibrator", {x:glob}, 'calibration-plot').then(
+    shinylight.call("calibrator", {x:glob},
+		    'calibration-plot', {'imgType': 'svg'}).then(
 	result => {
 	    result2simplex(result),
 	    shinylight.setElementPlot('calibration-plot', result.plot)
@@ -399,8 +413,10 @@ function markSamplesByPrefix(){
 }
 
 function calibrate(){
-    shinylight.call("calibrateSamples", {x:glob},
-		    'sample-calibration-plot').then(
+    shinylight.call("calibrateSamples",
+		    {x:glob},
+		    'sample-calibration-plot',
+		    {'imgType': 'svg'}).then(
 	result => shinylight.setElementPlot('sample-calibration-plot', result.plot),
 	error => alert(error)
     )
@@ -422,7 +438,10 @@ function finish(){
 function plotresults(){
     showOrHide('.hide4plot',true);
     showOrHide('.hide4table',false);
-    shinylight.call("plotresults", {x:glob}, 'final-plot').then(
+    shinylight.call("plotresults",
+		    {x:glob},
+		    'final-plot',
+		    {'imgType': 'svg'}).then(
 	result => {
 	    shinylight.setElementPlot('final-plot', result.plot)
 	},
