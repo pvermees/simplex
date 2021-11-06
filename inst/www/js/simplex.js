@@ -300,14 +300,19 @@ function calibration(){
 	error => alert(error)
     ).then(
 	() => {
-	    document.getElementById('standards').value =
-		glob.simplex.standard.name[0];
-	    document.getElementById('prefix').value =
-		glob.simplex.standard.prefix;
+	    if (typeof glob.simplex.standard != 'undefined'){
+		document.getElementById('standards').value =
+		    glob.simplex.standard.name[0];
+		document.getElementById('prefix').value =
+		    glob.simplex.standard.prefix;
+	    } else {
+		glob.simplex.standard = {
+		    'name': [''],
+		    'prefix': ''
+		}
+	    }
+	    markStandardsByPrefix()
 	},
-	error => alert(error)
-    ).then(
-	() => markStandardsByPrefix(),
 	error => alert(error)
     ).then(
 	() => shower(),
@@ -335,7 +340,10 @@ function markStandardsByPrefix(){
 
 function chooseStandard(){
     let stand = document.getElementById("standards").value;
-    glob.simplex.standard.name[0] = stand;
+    shinylight.call("getstandard", {preset:stand}, null).then(
+	result => glob.simplex.standard = result.data,
+	error => alert(error)
+    )
 }
 
 function calibrator(){

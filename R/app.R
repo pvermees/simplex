@@ -1,3 +1,15 @@
+source('R/calibrate.R')
+source('R/calibration.R')
+source('R/drift.R')
+source('R/io.R')
+source('R/logratios.R')
+source('R/method.R')
+source('R/postprocess.R')
+source('R/process.R')
+source('R/standard.R')
+source('R/toolbox.R')
+source('R/trim.R')
+
 presets <- function(method){
     if (method=='IGG-UPb'){
         load('data/Cameca_UPb.rda')
@@ -86,8 +98,12 @@ logratioPlot <- function(x,i,ratios){
     plot.logratios(x=as.simplex(x),i=as.numeric(i)+1,ratios=ratios)
 }
 
-calibrator <- function(x,t=0,option=3,...){
-    out <- calibration(as.simplex(x),stand=x$simplex$standard,t=t)
+getstandard <- function(preset){
+    standard(preset)
+}
+
+calibrator <- function(x,option=3,...){
+    out <- calibration(as.simplex(x),stand=x$simplex$standard)
     plot.calibration(out,option=option,...)
     result2json(out)
 }
@@ -136,7 +152,8 @@ upload <- function(f,m){
     for (i in 1:ntcs){
         tcs[[f$fns[[i]]]] <- textConnection(f$tcs[[i]])
     }
-    read_data(f=tcs,m=m)
+    result2json(read_data(f=tcs,m=m))
+    
 }
 
 freeformServer <- function(port=NULL) {
@@ -150,6 +167,7 @@ freeformServer <- function(port=NULL) {
             driftPlot=driftPlot,
             getlogratios=getlogratios,
             logratioPlot=logratioPlot,
+            getstandard=getstandard,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,
