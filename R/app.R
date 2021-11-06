@@ -82,7 +82,8 @@ result2json <- function(x){
 }
 
 getdrift <- function(x){
-    result2json(drift(x=as.simplex(x)))
+    out <- drift_helper(x=as.simplex(x),gui=TRUE)
+    result2json(out)
 }
 
 driftPlot <- function(x,i){
@@ -91,7 +92,8 @@ driftPlot <- function(x,i){
 }
 
 getlogratios <- function(x){
-    result2json(logratios(x=as.simplex(x)))
+    out <- logratios_helper(x=as.simplex(x),gui=TRUE)
+    result2json(out)
 }
 
 logratioPlot <- function(x,i,ratios){

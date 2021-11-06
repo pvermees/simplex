@@ -179,7 +179,7 @@ function drift(){
 	() => loader(),
 	error => alert(error)
     ).then(
-	shinylight.call("getdrift", {x:glob}, null).then(
+	shinylight.call("getdrift", {x:glob}, null, extra()).then(
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
@@ -254,7 +254,7 @@ function logratios(){
 	() => loader(),
 	error => alert(error)
     ).then(
-	shinylight.call("getlogratios", {x:glob}, null).then(
+	shinylight.call("getlogratios", {x:glob}, null, extra()).then(
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
@@ -268,6 +268,23 @@ function logratios(){
 	    error => alert(error)
 	)
     )
+}
+
+function extra(){
+    var extra = {
+        'info': function(text) {
+            shinylight.setElementText('status', text);
+        },
+        'progress': function(numerator, denominator) {
+            const pc = Math.ceil(numerator * 100 / denominator);
+	    let nbars = 20;
+	    let ndone = Math.ceil(numerator*nbars/denominator);
+	    let done = '|'.repeat(ndone);
+	    let todo = '.'.repeat(nbars-ndone);
+            shinylight.setElementText('progress', done + todo + ' ' + pc + '%');
+        }
+    }
+    return(extra)
 }
 
 function logratioAliquot(){

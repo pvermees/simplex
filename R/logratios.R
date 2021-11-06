@@ -11,10 +11,20 @@
 #' }
 #' @export
 logratios <- function(x){
+    logratios_helper(x)
+}
+logratios_helper <- function(x,gui=FALSE){
     out <- x
     snames <- names(x$samples)
-    for (sname in snames){
-        print(sname)
+    ns <- length(snames)
+    for (i in 1:ns){
+        sname <- snames[i]
+        if (gui){
+            shinylight::sendInfoText(paste(" (processing",sname,")"))
+            shinylight::sendProgress(i,ns)
+        } else {
+            print(sname)
+        }
         sp <- spot(dat=x,sname=sname)
         out$samples[[sname]]$lr <- logratios.spot(x=sp)
     }

@@ -8,9 +8,20 @@
 #' plot(dc,i=1)
 #' @export
 drift <- function(x){
+    drift_helper(x)
+}
+drift_helper <- function(x,gui=FALSE){
     out <- x
     snames <- names(x$samples)
-    for (sname in snames){
+    ns <- length(snames)
+    for (i in 1:ns){
+        sname <- snames[i]
+        if (gui){
+            shinylight::sendInfoText(paste(" (processing",sname,")"))
+            shinylight::sendProgress(i,ns)
+        } else {
+            print(sname)
+        }
         sp <- spot(dat=x,sname=sname)
         out$samples[[sname]]$dc <- drift.spot(spot=sp)
     }
