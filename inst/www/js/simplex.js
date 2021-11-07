@@ -463,7 +463,7 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => {
-	    showIt('.show4UThPb',glob.datatype==='UThPb');
+	    showIt('.show4UThPb',glob.datatype==='U-Th-Pb');
 	    document.getElementById('prefix').value = glob.sampleprefix;
 	    markSamplesByPrefix();
 	}, error => alert(error)
@@ -499,6 +499,7 @@ function resultstable(){
 }
 
 function export2isoplotr(){
+    glob.IsoplotRformat = document.getElementById("format").value;
     var json = null;
     fetch('js/IsoplotR.json')
 	.then(response => {
@@ -554,7 +555,4 @@ function export2isoplotr(){
 	    },
 	    err => alert(err)
 	);
-}
-
-async function table2isoplotr(){
 }
