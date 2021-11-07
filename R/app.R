@@ -8,7 +8,7 @@ presets <- function(method){
     } else if (method=='IGG-S'){
         simplex <- get(load('data/Cameca_sulphur.rda'))
     } else if (method=='GA-UPb'){
-        simpelex <- get(load('data/SHRIMP_UPb.rda'))
+        simplex <- get(load('data/SHRIMP_UPb.rda'))
     } else {
         simplex <- list()
         simplex$samples <- NULL
