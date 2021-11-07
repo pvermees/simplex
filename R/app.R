@@ -138,6 +138,18 @@ resultstable <- function(x){
     as.data.frame(tab)
 }
 
+export2isoplotr <- function(x){
+    if (identical(x$IsoplotRformat,'U-Pb')){
+        method <- 'U-Pb'
+    } else if (identical(x$IsoplotRformat,'U-Th-Pb')){
+        method <- 'U-Th-Pb'
+    } else if (identical(x$IsoplotRformat,'Th-Pb')){
+        method <- 'Th-Pb'
+    }
+    out <- simplex2IsoplotR(as.simplex(x),method=method)
+    as.list(as.data.frame(out$x))
+}
+
 # f = list of two lists with blocks of text and corresponding filenames
 # m = method (currently a string, will be modified to accept lists)
 upload <- function(f,m){
@@ -166,7 +178,8 @@ freeformServer <- function(port=NULL) {
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,
-            resultstable=resultstable
+            resultstable=resultstable,
+            export2isoplotr=export2isoplotr
         )
     )
 }

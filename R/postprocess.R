@@ -125,15 +125,15 @@ data2table_pars <- function(x,option){
         J <- diag(3)
     } else if (type=='U-Pb'){
         num <- c('U238','Pb207','Pb204')
-        den <- c('206Pb','Pb206','Pb206')
+        den <- c('Pb206','Pb206','Pb206')
         J <- matrix(0,3,3)
         J[1,1] <- -1
         J[2,3] <- 1
         J[3,2] <- 1
     } else if (type=='U-Th-Pb'){
-        num <- c('U238','Pb207','Pb204','Pb208','Th232')
-        den <- c('206Pb','Pb206','Pb206','Pb206','U238')
-        J <- matrix(0,5,5)
+        num <- c('U238','Pb207','Pb204','Pb208','Th232','Th232','Pb204')
+        den <- c('Pb206','Pb206','Pb206','Pb206','U238','Pb208','Pb208')
+        J <- matrix(0,7,5)
         J[1,1] <- -1
         J[2,4] <- 1
         J[3,3] <- 1
@@ -143,6 +143,8 @@ data2table_pars <- function(x,option){
         J[5,2] <- -1
         J[5,3] <- 1
         J[5,5] <- -1
+        J[6,2] <- -1
+        J[7,5] <- 1
     } else {
         stop('invalid data type')
     }
@@ -240,9 +242,12 @@ age <- function(cd){
 #' @title convert to IsoplotR
 #' @description convert U-Pb or U-Th-Pb data to an IsoplotR object
 #' @param dat an object of class \code{calibrated}
-#' @param format optional. Either 5 or 7, sets the format of the
-#'     \code{IsoplotR} oboject
-#' @return an object of class \code{UPb}
+#' @param method sets the format of the \code{IsoplotR} oboject. If
+#'     \code{'U-Pb'}, produces a format 5 object of class \code{UPb};
+#'     if \code{'U-Th-Pb'}, produces a format 8 object of class
+#'     \code{UPb}; if \code{'Th-Pb'}, produces a format 2 object of
+#'     class \code{ThPb}.
+#' @return an object of class \code{UPb} or \code{ThPb}
 #' @examples
 #' \dontrun{
 #' m <- method('GA-UPb')
@@ -253,20 +258,26 @@ age <- function(cd){
 #' IsoplotR::concordia(UPb)
 #' }
 #' @export
-simplex2IsoplotR <- function(dat,format=5){
+simplex2IsoplotR <- function(dat,method='U-Pb'){
     tab <- data2table(dat)
-    if (identical(datatype(dat),'U-Pb')){
-        out <- IsoplotR:::as.UPb(tab,format=format)
-    } else if (identical(datatype(dat),'U-Th-Pb')){
-        if (format<7){
-            cols <- c(1:6,13:14,18)
-            out <- IsoplotR:::as.UPb(tab[,cols,drop=FALSE],format=5)
-        } else {
-            cols <- c(1:4,7:11,13:14,16:17,20)
-            out <- IsoplotR:::as.UPb(tab[,cols,drop=FALSE],format=8)
+    dt <- datatype(dat)
+    if (identical(method,'U-Pb')){
+        if (identical(dt,'U-Th-Pb')){
+            cols <- c(1:6,15:16,21)
+            tab <- tab[,cols,drop=FALSE]
         }
-    } else {
-        stop('This data type cannot be exported to IsoplotR')
+        out <- IsoplotR:::as.UPb(tab,format=5)
+    } else if (identical(method,'U-Th-Pb')){
+        if (!identical(dt,'U-Th-Pb'))
+            stop('Invalid data type or U-Th-Pb dating.')
+        cols <- c(1:4,7:10,15,17:18,22:23,30)
+        tab <- tab[,cols,drop=FALSE]
+        out <- IsoplotR:::as.UPb(tab,format=8)
+    } else if (identical(method,'Th-Pb')){
+        if (!identical(dt,'U-Th-Pb'))
+            stop('Invalid data type or U-Th-Pb dating.')
+        cols <- c(11:14,33)
+        out <- IsoplotR:::as.ThPb(tab,format=2)
     }
     out
 }

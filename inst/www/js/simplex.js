@@ -373,7 +373,7 @@ function showOrHideStandards(){
 	break;
     case 'oxygen': 
         disable = [1,2,3,4,6];
-        break; 
+        break;
     case 'sulphur':
 	disable = [1,2,3,4,5];
         break; 
@@ -499,5 +499,62 @@ function resultstable(){
 }
 
 function export2isoplotr(){
-    
+    var json = null;
+    fetch('js/IsoplotR.json')
+	.then(response => {
+	    if (!response.ok) {
+		throw new Error("HTTP error " + response.status);
+	    } else {
+		return response.json();
+	    }
+	}).then(
+	    result => json = result,
+	    err => alert(err)
+	).then(
+	    async () => {
+		let result = await shinylight.call('export2isoplotr',
+						   { x:glob }, null);
+		let gc = null;
+		let pd = null;
+		let format = null;
+		switch (glob.IsoplotRformat){
+		case 'U-Pb':
+		    gc = 'U-Pb';
+		    pd = 'concordia';
+		    format = 5;
+		    break;
+		case 'U-Th-Pb':
+		    gc = 'U-Pb';
+		    pd = 'concordia';
+		    format = 8;
+		    break;
+		case 'Th-Pb':
+		    gc = 'Th-Pb';
+		    pd = 'isochron';
+		    format = 2;
+		    break;		    
+		}
+		json.settings.geochronometer = gc;
+		json.settings.plotdevice = pd;
+		json.settings[gc].format = format;
+		json.data[gc] = result;
+	    },
+	    err => alert(err)
+	)
+	.then(
+	    () => {
+		let fname = prompt("Please enter a file name", "simplex.json");
+		if (fname != null){
+		    document.getElementById('fname').setAttribute(
+			"href","data:text/plain," + JSON.stringify(json)
+		    );
+		    document.getElementById('fname').setAttribute("download",fname);
+		    document.getElementById('fname').click();
+		}
+	    },
+	    err => alert(err)
+	);
+}
+
+async function table2isoplotr(){
 }
