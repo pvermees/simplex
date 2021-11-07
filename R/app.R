@@ -1,19 +1,14 @@
 presets <- function(method){
     if (method=='IGG-UPb'){
-        load('data/Cameca_UPb.rda')
-        simplex <- Cameca_UPb
+        simplex <- get(load('data/Cameca_UPb.rda'))
     } else if (method=='IGG-UThPb'){
-        load('data/Cameca_UThPb.rda')
-        simplex <- Cameca_UThPb
+        simplex <- get(load('data/Cameca_UThPb.rda'))
     } else if (method=='IGG-O'){
-        load('data/Cameca_oxygen.rda')
-        simplex <- Cameca_oxygen
+        simplex <- get(load('data/Cameca_oxygen.rda'))
     } else if (method=='IGG-S'){
-        load('data/Cameca_sulphur.rda')
-        simplex <- Cameca_sulphur
+        simplex <- get(load('data/Cameca_sulphur.rda'))
     } else if (method=='GA-UPb'){
-        load('data/SHRIMP_UPb.rda')
-        simplex <- SHRIMP_UPb
+        simpelex <- get(load('data/SHRIMP_UPb.rda'))
     } else {
         simplex <- list()
         simplex$samples <- NULL

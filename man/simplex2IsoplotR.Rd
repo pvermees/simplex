@@ -4,16 +4,19 @@
 \alias{simplex2IsoplotR}
 \title{convert to IsoplotR}
 \usage{
-simplex2IsoplotR(dat, format = 5)
+simplex2IsoplotR(dat, method = "U-Pb")
 }
 \arguments{
 \item{dat}{an object of class \code{calibrated}}
 
-\item{format}{optional. Either 5 or 7, sets the format of the
-\code{IsoplotR} oboject}
+\item{method}{sets the format of the \code{IsoplotR} oboject. If
+\code{'U-Pb'}, produces a format 5 object of class \code{UPb};
+if \code{'U-Th-Pb'}, produces a format 8 object of class
+\code{UPb}; if \code{'Th-Pb'}, produces a format 2 object of
+class \code{ThPb}.}
 }
 \value{
-an object of class \code{UPb}
+an object of class \code{UPb} or \code{ThPb}
 }
 \description{
 convert U-Pb or U-Th-Pb data to an IsoplotR object

@@ -463,6 +463,7 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => {
+	    hideIt('.hide4stable',stable());
 	    showIt('.show4UThPb',glob.datatype==='U-Th-Pb');
 	    document.getElementById('prefix').value = glob.sampleprefix;
 	    markSamplesByPrefix();
