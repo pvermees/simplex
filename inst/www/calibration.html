@@ -1,42 +1,38 @@
-<div class="show4loading blink">Processing...</div>
-<div class="hide4loading">
-  <left>
-    
-    <div>Choose a standard:
-      <select id="standards" onchange="chooseStandard()">
-	<option disabled selected value> -- select an option -- </option>
-	<option value="Plesovice">Plesovice zircon</option>
-	<option value="Qinghu">Qinghu zircon</option>
-	<option value="Temora">Temora zircon</option>
-	<option value="44069">44069 monazite</option>
-	<option value="NBS28">NBS28 quartz</option>
-	<option value="Sonora">Sonora pyrite</option>
-	<option value="other">other</option>
+<left>
+  
+  <div>Choose a standard:
+    <select id="standards" onchange="chooseStandard()">
+      <option disabled selected value> -- select an option -- </option>
+      <option value="Plesovice">Plesovice zircon</option>
+      <option value="Qinghu">Qinghu zircon</option>
+      <option value="Temora">Temora zircon</option>
+      <option value="44069">44069 monazite</option>
+      <option value="NBS28">NBS28 quartz</option>
+      <option value="Sonora">Sonora pyrite</option>
+      <option value="other">other</option>
+    </select>
+    <div class="hidden show4newstandard">Define a new standard by specifying its 
+      <select id="standoption" onchange="standardType()">
+	<option id="specify-standard-age">age</option>
+	<option id="specify-standard-composition">composition</option>
       </select>
-      <div class="hidden show4newstandard">Define a new standard by specifying its 
-	<select id="standoption" onchange="standardType()">
-	  <option id="specify-standard-age">age</option>
-	  <option id="specify-standard-composition">composition</option>
-	</select>
-	<table id="tval"></table>
-	<span>&plusmn;<table id="stval"></table></span>
-	<span>Covariance matrix:<table id="cov-tval"></table></span>
-      </div> 
-    </div>
-    
-    <div>Prefix:<input type="text" id="prefix"
-		       onchange="markStandardsByPrefix()">
-      <button class="mainbutton" onclick="calibrator()">Calibrate</button>
-    </div>
+      <table id="tval"></table>
+      <span>&plusmn;<table id="stval"></table></span>
+      <span>Covariance matrix:<table id="cov-tval"></table></span>
+    </div> 
+  </div>
+  
+  <div>Prefix:<input type="text" id="prefix"
+		     onchange="markStandardsByPrefix()">
+    <button class="mainbutton" onclick="calibrator()">Calibrate</button>
+  </div>
 
-    <div>Analyses to use for the calibration:
-      <table id="aliquots" class="normalfont"></table>
-    </div>
-    
-  </left>
+  <div>Analyses to use for the calibration:
+    <table id="aliquots" class="normalfont"></table>
+  </div>
   
-  <right>
-    <img class="plot" id="calibration-plot">
-  </right>
-  
-</div>
+</left>
+
+<right>
+  <img class="plot" id="calibration-plot">
+</right>

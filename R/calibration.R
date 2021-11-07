@@ -199,12 +199,12 @@ calplot_stable <- function(dat,...){
 calplot_geochronology <- function(dat,option=1,title=TRUE,...){
     cal <- dat$calibration
     np <- length(cal)       # number of plot panels
-    nc <- ceiling(sqrt(np)) # number of columns
-    nr <- ceiling(np/nc)    # number of rows
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc))
     ii <- 1
-    for (i1 in 1:(nr-1)){
-        for (i2 in (i1+1):nc){
+    for (i1 in 1:(nc-1)){
+        for (i2 in (i1+1):nr){
             if (ii>np) break
             calplot_geochronology_helper(dat,option=option,
                                          type=ii,title=title,...)

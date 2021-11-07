@@ -69,6 +69,11 @@ result2json <- function(x){
     out
 }
 
+getdatatype <- function(x){
+    dat <- as.simplex(x)
+    datatype(dat)
+}
+
 getdrift <- function(x){
     out <- drift_helper(x=as.simplex(x),gui=TRUE)
     result2json(out)
@@ -92,9 +97,9 @@ getstandard <- function(preset){
     standard(preset)
 }
 
-calibrator <- function(x,option=3,...){
+calibrator <- function(x,...){
     out <- calibration(as.simplex(x),stand=x$simplex$standard)
-    plot.calibration(out,option=option,...)
+    plot.calibration(out,...)
     result2json(out)
 }
 
@@ -116,8 +121,7 @@ plotresults <- function(x){
         d <- delta(cal)
         plot.delta(d)
     } else {
-        tab <- data2table(cal)
-        UPb <- IsoplotR:::as.UPb(tab,format=5)
+        UPb <- simplex2IsoplotR(cal)
         IsoplotR::concordia(UPb)
     }
 }
@@ -153,6 +157,7 @@ freeformServer <- function(port=NULL) {
         interface=list(
             presets=presets,
             upload=upload,
+            getdatatype=getdatatype,
             getdrift=getdrift,
             driftPlot=driftPlot,
             getlogratios=getlogratios,

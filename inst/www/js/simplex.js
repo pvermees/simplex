@@ -14,6 +14,8 @@ var glob = {
     'ratios': false,
     'sampleprefix': null,
     'standards': [],
+    'datatype': null,
+    'IsoplotRformat': 'U-Pb',
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 }
 
@@ -68,6 +70,14 @@ async function loadPresets(){
     result2simplex(result);
     showPresets();
     fileFormats();
+    setDataType();
+}
+
+function setDataType(){
+    shinylight.call('getdatatype', { x: glob }, null).then(
+	result => glob.datatype = result.data[0],
+	error => alert(error)
+    )
 }
 
 function showPresets(){
@@ -78,8 +88,8 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
-    showOrHide('.hide4stable',stable(),assign,'oxide');
-    showOrHide('.hide4multi',glob.simplex.method.multicollector[0]);
+    hideIt('.hide4stable',stable(),assign,'oxide');
+    hideIt('.hide4multi',glob.simplex.method.multicollector[0]);
     labelButtons();
     document.getElementById('multicollector').checked =
 	glob.simplex.method.multicollector[0];
@@ -87,25 +97,29 @@ function showPresets(){
 	glob.simplex.method.nominalblank[0];
 }
 
+function showIt(cls,condition,callback,arg){
+    showOrHide(cls,condition,callback,arg)
+}
+function hideIt(cls,condition,callback,arg){
+    showOrHide(cls,!condition,callback,arg)
+}
 function showOrHide(cls,condition,callback,arg){
     let set = document.querySelector(cls);
     if (set==null) return
     if (condition){
-	set.classList.add('hidden');
-    } else {
 	set.classList.remove('hidden');
 	if (callback !== undefined && arg !== undefined) callback(arg)
+    } else {
+	set.classList.add('hidden');
     }
 }
 
 function stable(){
-    let m = glob.simplex.method.method;
-    return(["IGG-O","IGG-S","GA-O"].includes(m[0]))
+    return(["oxygen","sulphur"].includes(glob.datatype))
 }
 
 function geochron(){
-    let m = glob.simplex.method.method;
-    return(["IGG-UPb","IGG-UThPb","GA-UPb"].includes(m[0]))
+    return(["U-Pb","U-Th-Pb"].includes(glob.datatype))
 }
 
 function labelButtons(){
@@ -169,6 +183,9 @@ async function upload(){
 		error => alert(error)
 	    )
 	},
+	err => alert(err)
+    ).then(
+	() => setDataType(),
 	err => alert(err)
     )
 }
@@ -326,10 +343,8 @@ function logratioPlot(){
 function calibration(){
     selectButton(3);
     loadPage("calibration.html").then(
-	() => loader(),
-	error => alert(error)
-    ).then(
 	() => {
+	    showOrHideStandards();
 	    if (typeof glob.simplex.standard != 'undefined'){
 		document.getElementById('standards').value =
 		    glob.simplex.standard.name[0];
@@ -344,10 +359,13 @@ function calibration(){
 	    markStandardsByPrefix()
 	},
 	error => alert(error)
-    ).then(
-	() => shower(),
-	error => alert(error)
     );
+}
+
+function showOrHideStandards(){
+    if (stable()){
+	document.getElementById()
+    }
 }
 
 function markStandardsByPrefix(){
@@ -428,7 +446,7 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => {
-	    showOrHide('.hide4stable',stable());
+	    showIt('.show4UThPb',glob.datatype==='UThPb');
 	    document.getElementById('prefix').value = glob.sampleprefix;
 	    markSamplesByPrefix();
 	}, error => alert(error)
@@ -436,8 +454,8 @@ function finish(){
 }
 
 function plotresults(){
-    showOrHide('.hide4plot',true);
-    showOrHide('.hide4table',false);
+    hideIt('.hide4plot',true);
+    hideIt('.hide4table',false);
     shinylight.call("plotresults",
 		    {x:glob},
 		    'final-plot',
@@ -450,8 +468,8 @@ function plotresults(){
 }
 
 function resultstable(){
-    showOrHide('.hide4table',true);
-    showOrHide('.hide4plot',false);
+    hideIt('.hide4table',true);
+    hideIt('.hide4plot',false);
     shinylight.call("resultstable", {x:glob}, null).then(
 	result => {
 	    let nr = result.data.length;
