@@ -363,8 +363,25 @@ function calibration(){
 }
 
 function showOrHideStandards(){
-    if (stable()){
-	document.getElementById()
+    let disable = null;
+    switch(glob.datatype) {
+    case 'U-Pb':
+	disable = [5,6];
+        break; 
+    case 'U-Th-Pb':
+	disable = [1,2,5,6];
+	break;
+    case 'oxygen': 
+        disable = [1,2,3,4,6];
+        break; 
+    case 'sulphur':
+	disable = [1,2,3,4,5];
+        break; 
+    default: //optional
+	//statements
+    }
+    for (let i=0; i<disable.length; i++){
+	document.getElementById("standards").options[disable[i]].disabled = true;
     }
 }
 
