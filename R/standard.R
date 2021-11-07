@@ -12,24 +12,25 @@
 #' @param val (optional) true isotopic composition of
 #'     \eqn{^{206}}Pb/\eqn{^{238}}U- and
 #'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
-#'     or true \eqn{\delta^{18}O} and \eqn{\delta^{16}O} values of the
-#'     oxygen isotope reference material.
+#'     or the true \eqn{\delta}-values of the stable isotope reference
+#'     material.
 #' @param cov (optional) the covariance matrix of \code{val}
 #' @param common (optional) the common-Pb composition
 #'     (\eqn{^{206}}Pb/\eqn{^{204}}Pb and
 #'     \eqn{^{208}}Pb/\eqn{^{204}}Pb).
 #' @return an object of class \code{standard}
 #' @examples
-#' data(Cameca,package="simplex")
-#' dc <- drift(x=Cameca)
+#' data(Cameca_UPb,package="simplex")
+#' dc <- drift(x=Cameca_UPb)
 #' lr <- logratios(x=dc)
 #' st <- standard(preset="Plesovice")
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(preset,prefix=preset,tst,
-                     val,cov=matrix(0,length(val),length(val)),common){
+standard <- function(preset,prefix=preset,tst,val,
+                     cov=matrix(0,length(val),length(val)),common){
     if (missing(preset)){
+        preset <- 'other'
         out <- list()
         if (missing(val)){
             if (missing(tst)){
@@ -37,32 +38,36 @@ standard <- function(preset,prefix=preset,tst,
                      "of the sample are missing.")
             } else {
                 out$tst <- tst
-                out$fetch <- function(dat){
-                    age2lr(dat)
-                }
+                out$fetchfun <- "age2lr"
             }
         } else {
             out$val <- val
             out$cov <- cov
-            if (missing(common)) out$common <- val*0
-            else out$common <- common
-            out$fetch <- function(dat){
-                lrstand(dat)
-            }
+            if (!missing(common)) out$common <- common
+            out$fetchfun <- "lrstand"
         }
         out$prefix <- prefix
         class(out) <- 'standard'
     } else if (preset=='Plesovice'){
-        out <- standard(tst=c(337.13,0.18),prefix=prefix)
+        out <- standard(tst=c('t'=337.13,'s[t]'=0.18),prefix=prefix)
+    } else if (preset=='Qinghu'){
+        out <- standard(tst=c('t'=159.5,'s[t]'=0.1),prefix=prefix)
     } else if (preset=='44069'){
-        out <- standard(tst=c(424.86,0.25),prefix=prefix)
+        out <- standard(tst=c('t'=424.86,'s[t]'=0.25),prefix=prefix)
     } else if (preset=='Temora'){
-        out <- standard(tst=c(416.75,0.12),prefix=prefix)
+        out <- standard(tst=c('t'=416.75,'s[t]'=0.12),prefix=prefix)
     } else if (preset=='NBS28'){
-        out <- standard(val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2,prefix=prefix)
+        out <- standard(val=c('d17O'=4.79,'d18O'=9.56),
+                        cov=diag(c(0.05,0.11))^2,
+                        prefix=prefix)
+    } else if (preset=='Sonora'){ # temporary value
+        out <- standard(val=c('d33S'=0.83,'d34S'=1.61,'d36S'=3.25),
+                        cov=diag(c(0.03,0.08,0.03))^2,
+                        prefix=prefix)
     } else {
         stop("Invalid input to standard(...).")
     }
+    out$name <- preset
     out
 }
 lrstand <- function(dat){
@@ -84,7 +89,17 @@ lrstand <- function(dat){
         }
         labels <- c("O17O16","O18O16")
         out$ref <- VSMOW()$lr
-        out$lr <- log(1 + val/1000) + VSMOW()$lr
+        out$lr <- log(1 + val/1000) + out$ref
+        J <- diag(1/(1000 + val))
+    } else if (type=="sulphur"){
+        if (length(val)==2){ # if d36S is missing
+            val <- c(val,val[2]*2)
+            J <- rbind(c(1,0),c(0,1),c(0,2))
+            cov <- J %*% cov %*% t(J)
+        }
+        labels <- c("S33S32","S34S32","S36S32")
+        out$ref <- troilite()$lr
+        out$lr <- log(1 + val/1000) + out$ref
         J <- diag(1/(1000 + val))
     } else {
         stop('Invalid type argument supplied to lrstand')

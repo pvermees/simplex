@@ -1,0 +1,48 @@
+<div id="presets">
+  <div id="preset-menu">
+    Presets: <select id="methods" onchange="loadPresets()">
+      <option value="IGG-UPb">IGG-UPb</option>
+      <option value="IGG-UThPb">IGG-UThPb</option>
+      <option value="IGG-O">IGG-O</option>
+      <option value="IGG-S">IGG-S</option>
+      <option value="GA-UPb">GA-UPb</option>
+    </select>
+  </div>
+  <div id="preset-details">
+    <table>
+      <tr>
+	<td>Description:</td>
+	<td><input class="preset" type="text" id="description"></td></tr>
+      <tr>
+	<td>Instrument:</td>
+	<td><input class="preset" type="text" id="instrument"></td></tr>
+      <tr>
+	<td>Ions:</td>
+	<td><input class="preset" type="text" id="ions"></td></tr>
+      <tr>
+	<td>Numerators:</td>
+	<td><input class="preset" type="text" id="num"></td></tr>
+      <tr>
+	<td>Denominators:</td>
+	<td><input class="preset" type="text" id="den"></td></tr>
+      <tr class="hide4stable">
+	<td>Oxide(s):</td>
+	<td><input class="preset" type="text" id="oxide"></td></tr>
+      <tr>
+	<td>Multicollection?</td>
+	<td><input type="checkbox" id="multicollector"></td></tr>
+      <tr>
+	<td>Nominal blank?</td>
+	<td><input type="checkbox" id="nominalblank"></td></tr>
+    </table>
+  </div>
+</div>
+
+<div>
+  Load SIMS data:
+  <label class="custom-file-upload">
+    <input type="file" id="upload" onchange="upload()" multiple>
+    Browse...
+  </input>
+  </label><label id="upload-status"></label>
+</div>

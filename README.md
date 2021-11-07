@@ -14,7 +14,7 @@ This can be installed by typing the following code at the R command
 line prompt:
 
 ```
-install.packages('devtools')
+install.packages('remotes')
 ```
 
 ## Installation
@@ -22,12 +22,21 @@ install.packages('devtools')
 To install the current development version of simplex from Github, type:
 
 ```
-library(devtools)
-install_github('pvermees/isoplotr')
-install_github('pvermees/simplex')
+remotes::install_github('tim-band/shinylight')
+remotes::install_github('pvermees/isoplotr')
+remotes::install_github('pvermees/simplex')
 ```
 
-## Examples
+## Graphical User Interface (GUI)
+
+The easiest way to run **simplex** is to start its GUI in a browser
+tab, using the following **R** command:
+
+```
+simplex::simplex()
+```
+
+## Command Line Interface (CLI)
 
 Load the **simplex** package into memory:
 
@@ -41,7 +50,7 @@ including the drift correction, logratio calculation, and calibration:
 ```
 m <- method('GA-UPb')
 s <- standard(preset="Temora",prefix='TEM')
-cd <- process(f='SHRIMP.pd',method=m,stand=s)
+cd <- process(f='SHRIMP.pd',m=m,stand=s)
 plot.calibration(cd)
 ```
 
@@ -52,7 +61,7 @@ Extracting the results for 91500 zircon, saving the results as a
 samp <- subset(cd,prefix='915')
 tab <- data2table(samp)
 write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
-UPb <- IsoplotR::read.data('91500.csv',method='U-Pb',format=5)
+UPb <- simplex2IsoplotR(samp)
 IsoplotR::concordia(UPb,type=2,show.age=1)
 ```
 
@@ -61,7 +70,7 @@ Stable isotope analysis of a built-in oxygen dataset:
 ```
 m <- method('IGG-O')
 s <- standard(preset="NBS28")
-cd <- process(f='*.asc',method=m,stand=s)
+cd <- process(f='*.asc',m=m,stand=s)
 del <- delta(cd)
 tab <- data2table(del)
 ```

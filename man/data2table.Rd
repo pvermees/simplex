@@ -27,8 +27,8 @@ a matrix
 convert calibrated SIMS data objects to a flat table
 }
 \examples{
-data('Cameca',package='simplex')
-dc <- drift(x=Cameca)
+data('Cameca_UPb',package='simplex')
+dc <- drift(x=Cameca_UPb)
 lr <- logratios(x=dc)
 cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
 cd <- calibrate(cal)

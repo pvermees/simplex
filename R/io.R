@@ -2,47 +2,75 @@
 #' @description read ASCII data files
 #' @param f file name(s), may include wildcards (\code{*.asc},
 #'     \code{*.op} or \code{*.pd}).
-#' @param method an object of class \code{method} OR the name of a
-#'     data acquisition protocol (one of \code{'IGG-UPb'},
-#'     \code{'GA-UPb'}, \code{'IGG-UThPb'}, \code{'IGG-O'}, or
-#'     \code{'IGG-S'}). To create new methods, see \code{method}.
+#' @param m an object of class \code{method} OR the name of a data
+#'     acquisition protocol (one of \code{'IGG-UPb'}, \code{'GA-UPb'},
+#'     \code{'IGG-UThPb'}, \code{'IGG-O'}, or \code{'IGG-S'}). To
+#'     create new methods, see \code{method}.
 #' @return an object of class \code{simplex}
 #' @examples
 #' fname <- system.file('SHRIMP.pd',package='simplex')
-#' shrimpdat <- read_data(fname,method='GA-UPb')
+#' shrimpdat <- read_data(fname,m='GA-UPb')
 #' plot(shrimpdat,i=1)
 #' @export
-read_data <- function(f,method='IGG-UPb'){
+read_data <- function(f,m='IGG-UPb'){
     out <- list()
-    s <- list()
-    if (is.character(method)) m <- method(method=method)
-    else m <- method
-    for (fname in Sys.glob(f)){
+    if (is.character(m)){
+        out$method <- method(m=m)
+    } else {
+        out$method <- m
+    }
+    if ("textConnection" %in% class(f[[1]])){
+        out$samples <- read_samples_tc(tc=f,m=out$method)
+    } else {
+        out$samples <- read_samples_fn(fn=f,m=out$method)
+    }
+    class(out) <- 'simplex'
+    out
+}
+read_samples_tc <- function(tc,m){
+    out <- list()
+    ntc <- length(tc)
+    fn <- names(tc)
+    for (i in 1:ntc){
         if (m$instrument == 'Cameca') {
-            sname <- tools::file_path_sans_ext(fname)
-            s[[sname]] <- read_file(fname,m=m)
+            sname <- tools::file_path_sans_ext(fn[i])
+            out[[sname]] <- read_file(tc[[i]],m=m)
         } else if (m$instrument== 'SHRIMP') {
-            s <- c(s,read_file(fname,m=m))
+            ext <- tools::file_ext(fn[i])
+            out <- c(out,read_file(tc[[i]],m=m,ext=ext))
         } else {
             stop('Unsupported instrument')
         }
     }
-    out$samples <- s
-    out$method <- m
-    class(out) <- 'simplex'
+    out
+}
+read_samples_fn <- function(fn,m){
+    out <- list()
+    for (fname in Sys.glob(fn)){
+        f <- file(fname)
+        open(f);
+        if (m$instrument == 'Cameca') {
+            sname <- tools::file_path_sans_ext(fname)
+            out[[sname]] <- read_file(f,m=m)
+        } else if (m$instrument== 'SHRIMP') {
+            ext <- tools::file_ext(fname)
+            out <- c(out,read_file(f,m=m,ext=ext))
+        } else {
+            stop('Unsupported instrument')
+        }
+        close(f)
+    }
     out
 }
 
-# fname is the complete path to an .asc or .op file
-read_file <- function(fname,m){
+read_file <- function(f,m,ext=NA){
     if (m$instrument=='Cameca'){
-        out <- read_Cameca_asc(fname=fname,m=m)
+        out <- read_Cameca_asc(f=f,m=m)
     } else if (m$instrument=='SHRIMP'){
-        ext <- tools::file_ext(fname)
-        if (ext=='op')
-            out <- read_SHRIMP_op(fname=fname,m=m)
-        else if (ext=='pd')
-            out <- read_SHRIMP_pd(fname=fname,m=m)
+        if (identical(ext,'op'))
+            out <- read_SHRIMP_op(f=f,m=m)
+        else if (identical(ext,'pd'))
+            out <- read_SHRIMP_pd(f=f,m=m)
         else
             stop('Invalid file extension')
     } else {
@@ -51,9 +79,7 @@ read_file <- function(fname,m){
     out
 }
 
-read_Cameca_asc <- function(fname,m){
-    f <- file(fname)
-    open(f);
+read_Cameca_asc <- function(f,m){
     out <- list()
     while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
         if (grepl("ACQUISITION PARAMETERS",line)){
@@ -98,13 +124,10 @@ read_Cameca_asc <- function(fname,m){
             out$time <- read_asc_block(f,ions=m$ions)
         }
     }
-    close(f)
     out
 }
 
-read_SHRIMP_op <- function(fname,m){
-    f <- file(fname)
-    open(f);
+read_SHRIMP_op <- function(f,m){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
@@ -120,7 +143,7 @@ read_SHRIMP_op <- function(fname,m){
             spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
             names(spot$dwelltime) <- m$ions
-            spot$dtype <- m$dtype
+            spot$dtype <- rep(m$detectors,length(m$ions))
             names(spot$dtype) <- m$ions
             spot$time <- matrix(0,nscans,nions)
             colnames(spot$time) <- m$ions
@@ -142,13 +165,10 @@ read_SHRIMP_op <- function(fname,m){
             junk <- readLines(f,n=1,warn=FALSE)
         }
     }
-    close(f)
     out
 }
 
-read_SHRIMP_pd <- function(fname,m){
-    f <- file(fname)
-    open(f);
+read_SHRIMP_pd <- function(f,m){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
@@ -191,7 +211,6 @@ read_SHRIMP_pd <- function(fname,m){
             out[[sname]] <- spot
         }
     }
-    close(f)
     out
 }
 
@@ -279,8 +298,8 @@ spot <- function(dat,sname=NULL,i=1,...){
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
-#' data('SHRIMP',package='simplex')
-#' plot(SHRIMP,i=1)
+#' data('SHRIMP_UPb',package='simplex')
+#' plot(SHRIMP_UPb,i=1)
 #' @method plot simplex
 #' @export
 plot.simplex <- function(x,sname=NULL,i=1,...){

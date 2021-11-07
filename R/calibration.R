@@ -20,13 +20,13 @@
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=0){
+calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
     out$standard <- stand
     dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out$calibration <- stable_calibration(lr=dat)
     else out$calibration <- geochron_calibration(lr=dat,t=t)
-    class(out) <- append('calibration',class(out))
+    class(out) <- unique(append('calibration',class(out)))
     out
 }
 
@@ -53,10 +53,10 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,t=0,...){
+geochron_calibration <- function(lr,t=NULL,...){
     out <- list()
     oxide <- lr$method$oxide
-    common <- lr$standard$fetch(lr)$common
+    common <- do.call(lr$standard$fetchfun,args=list(dat=lr))$common
     type <- datatype(lr)
     if (type=="U-Pb"){
         out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,type=type,
@@ -72,7 +72,7 @@ geochron_calibration <- function(lr,t=0,...){
     out
 }
 
-geocal <- function(lr,oxide,t,type,common){
+geocal <- function(lr,oxide,t=NULL,type,common){
     if (type=='U-Pb'){
         num <- c(oxide,'Pb206','Pb204')
         den <- c('U238','U238','Pb206')
@@ -82,20 +82,20 @@ geocal <- function(lr,oxide,t,type,common){
     } else {
         stop("Invalid data type.")
     }
+    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
     out <- list(num=num,den=den,oxide=oxide,t=hours(t))
     out$common <- common
-    out$york <- beta2york(lr=lr,t=t,num=num,den=den,common=common)
-    out$fit <- IsoplotR::york(out$york)
+    out$snames <- names(lr$samples)
+    yd <- beta2york(lr=lr,t=t,snames=out$snames,
+                    num=num,den=den,common=common)
+    out$fit <- IsoplotR::york(yd)
     out
 }
 
-beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
-                      den=c('U238','U238','Pb206'),
-                      snames=NULL,i=NULL,common=0){
-    if (is.null(snames)) snames <- names(lr$samples)
-    if (!is.null(i)) snames <- snames[i]
-    ns <- length(snames)
-    out <- matrix(0,nrow=ns,ncol=5)
+beta2york <- function(lr,t=0,snames,num=c('UO2','Pb206','Pb204'),
+                      den=c('U238','U238','Pb206'),common=0){
+    if (missing(snames)) snames <- names(lr$samples)
+    out <- matrix(0,nrow=length(snames),ncol=5)
     colnames(out) <- c('X','sX','Y','sY','rXY')
     rownames(out) <- snames
     for (sname in snames){
@@ -140,8 +140,6 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
 #' @title plot calibration data
 #' @description shows the calibration data on a logratio plot.
 #' @param x an object of class \code{logratios}
-#' @param snames the sample names to be shown
-#' @param i the sample number to be shown
 #' @param option if \code{option=1}, plots the best fit line through
 #'     U-Pb and Th-Pb data. If \code{option=2}, adds the time-resolved
 #'     raw data to the plot. If \code{option=3}, marks the first and
@@ -159,26 +157,28 @@ beta2york <- function(lr,t=0,num=c('UO2','Pb206','Pb204'),
 #' }
 #' @method plot calibration
 #'@export
-plot.calibration <- function(x,option=1,snames=NULL,i=NULL,...){
-    if (is.null(snames)){
-        if (stable(x)) snames <- x$calibration$snames
-        else snames <- rownames(x$calibration[[1]]$york)
+plot.calibration <- function(x,option=1,...){
+    if (stable(x)) {
+        out <- calplot_stable(dat=x,...)
+    } else {
+        out <- calplot_geochronology(dat=x,option=option,...)
     }
-    if (!is.null(i)) snames <- snames[i]
-    if (stable(x)) calplot_stable(dat=x,snames=snames,...)
-    else calplot_geochronology(dat=x,option=option,snames=snames,...)
+    invisible(out)
 }
 
-calplot_stable <- function(dat,snames=NULL,...){
+calplot_stable <- function(dat,...){
+    cal <- dat$calibration
     num <- dat$method$num
     den <- dat$method$den
-    np <- length(num)-1     # number of plot panels
-    nr <- ceiling(sqrt(np)) # number of rows
-    nc <- ceiling(np/nr)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-    for (i in 1:nr){
-        for (j in (i+1):max(nc,nr+1)){
-            b0names <- names(dat$samples)
+    nn <- length(num)
+    np <- nn*(nn-1)/2       # number of plot panels
+    nc <- ceiling(sqrt(np)) # number of rows
+    nr <- ceiling(np/nc)    # number of columns
+    oldpar <- graphics::par(mfrow=c(nr,nc))
+    ii <- 1
+    snames <- cal$snames
+    for (i in 1:(nn-1)){
+        for (j in (i+1):nn){
             xlab <- paste0(num[i],'/',den[i])
             ylab <- paste0(num[j],'/',den[j])
             B <- beta2york(lr=dat,snames=snames,
@@ -186,33 +186,48 @@ calplot_stable <- function(dat,snames=NULL,...){
             IsoplotR::scatterplot(B,...)
             graphics::mtext(side=1,text=xlab,line=2)
             graphics::mtext(side=2,text=ylab,line=2)
-            ell <- IsoplotR::ellipse(dat$calibration$lr[i],dat$calibration$lr[j],
-                                     dat$calibration$cov[c(i,j),c(i,j)])
+            ell <- IsoplotR::ellipse(cal$lr[i],cal$lr[j],
+                                     cal$cov[c(i,j),c(i,j)])
             graphics::polygon(ell,col='white')
+            ii <- ii + 1
+            if (ii>np) break
         }
     }
+    graphics::par(oldpar)
 }
 
-calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
-    if (missing(type)) cal <- dat$calibration[[1]]
-    else cal <- dat$calibration[[type]]
-    if (is.null(snames)){
-        snames <- names(dat$samples)
-        if (!is.null(i)){
-            snames <- snames[i]
+calplot_geochronology <- function(dat,option=1,title=TRUE,...){
+    cal <- dat$calibration
+    np <- length(cal)       # number of plot panels
+    nr <- ceiling(sqrt(np)) # number of rows
+    nc <- ceiling(np/nr)    # number of columns
+    oldpar <- graphics::par(mfrow=c(nr,nc))
+    ii <- 1
+    for (i1 in 1:(nc-1)){
+        for (i2 in (i1+1):nr){
+            if (ii>np) break
+            calplot_geochronology_helper(dat,option=option,
+                                         type=ii,title=title,...)
+            ii <- ii + 1
         }
     }
-    yd <- cal$york[snames,,drop=FALSE]
+    graphics::par(oldpar)
+}
+
+calplot_geochronology_helper <- function(dat,option=1,type=1,title=TRUE,...){
+    cal <- dat$calibration[[type]]
     num <- cal$num
     den <- cal$den
+    yd <- beta2york(lr=dat,t=seconds(cal$t),snames=cal$snames,
+                    num=num,den=den,common=cal$common)
     xlab <- paste0('log[',num[1],'/',den[1],']')
     ylab <- paste0('log[',num[2],'/',den[2],']')
     if (option==1){
-        IsoplotR::scatterplot(yd,fit=cal$fit,...)
+        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,ylab=ylab,...)
     } else {
         X <- NULL
         Y <- NULL
-        for (sname in snames){
+        for (sname in cal$snames){
             sp <- spot(dat=dat,sname=sname)
             Op <- betapars(spot=sp,ion=num[1])
             Pp <- betapars(spot=sp,ion=den[1])
@@ -226,20 +241,21 @@ calplot_geochronology <- function(dat,option=1,snames=NULL,i=NULL,type,...){
             X <- cbind(X,newX)
             Y <- cbind(Y,newY)
         }
-        Xlim <- rep(0,2)
-        Ylim <- rep(0,2)
-        Xlim[1] <- min(yd[snames,'X']-2*yd[snames,'sX'],X)
-        Xlim[2] <- max(yd[snames,'X']+2*yd[snames,'sX'],X)
-        Ylim[1] <- min(yd[snames,'Y']-2*yd[snames,'sY'],Y)
-        Ylim[2] <- max(yd[snames,'Y']+2*yd[snames,'sY'],Y)
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlim=Xlim,ylim=Ylim,...)
+        xlim <- c(0,2)
+        xlim[1] <- min(yd[cal$snames,'X']-3*yd[cal$snames,'sX'],X)
+        xlim[2] <- max(yd[cal$snames,'X']+3*yd[cal$snames,'sX'],X)
+        ylim <- c(0,2)
+        ylim[1] <- min(yd[cal$snames,'Y']-3*yd[cal$snames,'sY'],Y)
+        ylim[2] <- max(yd[cal$snames,'Y']+3*yd[cal$snames,'sY'],Y)
+        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,
+                              ylab=ylab,xlim=xlim,ylim=ylim,...)
         graphics::matlines(X,Y,lty=1,col='darkgrey')
         if (option>2){
             graphics::points(X[1,],Y[1,],pch=21,bg='black')
             graphics::points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
         }
     }
-    graphics::title(caltitle(fit=cal$fit),xlab=xlab,ylab=ylab)
+    if (title) graphics::title(caltitle(fit=cal$fit))
 }
 
 caltitle <- function(fit,sigdig=2,type=NA,...){

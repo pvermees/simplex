@@ -4,16 +4,16 @@
 \alias{read_data}
 \title{read SIMS data}
 \usage{
-read_data(f, method = "IGG-UPb")
+read_data(f, m = "IGG-UPb")
 }
 \arguments{
 \item{f}{file name(s), may include wildcards (\code{*.asc},
 \code{*.op} or \code{*.pd}).}
 
-\item{method}{an object of class \code{method} OR the name of a
-data acquisition protocol (one of \code{'IGG-UPb'},
-\code{'GA-UPb'}, \code{'IGG-UThPb'}, \code{'IGG-O'}, or
-\code{'IGG-S'}). To create new methods, see \code{method}.}
+\item{m}{an object of class \code{method} OR the name of a data
+acquisition protocol (one of \code{'IGG-UPb'}, \code{'GA-UPb'},
+\code{'IGG-UThPb'}, \code{'IGG-O'}, or \code{'IGG-S'}). To
+create new methods, see \code{method}.}
 }
 \value{
 an object of class \code{simplex}
@@ -23,6 +23,6 @@ read ASCII data files
 }
 \examples{
 fname <- system.file('SHRIMP.pd',package='simplex')
-shrimpdat <- read_data(fname,method='GA-UPb')
+shrimpdat <- read_data(fname,m='GA-UPb')
 plot(shrimpdat,i=1)
 }

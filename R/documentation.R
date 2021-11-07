@@ -1,32 +1,21 @@
-#' @title example Cameca dataset
-#' @description built-in Cameca U-Pb dataset containing Plesovice and
-#'     Qinghu zircon
-#' @name Cameca
-#' @docType data
-#' @examples
-#' data(Cameca,package="simplex")
-#' plot(Cameca,i=1)
-NULL
+#' test data
+#'
+#' Various Cameca and SHRIMP datasets
+#' @name test-data
+#' @keywords datasets
+"Cameca_UPb"
 
-#' @title example oxygen isotope dataset
-#' @description built-in Cameca oxigen dataset containing NBS28,
-#'     Qinghu zircon and ZBL10 data
-#' @name oxygen
-#' @docType data
-#' @examples
-#' data(oxygen,package="simplex")
-#' plot(oxygen,i=1)
-NULL
+#' @rdname test-data
+"Cameca_UThPb"
 
-#' @title example SHRIMP dataset
-#' @description built-in SHRIMP U-Pb dataset containing Temora and
-#'     91500 zircon
-#' @name SHRIMP
-#' @docType data
-#' @examples
-#' data(SHRIMP,package="simplex")
-#' plot(SHRIMP,i=1)
-NULL
+#' @rdname test-data
+"Cameca_oxygen"
+
+#' @rdname test-data
+"Cameca_sulphur"
+
+#' @rdname test-data
+"SHRIMP_UPb"
 
 #' simplex: a SIMS data reduction package
 #'

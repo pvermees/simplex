@@ -4,7 +4,7 @@
 \alias{plot.calibration}
 \title{plot calibration data}
 \usage{
-\method{plot}{calibration}(x, option = 1, snames = NULL, i = NULL, ...)
+\method{plot}{calibration}(x, option = 1, ...)
 }
 \arguments{
 \item{x}{an object of class \code{logratios}}
@@ -13,10 +13,6 @@
 U-Pb and Th-Pb data. If \code{option=2}, adds the time-resolved
 raw data to the plot. If \code{option=3}, marks the first and
 last measurement by black and white circles, respectively.}
-
-\item{snames}{the sample names to be shown}
-
-\item{i}{the sample number to be shown}
 
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function.}

@@ -73,6 +73,19 @@ VSMOW <- function(){
     out
 }
 
+troilite <- function(){
+    out <- list()
+    S2346 <- c(126.948,22.6436,6515)
+    out$lr <- -log(S2346)
+    relerr <- c(0.047,0.0020,20)/S2346
+    out$cov <- diag(relerr^2)
+    labels <- c("S33S32","S34S32","S36S32")
+    names(out$lr) <- labels
+    rownames(out$cov) <- labels
+    colnames(out$cov) <- labels
+    out    
+}
+
 stable <- function(dat){
     type <- datatype(dat)
     if (type %in% c("oxygen")) return(TRUE)
@@ -100,8 +113,21 @@ datatype <- function(x){
     out
 }
 
+chronometer <- function(x,type){
+    dt <- datatype(x)
+    if (identical(dt,"U-Pb"))
+        out <- "U238-Pb206"
+    else if (identical(dt,"U-Th-Pb") & type %in% c(1,'UPb'))
+        out <- "U238-Pb206"
+    else if (identical(dt,"U-Th-Pb") & type %in% c(2,'ThPb'))
+        out <- "Th232-Pb208"
+    else
+        stop('Invalid chronometer')
+    out
+}
+
 faraday <- function(spot,ion=NULL){
-    if (is.null(ion)) out <- all(spot$dtype[spot$method$ions]=='Fc')
+    if (is.null(ion)) out <- any(spot$dtype[spot$method$ions]=='Fc')
     else out <- spot$dtype[ion]=='Fc'
     out
 }

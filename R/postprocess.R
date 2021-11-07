@@ -5,8 +5,8 @@
 #'     logratio definition (\code{log=TRUE})?
 #' @return an object of class \code{delta}
 #' @examples
-#' data('oxygen',package='simplex')
-#' dc <- drift(x=oxygen)
+#' data('Cameca_oxygen',package='simplex')
+#' dc <- drift(x=Cameca_oxygen)
 #' lr <- logratios(x=dc)
 #' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
 #' cd <- calibrate(cal)
@@ -18,7 +18,7 @@ delta <- function(cd,log=TRUE){
     del <- list()
     del$num <- cd$calibrated$num
     del$den <- cd$calibrated$den
-    ref <- cd$standard$fetch(cd)$ref
+    ref <- do.call(cd$standard$fetchfun,args=list(dat=cd))$ref
     logd <- cd$calibrated$lr - rep(ref,length(cd$samples))
     nd <- length(logd)
     if (log){
@@ -29,8 +29,12 @@ delta <- function(cd,log=TRUE){
         J <- 1000*exp(logd)*diag(nd)
     }
     del$cov <- J %*% cd$calibrated$cov %*% t(J)
+    nms <- rep(paste0('delta(',del$num,')'),length(cd$samples))
+    rownames(del$cov) <- nms
+    colnames(del$cov) <- nms
+    names(del$d) <- nms
     out$delta <- del
-    class(out) <- append('delta',class(cd))
+    class(out) <- unique(append('delta',class(cd)))
     out
 }
 
@@ -40,8 +44,8 @@ delta <- function(cd,log=TRUE){
 #' @param ... optional arguments
 #' @return a matrix
 #' @examples
-#' data('Cameca',package='simplex')
-#' dc <- drift(x=Cameca)
+#' data('Cameca_UPb',package='simplex')
+#' dc <- drift(x=Cameca_UPb)
 #' lr <- logratios(x=dc)
 #' cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
 #' cd <- calibrate(cal)
@@ -66,38 +70,44 @@ data2table.delta <- function(x,...){
 }
 data2table_helper <- function(x,option,...){
     p <- data2table_pars(x=x,option=option)
-    ni <- length(p$num)
-    ns <- length(p$lr)/ni
-    nc <- 2*ni+ni*(ni-1)/2
+    nin <- ncol(p$J)
+    nout <- nrow(p$J)
+    ns <- length(p$lr)/nin
+    nc <- 2*nout+nout*(nout-1)/2
     cnames <- rep('',nc)
-    DP <- paste0(p$num,'/',p$den)
-    cnames[2*(1:ni)-1] <- DP
-    cnames[2*(1:ni)] <- paste0('s[',DP,']')
-    if (nc>2*ni){
-        for (i in 1:(ni-1)){
-            for (j in (i+1):ni){
-                cnames[2*ni+(i-1)*(ni-1)+(j-i)] <-
-                    paste0('r[',DP[i],',',DP[j],']')
+    if (option=='delta'){
+        DP <- paste0('d(',p$num,')')
+    } else {
+        DP <- paste0(p$num,'/',p$den)
+    }
+    cnames[2*(1:nout)-1] <- DP
+    cnames[2*(1:nout)] <- paste0('s[',DP,']')
+    ii <- 2*nout
+    for (i in 1:nout){
+        for (j in i:nout){
+            if (i!=j){
+                ii <- ii + 1
+                cnames[ii] <- paste0('r[',DP[i],',',DP[j],']')
             }
         }
     }
     out <- matrix(0,ns,nc)
     colnames(out) <- cnames
     for (i in 1:ns){
-        ii <- (i-1)*ni+(1:ni)
+        ii <- (i-1)*nin+(1:nin)
         lr <- as.vector(p$J %*% p$lr[ii])
         covmat <- p$J %*% p$cov[ii,ii] %*% t(p$J)
         if (option=='delta'){
-            out[i,2*(1:ni)-1] <- lr
+            out[i,2*(1:nout)-1] <- lr
             E <- covmat
         } else {
-            out[i,2*(1:ni)-1] <- exp(lr)
-            J <- diag(exp(lr),nrow=ni,ncol=ni)
+            out[i,2*(1:nout)-1] <- exp(lr)
+            J <- diag(exp(lr),nrow=nout,ncol=nout)
             E <- J %*% covmat %*% t(J)
         }
-        out[i,2*(1:ni)] <- sqrt(diag(E))
+        out[i,2*(1:nout)] <- sqrt(diag(E))
         cormat <- stats::cov2cor(E)
-        if (nc>2*ni) out[i,(2*ni+1):nc] <- cormat[upper.tri(cormat)]
+        out[i,(2*nout+1):nc] <- cormat[upper.tri(cormat)]
     }
     rownames(out) <- names(x$samples)
     out
@@ -109,22 +119,32 @@ data2table_pars <- function(x,option){
         num <- c('O17','O18')
         den <- c('O16','O16')
         J <- diag(2)
+    } else if (type=='sulphur'){
+        num <- c('S33','S34','S36')
+        den <- c('S32','S32','S32')
+        J <- diag(3)
     } else if (type=='U-Pb'){
         num <- c('U238','Pb207','Pb204')
-        den <- c('206Pb','Pb206','Pb206')
+        den <- c('Pb206','Pb206','Pb206')
         J <- matrix(0,3,3)
         J[1,1] <- -1
         J[2,3] <- 1
         J[3,2] <- 1
     } else if (type=='U-Th-Pb'){
-        num <- c('U238','Pb207','Pb204','Pb208','Th232')
-        den <- c('206Pb','Pb206','Pb206','Pb206','Pb208')
-        J <- matrix(0,5,5)
+        num <- c('U238','Pb207','Pb204','Pb208','Th232','Th232','Pb204')
+        den <- c('Pb206','Pb206','Pb206','Pb206','U238','Pb208','Pb208')
+        J <- matrix(0,7,5)
         J[1,1] <- -1
-        J[2,3] <- 1
-        J[3,2] <- 1
-        J[4,4] <- 1
+        J[2,4] <- 1
+        J[3,3] <- 1
+        J[4,3] <- 1
+        J[4,5] <- -1
+        J[5,1] <- 1
+        J[5,2] <- -1
+        J[5,3] <- 1
         J[5,5] <- -1
+        J[6,2] <- -1
+        J[7,5] <- 1
     } else {
         stop('invalid data type')
     }
@@ -148,8 +168,8 @@ data2table_pars <- function(x,option){
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
-#' data('oxygen',package='simplex')
-#' dc <- drift(x=oxygen)
+#' data('Cameca_oxygen',package='simplex')
+#' dc <- drift(x=Cameca_oxygen)
 #' lr <- logratios(x=dc)
 #' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
 #' cd <- calibrate(cal)
@@ -159,9 +179,10 @@ data2table_pars <- function(x,option){
 #' @export
 plot.delta <- function(x,...){
     del <- x$delta
-    np <- length(del$num)-1     # number of plot panels
-    nr <- ceiling(sqrt(np)) # number of rows
-    nc <- ceiling(np/nr)    # number of columns
+    nn <- length(del$num)
+    np <- nn*(nn-1)/2       # number of plot panels
+    nc <- ceiling(sqrt(np)) # number of rows
+    nr <- ceiling(np/nc)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:nr){
         for (j in (i+1):max(nc,nr+1)){
@@ -177,6 +198,7 @@ plot.delta <- function(x,...){
             graphics::mtext(ylab,side=2,line=2)
         }
     }
+    graphics::par(oldpar)
 }
 
 delta2york <- function(d,i,j){
@@ -214,5 +236,48 @@ age <- function(cd){
     names(out$t68) <- snames
     rownames(out$E68) <- snames
     colnames(out$E68) <- snames
+    out
+}
+
+#' @title convert to IsoplotR
+#' @description convert U-Pb or U-Th-Pb data to an IsoplotR object
+#' @param dat an object of class \code{calibrated}
+#' @param method sets the format of the \code{IsoplotR} oboject. If
+#'     \code{'U-Pb'}, produces a format 5 object of class \code{UPb};
+#'     if \code{'U-Th-Pb'}, produces a format 8 object of class
+#'     \code{UPb}; if \code{'Th-Pb'}, produces a format 2 object of
+#'     class \code{ThPb}.
+#' @return an object of class \code{UPb} or \code{ThPb}
+#' @examples
+#' \dontrun{
+#' m <- method('GA-UPb')
+#' s <- standard(preset="Temora",prefix='TEM')
+#' fname <- system.file('SHRIMP.pd',package='simplex')
+#' cd <- process(f=fname,m=m,stand=s)
+#' UPb <- simplex2IsoplotR(cd)
+#' IsoplotR::concordia(UPb)
+#' }
+#' @export
+simplex2IsoplotR <- function(dat,method='U-Pb'){
+    tab <- data2table(dat)
+    dt <- datatype(dat)
+    if (identical(method,'U-Pb')){
+        if (identical(dt,'U-Th-Pb')){
+            cols <- c(1:6,15:16,21)
+            tab <- tab[,cols,drop=FALSE]
+        }
+        out <- IsoplotR:::as.UPb(tab,format=5)
+    } else if (identical(method,'U-Th-Pb')){
+        if (!identical(dt,'U-Th-Pb'))
+            stop('Invalid data type or U-Th-Pb dating.')
+        cols <- c(1:4,7:10,15,17:18,22:23,30)
+        tab <- tab[,cols,drop=FALSE]
+        out <- IsoplotR:::as.UPb(tab,format=8)
+    } else if (identical(method,'Th-Pb')){
+        if (!identical(dt,'U-Th-Pb'))
+            stop('Invalid data type or U-Th-Pb dating.')
+        cols <- c(11:14,33)
+        out <- IsoplotR:::as.ThPb(tab,format=2)
+    }
     out
 }

@@ -4,13 +4,15 @@
 \alias{plot.calibrated}
 \title{plot calibrated data}
 \usage{
-\method{plot}{calibrated}(x, type, ...)
+\method{plot}{calibrated}(x, option = 1, ...)
 }
 \arguments{
 \item{x}{an object of class \code{calibrated}}
 
-\item{type}{for U-Pb or U-Th-Pb data, either \code{'U-Pb'} or
-\code{'Th-Pb'}.}
+\item{option}{for U-Pb or U-Th-Pb data. If \code{1}, plots the data
+as error ellipses; if \code{2}, adds the raw data; if \code{3},
+marks the first and last measurement with a black and white
+circle, respectively.}
 
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function}
@@ -19,10 +21,10 @@
 shows the calibrated data on a logratio plot.
 }
 \examples{
-data('Cameca')
-dc <- drift(x=Cameca)
+data('Cameca_UPb')
+dc <- drift(x=Cameca_UPb)
 lr <- logratios(x=dc)
 cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
 cd <- calibrate(cal)
-plot(cd,type='U-Pb')
+plot(cd)
 }

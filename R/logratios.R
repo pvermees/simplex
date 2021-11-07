@@ -11,14 +11,24 @@
 #' }
 #' @export
 logratios <- function(x){
+    logratios_helper(x)
+}
+logratios_helper <- function(x,gui=FALSE){
     out <- x
     snames <- names(x$samples)
-    for (sname in snames){
-        print(sname)
+    ns <- length(snames)
+    for (i in 1:ns){
+        sname <- snames[i]
+        if (gui){
+            shinylight::sendInfoText(paste(" (processing",sname,")"))
+            shinylight::sendProgress(i,ns)
+        } else {
+            print(sname)
+        }
         sp <- spot(dat=x,sname=sname)
         out$samples[[sname]]$lr <- logratios.spot(x=sp)
     }
-    class(out) <- append("logratios",class(out))
+    class(out) <- unique(append("logratios",class(out)))
     out
 }
 
@@ -52,13 +62,14 @@ common2original <- function(fit,num,den,groups){
     rnames <- paste0(num,'/',den)
     outnames <- c(paste0('b0[',rnames,']'),
                   paste0('g[',rnames,']'))
-    ni <- length(rnames)
-    J <- matrix(0,nrow=2*ni,ncol=ncol(B0G$cov))
+    nin <- length(b0in)
+    nout <- length(rnames)
+    J <- matrix(0,nrow=2*nout,ncol=ncol(B0G$cov))
     colnames(J) <- colnames(B0G$cov)
     rownames(J) <- outnames
-    b0gout <- rep(0,2*ni)
+    b0gout <- rep(0,2*nout)
     names(b0gout) <- outnames
-    for (i in 1:ni){
+    for (i in 1:nout){
         nion <- num[i]
         dion <- den[i]
         if (nion == groups$den){
@@ -78,15 +89,15 @@ common2original <- function(fit,num,den,groups){
         nele <- element(num[i])
         dele <- element(den[i])
         if (nele == dele){
-            b0gout[ni+i] <- 0
+            b0gout[nout+i] <- 0
         } else {
             inele <- which(gnamesin %in% nele)
-            b0gout[ni+i] <- b0gout[ni+i] + gin[inele]
-            J[ni+i,ni+inele] <- 1
+            b0gout[nout+i] <- b0gout[nin+i] + gin[inele]
+            J[nout+i,nin+inele] <- 1
             if (dele != element(groups$den)){
                 idele <- which(gnamesin %in% dele)
-                b0gout[ni+i] <- b0gout[ni+i] - gin[idele]
-                J[ni+i,ni+idele] <- -1
+                b0gout[nout+i] <- b0gout[nout+i] - gin[idele]
+                J[nout+i,nin+idele] <- -1
             }
         }
     }
@@ -239,8 +250,9 @@ b0g2list <- function(b0g,groups,cov){
     if (!missing(cov)){
         nc <- length(b0) + length(g)
         out$cov <- matrix(0,nc,nc)
-        out$cov[1:nb,1:nb] <- cov[1:nb,1:nb]
-        if (ng>0) out$cov[nc-ng+(1:ng),nc-ng+(1:ng)] <- cov[nb+(1:ng),nb+(1:ng)]
+        if (ng>0) i <- c(1:nb,nc-ng+(1:ng))
+        else i <- 1:nb
+        out$cov[i,i] <- cov
         outnames <- c(names(b0),names(g))
         colnames(out$cov) <- outnames
         rownames(out$cov) <- outnames
@@ -277,9 +289,11 @@ groupbypairs <- function(B){
 #' @param x an object of class \code{logratios}
 #' @param sname the sample name to be shown
 #' @param i the sample number to be shown
-#' @param option if 1, plots the logratios against time, if 2, plots
-#'     the raw signals versus time. Both plots show the fitted values
-#'     as a solid line.
+#' @param ratios logical. If \code{FALSE}, plots the raw signals
+#' versus time. If \code{TRUE}, plots the ratios against time.
+#' Both plots show the fitted values as a solid line. Note that, for
+#' single collector datasets, the numerator and denominator of the
+#' measured ratios correspond to different times.
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
@@ -287,22 +301,20 @@ groupbypairs <- function(B){
 #' data('SHRIMP',package='simplex')
 #' dc <- drift(x=SHRIMP)
 #' lr <- logratios(dc)
-#' plot(lr,i=1,option=2)
+#' plot(lr,i=1,logratios=TRUE)
 #' }
 #' @method plot logratios
 #' @export
-plot.logratios <- function(x,sname=NULL,i=1,option=1,...){
+plot.logratios <- function(x,sname=NULL,i=1,ratios=FALSE,...){
     spot <- spot(x,sname=sname,i=i)
-    if (option==1){
-        plot_logratios(spot=spot,...)
-    } else if (option==2){
-        plot_signals(spot=spot,...)
+    if (ratios){
+        plot_ratios(spot=spot,...)
     } else {
-        stop("Invalid plot option.")
+        plot_signals(spot=spot,...)
     }
 }
 
-plot_logratios <- function(spot,...){
+plot_ratios <- function(spot,...){
     bad <- logratios.spot(x=spot)$outliers
     num <- spot$method$num
     den <- spot$method$den

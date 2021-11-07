@@ -28,8 +28,8 @@ analytical uncertainty.}
 \item{val}{(optional) true isotopic composition of
 \eqn{^{206}}Pb/\eqn{^{238}}U- and
 \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
-or true \eqn{\delta^{18}O} and \eqn{\delta^{16}O} values of the
-oxygen isotope reference material.}
+or the true \eqn{\delta}-values of the stable isotope reference
+material.}
 
 \item{cov}{(optional) the covariance matrix of \code{val}}
 
@@ -45,8 +45,8 @@ specify the isotopic composition of a reference
     material for SIMS data calibration.
 }
 \examples{
-data(Cameca,package="simplex")
-dc <- drift(x=Cameca)
+data(Cameca_UPb,package="simplex")
+dc <- drift(x=Cameca_UPb)
 lr <- logratios(x=dc)
 st <- standard(preset="Plesovice")
 cal <- calibration(lr=lr,stand=st)

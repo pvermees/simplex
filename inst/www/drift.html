@@ -1,0 +1,16 @@
+<div class="show4loading center-me">
+  <span id="status"></span>
+  <div class="center-child">
+    <span id="progress"></span>
+  </div>
+</div>
+<div class="hide4loading">
+  <left>
+    <div>Aliquots:<select id="aliquots" onchange="driftAliquot()"></select>
+      &nbsp;<button class="mainbutton" onclick="driftPlot()">Plot</button>
+    </div>
+    <div>Signal: <table id="signal-table" class="normalfont"></table></div>
+    <div>Time: <table id="time-table" class="normalfont"></table></div>
+  </left>
+  <right><img class="plot" id="drift-plot"></right>
+</div>

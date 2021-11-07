@@ -1,0 +1,18 @@
+<div class="show4loading center-me">
+  <span id="status"></span>
+  <div class="center-child">
+    <span id="progress"></span>
+  </div>
+</div>
+<div class="hide4loading">
+  <left>
+    <div>Aliquot:<select id="aliquots" onchange="logratioAliquot()"></select>
+      &nbsp;<button class="mainbutton" onclick="logratioPlot()">Plot</button>
+      <input type="checkbox" id="ratiocheckbox" onchange="checkratios()">ratios
+    </div>
+    <div>log[x/y] = b0[x/y] + g[x/y] t</div>
+    <div>with b0: <table id="b0" class="normalfont"></table></div>
+    <div>and g: <table id="g" class="normalfont"></table></div>
+  </left>
+  <right><img class="plot" id="logratio-plot"></right>
+</div>

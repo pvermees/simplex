@@ -17,8 +17,8 @@ visualises stable isotope data as error ellipses in
     delta notation
 }
 \examples{
-data('oxygen',package='simplex')
-dc <- drift(x=oxygen)
+data('Cameca_oxygen',package='simplex')
+dc <- drift(x=Cameca_oxygen)
 lr <- logratios(x=dc)
 cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
 cd <- calibrate(cal)

@@ -4,24 +4,24 @@
 \alias{process}
 \title{process SIMS data}
 \usage{
-process(f, method, stand, t = 0, exterr = FALSE)
+process(f, m, stand, t = NULL, exterr = FALSE)
 }
 \arguments{
 \item{f}{file name(s), may include wildcards (\code{*.asc},
 \code{*.op} or \code{*.pd}).}
 
-\item{method}{an object of class \code{method} OR the name of a
-data acquisition protocol (one of \code{'IGG-UPb'},
-\code{'GA-UPb'}, \code{'IGG-UThPb'}, \code{'IGG-O'}, or
-\code{'IGG-S'}). To create new methods, see \code{method}.}
+\item{m}{an object of class \code{method} OR the name of a data
+acquisition protocol (one of \code{'IGG-UPb'}, \code{'GA-UPb'},
+\code{'IGG-UThPb'}, \code{'IGG-O'}, or \code{'IGG-S'}). To
+create new methods, see \code{method}.}
 
 \item{stand}{an object of class \code{standard}}
 
 \item{t}{the analysis time to which the logratio signals should be
 regressed.}
 
-\item{exterr}{include the uncertainty associated with the
-standard calibration in the error propagation?}
+\item{exterr}{include the uncertainty associated with the standard
+calibration in the error propagation?}
 }
 \value{
 an object of class \code{calibrated}
@@ -36,7 +36,7 @@ one stop shop for SIMS data reduction, including
 m <- method('GA-UPb')
 s <- standard(preset="Temora",prefix='TEM')
 fname <- system.file('SHRIMP.pd',package='simplex')
-cd <- process(f=fname,method=m,stand=s)
+cd <- process(f=fname,m=m,stand=s)
 tab <- data2table(cd)
 }
 }
