@@ -182,9 +182,12 @@ freeformServer <- function(port=NULL) {
 
 #' @title Graphical User Interface for simplex
 #' @description Shinylight app for simplex
+#' @param port The port on which to listen. If not provided, a random
+#'     unused port will be chosen and a browser window opened on that
+#'     port.
 #' @examples
 #' \donttest{simplex()}
 #' @export
-simplex <- function(){
-    freeformServer()
+simplex <- function(port=NULL){
+    freeformServer(port)
 }
