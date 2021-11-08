@@ -36,6 +36,15 @@ tab, using the following **R** command:
 simplex::simplex()
 ```
 
+## Running as a server
+
+You can run **simplex** on a port of your choice with the `server.sh`
+shell script:
+
+```
+./server.sh 8080
+```
+
 ## Command Line Interface (CLI)
 
 Load the **simplex** package into memory:
