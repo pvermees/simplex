@@ -8,7 +8,7 @@ presets <- function(method){
     } else if (method=='IGG-S'){
         simplex <- get(load('data/Cameca_sulphur.rda'))
     } else if (method=='GA-UPb'){
-        simpelex <- get(load('data/SHRIMP_UPb.rda'))
+        simplex <- get(load('data/SHRIMP_UPb.rda'))
     } else {
         simplex <- list()
         simplex$samples <- NULL
@@ -134,6 +134,7 @@ resultstable <- function(x){
 }
 
 export2isoplotr <- function(x){
+    cal <- calibrate_it(x)
     if (identical(x$IsoplotRformat,'U-Pb')){
         method <- 'U-Pb'
     } else if (identical(x$IsoplotRformat,'U-Th-Pb')){
@@ -141,7 +142,7 @@ export2isoplotr <- function(x){
     } else if (identical(x$IsoplotRformat,'Th-Pb')){
         method <- 'Th-Pb'
     }
-    out <- simplex2IsoplotR(as.simplex(x),method=method)
+    out <- simplex2IsoplotR(cal,method=method)
     as.list(as.data.frame(out$x))
 }
 

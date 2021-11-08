@@ -63,21 +63,24 @@ function initpreset(){
     document.getElementById("methods").value = glob.simplex.method.method[0];
 }
 
-async function loadPresets(){
+function loadPresets(){
     const m = document.getElementById("methods").value;
     glob.simplex.method.method[0] = m;
-    const result = await shinylight.call('presets', { method: m }, null);
-    result2simplex(result);
-    showPresets();
-    fileFormats();
-    setDataType();
-}
-
-function setDataType(){
-    shinylight.call('getdatatype', { x: glob }, null).then(
-	result => glob.datatype = result.data[0],
-	error => alert(error)
-    )
+    shinylight.call('presets', { method: m }, null)
+	.then(
+	    result => result2simplex(result),
+	    err => alert(err)
+	)
+	.then(
+	    () => shinylight.call('getdatatype', { x: glob }, null).then(
+		result => {
+		    glob.datatype = result.data[0]
+		    showPresets();
+		    fileFormats();
+		},
+		error => alert(error)
+	    )
+	)
 }
 
 function showPresets(){
@@ -88,8 +91,7 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
-    hideIt('.hide4stable',stable(),assign,'oxide');
-    hideIt('.hide4multi',glob.simplex.method.multicollector[0]);
+    showIt('.hide4stable',!stable(),assign,'oxide');
     labelButtons();
     document.getElementById('multicollector').checked =
 	glob.simplex.method.multicollector[0];
@@ -183,9 +185,6 @@ async function upload(){
 		error => alert(error)
 	    )
 	},
-	err => alert(err)
-    ).then(
-	() => setDataType(),
 	err => alert(err)
     )
 }
