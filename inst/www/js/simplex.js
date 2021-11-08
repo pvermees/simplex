@@ -91,7 +91,12 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
-    showIt('.hide4stable',!stable(),assign,'oxide');
+    if (geochron()){
+	show('.show4geochron');
+	assign('oxide');
+    } else {
+	hide('.show4geochron')
+    }
     labelButtons();
     document.getElementById('multicollector').checked =
 	glob.simplex.method.multicollector[0];
@@ -99,21 +104,21 @@ function showPresets(){
 	glob.simplex.method.nominalblank[0];
 }
 
-function showIt(cls,condition,callback,arg){
-    showOrHide(cls,condition,callback,arg)
+function show(cls){
+    let set = document.querySelectorAll(cls);
+    if (set==null) return    
+    document.querySelectorAll(cls).forEach(
+	function(item){
+	    item.classList.remove("hidden");
+	});
 }
-function hideIt(cls,condition,callback,arg){
-    showOrHide(cls,!condition,callback,arg)
-}
-function showOrHide(cls,condition,callback,arg){
-    let set = document.querySelector(cls);
+function hide(cls){
+    let set = document.querySelectorAll(cls);
     if (set==null) return
-    if (condition){
-	set.classList.remove('hidden');
-	if (callback !== undefined && arg !== undefined) callback(arg)
-    } else {
-	set.classList.add('hidden');
-    }
+    document.querySelectorAll(cls).forEach(
+	function(item){
+	    item.classList.add("hidden");
+	});
 }
 
 function stable(){
@@ -221,17 +226,13 @@ function checkratios(){
 }
 
 function loader(){
-    let show = document.querySelector('.show4loading');
-    let hide = document.querySelector('.hide4loading');
-    show.classList.remove('hidden');
-    hide.classList.add('hidden');
+    show('.show4loading');
+    hide('.hide4loading');
 }
 
 function shower(){
-    let show = document.querySelector('.show4loading');
-    let hide = document.querySelector('.hide4loading');
-    show.classList.add('hidden');
-    hide.classList.remove('hidden');
+    show('.hide4loading');
+    hide('.show4loading');
 }
 
 function loadSamples(callback){
@@ -462,8 +463,10 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => {
-	    hideIt('.hide4stable',stable());
-	    showIt('.show4UThPb',glob.datatype==='U-Th-Pb');
+	    if (stable()) hide('.hide4stable')
+	    else show('.hide4stable')
+	    if (glob.datatype==='U-Th-Pb') show('.show4UThPb')
+	    else hide('.show4UThPb')
 	    document.getElementById('prefix').value = glob.sampleprefix;
 	    markSamplesByPrefix();
 	}, error => alert(error)
@@ -471,11 +474,9 @@ function finish(){
 }
 
 function plotresults(){
-    hideIt('.hide4plot',true);
-    hideIt('.hide4table',false);
-    shinylight.call("plotresults",
-		    {x:glob},
-		    'final-plot',
+    hide('.hide4plot');
+    show('.hide4table');
+    shinylight.call("plotresults", {x:glob}, 'final-plot',
 		    {'imgType': 'svg'}).then(
 	result => {
 	    shinylight.setElementPlot('final-plot', result.plot)
@@ -485,8 +486,8 @@ function plotresults(){
 }
 
 function resultstable(){
-    hideIt('.hide4table',true);
-    hideIt('.hide4plot',false);
+    hide('.hide4table');
+    show('.hide4plot');
     shinylight.call("resultstable", {x:glob}, null).then(
 	result => {
 	    let nr = result.data.length;
