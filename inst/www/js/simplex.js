@@ -8,6 +8,7 @@ var glob = {
 	'calibration': null,
 	'calibrated': null
     },
+    'start': true,
     'names': null,
     'class': 'simplex',
     'selected': 0,
@@ -53,7 +54,9 @@ function setup(){
     loadPage("setup.html").then(
         () => {
 	    initpreset();
-	    loadPresets()
+	    if (glob.start) loadPresets()
+	    else showPresets()
+	    glob.start = false;
 	},
         error => alert(error)
     );
