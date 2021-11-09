@@ -83,6 +83,10 @@ function loadPresets(){
 	)
 }
 
+function method(el){
+    glob.simplex.method[el.id] = el.value.split(',')
+}
+
 function showPresets(){
     let assign = (id) => document.getElementById(id).value =
 	glob.simplex.method[id];
@@ -182,10 +186,9 @@ async function readFiles(){
 }
 
 async function upload(){
-    const m = document.getElementById("methods").value;
     readFiles().then(
 	f => {
-	    shinylight.call('upload', {f:f, m:m}, null).then(
+	    shinylight.call('upload', {f:f, x:glob}, null).then(
 		result => result2simplex(result),
 		error => alert(error)
 	    )
