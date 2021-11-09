@@ -152,14 +152,13 @@ export2isoplotr <- function(x){
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
-# m = method (currently a string, will be modified to accept lists)
-upload <- function(f,m){
+upload <- function(f,x){
     ntcs <- length(f$tcs)
     tcs <- list()
     for (i in 1:ntcs){
         tcs[[f$fns[[i]]]] <- textConnection(f$tcs[[i]])
     }
-    result2json(read_data(f=tcs,m=m))
+    result2json(read_data(f=tcs,m=as.simplex(x)$method))
     
 }
 

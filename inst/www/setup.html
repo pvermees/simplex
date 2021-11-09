@@ -12,28 +12,36 @@
     <table>
       <tr>
 	<td>Description:</td>
-	<td><input class="preset" type="text" id="description"></td></tr>
+	<td><input class="preset" type="text"
+		   id="description" onchange="method(this)"></td></tr>
       <tr>
 	<td>Instrument:</td>
-	<td><input class="preset" type="text" id="instrument"></td></tr>
+	<td><input class="preset" type="text"
+		   id="instrument" onchange="method(this)"></td></tr>
       <tr>
 	<td>Ions:</td>
-	<td><input class="preset" type="text" id="ions"></td></tr>
+	<td><input class="preset" type="text" 
+		   id="ions" onchange="method(this)"></td></tr>
       <tr>
 	<td>Numerators:</td>
-	<td><input class="preset" type="text" id="num"></td></tr>
+	<td><input class="preset" type="text"
+		   id="num" onchange="method(this)"></td></tr>
       <tr>
 	<td>Denominators:</td>
-	<td><input class="preset" type="text" id="den"></td></tr>
+	<td><input class="preset" type="text"
+		   id="den" onchange="method(this)"></td></tr>
       <tr class="show4geochron hide4stable">
 	<td>Oxide(s):</td>
-	<td><input class="preset" type="text" id="oxide"></td></tr>
+	<td><input class="preset" type="text"
+		   id="oxide" onchange="method(this)"></td></tr>
       <tr>
 	<td>Multicollection?</td>
-	<td><input type="checkbox" id="multicollector"></td></tr>
+	<td><input type="checkbox" id="multicollector"
+		   onchange="glob.simplex.method.multicollector[0]=this.checked;"></td></tr>
       <tr>
 	<td>Nominal blank?</td>
-	<td><input type="checkbox" id="nominalblank"></td></tr>
+	<td><input type="checkbox" id="nominalblank"
+		   onchange="glob.simplex.method.nominalblank[0]=this.checked;"></td></tr>
     </table>
   </div>
 </div>
