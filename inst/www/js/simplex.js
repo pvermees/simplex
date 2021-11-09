@@ -8,6 +8,7 @@ var glob = {
 	'calibration': null,
 	'calibrated': null
     },
+    'i': 0,
     'start': true,
     'names': null,
     'class': 'simplex',
@@ -218,7 +219,7 @@ function drift(){
 	    result => result2simplex(result),
 	    error => alert(error)
 	).then(
-	    () => loadSamples(() => driftAliquot()),
+	    () => loadSamples( () => initDrift() ),
 	    error => alert(error)
 	).then(
 	    () => shower(),
@@ -260,13 +261,26 @@ function loadTable(dat,header,id,nr){
     tab.putCells(0,nr+1,0,nc+1,dat);
 }
 
+function initDrift(){
+    document.getElementById("aliquots").value = glob.i;
+    driftAliquot();
+}
+
 function driftAliquot(){
-    let i = document.getElementById("aliquots").value;
+    glob.i = parseFloat(document.getElementById("aliquots").value);
     let keys = Object.keys(glob.simplex.samples);
     let header = glob.simplex.method.ions;
-    let dat = glob.simplex.samples[keys[i]];
+    let dat = glob.simplex.samples[keys[glob.i]];
     loadTable(dat.time,header,'time-table',dat.time.length);
     loadTable(dat.signal,header,'signal-table',dat.signal.length);
+}
+
+function backnforth(di,callback){
+    let keys = Object.keys(glob.simplex.samples);
+    let ns = keys.length;
+    glob.i = ((glob.i + di % ns) + ns) % ns; // modulo operation
+    document.getElementById("aliquots").value = glob.i;
+    callback();
 }
 
 function driftPlot(){
@@ -293,7 +307,7 @@ function logratios(){
 	    error => alert(error)
 	).then(
 	    () => {
-		loadSamples(() => logratioAliquot());
+		loadSamples(() => initLogratios() );
 		document.getElementById("ratiocheckbox").checked = glob.ratios;
 	    },
 	    error => alert(error)
@@ -302,6 +316,11 @@ function logratios(){
 	    error => alert(error)
 	)
     )
+}
+
+function initLogratios(){
+    document.getElementById("aliquots").value = glob.i;
+    logratioAliquot()
 }
 
 function extra(){
@@ -323,8 +342,8 @@ function extra(){
 }
 
 function logratioAliquot(){
-    let i = document.getElementById("aliquots").value;
-    let key = Object.keys(glob.simplex.samples)[i];
+    glob.i = parseFloat(document.getElementById("aliquots").value);
+    let key = Object.keys(glob.simplex.samples)[glob.i];
     let header = glob.names.samples[key].lr.b0g;
     let b0g = glob.simplex.samples[key].lr.b0g;
     let ns = header.length/2;
