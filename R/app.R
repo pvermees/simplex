@@ -162,11 +162,11 @@ upload <- function(f,x){
     
 }
 
-freeformServer <- function(port=NULL,test=FALSE) {
+freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
     if (test) appDir <- R.utils::getAbsolutePath("inst/www")
     else appDir <- system.file("www",package="simplex")
-    shinylight::slServer(host='0.0.0.0', port=port,
-                         appDir=appDir, daemonize=TRUE,
+    shinylight::slServer(host=host,port=port,
+                         appDir=appDir,daemonize=TRUE,
         interface=list(
             presets=presets,
             upload=upload,
