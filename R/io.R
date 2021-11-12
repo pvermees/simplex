@@ -280,7 +280,7 @@ subset2snames <- function(dat,prefix=NULL,snames=NULL,i=NULL,...){
 spot <- function(dat,sname=NULL,i=1,...){
     if (is.null(sname)){
         x <- dat$samples[[i]]
-        sname <- names(dat)[i]
+        sname <- names(dat$samples)[i]
     } else {
         x <- dat$samples[[sname]]
     }

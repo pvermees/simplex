@@ -303,25 +303,31 @@ function driftPlot(){
 
 // 3. Logratios
 
-function logratios(){
+async function logratios(){
     selectButton(2);
     loadPage("logratios.html").then(
-	() => loader(),
-	error => alert(error)
-    ).then(
-	shinylight.call("getlogratios", {x:glob}, null, extra()).then(
-	    result => result2simplex(result),
-	    error => alert(error)
-	).then(
-	    () => {
-		loadSamples(() => initLogratios() );
+	() => {
+	    if (glob.class.includes('logratios')){ // already has logratios
+		loadSamples( () => initLogratios() );
 		document.getElementById("ratiocheckbox").checked = glob.ratios;
-	    },
-	    error => alert(error)
-	).then(
-	    () => shower(),
-	    error => alert(error)
-	)
+	    } else { // does not yet have logratios
+		loader();
+		shinylight.call("getlogratios", {x:glob}, null, extra()).then(
+		    result => result2simplex(result),
+		    error => alert(error)
+		).then(
+		    () => {
+			loadSamples( () => initLogratios() );
+			document.getElementById("ratiocheckbox").checked = glob.ratios;
+		    },
+		    error => alert(error)
+		).then(
+		    () => shower(),
+		    error => alert(error)
+		)
+	    }
+	},
+	error => alert(error)
     )
 }
 

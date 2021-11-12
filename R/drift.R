@@ -55,16 +55,18 @@ misfit_g <- function(par,spot,ions){
     g <- par
     out <- 0
     a0 <- get_a0(g=g,spot=spot,ions=ions)
+    i <- 1:nrow(spot$signal)
+    if (!is.null(spot$outliers)) i <- i[-spot$outliers]
     for (ion in ions){
         p <- alphapars(spot=spot,ion=ion)
-        a <- exp(a0[ion]+g*p$t)
+        a <- exp(a0[ion]+g*p$t[i])
         if (spot$dtype[ion]=='Fc'){
-            obs <- p$sig - p$bkg
+            obs <- p$sig[i] - p$bkg
             pred <- a
             out <- out + sum((obs-pred)^2)
         } else {
-            obs <- p$counts
-            pred <- a*p$edt # + p$bkgcounts # approximate
+            obs <- p$counts[i]
+            pred <- a*p$edt[i] # + p$bkgcounts # approximate
             out <- out - sum(stats::dpois(x=obs,lambda=pred,log=TRUE))
         }
     }
@@ -174,9 +176,11 @@ plot.drift <- function(x,sname=NULL,i=1,...){
         sbm <- sb*exp(g*hours(tm-tt))
         sbM <- sb*exp(g*hours(tM-tt))
         ylim <- c(sbm[1],sbM[nr])
+        bg <- rep('black',length(tt))
+        if (!is.null(spot$outliers)) bg[spot$outliers] <- 'white'
         graphics::matplot(rbind(tm,tM),rbind(sbm,sbM),type='l',
                           col='black',lty=1,xlab='',ylab='',...)
-        graphics::points(tt,sb,type='p',pch=21,bg='black')
+        graphics::points(tt,sb,type='p',pch=21,bg=bg)
         graphics::lines(tlim,predsig,lty=3)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
