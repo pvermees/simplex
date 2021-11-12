@@ -10,18 +10,20 @@
 #' plot(lr,i=1,option=2)
 #' }
 #' @export
-logratios <- function(x){
-    logratios_helper(x)
+logratios <- function(x,i=NULL){
+    logratios_helper(x,i=i)
 }
-logratios_helper <- function(x,gui=FALSE){
+logratios_helper <- function(x,i=NULL,gui=FALSE){
     out <- x
     snames <- names(x$samples)
     ns <- length(snames)
-    for (i in 1:ns){
-        sname <- snames[i]
+    if (is.null(i)) ii <- 1:ns
+    else ii <- i
+    for (j in ii){
+        sname <- snames[j]
         if (gui){
             shinylight::sendInfoText(paste(" (processing",sname,")"))
-            shinylight::sendProgress(i,ns)
+            shinylight::sendProgress(j,ns)
         } else {
             print(sname)
         }
@@ -161,8 +163,8 @@ faraday_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
     for (ele in nele){
         num <- groups$num[[ele]]
         ni <- length(num)
-        for (i in 1:ni){
-            ion <- num[i]
+        for (j in 1:ni){
+            ion <- num[j]
             N <- betapars(spot=spot,ion=ion)
             bND <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t)
             predb <- cbind(predb,bND)
@@ -184,7 +186,9 @@ faraday_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         out$pred <- sweep(frac,1,rowSums(meas),'*')
         out$outliers <- rep(FALSE,length(D$t))
     } else {
-        misfit <- obsb-predb
+        i <- 1:length(D$t)
+        if (!is.null(spot$outliers)) i <- i[-spot$outliers]
+        misfit <- obsb[i]-predb[i]
         covmat <- stats::cov(misfit)
         out <- sum(stats::mahalanobis(x=misfit,center=0*b0,cov=covmat))/2
     }
@@ -203,8 +207,8 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
     for (ele in names(groups$num)){
         num <- groups$num[[ele]]
         ni <- length(num)
-        for (i in 1:ni){
-            ion <- num[i]
+        for (j in 1:ni){
+            ion <- num[j]
             N <- betapars(spot=spot,ion=ion)
             bc <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t) + log(N$edt) - log(D$edt)
             pbc <- cbind(pbc,bc)
@@ -227,7 +231,9 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         out$pred <- sweep(theta,1,rowSums(counts),'*')
         out$outliers <- rep(FALSE,length(D$t))
     } else {
-        out <- -stats::dmultinom(counts,prob=theta,log=TRUE)
+        i <- 1:length(D$t)
+        if (!is.null(spot$outliers)) i <- i[-spot$outliers]
+        out <- -stats::dmultinom(counts[i],prob=theta[i],log=TRUE)
     }
     out
 }
