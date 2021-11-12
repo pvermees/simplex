@@ -80,8 +80,9 @@ getdrift <- function(x){
 }
 
 driftPlot <- function(x,i){
-    dat <- as.simplex(x)
-    plot.drift(x=dat,i=as.numeric(i)+1)
+    out <- as.simplex(x)
+    plot.drift(x=out,i=as.numeric(i)+1)
+    result2json(out)
 }
 
 getlogratios <- function(x){

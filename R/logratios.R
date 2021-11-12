@@ -359,7 +359,8 @@ plot_signals <- function(spot,...){
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in ions){
         tt <- seconds(lr$t[,ion])
-        graphics::plot(tt,lr$obs[,ion],type='n',xlab='',ylab='',...)
+        graphics::plot(c(tt,tt),c(lr$obs[,ion],lr$pred[,ion]),
+                       type='n',xlab='',ylab='',...)
         graphics::points(tt,lr$obs[,ion],pch=21,bg=bg)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)

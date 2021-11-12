@@ -290,7 +290,7 @@ function backnforth(di,callback){
 }
 
 function driftPlot(){
-    let i = document.getElementById("aliquots").value;
+    let i = parseInt(document.getElementById("aliquots").value);
     shinylight.call('driftPlot', {x:glob, i:i},
 		    'drift-plot', {'imgType': 'svg'}).then(
 			result => {
