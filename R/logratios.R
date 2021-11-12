@@ -184,11 +184,10 @@ faraday_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         out$t <- tt
         out$obs <- meas
         out$pred <- sweep(frac,1,rowSums(meas),'*')
-        out$outliers <- rep(FALSE,length(D$t))
     } else {
         i <- 1:length(D$t)
         if (!is.null(spot$outliers)) i <- i[-spot$outliers]
-        misfit <- obsb[i]-predb[i]
+        misfit <- obsb[i,]-predb[i,]
         covmat <- stats::cov(misfit)
         out <- sum(stats::mahalanobis(x=misfit,center=0*b0,cov=covmat))/2
     }
@@ -207,8 +206,8 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
     for (ele in names(groups$num)){
         num <- groups$num[[ele]]
         ni <- length(num)
-        for (j in 1:ni){
-            ion <- num[j]
+        for (i in 1:ni){
+            ion <- num[i]
             N <- betapars(spot=spot,ion=ion)
             bc <- b0[ion] + g[ele]*D$t + N$g*(N$t-D$t) + log(N$edt) - log(D$edt)
             pbc <- cbind(pbc,bc)
@@ -229,11 +228,10 @@ sem_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
         out$t <- tt
         out$obs <- counts
         out$pred <- sweep(theta,1,rowSums(counts),'*')
-        out$outliers <- rep(FALSE,length(D$t))
     } else {
         i <- 1:length(D$t)
         if (!is.null(spot$outliers)) i <- i[-spot$outliers]
-        out <- -stats::dmultinom(counts[i],prob=theta[i],log=TRUE)
+        out <- -stats::dmultinom(counts[i,],prob=theta[i,],log=TRUE)
     }
     out
 }
@@ -321,7 +319,6 @@ plot.logratios <- function(x,sname=NULL,i=1,ratios=FALSE,...){
 }
 
 plot_ratios <- function(spot,...){
-    bad <- logratios.spot(x=spot)$outliers
     num <- spot$method$num
     den <- spot$method$den
     b0g <- spot$lr$b0g
@@ -329,7 +326,8 @@ plot_ratios <- function(spot,...){
     np <- length(num)       # number of plot panels
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
-    nt <- nrow(spot$time)
+    bg <- rep('black',nrow(spot$time))
+    if (!is.null(spot$outliers)) bg[spot$outliers] <- 'white'
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (i in 1:np){
         ratio <- paste0(num[i],'/',den[i])
@@ -342,8 +340,7 @@ plot_ratios <- function(spot,...){
         Ypred <- exp(b0 + g*Dp$t + Np$g*(Np$t-Dp$t))
         ylab <- paste0('(',num[i],'-b)/(',den[i],'-b)')
         graphics::plot(c(X,X),c(Y,Ypred),type='n',xlab='',ylab='',...)
-        graphics::points(X[!bad],Y[!bad],pch=21)
-        graphics::points(X[bad],Y[bad],pch=4)
+        graphics::points(X,Y,pch=21,bg=bg)
         graphics::lines(X,Ypred)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
@@ -357,16 +354,16 @@ plot_signals <- function(spot,...){
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     lr <- logratios.spot(x=spot)
-    bad <- lr$outliers
+    bg <- rep('black',nrow(spot$time))
+    if (!is.null(spot$outliers)) bg[spot$outliers] <- 'white'
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
     for (ion in ions){
         tt <- seconds(lr$t[,ion])
-        graphics::plot(tt[!bad],lr$obs[!bad,ion],type='n',xlab='',ylab='',...)
-        graphics::points(tt[!bad],lr$obs[!bad,ion],pch=21)
-        graphics::points(tt[bad],lr$obs[bad,ion],pch=4)
+        graphics::plot(tt,lr$obs[,ion],type='n',xlab='',ylab='',...)
+        graphics::points(tt,lr$obs[,ion],pch=21,bg=bg)
         graphics::mtext(side=1,text='t',line=2)
         graphics::mtext(side=2,text=ion,line=2)
-        graphics::lines(tt[!bad],lr$pred[!bad,ion])
+        graphics::lines(tt,lr$pred[,ion])
     }
     graphics::par(oldpar)
 }
