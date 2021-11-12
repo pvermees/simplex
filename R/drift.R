@@ -7,18 +7,21 @@
 #' dc <- drift(x=SHRIMP_UPb)
 #' plot(dc,i=1)
 #' @export
-drift <- function(x){
-    drift_helper(x)
+drift <- function(x,i=NULL){
+    drift_helper(x,i=i)
 }
-drift_helper <- function(x,gui=FALSE){
+# gui=TRUE in app.R
+drift_helper <- function(x,i=NULL,gui=FALSE){
     out <- x
     snames <- names(x$samples)
     ns <- length(snames)
-    for (i in 1:ns){
-        sname <- snames[i]
+    if (is.null(i)) ii <- 1:ns
+    else ii <- i
+    for (j in ii){
+        sname <- snames[j]
         if (gui){
             shinylight::sendInfoText(paste(" (processing",sname,")"))
-            shinylight::sendProgress(i,ns)
+            shinylight::sendProgress(j,ns)
         } else {
             print(sname)
         }

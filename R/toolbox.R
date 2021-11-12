@@ -131,3 +131,20 @@ faraday <- function(spot,ion=NULL){
     else out <- spot$dtype[ion]=='Fc'
     out
 }
+
+outlier <- function(x,sname=NULL,i=1,j){
+    out <- x
+    if (is.null(sname)) sname <- names(x$samples)[i]
+    if (is.null(x$outliers)){ # does not yet have any outliers -> create
+        out$outliers <- list()
+        out$outliers[[sname]] <- j
+    } else if (is.null(x$outliers[[sname]])){ # no outliers for this sample -> add
+        out$outliers[[sname]] <- j
+    } else if (j %in% x$outliers[[sname]]){ # does not yet have this outlier -> add
+        out$outliers[[sname]] <- c(out$outliers[[sname]],j)
+    } else { # already has this outlier -> remove
+        jj <- which(x$outliers[[sname]] %in% j)
+        out$outliers[[sname]] <- out$outliers[[sname]][-jj]
+    }
+    out
+}

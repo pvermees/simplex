@@ -24,6 +24,8 @@ read_data <- function(f,m='IGG-UPb'){
     } else {
         out$samples <- read_samples_fn(fn=f,m=out$method)
     }
+    snames <- names(out$samples)
+    ns <- length(snames)
     class(out) <- 'simplex'
     out
 }
@@ -285,6 +287,7 @@ spot <- function(dat,sname=NULL,i=1,...){
     out <- dat
     out$samples <- NULL
     out$sname <- sname
+    if (!is.null(out$outliers)) out$outliers <- dat$outliers[[sname]]
     out <- c(out,x)
     class(out) <- 'spot'
     out
