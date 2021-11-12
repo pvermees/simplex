@@ -24,6 +24,8 @@ read_data <- function(f,m='IGG-UPb'){
     } else {
         out$samples <- read_samples_fn(fn=f,m=out$method)
     }
+    snames <- names(out$samples)
+    ns <- length(snames)
     class(out) <- 'simplex'
     out
 }
@@ -278,13 +280,14 @@ subset2snames <- function(dat,prefix=NULL,snames=NULL,i=NULL,...){
 spot <- function(dat,sname=NULL,i=1,...){
     if (is.null(sname)){
         x <- dat$samples[[i]]
-        sname <- names(dat)[i]
+        sname <- names(dat$samples)[i]
     } else {
         x <- dat$samples[[sname]]
     }
     out <- dat
     out$samples <- NULL
     out$sname <- sname
+    if (!is.null(out$outliers)) out$outliers <- dat$outliers[[sname]]
     out <- c(out,x)
     class(out) <- 'spot'
     out

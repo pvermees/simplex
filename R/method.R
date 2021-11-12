@@ -55,7 +55,7 @@ defaultmethod <- function(m){
         out$instrument <- 'Cameca'
         out$ions <- c('Zr90','Zr92','200.5','Zr94',
                       'Pb204','Pb206','Pb207','Pb208',
-                      'U238','ThO2','UO2','270.1')
+                      'U238','ThO2','UO2')
         out$detectors <- c('FC1','EM','FC2')
         out$num <- c('Pb204','Pb207','Pb208','Pb206','UO2')
         out$den <- c('Pb206','Pb206','Pb206','U238','U238')

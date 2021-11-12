@@ -4,6 +4,7 @@ var glob = {
     'simplex': {
 	'method': { 'method': ['IGG-UPb'] },
 	'samples': null,
+	'outliers': null,
 	'standard': null,
 	'calibration': null,
 	'calibrated': null
@@ -209,22 +210,27 @@ function result2simplex(result){
 
 // 3. Drift
 
-function drift(){
+async function drift(){
     selectButton(1);
     loadPage("drift.html").then(
-	() => loader(),
+	() => {
+	    if (glob.class.includes('drift')){ // already drift corrected
+		loadSamples( () => initDrift() )
+	    } else { // not yet drift corrected
+		loader();
+		shinylight.call("getdrift", {x:glob}, null, extra()).then(
+		    result => result2simplex(result),
+		    error => alert(error)
+		).then(
+		    () => loadSamples( () => initDrift() ),
+		    error => alert(error)
+		).then(
+		    () => shower(),
+		    error => alert(error)
+		)
+	    }
+	},
 	error => alert(error)
-    ).then(
-	shinylight.call("getdrift", {x:glob}, null, extra()).then(
-	    result => result2simplex(result),
-	    error => alert(error)
-	).then(
-	    () => loadSamples( () => initDrift() ),
-	    error => alert(error)
-	).then(
-	    () => shower(),
-	    error => alert(error)
-	)
     )
 }
 
@@ -284,37 +290,44 @@ function backnforth(di,callback){
 }
 
 function driftPlot(){
-    let i = document.getElementById("aliquots").value;
-    shinylight.call('driftPlot',
-		    {x:glob, i:i},
-		    'drift-plot',
-		    {'imgType': 'svg'}).then(
-	result => shinylight.setElementPlot('drift-plot', result.plot),
-	error => alert(error)
-    );
+    let i = parseInt(document.getElementById("aliquots").value);
+    shinylight.call('driftPlot', {x:glob, i:i},
+		    'drift-plot', {'imgType': 'svg'}).then(
+			result => {
+			    result2simplex(result);
+			    shinylight.setElementPlot('drift-plot', result.plot);
+			},
+			error => alert(error)
+		    );
 }
 
 // 3. Logratios
 
-function logratios(){
+async function logratios(){
     selectButton(2);
     loadPage("logratios.html").then(
-	() => loader(),
-	error => alert(error)
-    ).then(
-	shinylight.call("getlogratios", {x:glob}, null, extra()).then(
-	    result => result2simplex(result),
-	    error => alert(error)
-	).then(
-	    () => {
-		loadSamples(() => initLogratios() );
+	() => {
+	    if (glob.class.includes('logratios')){ // already has logratios
+		loadSamples( () => initLogratios() );
 		document.getElementById("ratiocheckbox").checked = glob.ratios;
-	    },
-	    error => alert(error)
-	).then(
-	    () => shower(),
-	    error => alert(error)
-	)
+	    } else { // does not yet have logratios
+		loader();
+		shinylight.call("getlogratios", {x:glob}, null, extra()).then(
+		    result => result2simplex(result),
+		    error => alert(error)
+		).then(
+		    () => {
+			loadSamples( () => initLogratios() );
+			document.getElementById("ratiocheckbox").checked = glob.ratios;
+		    },
+		    error => alert(error)
+		).then(
+		    () => shower(),
+		    error => alert(error)
+		)
+	    }
+	},
+	error => alert(error)
     )
 }
 
