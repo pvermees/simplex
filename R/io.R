@@ -190,8 +190,9 @@ read_SHRIMP_pd <- function(f,m){
             block <- utils::read.table(text=readLines(f,n=nions,warn=FALSE))
             spot$dwelltime <- block[,4]
             names(spot$dwelltime) <- m$ions
+            spot$detector <- block[,11]
             spot$dtype <- rep('Fc',length(m$ions))
-            spot$dtype[block[,11]=='COUNTER'] <- 'Em'
+            spot$dtype[spot$detector=='COUNTER'] <- 'Em'
             names(spot$dtype) <- m$ions
             spot$time <- matrix(0,nscans,nions)
             spot$signal <- matrix(0,nscans,nions)

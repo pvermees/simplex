@@ -56,7 +56,7 @@ data2table <- function(x,...){ UseMethod("data2table",x) }
 #' @rdname data2table
 #' @export
 data2table.default <- function(x,...){
-    data2table_helper(x=x,option='default',...)
+    stop('No default version of data2table.')
 }
 #' @rdname data2table
 #' @export
@@ -67,6 +67,59 @@ data2table.calibrated <- function(x,...){
 #' @export
 data2table.delta <- function(x,...){
     data2table_helper(x=x,option='delta',...)
+}
+#' @rdname data2table
+#' @export
+data2table.logratios <- function(x,log=TRUE,t=NULL,...){
+    num <- x$method$num
+    den <- x$method$den
+    samps <- x$samples
+    nr <- length(samps)
+    nn <- length(num)
+    nrho <- nn*(nn-1)/2
+    nc <- 2*nn + nrho
+    out <- matrix(NA,nrow=nr,ncol=nc)
+    cnames <- rep(NA,nc)
+    ii <- 1
+    for (i in 1:nn){
+        ratio1 <- paste0(num[i],'/',den[i])
+        r1 <- ifelse(log,paste0('ln[',ratio1,']'),ratio1)
+        cnames[2*i-1] <- r1
+        cnames[2*i] <- paste0('s(',r1,')')
+        for (j in i:nn){
+            if (i!=j){
+                ratio2 <- paste0(num[j],'/',den[j])
+                r2 <- ifelse(log,paste0('ln[',ratio2,']'),ratio2)
+                cnames[2*nn+ii] <- paste0('r(',r1,',',r2,')')
+                ii <- ii + 1
+            }
+        }
+    }
+    rownames(out) <- names(samps)
+    colnames(out) <- cnames
+    if (is.null(t)) t <- stats::median(samps[[1]]$time)
+    J <- cbind(diag(nn),diag(nn)*hours(t))
+    for (i in 1:nr){
+        lr <- samps[[i]]$lr
+        b0 <- lr$b0g[1:nn]
+        g <- lr$b0g[(nn+1):(2*nn)]
+        lrt <- b0 + g * hours(t)
+        covlrt <- J %*% lr$cov %*% t(J)
+        if (log) {
+            out[i,2*(1:nn)-1] <- lrt
+            out[i,2*(1:nn)] <- sqrt(diag(covlrt))
+            cormat <- cov2cor(covlrt)
+        } else {
+            out[i,2*(1:nn)-1] <- exp(lrt)
+            Jexp <- diag(nn)*exp(lrt)
+            covmat <- Jexp %*% covlrt %*% t(Jexp)
+            out[i,2*(1:nn)] <- sqrt(diag(covmat))
+            cormat <- cov2cor(covmat)
+            
+        }
+        if (nc>2*(nn)) out[i,(2*nn+1):(nc)] <- cormat[upper.tri(cormat)]
+    }
+    out
 }
 data2table_helper <- function(x,option,...){
     p <- data2table_pars(x=x,option=option)

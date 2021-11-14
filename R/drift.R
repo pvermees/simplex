@@ -182,7 +182,7 @@ plot.drift <- function(x,sname=NULL,i=1,...){
                           col='black',lty=1,xlab='',ylab='',...)
         graphics::points(tt,sb,type='p',pch=21,bg=bg)
         graphics::lines(tlim,predsig,lty=3)
-        graphics::mtext(side=1,text='t',line=2)
+        graphics::mtext(side=1,text='t (s)',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
     }
     graphics::par(oldpar)

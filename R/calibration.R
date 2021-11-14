@@ -20,12 +20,13 @@
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,t=NULL){
+calibration <- function(lr,stand,snames=NULL,i=NULL,
+                        invert=FALSE,t=NULL,slope=NULL){
     out <- lr
     out$standard <- stand
     dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
     if (stable(lr)) out$calibration <- stable_calibration(lr=dat)
-    else out$calibration <- geochron_calibration(lr=dat,t=t)
+    else out$calibration <- geochron_calibration(lr=dat,t=t,slope=slope)
     class(out) <- unique(append('calibration',class(out)))
     out
 }
@@ -53,26 +54,15 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,t=NULL,...){
+geochron_calibration <- function(lr,t=NULL,slope=NULL,...){
     out <- list()
-    oxide <- lr$method$oxide
     common <- do.call(lr$standard$fetchfun,args=list(dat=lr))$common
     type <- datatype(lr)
-    if (type=="U-Pb"){
-        out[[type]] <- geocal(lr,oxide=oxide['U'],t=t,type=type,
-                              common=common['Pb206Pb204'])
-    } else if (datatype(lr)=="U-Th-Pb"){
-        out[['U-Pb']] <- geocal(lr,oxide=oxide['U'],t=t,
-                                type="U-Pb",common=common['Pb206Pb204'])
-        out[['Th-Pb']] <- geocal(lr,oxide=oxide['Th'],t=t,
-                                 type="Th-Pb",common=common['Pb208Pb204'])
-    } else {
-        stop("Invalid data type.")
-    }
-    out
+    Pb0 <- ifelse(type=="U-Pb",common['Pb206Pb204'],common['Pb208Pb204'])
+    geocal(lr,oxide=lr$method$oxide,slope=slope,t=t,type=type,common=Pb0)
 }
 
-geocal <- function(lr,oxide,t=NULL,type,common){
+geocal <- function(lr,oxide,slope=NULL,t=NULL,type,common){
     if (type=='U-Pb'){
         num <- c(oxide,'Pb206','Pb204')
         den <- c('U238','U238','Pb206')
@@ -88,7 +78,36 @@ geocal <- function(lr,oxide,t=NULL,type,common){
     out$snames <- names(lr$samples)
     yd <- beta2york(lr=lr,t=t,snames=out$snames,
                     num=num,den=den,common=common)
-    out$fit <- IsoplotR::york(yd)
+    if (is.null(slope)) out$fit <- IsoplotR::york(yd)
+    else out$fit <- yorkfix(yd,b=slope)
+    out
+}
+
+yorkfix <- function(xy,b,alpha=0.05){
+    SS <- function(a,b,xy){
+        XY <- IsoplotR:::get.york.xy(xy,a,b)
+        dX <- XY[,1]-xy[,'X']
+        sX <- xy[,'sX']
+        dY <- XY[,2]-xy[,'Y']
+        sY <- xy[,'sY']
+        rXY <- xy[,'rXY']
+        SS <- (dX/sX)^2 + (dY/sY)^2 - 2*rXY*dX*dY/(sX*sY)
+        sum(SS)
+    }
+    init <- lm(Y - b*X ~ 1, data=as.data.frame(xy))$coefficients
+    fit <- stats::optim(init,SS,method='BFGS',b=b,xy=xy,hessian=TRUE)
+    out <- list(type='york')
+    a <- fit$par
+    sa <- sqrt(solve(fit$hessian))
+    out$a <- c(a,sa)
+    names(out$a) <- c('a','s[a]')
+    out$b <- c(b,0)
+    names(out$b) <- c('b','s[b]')
+    out$cov.ab <- 0
+    out$df <- nrow(xy)-1
+    out$mswd <- fit$value/out$df
+    out$p.value <- as.numeric(1-stats::pchisq(fit$value,out$df))
+    out$alpha <- alpha
     out
 }
 
@@ -198,24 +217,6 @@ calplot_stable <- function(dat,...){
 
 calplot_geochronology <- function(dat,option=1,title=TRUE,...){
     cal <- dat$calibration
-    np <- length(cal)       # number of plot panels
-    nr <- ceiling(sqrt(np)) # number of rows
-    nc <- ceiling(np/nr)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc))
-    ii <- 1
-    for (i1 in 1:(nc-1)){
-        for (i2 in (i1+1):nr){
-            if (ii>np) break
-            calplot_geochronology_helper(dat,option=option,
-                                         type=ii,title=title,...)
-            ii <- ii + 1
-        }
-    }
-    graphics::par(oldpar)
-}
-
-calplot_geochronology_helper <- function(dat,option=1,type=1,title=TRUE,...){
-    cal <- dat$calibration[[type]]
     num <- cal$num
     den <- cal$den
     yd <- beta2york(lr=dat,t=seconds(cal$t),snames=cal$snames,

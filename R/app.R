@@ -20,11 +20,7 @@ presets <- function(method){
         simplex$method <- defaultmethod(method)
         class(simplex) <- 'simplex'
     }
-    out <- list()
-    out$simplex <- simplex
-    out$names <- rcnames(simplex)
-    out$class <- class(simplex)
-    out
+    result2json(simplex)
 }
 
 rcnames <- function(dat){
@@ -66,6 +62,7 @@ result2json <- function(x){
     out$simplex <- x
     out$names <- rcnames(x)
     out$class <- class(x)
+    out$multi <- multicollector(x)
     out
 }
 
@@ -94,12 +91,21 @@ logratioPlot <- function(x,i,ratios){
     plot.logratios(x=as.simplex(x),i=as.numeric(i)+1,ratios=ratios)
 }
 
+logratioTable <- function(x){
+    tab <- data2table.logratios(as.simplex(x),log=x$log)
+    rownames(tab) <- NULL
+    as.data.frame(tab)
+}
+
 getstandard <- function(preset){
     standard(preset)
 }
 
 calibrator <- function(x,...){
-    out <- calibration(as.simplex(x),stand=x$simplex$standard)
+    dat <- as.simplex(x)
+    if (x$fixedslope) slope <- x$slope
+    else slope <- NULL
+    out <- calibration(dat,stand=x$simplex$standard,slope=slope)
     plot.calibration(out,...)
     result2json(out)
 }
@@ -175,6 +181,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
             driftPlot=driftPlot,
             getlogratios=getlogratios,
             logratioPlot=logratioPlot,
+            logratioTable=logratioTable,
             getstandard=getstandard,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,

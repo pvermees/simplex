@@ -57,25 +57,16 @@ calibrate_stable <- function(dat,exterr=FALSE){
 calibrate_geochron <- function(dat,exterr=FALSE){
     out <- dat
     type <- datatype(dat)
-    if (type=="U-Pb"){
-        UPb <- fractical(dat,type="U-Pb",exterr=exterr)
-        PbPb <- nofractical(dat,type="U-Pb")
-        out$calibrated <- mergecal(UPb,PbPb)
-    } else if (type=="U-Th-Pb"){
-        UPb <- fractical(dat,type="U-Pb",exterr=exterr)
-        PbPb <- nofractical(dat,type="U-Th-Pb")
-        ThPb <- fractical(dat,type="Th-Pb",exterr=exterr)
-        out$calibrated <- mergecal(UPb,ThPb,PbPb)
-    } else {
-        stop("Invalid data type supplied to calibrate function.")
-    }
+    PD <- fractical(dat,type=type,exterr=exterr)
+    PbPb <- nofractical(dat,type=type)
+    out$calibrated <- mergecal(PD,PbPb)
     class(out) <- unique(append("calibrated",class(out)))
     out
 }
 
 fractical <- function(dat,type="U-Pb",exterr=FALSE){
     scal <- do.call(dat$standard$fetch,args=list(dat=dat)) # standard calibration
-    dcal <- dat$calibration[[type]] # data calibration
+    dcal <- dat$calibration # data calibration
     if (type=='U-Pb'){
         num='Pb206'
         den='U238'
@@ -135,9 +126,9 @@ nofractical <- function(dat,type="U-Pb"){
     if (type=='U-Pb'){
         num=c('Pb204','Pb207')
         den=c('Pb206','Pb206')
-    } else if (type=='U-Th-Pb'){
-        num=c('Pb204','Pb207','Pb204')
-        den=c('Pb206','Pb206','Pb208')
+    } else if (type=='Th-Pb'){
+        num='Pb204'
+        den='Pb208'
     }    
     snames <- names(dat$samples)
     ns <- length(snames)
@@ -184,7 +175,7 @@ mergecal <- function(...){
 #' @title plot calibrated data
 #' @description shows the calibrated data on a logratio plot.
 #' @param x an object of class \code{calibrated}
-#' @param option for U-Pb or U-Th-Pb data. If \code{1}, plots the data
+#' @param option for U-Pb or Th-Pb data. If \code{1}, plots the data
 #'     as error ellipses; if \code{2}, adds the raw data; if \code{3},
 #'     marks the first and last measurement with a black and white
 #'     circle, respectively.
@@ -277,23 +268,6 @@ deltagrid <- function(dat,i,j){
 
 caldplot_geochronology <- function(dat,option=1,...){
     cal <- dat$calibration
-    np <- length(cal)       # number of plot panels
-    nr <- ceiling(sqrt(np)) # number of rows
-    nc <- ceiling(np/nr)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(4,4))
-    ii <- 1
-    for (i1 in 1:(nc-1)){
-        for (i2 in (i1+1):nr){
-            if (ii>np) break
-            caldplot_geochronology_helper(dat,option=option,type=ii,...)
-            ii <- ii + 1
-        }
-    }
-    graphics::par(oldpar)
-}
-
-caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
-    cal <- dat$calibration[[type]]
     num <- cal$num
     den <- cal$den
     snames <- names(dat$samples)
@@ -307,7 +281,7 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
     ylim[1] <- min(yd[,'Y']-3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[1])
     ylim[2] <- max(yd[,'Y']+3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[2])
     graphics::plot(xlim,ylim,xlab=xlab,ylab=ylab,xlim=xlim,ylim=ylim,type='n')
-    agegrid(dat,type,xlim,ylim)
+    agegrid(dat,xlim,ylim)
     if (option==1){
         IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
     } else {
@@ -339,21 +313,21 @@ caldplot_geochronology_helper <- function(dat,option=1,type=1,...){
     }
 }
 
-agegrid <- function(dat,type,xlim,ylim){
+agegrid <- function(dat,xlim,ylim){
+    ratio <- ifelse(datatype(dat)=='U-Pb','Pb206U238','Pb208Th232')
     usr <- graphics::par('usr')
-    cal <- dat$calibration[[type]]
+    cal <- dat$calibration
     st <- do.call(dat$standard$fetchfun,args=list(dat=dat))
     lrlim <- rep(0,2)
     a <- cal$fit$a[1]
     b <- cal$fit$b[1]
-    adj1 <- st$lr[type] - a - b*xlim[2]
-    adj2 <- st$lr[type] - a - b*xlim[1]
+    adj1 <- st$lr[ratio] - a - b*xlim[2]
+    adj2 <- st$lr[ratio] - a - b*xlim[1]
     lrlim[1] <- ylim[1] + adj1
     lrlim[2] <- ylim[2] + adj2
-    tlim <- IsoplotR::age(exp(lrlim),method=chronometer(dat,type))
+    tlim <- IsoplotR::age(exp(lrlim),method=chronometer(dat))
     tticks <- pretty(tlim)
     nt <- length(tticks)
-    ratio <- names(st$lr)[type]
     lrmin <- log(IsoplotR::age2ratio(tticks,ratio=ratio)[,1]) - adj2
     lrmax <- lrmin + cal$fit$b[1]*diff(xlim)
     xticks <- list(x=NULL,t=NULL)
