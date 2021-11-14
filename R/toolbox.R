@@ -11,7 +11,6 @@ effective_dwelltime <- function(spot){
     -sweep(lost_time,MARGIN=2,FUN='-',spot$dwelltime)
 }
 
-
 element <- function(ion){
     txt <- gsub("[^a-zA-Z]", "", ion)
     empty <- which(txt %in% "")
@@ -36,12 +35,13 @@ seconds <- function(tt){
 
 background <- function(spot,ions){
     detector <- spot$detector[ions]
-    if (spot$method$nominalblank){
+    blk <- spot$method$blank
+    if (identical(blk,'nominal')){
         out <- spot$background[detector]
     } else if (spot$m$instrument=='Cameca'){
-        out <- spot$signal[,'bkg']
+        out <- spot$signal[,blk]
     } else if (spot$m$instrument=='SHRIMP'){
-        out <- spot$signal[,'bkg']/spot$dwelltime['bkg']
+        out <- spot$signal[,blk]/spot$dwelltime[blk]
     } else {
         stop('Illegal background option')
     }
@@ -86,25 +86,31 @@ troilite <- function(){
     out    
 }
 
-stable <- function(dat){
-    type <- datatype(dat)
-    if (type %in% c("oxygen")) return(TRUE)
-    else if (type %in% c("sulphur")) return(TRUE)
-    else if (type %in% c("U-Pb")) return(FALSE)
-    else if (type %in% c("U-Th-Pb")) return(FALSE)
-    else stop("Invalid data type.")
+multicollector <- function(x,...){ UseMethod("multicollector",x) }
+multicollector.default <- function(x,...){
+    detectors <- x$detector
+    numion <- length(detectors)
+    numdet <- length(unique(detectors))
+    if (numdet==numion) return(TRUE)
+    else if (numdet==1) return(FALSE)
+    else stop('Simplex does not currently manage mixed ',
+              'peak-hopping and multidetection runs.')    
+}
+multicollector.simplex <- function(x){
+    multicollector.default(x$samples[[1]])
+}
+multicollector.spot <- function(x){
+    multcollector.default(x)
 }
 
 datatype <- function(x){
     ions <- x$method$ions
-    if (all(c("U238","Th232","Pb204",
-              "Pb206","Pb207","Pb208")%in%ions) &&
-               any(c("UO","UO2")%in%ions) &&
-               any(c("ThO","ThO2")%in%ions)){
-        out <- "U-Th-Pb"
-    } else if (all(c("U238","Pb206","Pb206","Pb207")%in%ions) &&
+    if (all(c("U238","Pb206","Pb206","Pb207")%in%ions) &&
         any(c("UO","UO2")%in%ions)){
         out <- "U-Pb"
+    } else if (all(c("Th232","Pb204","Pb208")%in%ions) &&
+               any(c("ThO","ThO2")%in%ions)){
+        out <- "Th-Pb"
     } else if (all(c("O16","O17","O18")%in%ions)){
         out <- "oxygen"
     } else if (all(c('S32','S33','S34','S36')%in%ions)){
@@ -113,13 +119,11 @@ datatype <- function(x){
     out
 }
 
-chronometer <- function(x,type){
+chronometer <- function(x){
     dt <- datatype(x)
     if (identical(dt,"U-Pb"))
         out <- "U238-Pb206"
-    else if (identical(dt,"U-Th-Pb") & type %in% c(1,'UPb'))
-        out <- "U238-Pb206"
-    else if (identical(dt,"U-Th-Pb") & type %in% c(2,'ThPb'))
+    else if (identical(dt,"Th-Pb"))
         out <- "Th232-Pb208"
     else
         stop('Invalid chronometer')

@@ -13,12 +13,14 @@ var glob = {
     'start': true,
     'names': null,
     'class': 'simplex',
+    'multi': false,
     'selected': 0,
     'ratios': false,
     'sampleprefix': null,
     'standards': [],
+    'fixedslope': false,
+    'slope': 1,
     'datatype': null,
-    'IsoplotRformat': 'U-Pb',
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 }
 
@@ -100,17 +102,10 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
-    if (geochron()){
-	show('.show4geochron');
-	assign('oxide');
-    } else {
-	hide('.show4geochron')
-    }
+    assign('blank');
+    if (glob.multi) hide('.hide4multi')
+    else show('.hide4multi')
     labelButtons();
-    document.getElementById('multicollector').checked =
-	glob.simplex.method.multicollector[0];
-    document.getElementById('nominalblank').checked =
-	glob.simplex.method.nominalblank[0];
 }
 
 function show(cls){
@@ -135,12 +130,11 @@ function stable(){
 }
 
 function geochron(){
-    return(["U-Pb","U-Th-Pb"].includes(glob.datatype))
+    return(["U-Pb","Th-Pb"].includes(glob.datatype))
 }
 
 function labelButtons(){
-    let labelNums = glob.simplex.method.multicollector[0] ?
-	[1,0,2,3,4,5] : [1,2,3,4,5,6];
+    let labelNums = glob.simplex.method.multi ?	[1,0,2,3,4,5] : [1,2,3,4,5,6];
     let id = null;
     for (let i=0; i<labelNums.length; i++){
 	id = glob.buttonIDs[i];
@@ -206,6 +200,7 @@ function result2simplex(result){
     glob.simplex = result.data.simplex;
     glob.names = result.data.names;
     glob.class = result.data.class;
+    glob.multi = result.data.multi[0];
 }
 
 // 3. Drift
@@ -383,6 +378,7 @@ function calibration(){
     loadPage("calibration.html").then(
 	() => {
 	    showOrHideStandards();
+	    document.getElementById('slope').value = glob.slope;
 	    if (typeof glob.simplex.standard != 'undefined'){
 		document.getElementById('standards').value =
 		    glob.simplex.standard.name[0];
@@ -400,13 +396,21 @@ function calibration(){
     );
 }
 
+function slopefixer(){
+    let checkbox = document.getElementById('fixedslope');
+    glob.simplex.fixedslope = checkbox.checked;
+    let textbox = document.getElementById('slopespan');
+    if (checkbox.checked) textbox.classList.remove('hidden')
+    else textbox.classList.add('hidden')
+}
+
 function showOrHideStandards(){
     let disable = null;
     switch(glob.datatype) {
     case 'U-Pb':
 	disable = [5,6];
         break; 
-    case 'U-Th-Pb':
+    case 'Th-Pb':
 	disable = [1,2,5,6];
 	break;
     case 'oxygen': 
@@ -503,8 +507,6 @@ function finish(){
 	() => {
 	    if (stable()) hide('.hide4stable')
 	    else show('.hide4stable')
-	    if (glob.datatype==='U-Th-Pb') show('.show4UThPb')
-	    else hide('.show4UThPb')
 	    document.getElementById('prefix').value = glob.sampleprefix;
 	    markSamplesByPrefix();
 	}, error => alert(error)
@@ -516,9 +518,7 @@ function plotresults(){
     show('.hide4table');
     shinylight.call("plotresults", {x:glob}, 'final-plot',
 		    {'imgType': 'svg'}).then(
-	result => {
-	    shinylight.setElementPlot('final-plot', result.plot)
-	},
+	result => shinylight.setElementPlot('final-plot', result.plot),
 	error => alert(error)
     );
 }
@@ -552,21 +552,15 @@ function export2isoplotr(){
 	    err => alert(err)
 	).then(
 	    async () => {
-		let result = await shinylight.call('export2isoplotr',
-						   { x:glob }, null);
+		let result = await shinylight.call('export2isoplotr', { x:glob }, null);
 		let gc = null;
 		let pd = null;
 		let format = null;
-		switch (glob.IsoplotRformat){
+		switch (glob.datatype){
 		case 'U-Pb':
 		    gc = 'U-Pb';
 		    pd = 'concordia';
 		    format = 5;
-		    break;
-		case 'U-Th-Pb':
-		    gc = 'U-Pb';
-		    pd = 'concordia';
-		    format = 8;
 		    break;
 		case 'Th-Pb':
 		    gc = 'Th-Pb';

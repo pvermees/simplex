@@ -27,6 +27,14 @@
     <button class="mainbutton" onclick="calibrator()">Calibrate</button>
   </div>
 
+  <div>
+    <input type="checkbox" id="fixedslope" onchange="slopefixer()">
+    Fixed slope? 
+    <span class='hidden' id="slopespan">
+      Slope: <input type="text" id="slope">
+    </span>
+  </div>
+
   <div>Analyses to use for the calibration:
     <table id="aliquots" class="normalfont"></table>
   </div>

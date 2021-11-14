@@ -20,8 +20,8 @@
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,stand,snames=NULL,i=NULL,invert=FALSE,
-                        t=NULL,slope=list(UPb=NULL,ThPb=NULL)){
+calibration <- function(lr,stand,snames=NULL,i=NULL,
+                        invert=FALSE,t=NULL,slope=NULL){
     out <- lr
     out$standard <- stand
     dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
@@ -54,23 +54,12 @@ stable_calibration <- function(lr){
     out
 }
 
-geochron_calibration <- function(lr,t=NULL,slope=list(UPb=NULL,ThPb=NULL),...){
+geochron_calibration <- function(lr,t=NULL,slope=NULL,...){
     out <- list()
-    oxide <- lr$method$oxide
     common <- do.call(lr$standard$fetchfun,args=list(dat=lr))$common
     type <- datatype(lr)
-    if (type=="U-Pb"){
-        out[[type]] <- geocal(lr,oxide=oxide['U'],slope=slope$UPb,t=t,
-                              type=type,common=common['Pb206Pb204'])
-    } else if (datatype(lr)=="U-Th-Pb"){
-        out[['U-Pb']] <- geocal(lr,oxide=oxide['U'],slope=slope$UPb,t=t,
-                                type="U-Pb",common=common['Pb206Pb204'])
-        out[['Th-Pb']] <- geocal(lr,oxide=oxide['Th'],slope=slope$ThPb,t=t,
-                                 type="Th-Pb",common=common['Pb208Pb204'])
-    } else {
-        stop("Invalid data type.")
-    }
-    out
+    Pb0 <- ifelse(type=="U-Pb",common['Pb206Pb204'],common['Pb208Pb204'])
+    geocal(lr,oxide=lr$method$oxide,slope=slope,t=t,type=type,common=Pb0)
 }
 
 # TODO: document
@@ -90,11 +79,8 @@ geocal <- function(lr,oxide,slope=NULL,t=NULL,type,common){
     out$snames <- names(lr$samples)
     yd <- beta2york(lr=lr,t=t,snames=out$snames,
                     num=num,den=den,common=common)
-    if (is.null(slope)){
-        out$fit <- IsoplotR::york(yd)
-    } else {
-        out$fit <- yorkfix(yd,b=slope)
-    }
+    if (is.null(slope)) out$fit <- IsoplotR::york(yd)
+    else out$fit <- yorkfix(yd,b=slope)
     out
 }
 
@@ -232,24 +218,6 @@ calplot_stable <- function(dat,...){
 
 calplot_geochronology <- function(dat,option=1,title=TRUE,...){
     cal <- dat$calibration
-    np <- length(cal)       # number of plot panels
-    nr <- ceiling(sqrt(np)) # number of rows
-    nc <- ceiling(np/nr)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc))
-    ii <- 1
-    for (i1 in 1:(nc-1)){
-        for (i2 in (i1+1):nr){
-            if (ii>np) break
-            calplot_geochronology_helper(dat,option=option,
-                                         type=ii,title=title,...)
-            ii <- ii + 1
-        }
-    }
-    graphics::par(oldpar)
-}
-
-calplot_geochronology_helper <- function(dat,option=1,type=1,title=TRUE,...){
-    cal <- dat$calibration[[type]]
     num <- cal$num
     den <- cal$den
     yd <- beta2york(lr=dat,t=seconds(cal$t),snames=cal$snames,

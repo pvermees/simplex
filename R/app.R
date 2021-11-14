@@ -20,11 +20,7 @@ presets <- function(method){
         simplex$method <- defaultmethod(method)
         class(simplex) <- 'simplex'
     }
-    out <- list()
-    out$simplex <- simplex
-    out$names <- rcnames(simplex)
-    out$class <- class(simplex)
-    out
+    result2json(simplex)
 }
 
 rcnames <- function(dat){
@@ -66,6 +62,7 @@ result2json <- function(x){
     out$simplex <- x
     out$names <- rcnames(x)
     out$class <- class(x)
+    out$multi <- multicollector(x)
     out
 }
 
@@ -99,7 +96,10 @@ getstandard <- function(preset){
 }
 
 calibrator <- function(x,...){
-    out <- calibration(as.simplex(x),stand=x$simplex$standard)
+    dat <- as.simplex(x)
+    if (x$fixedslope) slope <- x$slope
+    else slope <- NULL
+    out <- calibration(dat,stand=x$simplex$standard,slope=slope)
     plot.calibration(out,...)
     result2json(out)
 }
