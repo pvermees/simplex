@@ -130,7 +130,7 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
             cormat <- cov2cor(covmat)
             
         }
-        if (nc>i0+2*(nn)) out[i,(i0+2*nn+1):(i0+nc)] <- cormat[upper.tri(cormat)]
+        if (nc>(2*nn)) out[i,(i0+2*nn+1):(i0+nc)] <- cormat[upper.tri(cormat)]
     }
     out
 }
