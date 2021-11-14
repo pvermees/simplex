@@ -93,6 +93,7 @@ function loadPresets(){
 
 function method(el){
     glob.simplex.method[el.id] = el.value.split(',')
+    glob.class = ['simplex']; // reset calculations
 }
 
 function showPresets(){

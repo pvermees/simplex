@@ -108,16 +108,16 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,...){
         if (log) {
             out[i,2*(1:nn)-1] <- lrt
             out[i,2*(1:nn)] <- sqrt(diag(covlrt))
-            cormat <- cor(covlrt)
+            cormat <- cov2cor(covlrt)
         } else {
             out[i,2*(1:nn)-1] <- exp(lrt)
             Jexp <- diag(nn)*exp(lrt)
             covmat <- Jexp %*% covlrt %*% t(Jexp)
             out[i,2*(1:nn)] <- sqrt(diag(covmat))
-            cormat <- cor(covmat)
+            cormat <- cov2cor(covmat)
             
         }
-        out[i,(2*nn+1):(nc)] <- cormat[upper.tri(cormat)]
+        if (nc>2*(nn)) out[i,(2*nn+1):(nc)] <- cormat[upper.tri(cormat)]
     }
     out
 }
