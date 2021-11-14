@@ -62,7 +62,6 @@ geochron_calibration <- function(lr,t=NULL,slope=NULL,...){
     geocal(lr,oxide=lr$method$oxide,slope=slope,t=t,type=type,common=Pb0)
 }
 
-# TODO: document
 geocal <- function(lr,oxide,slope=NULL,t=NULL,type,common){
     if (type=='U-Pb'){
         num <- c(oxide,'Pb206','Pb204')

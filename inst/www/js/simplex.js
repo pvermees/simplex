@@ -16,6 +16,7 @@ var glob = {
     'multi': false,
     'selected': 0,
     'ratios': false,
+    'log': true,
     'sampleprefix': null,
     'standards': [],
     'fixedslope': false,
@@ -134,7 +135,7 @@ function geochron(){
 }
 
 function labelButtons(){
-    let labelNums = glob.simplex.method.multi ?	[1,0,2,3,4,5] : [1,2,3,4,5,6];
+    let labelNums = glob.multi ? [1,0,2,3,4,5] : [1,2,3,4,5,6];
     let id = null;
     for (let i=0; i<labelNums.length; i++){
 	id = glob.buttonIDs[i];
@@ -233,6 +234,10 @@ function checkratios(){
     glob.ratios = document.getElementById("ratiocheckbox").checked;
 }
 
+function checklog(){
+    glob.log = document.getElementById("logcheckbox").checked;
+}
+
 function loader(){
     show('.show4loading');
     hide('.hide4loading');
@@ -305,6 +310,7 @@ async function logratios(){
 	    if (glob.class.includes('logratios')){ // already has logratios
 		loadSamples( () => initLogratios() );
 		document.getElementById("ratiocheckbox").checked = glob.ratios;
+		document.getElementById("logcheckbox").checked = glob.log;
 	    } else { // does not yet have logratios
 		loader();
 		shinylight.call("getlogratios", {x:glob}, null, extra()).then(
@@ -314,6 +320,7 @@ async function logratios(){
 		    () => {
 			loadSamples( () => initLogratios() );
 			document.getElementById("ratiocheckbox").checked = glob.ratios;
+			document.getElementById("logcheckbox").checked = glob.log;
 		    },
 		    error => alert(error)
 		).then(
@@ -360,6 +367,8 @@ function logratioAliquot(){
 }
 
 function logratioPlot(){
+    show('.plot');
+    hide('.table');
     let i = document.getElementById("aliquots").value;
     shinylight.call('logratioPlot',
 		    {x:glob, i:i, ratios:glob.ratios},
@@ -369,6 +378,20 @@ function logratioPlot(){
 	    result => shinylight.setElementPlot('logratio-plot', result.plot),
 	    error => alert(error)
 	);
+}
+
+function logratioTable(){
+    show('.table');
+    hide('.plot');
+    shinylight.call("logratioTable", {x:glob}, null).then(
+	result => {
+	    let nr = result.data.length;
+	    let header = Object.keys(result.data[0]);
+	    let tab = createDataEntryGrid('logratio-table', header, nr);
+	    shinylight.setGridResult(tab, result);
+	},
+	error => alert(error)
+    );
 }
 
 // 4. Calibration

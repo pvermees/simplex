@@ -91,6 +91,12 @@ logratioPlot <- function(x,i,ratios){
     plot.logratios(x=as.simplex(x),i=as.numeric(i)+1,ratios=ratios)
 }
 
+logratioTable <- function(x){
+    tab <- data2table.logratios(as.simplex(x),log=x$log)
+    rownames(tab) <- NULL
+    as.data.frame(tab)
+}
+
 getstandard <- function(preset){
     standard(preset)
 }
@@ -175,6 +181,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
             driftPlot=driftPlot,
             getlogratios=getlogratios,
             logratioPlot=logratioPlot,
+            logratioTable=logratioTable,
             getstandard=getstandard,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
