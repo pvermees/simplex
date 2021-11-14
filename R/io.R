@@ -84,6 +84,11 @@ read_file <- function(f,m,ext=NA){
 read_Cameca_asc <- function(f,m){
     out <- list()
     while (length(line <- readLines(f,n=1,warn=FALSE)) > 0) {
+        if (grepl("X POSITION",line)){
+            parsed <- parse_line(line)
+            out$x <- as.numeric(parsed[3])
+            out$y <- as.numeric(parsed[6])
+        }
         if (grepl("ACQUISITION PARAMETERS",line)){
             junk <- readLines(f,n=6,warn=FALSE)
             out$dwelltime <- read_numbers(f,remove=1)

@@ -17,6 +17,7 @@ var glob = {
     'selected': 0,
     'ratios': false,
     'log': true,
+    'xy': false,
     'sampleprefix': null,
     'standards': [],
     'fixedslope': false,
@@ -234,9 +235,11 @@ async function drift(){
 function checkratios(){
     glob.ratios = document.getElementById("ratiocheckbox").checked;
 }
-
 function checklog(){
     glob.log = document.getElementById("logcheckbox").checked;
+}
+function checkxy(){
+    glob.xy = document.getElementById("xycheckbox").checked;
 }
 
 function loader(){
@@ -312,6 +315,13 @@ async function logratios(){
 		loadSamples( () => initLogratios() );
 		document.getElementById("ratiocheckbox").checked = glob.ratios;
 		document.getElementById("logcheckbox").checked = glob.log;
+		if (glob.simplex.method.instrument=='Cameca'){
+		    show('.show4cameca');
+		    document.getElementById("xycheckbox").checked = glob.xy;
+		} else {
+		    hide('.show4cameca');
+		    glob.xy = false;
+		}
 	    } else { // does not yet have logratios
 		loader();
 		shinylight.call("getlogratios", {x:glob}, null, extra()).then(
@@ -322,6 +332,7 @@ async function logratios(){
 			loadSamples( () => initLogratios() );
 			document.getElementById("ratiocheckbox").checked = glob.ratios;
 			document.getElementById("logcheckbox").checked = glob.log;
+			document.getElementById("xycheckbox").checked = glob.xy;
 		    },
 		    error => alert(error)
 		).then(

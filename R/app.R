@@ -92,7 +92,7 @@ logratioPlot <- function(x,i,ratios){
 }
 
 logratioTable <- function(x){
-    tab <- data2table.logratios(as.simplex(x),log=x$log)
+    tab <- data2table.logratios(as.simplex(x),log=x$log,addxy=x$xy)
     rownames(tab) <- NULL
     as.data.frame(tab)
 }

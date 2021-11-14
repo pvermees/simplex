@@ -70,7 +70,10 @@ data2table.delta <- function(x,...){
 }
 #' @rdname data2table
 #' @export
-data2table.logratios <- function(x,log=TRUE,t=NULL,...){
+data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
+    if (addxy & identical(x$method$instrument,'SHRIMP')){
+        stop('SHRIMP data do not contain x-y stage coordinates.')
+    }
     num <- x$method$num
     den <- x$method$den
     samps <- x$samples
@@ -78,7 +81,6 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,...){
     nn <- length(num)
     nrho <- nn*(nn-1)/2
     nc <- 2*nn + nrho
-    out <- matrix(NA,nrow=nr,ncol=nc)
     cnames <- rep(NA,nc)
     ii <- 1
     for (i in 1:nn){
@@ -95,6 +97,13 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,...){
             }
         }
     }
+    if (addxy) {
+        i0 <- 2
+        cnames <- c('x','y',cnames)
+    } else {
+        i0 <- 0
+    }
+    out <- matrix(NA,nrow=nr,ncol=nc+i0)
     rownames(out) <- names(samps)
     colnames(out) <- cnames
     if (is.null(t)) t <- stats::median(samps[[1]]$time)
@@ -105,19 +114,23 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,...){
         g <- lr$b0g[(nn+1):(2*nn)]
         lrt <- b0 + g * hours(t)
         covlrt <- J %*% lr$cov %*% t(J)
+        if (addxy){
+            out[i,1] <- samps[[i]]$x
+            out[i,2] <- samps[[i]]$y
+        }
         if (log) {
-            out[i,2*(1:nn)-1] <- lrt
-            out[i,2*(1:nn)] <- sqrt(diag(covlrt))
+            out[i,i0+2*(1:nn)-1] <- lrt
+            out[i,i0+2*(1:nn)] <- sqrt(diag(covlrt))
             cormat <- cov2cor(covlrt)
         } else {
-            out[i,2*(1:nn)-1] <- exp(lrt)
+            out[i,i0+2*(1:nn)-1] <- exp(lrt)
             Jexp <- diag(nn)*exp(lrt)
             covmat <- Jexp %*% covlrt %*% t(Jexp)
-            out[i,2*(1:nn)] <- sqrt(diag(covmat))
+            out[i,i0+2*(1:nn)] <- sqrt(diag(covmat))
             cormat <- cov2cor(covmat)
             
         }
-        if (nc>2*(nn)) out[i,(2*nn+1):(nc)] <- cormat[upper.tri(cormat)]
+        if (nc>i0+2*(nn)) out[i,(i0+2*nn+1):(i0+nc)] <- cormat[upper.tri(cormat)]
     }
     out
 }
