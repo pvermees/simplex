@@ -15,7 +15,7 @@ var glob = {
     'class': 'simplex',
     'multi': false,
     'selected': 0,
-    'ratios': false,
+    'ratios': true,
     'log': true,
     'xy': false,
     'sampleprefix': null,
@@ -106,9 +106,6 @@ function showPresets(){
     assign('num');
     assign('den');
     assign('blank');
-    if (glob.multi) hide('.hide4multi')
-    else show('.hide4multi')
-    labelButtons();
 }
 
 function show(cls){
@@ -134,16 +131,6 @@ function stable(){
 
 function geochron(){
     return(["U-Pb","Th-Pb"].includes(glob.datatype))
-}
-
-function labelButtons(){
-    let labelNums = glob.multi ? [1,0,2,3,4,5] : [1,2,3,4,5,6];
-    let id = null;
-    for (let i=0; i<labelNums.length; i++){
-	id = glob.buttonIDs[i];
-	document.getElementById(id).innerText =
-	    labelNums[i] + '. ' + glob.buttonIDs[i];
-    }
 }
 
 function fileFormats(){
