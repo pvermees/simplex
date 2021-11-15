@@ -165,6 +165,7 @@ plot.drift <- function(x,sname=NULL,i=1,...){
     nr <- ceiling(sqrt(np)) # number of rows
     nc <- ceiling(np/nr)    # number of columns
     oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
+    mono <- !multicollector(x)
     for (ion in ions){
         ap <- alphapars(spot,ion)
         sb <- ap$sig - ap$bkg
@@ -181,7 +182,7 @@ plot.drift <- function(x,sname=NULL,i=1,...){
         graphics::matplot(rbind(tm,tM),rbind(sbm,sbM),type='l',
                           col='black',lty=1,xlab='',ylab='',...)
         graphics::points(tt,sb,type='p',pch=21,bg=bg)
-        graphics::lines(tlim,predsig,lty=3)
+        if (mono) graphics::lines(tlim,predsig,lty=3)
         graphics::mtext(side=1,text='t (s)',line=2)
         graphics::mtext(side=2,text=ylab,line=2)
     }
