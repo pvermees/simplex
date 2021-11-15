@@ -178,7 +178,15 @@ async function upload(){
     readFiles().then(
 	f => {
 	    shinylight.call('upload', {f:f, x:glob}, null).then(
-		result => result2simplex(result),
+		result => {
+		    result2simplex(result);
+		    document.getElementById('ions').value =
+			glob.simplex.method.ions.toString();
+		    document.getElementById('num').value =
+			glob.simplex.method.num.toString();
+		    document.getElementById('den').value =
+			glob.simplex.method.den.toString();
+		},
 		error => alert(error)
 	    )
 	},

@@ -27,7 +27,7 @@ read_data <- function(f,m='IGG-UPb'){
     snames <- names(out$samples)
     ns <- length(snames)
     class(out) <- 'simplex'
-    out
+    fixmethod(out)
 }
 read_samples_tc <- function(tc,m){
     out <- list()
