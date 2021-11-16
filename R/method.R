@@ -28,7 +28,7 @@
 #' plot(shrimpdat,i=1)
 #' @export
 method <- function(m='IGG-UPb',instrument,ions,num,
-                   den,nominalblank,description){
+                   den,blank,description){
     if (m%in%c('IGG-UPb','IGG-UThPb','IGG-O','IGG-S','GA-UPb')){
         out <- defaultmethod(m)
     } else {
@@ -39,7 +39,7 @@ method <- function(m='IGG-UPb',instrument,ions,num,
     if (!missing(ions)) out$ions <- ions
     if (!missing(num)) out$num <- num
     if (!missing(den)) out$den <- den
-    if (!missing(nominalblank)) out$nominalblank <- nominalblank
+    if (!missing(blank)) out$blank <- blank
     if (!missing(description)) out$description <- description
     class(out) <- "method"
     invisible(out)
