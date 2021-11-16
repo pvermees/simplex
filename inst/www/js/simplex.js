@@ -97,6 +97,19 @@ function method(el){
     glob.class = ['simplex']; // reset calculations
 }
 
+function renameIons(){
+    let ions = glob.simplex.method.ions;
+    let keys = Object.keys(glob.simplex.samples);
+    for (let i=0; i<keys.length; i++){
+	glob.names.samples[keys[i]].detector = ions;
+	glob.names.samples[keys[i]].dtype = ions;
+	glob.names.samples[keys[i]].dwelltime = ions;
+	glob.names.samples[keys[i]].sbm.cnames = ions;
+	glob.names.samples[keys[i]].signal.cnames = ions;
+	glob.names.samples[keys[i]].time.cnames = ions;
+    }
+}
+
 function showPresets(){
     let assign = (id) => document.getElementById(id).value =
 	glob.simplex.method[id];
