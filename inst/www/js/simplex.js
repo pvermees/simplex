@@ -275,9 +275,8 @@ function loadSamples(callback){
 
 function loadTable(dat,header,id,nr){
     let nc = header.length;
-    let e = document.getElementById('drift-plot');
-    e.deg = createDataEntryGrid(id,header,nr);
-    e.deg.putCells(0,nr+1,0,nc+1,dat);
+    let tab = createDataEntryGrid(id,header,nr);
+    tab.putCells(0,nr+1,0,nc+1,dat);
 }
 
 function initDrift(){
