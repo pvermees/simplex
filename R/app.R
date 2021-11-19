@@ -76,9 +76,11 @@ getdrift <- function(x){
     result2json(out)
 }
 
-driftPlot <- function(x,i){
-    out <- as.simplex(x)
-    plot.drift(x=out,i=as.numeric(i)+1)
+driftPlot <- function(x){
+    dat <- as.simplex(x)
+    i <- as.numeric(x$i)+1
+    out <- drift(dat,i=i)
+    plot.drift(x=out,i=i)
     result2json(out)
 }
 
@@ -87,8 +89,13 @@ getlogratios <- function(x){
     result2json(out)
 }
 
-logratioPlot <- function(x,i,ratios){
-    plot.logratios(x=as.simplex(x),i=as.numeric(i)+1,ratios=ratios)
+logratioPlot <- function(x,ratios){
+    dat <- as.simplex(x)
+    i <- as.numeric(x$i)+1
+    dc <- drift(dat,i=i)
+    out <- logratios(dat,i=i)
+    plot.logratios(x=out,i=i,ratios=ratios)
+    result2json(out)
 }
 
 logratioTable <- function(x){
