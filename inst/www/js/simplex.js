@@ -308,12 +308,14 @@ function backnforth(di,callback){
 }
 
 function driftPlot(){
-    let i = parseInt(document.getElementById("aliquots").value);
     let keys = Object.keys(glob.simplex.samples);
-    let outliers = document.getElementById('outliers').value;
-    glob.simplex.samples[keys[i]].outliers = (outliers==="") ?
-	null : [parseInt(outliers)];
-    shinylight.call('driftPlot', {x:glob, i:i},
+    let ostring = document.getElementById('outliers').value;
+    if (ostring===''){
+	delete glob.simplex.samples[keys[glob.i]].outliers;
+    } else {
+	glob.simplex.samples[keys[glob.i]].outliers = ostring.split(',',10).map(Number);
+    }
+    shinylight.call('driftPlot', {x:glob},
 		    'drift-plot', {'imgType': 'svg'}).then(
 			result => {
 			    result2simplex(result);
@@ -371,7 +373,7 @@ async function logratios(){
 
 function initLogratios(){
     document.getElementById("aliquots").value = glob.i;
-    logratioAliquot()
+    logratioAliquot();
 }
 
 function extra(){
@@ -396,18 +398,27 @@ function logratioAliquot(){
     glob.i = parseFloat(document.getElementById("aliquots").value);
     let key = Object.keys(glob.simplex.samples)[glob.i];
     let header = glob.names.samples[key].lr.b0g;
-    let b0g = glob.simplex.samples[key].lr.b0g;
+    let dat =  glob.simplex.samples[key];
+    let b0g = dat.lr.b0g;
     let ns = header.length/2;
     loadTable([b0g.slice(0,ns)],header.slice(0,ns),'b0',1);
     loadTable([b0g.slice(ns,2*ns)],header.slice(ns,2*ns),'g',1);
+    document.getElementById('outliers').value =
+	(dat.outliers===undefined) ? '' : dat.outliers;
 }
 
 function logratioPlot(){
     show('.plot');
     hide('.table');
-    let i = document.getElementById("aliquots").value;
+    let ostring = document.getElementById('outliers').value;
+    let key = Object.keys(glob.simplex.samples)[glob.i];
+    if (ostring===''){
+	delete glob.simplex.samples[key].outliers;
+    } else {
+	glob.simplex.samples[key].outliers = ostring.split(',',10).map(Number);
+    }
     shinylight.call('logratioPlot',
-		    {x:glob, i:i, ratios:glob.ratios},
+		    {x:glob, ratios:glob.ratios},
 		    'logratio-plot',
 		    {'imgType': 'svg'})
 	.then(
