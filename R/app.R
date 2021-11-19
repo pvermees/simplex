@@ -77,8 +77,10 @@ getdrift <- function(x){
 }
 
 driftPlot <- function(x,i){
-    out <- as.simplex(x)
-    plot.drift(x=out,i=as.numeric(i)+1)
+    dat <- as.simplex(x)
+    ii <- as.numeric(i)+1
+    out <- drift(dat,i=ii)
+    plot.drift(x=out,i=ii)
     result2json(out)
 }
 

@@ -275,13 +275,18 @@ function loadSamples(callback){
 
 function loadTable(dat,header,id,nr){
     let nc = header.length;
-    let tab = createDataEntryGrid(id,header,nr);
-    tab.putCells(0,nr+1,0,nc+1,dat);
+    let e = document.getElementById('drift-plot');
+    e.deg = createDataEntryGrid(id,header,nr);
+    e.deg.putCells(0,nr+1,0,nc+1,dat);
 }
 
 function initDrift(){
     document.getElementById("aliquots").value = glob.i;
     driftAliquot();
+}
+
+function deepcopy(object){
+    return(JSON.parse(JSON.stringify(object)))
 }
 
 function driftAliquot(){
@@ -291,6 +296,8 @@ function driftAliquot(){
     let dat = glob.simplex.samples[keys[glob.i]];
     loadTable(dat.time,header,'time-table',dat.time.length);
     loadTable(dat.signal,header,'signal-table',dat.signal.length);
+    document.getElementById('outliers').value =
+	(dat.outliers===undefined) ? '' : dat.outliers;
 }
 
 function backnforth(di,callback){
@@ -303,6 +310,10 @@ function backnforth(di,callback){
 
 function driftPlot(){
     let i = parseInt(document.getElementById("aliquots").value);
+    let keys = Object.keys(glob.simplex.samples);
+    let outliers = document.getElementById('outliers').value;
+    glob.simplex.samples[keys[i]].outliers = (outliers==="") ?
+	null : [parseInt(outliers)];
     shinylight.call('driftPlot', {x:glob, i:i},
 		    'drift-plot', {'imgType': 'svg'}).then(
 			result => {
@@ -311,6 +322,12 @@ function driftPlot(){
 			},
 			error => alert(error)
 		    );
+}
+
+function getOutliers(i){
+    let e = document.getElementById('drift-plot');
+    let omit = e.deg.getColumn(0);
+    return(omit);
 }
 
 // 3. Logratios
