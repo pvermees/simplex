@@ -1,3 +1,46 @@
+# called by read_data.R
+init_standard <- function(num,den){
+    num_is_element <- (element(num) %in% elements())
+    den_is_element <- (element(den) %in% elements())
+    are_elements <- (num_is_element & den_is_element)
+    versus <- rep(NA,length(num))
+    if (any(!num_is_element)){
+        molnum <- num[!num_is_element]
+        molden <- den[!num_is_element]
+        nmol <- sum(!num_is_element)
+        for (i in 1:nmol){
+            versus[den %in% molden[i]] <- paste0(molnum[i],'/',molden[i])
+        }
+    }
+    if (any(!den_is_element)){
+        molnum <- num[!den_is_element]
+        molden <- den[!den_is_element]
+        nmol <- sum(!den_is_element)
+        for (i in 1:nmol){
+            versus[num %in% molnum[i]] <- paste0(molnum[i],'/',molden[i])
+        }
+    }
+    nr <- sum(are_elements)
+    out <- data.frame(ratios=paste0(num,'/',den)[are_elements],
+                      val=rep(NA,nr),
+                      cov=matrix(NA,nr,nr))
+    if (any(!are_elements)){
+        out$versus <- versus[are_elements]
+    }
+    out
+}
+
+# i = the indices of the standard that correspond to the sample logratios
+assign_standard <- function(lr,i,st,j){
+    if ("simplex"%in%class(lr)) ST <- standard(lr)
+    else ST <- lr
+    ST[i,1:2] <- st[j,1:2]
+    ST[i,2+i] <- st[j,2+j]
+    if ("simplex"%in%class(lr)) out <- standard(lr,ST)
+    else out <- ST
+    out
+}
+
 #' @title define an isotopic reference standards
 #' @description specify the isotopic composition of a reference
 #'     material for SIMS data calibration.
@@ -27,49 +70,76 @@
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(preset,prefix=preset,tst,val,
-                     cov=matrix(0,length(val),length(val)),common){
-    if (missing(preset)){
-        preset <- 'other'
-        out <- list()
-        if (missing(val)){
-            if (missing(tst)){
-                stop("Both the age and the isotopic composition ",
-                     "of the sample are missing.")
-            } else {
-                out$tst <- tst
-                out$fetchfun <- "age2lr"
-            }
+standard <- function(x,st){
+    if ('simplex'%in%class(x)){
+        if (missing(st)){
+            out <- x$method$standard
         } else {
-            out$val <- val
-            out$cov <- cov
-            if (!missing(common)) out$common <- common
-            out$fetchfun <- "lrstand"
+            out <- x
+            out$method$standard <- st
         }
-        out$prefix <- prefix
-        class(out) <- 'standard'
-    } else if (preset=='Plesovice'){
-        out <- standard(tst=c('t'=337.13,'s[t]'=0.18),prefix=prefix)
-    } else if (preset=='Qinghu'){
-        out <- standard(tst=c('t'=159.5,'s[t]'=0.1),prefix=prefix)
-    } else if (preset=='44069'){
-        out <- standard(tst=c('t'=424.86,'s[t]'=0.25),prefix=prefix)
-    } else if (preset=='Temora'){
-        out <- standard(tst=c('t'=416.75,'s[t]'=0.12),prefix=prefix)
-    } else if (preset=='NBS28'){
-        out <- standard(val=c('d17O'=4.79,'d18O'=9.56),
-                        cov=diag(c(0.05,0.11))^2,
-                        prefix=prefix)
-    } else if (preset=='Sonora'){ # temporary value
-        out <- standard(val=c('d33S'=0.83,'d34S'=1.61,'d36S'=3.25),
-                        cov=diag(c(0.03,0.08,0.03))^2,
-                        prefix=prefix)
+    } else if (x=='Plesovice'){
+        out <- age2stand(tst=c(337.13,0.18))
+    } else if (x=='Qinghu'){
+        out <- age2stand(tst=c(159.5,0.1))
+    } else if (x=='44069'){
+        out <- age2stand(tst=c(424.86,0.25))
+    } else if (x=='Temora'){
+        out <- age2stand(tst=c(416.75,0.12))
+    } else if (x=='NBS28'){
+        del <- data.frame(num=c('O17','O18'),den='O16',
+                          val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2)
+        out <- del2stand(del,ref=VSMOW())
+    } else if (x=='Sonora'){ # temporary value
+        del <- data.frame(num=c('S33','S34','S36'),den='S32',
+                          val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2)
+        out <- del2stand(del,ref=troilite())
     } else {
         stop("Invalid input to standard(...).")
     }
-    out$name <- preset
     out
 }
+
+age2stand <- function(tst){
+    num <- c('Pb204','Pb204','Pb207','Pb206','Pb208')
+    den <- c('Pb206','Pb208','Pb206','U238','Th232')
+    ratios <- paste0(num,'/',den)
+    common <- IsoplotR:::stacey.kramers(tst[1])
+    D <- IsoplotR::mclean(tt=tst[1])
+    val <- c(-log(common[,c('i64','i84')]),
+             D$Pb207Pb206,D$Pb206U238,D$Pb208Th232)
+    J <- rbind(0,0,D$dPb207Pb206dt,D$dPb206U238dt,D$dPb208Th232dt)
+    data.frame(ratios=ratios,val=val,cov=J%*%(tst[2]^2)%*%t(J))
+}
+
+del2stand <- function(del,ref){
+    if (!identical(del$num,ref$num) |
+        !identical(del$den,ref$den)){
+        stop('Standard isotopes must match reference.')
+    }
+    out <- data.frame(ratios=paste0(del$num,'/',del$den))
+    out$val <- log(1 + del$val/1000) + ref$val
+    J <- diag(1/(1000 + del$val))
+    covmat <- data.matrix(del[,4:ncol(del)])
+    out$cov <- J %*% covmat %*% t(J)
+    out
+}
+
+VSMOW <- function(){
+    O678 <- c(0.3799e-3,2.00520e-3)
+    relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
+    data.frame(
+        num = c('O17','O18'),den = 'O16',
+        val=log(O678),cov=diag(relerr^2))
+}
+
+troilite <- function(){
+    S2346 <- c(126.948,22.6436,6515)
+    relerr <- c(0.047,0.0020,20)/S2346
+    data.frame(num=c('S33','S34','S36'),den='S32',
+               val=-log(S2346),cov=diag(relerr^2))
+}
+
 lrstand <- function(dat){
     val <- dat$stand$val
     cov <- dat$stand$cov
@@ -88,7 +158,7 @@ lrstand <- function(dat){
             cov <- J %*% cov %*% t(J)
         }
         labels <- c("O17O16","O18O16")
-        out$ref <- VSMOW()$lr
+        out$ref <- 
         out$lr <- log(1 + val/1000) + out$ref
         J <- diag(1/(1000 + val))
     } else if (type=="sulphur"){
@@ -98,7 +168,7 @@ lrstand <- function(dat){
             cov <- J %*% cov %*% t(J)
         }
         labels <- c("S33S32","S34S32","S36S32")
-        out$ref <- troilite()$lr
+        out$ref <- 
         out$lr <- log(1 + val/1000) + out$ref
         J <- diag(1/(1000 + val))
     } else {
@@ -108,22 +178,5 @@ lrstand <- function(dat){
     names(out$lr) <- labels
     rownames(out$cov) <- labels
     colnames(out$cov) <- labels
-    out
-}
-age2lr <- function(dat){
-    type <- datatype(dat)
-    tst <- dat$stand$tst
-    if (type%in%c('U-Pb','U-Th-Pb')){
-        r <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
-    } else {
-        stop('Invalid type argument supplied to age2lr')
-    }
-    out <- list()
-    out$lr <- log(r$x)
-    J <- diag(1/r$x)
-    rownames(J) <- names(r$x)
-    out$cov <- J %*% r$cov %*% t(J)
-    out$common <- IsoplotR:::stacey.kramers(tst[1])[,c('i64','i84')]
-    names(out$common) <- c('Pb206Pb204','Pb208Pb204')
     out
 }
