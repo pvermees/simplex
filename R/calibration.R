@@ -21,12 +21,13 @@
 #' }
 #' @export
 calibration <- function(lr,type=c('average','regression'),
-                        stand,pairing,regpar=NULL,prefix=NULL,
+                        stand,pairing=NULL,prefix=NULL,
                         snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
+    out$standard <- stand
+    out$pairing <- pairing
     dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
     if (identical(type[1],'average')){
-        out$standard <- set.standard(stand=stand,pairing=pairing)
         out$calibration <- stable_calibration(lr=dat)
     } else {
         if (is.null(rpar)) rpar <- init_rpar(lr$method$num,lr$method$den)
@@ -61,40 +62,51 @@ stable_calibration <- function(lr){
     out
 }
 
-init_regpar <- function(num,den){
+# initialise pairing between standard and sample
+pairing <- function(lr,stand){
+    num <- lr$method$num
+    den <- lr$method$den
+    stdratios <- stand$ratios
+    smpratios <- paste0(num,'/',den)
+    matches <- match(stdratios,smpratios)
+    out <- data.frame(std=stdratios,
+                      smp=smpratios[matches])
     num_is_element <- (element(num) %in% elements())
     den_is_element <- (element(den) %in% elements())
-    x <- NULL
-    y <- NULL
-    common <- NULL
-    if (any(!num_is_element)){ # any molecules?
-        molnum <- num[!num_is_element]
-        molden <- den[!num_is_element]
-        nmol <- sum(!num_is_element)
-        for (i in 1:nmol){
-            has_mol_pair <- (den %in% molden[i])
-            j <- which(num_is_element & has_mol_pair)
-            x <- c(x,paste0(molnum[i],'/',molden[i]))
-            y <- c(y,paste0(num[j],'/',den[j]))
-            k <- which(grepl('204',num) & (den %in% num[j]))
-            common <- c(common,paste0(num[k],'/',den[k]))
+    if (num_is_element || den_is_element){
+        versus <- NULL
+        common <- NULL
+        done <- NULL
+        if (any(!num_is_element)){ # any molecules?
+            molnum <- num[!num_is_element]
+            molden <- den[!num_is_element]
+            nmol <- sum(!num_is_element)
+            for (i in 1:nmol){
+                has_mol_pair <- (den %in% molden[i])
+                j <- which(num_is_element & has_mol_pair)
+                smp <- paste0(num[j],'/',den[j])
+                versus <- c(versus,paste0(molnum[i],'/',molden[i]))
+                k <- which(grepl('204',num) & (den %in% num[j]))
+                common <- c(common,paste0(num[k],'/',den[k]))
+                done <- c(done,j)
+            }
         }
-    }
-    if (any(!den_is_element)){ # any molecules?
-        molnum <- num[!den_is_element]
-        molden <- den[!den_is_element]
-        nmol <- sum(!den_is_element)
-        for (i in 1:nmol){
-            has_mol_pair <- (num %in% molnum[i])
-            j <- which(den_is_element & has_mol_pair)
-            x <- c(x,paste0(molnum[i],'/',molden[i]))
-            y <- c(y,paste0(num[j],'/',den[j]))
-            k <- which(grepl('204',den) & (num %in% den[j]))
-            common <- c(common,paste0(num[k],'/',den[k]))
+        if (any(!den_is_element)){ # any molecules?
+            molnum <- num[!den_is_element]
+            molden <- den[!den_is_element]
+            nmol <- sum(!den_is_element)
+            for (i in 1:nmol){
+                has_mol_pair <- (num %in% molnum[i])
+                j <- which(den_is_element & has_mol_pair)
+                smp <- c(y,paste0(num[j],'/',den[j]))
+                versus <- c(versus,paste0(molnum[i],'/',molden[i]))
+                k <- which(grepl('204',den) & (num %in% den[j]))
+                common <- c(common,paste0(num[k],'/',den[k]))
+                done <- c(done,j)
+            }
         }
+        out$slope <- rep(NA,nrow(out))
     }
-    out <- data.frame(x=x,y=y,common=common)
-    out$slope <- rep(NA,nrow(out))
     out    
 }
 

@@ -1,35 +1,3 @@
-init_standard <- function(num,den){
-    num_is_element <- (element(num) %in% elements())
-    den_is_element <- (element(den) %in% elements())
-    are_elements <- (num_is_element & den_is_element)
-    versus <- rep(NA,length(num))
-    slope <- rep(NA,length(num))
-    if (any(!num_is_element)){
-        molnum <- num[!num_is_element]
-        molden <- den[!num_is_element]
-        nmol <- sum(!num_is_element)
-        for (i in 1:nmol){
-            versus[den %in% molden[i]] <- paste0(molnum[i],'/',molden[i])
-        }
-    }
-    if (any(!den_is_element)){
-        molnum <- num[!den_is_element]
-        molden <- den[!den_is_element]
-        nmol <- sum(!den_is_element)
-        for (i in 1:nmol){
-            versus[num %in% molnum[i]] <- paste0(molnum[i],'/',molden[i])
-        }
-    }
-    nr <- sum(are_elements)
-    out <- data.frame(ratios=paste0(num,'/',den)[are_elements],
-                      val=rep(NA,nr),
-                      cov=matrix(NA,nr,nr))
-    if (any(!are_elements)){
-        out$versus <- versus[are_elements]
-    }
-    out
-}
-
 # i = the indices of the standard that correspond to the sample logratios
 assign_standard <- function(lr,i,st,j){
     if ("simplex"%in%class(lr)) ST <- standard(lr)
@@ -75,9 +43,7 @@ set.standard <- function(type,stand,pairing,rpar=NULL){
 #' plot(cal,option=3)
 #' @export
 standard <- function(x){
-    if ('simplex'%in%class(x)){
-        out <- init_standard(x$method$num,x$method$den)
-    } else if (x=='Plesovice'){
+    if (x=='Plesovice'){
         out <- age2stand(tst=c(337.13,0.18))
     } else if (x=='Qinghu'){
         out <- age2stand(tst=c(159.5,0.1))
@@ -99,7 +65,7 @@ standard <- function(x){
     out
 }
 
-age2stand <- function(tst){
+age2stand <- function(tst,pairing=NULL){
     num <- c('Pb204','Pb204','Pb207','Pb206','Pb208')
     den <- c('Pb206','Pb208','Pb206','U238','Th232')
     ratios <- paste0(num,'/',den)
