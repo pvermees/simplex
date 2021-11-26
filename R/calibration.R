@@ -13,20 +13,28 @@
 #' @examples
 #' \dontrun{
 #' data('SHRIMP',package='simplex')
-#' st <- standard(preset='Temora',prefix=TEM)
+#' st <- standard(preset='Temora',prefix='TEM')
 #' dc <- drift(x=SHRIMP)
 #' lr <- logratios(x=dc)
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,stand,snames=NULL,i=NULL,
-                        invert=FALSE,t=NULL,slope=NULL){
+calibration <- function(lr,type=c('average','regression'),
+                        stand,pairing,regpar=NULL,prefix=NULL,
+                        snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
-    out$standard <- stand
-    dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
-    if (stable(lr)) out$calibration <- stable_calibration(lr=dat)
-    else out$calibration <- geochron_calibration(lr=dat,t=t,slope=slope)
+    dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
+    if (identical(type[1],'average')){
+        out$standard <- set.standard(stand=stand,pairing=pairing)
+        out$calibration <- stable_calibration(lr=dat)
+    } else {
+        if (is.null(rpar)) rpar <- init_rpar(lr$method$num,lr$method$den)
+        out$standard <- set.standard(stand=stand,pairing=pairing,rpar=rpar)
+        for (r in nrow(rpar)){
+            out$calibration <- geochron_calibration(lr=dat,rpar=rpar[i,],t=t)
+        }
+    }
     class(out) <- unique(append('calibration',class(out)))
     out
 }
@@ -48,35 +56,51 @@ stable_calibration <- function(lr){
     init <- lr$samples[[1]]$lr$b0g[1:ni]
     wtdmean <- stats::optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
     out <- list()
-    out$snames <- names(lr$samples)
     out$lr <- wtdmean$par
     out$cov <- solve(wtdmean$hessian)
     out
 }
 
-geochron_calibration <- function(lr,t=NULL,slope=NULL,...){
-    out <- list()
-    common <- do.call(lr$standard$fetchfun,args=list(dat=lr))$common
-    type <- datatype(lr)
-    Pb0 <- ifelse(type=="U-Pb",common['Pb206Pb204'],common['Pb208Pb204'])
-    geocal(lr,oxide=lr$method$oxide,slope=slope,t=t,type=type,common=Pb0)
+init_regpar <- function(num,den){
+    num_is_element <- (element(num) %in% elements())
+    den_is_element <- (element(den) %in% elements())
+    x <- NULL
+    y <- NULL
+    common <- NULL
+    if (any(!num_is_element)){ # any molecules?
+        molnum <- num[!num_is_element]
+        molden <- den[!num_is_element]
+        nmol <- sum(!num_is_element)
+        for (i in 1:nmol){
+            has_mol_pair <- (den %in% molden[i])
+            j <- which(num_is_element & has_mol_pair)
+            x <- c(x,paste0(molnum[i],'/',molden[i]))
+            y <- c(y,paste0(num[j],'/',den[j]))
+            k <- which(grepl('204',num) & (den %in% num[j]))
+            common <- c(common,paste0(num[k],'/',den[k]))
+        }
+    }
+    if (any(!den_is_element)){ # any molecules?
+        molnum <- num[!den_is_element]
+        molden <- den[!den_is_element]
+        nmol <- sum(!den_is_element)
+        for (i in 1:nmol){
+            has_mol_pair <- (num %in% molnum[i])
+            j <- which(den_is_element & has_mol_pair)
+            x <- c(x,paste0(molnum[i],'/',molden[i]))
+            y <- c(y,paste0(num[j],'/',den[j]))
+            k <- which(grepl('204',den) & (num %in% den[j]))
+            common <- c(common,paste0(num[k],'/',den[k]))
+        }
+    }
+    out <- data.frame(x=x,y=y,common=common)
+    out$slope <- rep(NA,nrow(out))
+    out    
 }
 
-geocal <- function(lr,oxide,slope=NULL,t=NULL,type,common){
-    if (type=='U-Pb'){
-        num <- c(oxide,'Pb206','Pb204')
-        den <- c('U238','U238','Pb206')
-    } else if (type=='Th-Pb'){
-        num <- c(oxide,'Pb208','Pb204')
-        den <- c('Th232','Th232','Pb208')
-    } else {
-        stop("Invalid data type.")
-    }
+geochron_calibration <- function(lr,rpar,t=NULL){
     if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
-    out <- list(num=num,den=den,oxide=oxide,t=hours(t))
-    out$common <- common
-    out$snames <- names(lr$samples)
-    yd <- beta2york(lr=lr,t=t,snames=out$snames,
+    yd <- beta2york(lr=lr,t=t,snames=names(lr$samples),
                     num=num,den=den,common=common)
     if (is.null(slope)) out$fit <- IsoplotR::york(yd)
     else out$fit <- yorkfix(yd,b=slope)

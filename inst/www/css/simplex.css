@@ -24,7 +24,7 @@ left {
 }
 
 right {
-    overflow:auto;
+    overflow:scroll;
     position:fixed;
     left:50%;
     width:50%;

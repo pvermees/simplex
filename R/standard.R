@@ -1,9 +1,9 @@
-# called by read_data.R
 init_standard <- function(num,den){
     num_is_element <- (element(num) %in% elements())
     den_is_element <- (element(den) %in% elements())
     are_elements <- (num_is_element & den_is_element)
     versus <- rep(NA,length(num))
+    slope <- rep(NA,length(num))
     if (any(!num_is_element)){
         molnum <- num[!num_is_element]
         molden <- den[!num_is_element]
@@ -41,6 +41,10 @@ assign_standard <- function(lr,i,st,j){
     out
 }
 
+set.standard <- function(type,stand,pairing,rpar=NULL){
+    out <- list()
+}
+
 #' @title define an isotopic reference standards
 #' @description specify the isotopic composition of a reference
 #'     material for SIMS data calibration.
@@ -70,14 +74,9 @@ assign_standard <- function(lr,i,st,j){
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(x,st){
+standard <- function(x){
     if ('simplex'%in%class(x)){
-        if (missing(st)){
-            out <- x$method$standard
-        } else {
-            out <- x
-            out$method$standard <- st
-        }
+        out <- init_standard(x$method$num,x$method$den)
     } else if (x=='Plesovice'){
         out <- age2stand(tst=c(337.13,0.18))
     } else if (x=='Qinghu'){

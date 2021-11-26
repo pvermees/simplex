@@ -41,7 +41,6 @@ method <- function(m='IGG-UPb',instrument,ions,num,
     if (!missing(den)) out$den <- den
     if (!missing(blank)) out$blank <- blank
     if (!missing(description)) out$description <- description
-    out$standard <- init_standard(out$num,out$den)
     class(out) <- "method"
     invisible(out)
 }
