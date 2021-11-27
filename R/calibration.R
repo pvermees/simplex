@@ -63,20 +63,21 @@ stable_calibration <- function(lr){
 }
 
 # initialise pairing between standard and sample
-pairing <- function(lr,stand){
+pairing <- function(lr,stand,type=c('average','regression')){
     num <- lr$method$num
     den <- lr$method$den
     stdratios <- stand$ratios
-    smpratios <- paste0(num,'/',den)
-    matches <- match(stdratios,smpratios)
-    out <- data.frame(std=stdratios,
-                      smp=smpratios[matches])
-    num_is_element <- (element(num) %in% elements())
-    den_is_element <- (element(den) %in% elements())
-    if (num_is_element || den_is_element){
+    if (identical(type[1],'average')){
+        smpratios <- paste0(num,'/',den)
+        matches <- match(stdratios,smpratios)
+        out <- data.frame(std=stdratios,
+                          smp=smpratios[matches])
+    } else {
+        num_is_element <- (element(num) %in% elements())
+        den_is_element <- (element(den) %in% elements())
+        smp <- NULL
         versus <- NULL
-        common <- NULL
-        done <- NULL
+        smp.c <- NULL
         if (any(!num_is_element)){ # any molecules?
             molnum <- num[!num_is_element]
             molden <- den[!num_is_element]
@@ -84,11 +85,10 @@ pairing <- function(lr,stand){
             for (i in 1:nmol){
                 has_mol_pair <- (den %in% molden[i])
                 j <- which(num_is_element & has_mol_pair)
-                smp <- paste0(num[j],'/',den[j])
+                smp <- c(smp,paste0(num[j],'/',den[j]))
                 versus <- c(versus,paste0(molnum[i],'/',molden[i]))
                 k <- which(grepl('204',num) & (den %in% num[j]))
-                common <- c(common,paste0(num[k],'/',den[k]))
-                done <- c(done,j)
+                smp.c <- c(smp.c,paste0(num[k],'/',den[k]))
             }
         }
         if (any(!den_is_element)){ # any molecules?
@@ -98,13 +98,15 @@ pairing <- function(lr,stand){
             for (i in 1:nmol){
                 has_mol_pair <- (num %in% molnum[i])
                 j <- which(den_is_element & has_mol_pair)
-                smp <- c(y,paste0(num[j],'/',den[j]))
+                smp <- c(smp,paste0(num[j],'/',den[j]))
                 versus <- c(versus,paste0(molnum[i],'/',molden[i]))
                 k <- which(grepl('204',den) & (num %in% den[j]))
-                common <- c(common,paste0(num[k],'/',den[k]))
-                done <- c(done,j)
+                smp.c <- c(smp.c,paste0(num[k],'/',den[k]))
             }
         }
+        std <- stdratios[match(smp,stdratios)]
+        std.c <- stdratios[match(smp.c,stdratios)]
+        out <- data.frame(std=std,smp=smp,std.c=std.c,smp.c=smp.c,versus=versus)
         out$slope <- rep(NA,nrow(out))
     }
     out    
