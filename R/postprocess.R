@@ -74,63 +74,48 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
     if (addxy & identical(x$method$instrument,'SHRIMP')){
         stop('SHRIMP data do not contain x-y stage coordinates.')
     }
-    num <- x$method$num
-    den <- x$method$den
-    samps <- x$samples
-    nr <- length(samps)
-    nn <- length(num)
-    nrho <- nn*(nn-1)/2
-    nc <- 2*nn + nrho
+    tavg <- time_average(x,t=NULL)
+    ns <- length(tavg) # number of aliquots
+    nr <- length(tavg[[1]]$val) # number of ratios
+    si <- ifelse(addxy,2,0) # start index
+    nc <- si + 2*nr + nr*(nr-1)/2 # number of columns
+    out <- matrix(NA,nrow=ns,nc=nc)
     cnames <- rep(NA,nc)
-    ii <- 1
-    for (i in 1:nn){
-        ratio1 <- paste0(num[i],'/',den[i])
-        r1 <- ifelse(log,paste0('ln[',ratio1,']'),ratio1)
-        cnames[2*i-1] <- r1
-        cnames[2*i] <- paste0('s(',r1,')')
-        for (j in i:nn){
-            if (i!=j){
-                ratio2 <- paste0(num[j],'/',den[j])
-                r2 <- ifelse(log,paste0('ln[',ratio2,']'),ratio2)
-                cnames[2*nn+ii] <- paste0('r(',r1,',',r2,')')
-                ii <- ii + 1
-            }
-        }
-    }
-    if (addxy) {
-        i0 <- 2
-        cnames <- c('x','y',cnames)
+    ratios <- paste0(x$method$num,'/',x$method$den)
+    comb <- utils::combn(ratios,m=2)
+    if (log){
+        cnames[si+2*(1:nr)-1] <- paste0('ln[',ratios,']')
+        cnames[si+2*(1:nr)] <- paste0('s(ln[',ratios,'])')
+        if (nr>1) cnames[(si+2*nr+1):nc] <-
+                      paste0('r(ln[',comb[1,],'],ln[',comb[2,],'])')
     } else {
-        i0 <- 0
+        cnames[si+2*(1:nr)-1] <- ratios
+        cnames[si+2*(1:nr)] <- paste0('s(',ratios,')')
+        if (nr>1) cnames[(si+2*nr+1):nc] <-
+                      paste0('r(',comb[1,],',',comb[2,],')')
     }
-    out <- matrix(NA,nrow=nr,ncol=nc+i0)
-    rownames(out) <- names(samps)
+    if (addxy) cnames[1:2] <- c('x','y')
     colnames(out) <- cnames
-    if (is.null(t)) t <- stats::median(samps[[1]]$time)
-    J <- cbind(diag(nn),diag(nn)*hours(t))
-    for (i in 1:nr){
-        lr <- samps[[i]]$lr
-        b0 <- lr$b0g[1:nn]
-        g <- lr$b0g[(nn+1):(2*nn)]
-        lrt <- b0 + g * hours(t)
-        covlrt <- J %*% lr$cov %*% t(J)
-        if (addxy){
-            out[i,1] <- samps[[i]]$x
-            out[i,2] <- samps[[i]]$y
-        }
-        if (log) {
-            out[i,i0+2*(1:nn)-1] <- lrt
-            out[i,i0+2*(1:nn)] <- sqrt(diag(covlrt))
-            cormat <- cov2cor(covlrt)
+    rownames(out) <- names(x$samples)
+    for (i in 1:ns){
+        if (log){
+            val <- tavg[[i]]$val
+            E <- tavg[[i]]$cov
         } else {
-            out[i,i0+2*(1:nn)-1] <- exp(lrt)
-            Jexp <- diag(nn)*exp(lrt)
-            covmat <- Jexp %*% covlrt %*% t(Jexp)
-            out[i,i0+2*(1:nn)] <- sqrt(diag(covmat))
-            cormat <- cov2cor(covmat)
-            
+            val <- exp(tavg[[i]]$val)
+            J <- diag(nr) * as.vector(val)
+            E <- J %*% tavg[[i]]$cov %*% t(J)
         }
-        if (nc>(2*nn)) out[i,(i0+2*nn+1):(i0+nc)] <- cormat[upper.tri(cormat)]
+        if (addxy){
+            out[i,1] <- x$samples[[i]]$x
+            out[i,2] <- x$samples[[i]]$y
+        }
+        out[i,si+2*(1:nr)-1] <- val
+        out[i,si+2*(1:nr)] <- sqrt(diag(E))
+        if (nr>1){
+            cormat <- cov2cor(E)
+            out[i,(si+2*nr+1):nc] <- cormat[upper.tri(cormat)]
+        }
     }
     out
 }

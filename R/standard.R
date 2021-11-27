@@ -1,18 +1,3 @@
-# i = the indices of the standard that correspond to the sample logratios
-assign_standard <- function(lr,i,st,j){
-    if ("simplex"%in%class(lr)) ST <- standard(lr)
-    else ST <- lr
-    ST[i,1:2] <- st[j,1:2]
-    ST[i,2+i] <- st[j,2+j]
-    if ("simplex"%in%class(lr)) out <- standard(lr,ST)
-    else out <- ST
-    out
-}
-
-set.standard <- function(type,stand,pairing,rpar=NULL){
-    out <- list()
-}
-
 #' @title define an isotopic reference standards
 #' @description specify the isotopic composition of a reference
 #'     material for SIMS data calibration.
@@ -24,7 +9,7 @@ set.standard <- function(type,stand,pairing,rpar=NULL){
 #' @param tst (optional) two-element vector with the age and standard
 #'     error of the (presumed concordant) age standard and its
 #'     analytical uncertainty.
-#' @param val (optional) true isotopic composition of
+#' @param val (optional) true isotopic composition (as logratios) of
 #'     \eqn{^{206}}Pb/\eqn{^{238}}U- and
 #'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
 #'     or the true \eqn{\delta}-values of the stable isotope reference
@@ -65,7 +50,7 @@ standard <- function(x){
     out
 }
 
-age2stand <- function(tst,pairing=NULL){
+age2stand <- function(tst){
     num <- c('Pb204','Pb204','Pb207','Pb206','Pb208')
     den <- c('Pb206','Pb208','Pb206','U238','Th232')
     ratios <- paste0(num,'/',den)

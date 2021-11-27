@@ -20,45 +20,18 @@
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,type=c('average','regression'),
-                        stand,pairing=NULL,prefix=NULL,
+calibration <- function(lr,stand,pairing,prefix=NULL,
                         snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
     out$standard <- stand
     out$pairing <- pairing
     dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
-    if (identical(type[1],'average')){
-        out$calibration <- stable_calibration(lr=dat)
-    } else {
-        if (is.null(rpar)) rpar <- init_rpar(lr$method$num,lr$method$den)
-        out$standard <- set.standard(stand=stand,pairing=pairing,rpar=rpar)
-        for (r in nrow(rpar)){
-            out$calibration <- geochron_calibration(lr=dat,rpar=rpar[i,],t=t)
-        }
+    if (ncol(pairing)==2){ # average
+        out$calibration <- average_calibration(lr=dat,pairing=pairing,t=t)
+    } else { # regression
+        out$calibration <- regression_calibration(lr=dat,pairing=pairing,t=t)
     }
     class(out) <- unique(append('calibration',class(out)))
-    out
-}
-
-stable_calibration <- function(lr){
-    LL <- function(par,lr){
-        out <- 0
-        np <- length(par)
-        snames <- names(lr$samples)
-        for (sname in snames){
-            X <- lr$samples[[sname]]$lr$b0g[1:np]
-            E <- lr$samples[[sname]]$lr$cov[1:np,1:np]
-            LL <- stats::mahalanobis(x=X,center=par,cov=E)
-            out <- out + LL
-        }
-        out
-    }
-    ni <- length(lr$method$num)
-    init <- lr$samples[[1]]$lr$b0g[1:ni]
-    wtdmean <- stats::optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
-    out <- list()
-    out$lr <- wtdmean$par
-    out$cov <- solve(wtdmean$hessian)
     out
 }
 
@@ -110,6 +83,45 @@ pairing <- function(lr,stand,type=c('average','regression')){
         out$slope <- rep(NA,nrow(out))
     }
     out    
+}
+
+time_average <- function(lr,t=NULL){
+    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
+    tt <- hours(t)
+    snames <- names(lr$samples)
+    out <- list()
+    nlr <- length(lr$samples[[1]]$lr$b0g)/2
+    J <- cbind(diag(nlr),tt*diag(nlr))
+    ib0 <- 1:nlr
+    ig <- (nlr+1):(2*nlr)
+    for (sname in snames){
+        LR <- lr$samples[[sname]]$lr
+        out[[sname]] <- list()
+        out[[sname]]$val <- c(1,tt) %*% rbind(LR$b0g[ib0],LR$b0g[ig])
+        out[[sname]]$cov <- J %*% LR$cov %*% t(J)
+    }
+    out
+}
+
+average_calibration <- function(lr,pairing=pairing,t=NULL){
+    LL <- function(par,lr){
+        out <- 0
+        np <- length(par)
+        snames <- names(lr$samples)
+        for (sname in snames){
+            X <- lr$samples[[sname]]$lr$b0g[1:np]
+            E <- lr$samples[[sname]]$lr$cov[1:np,1:np]
+            LL <- stats::mahalanobis(x=X,center=par,cov=E)
+            out <- out + LL
+        }
+        out
+    }
+    ni <- length(lr$method$num)
+    init <- lr$samples[[1]]$lr$b0g[1:ni]
+    wtdmean <- stats::optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
+    data.frame(ratios=pairing$smp,
+               val=wtdmean$par,
+               cov=solve(wtdmean$hessian))
 }
 
 geochron_calibration <- function(lr,rpar,t=NULL){
