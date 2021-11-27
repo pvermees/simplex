@@ -23,13 +23,15 @@
 calibration <- function(lr,stand,pairing,prefix=NULL,
                         snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
-    out$standard <- stand
+    out$stand <- stand
     out$pairing <- pairing
     dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
-    if (ncol(pairing)==2){ # average
-        out$calibration <- average_calibration(lr=dat,pairing=pairing,t=t)
-    } else { # regression
-        out$calibration <- regression_calibration(lr=dat,pairing=pairing,t=t)
+    tavg <- time_average(dat,t=t)
+    if (ncol(pairing)==2){
+        out$calibration <- average_calibration(tavg=tavg,pairing=pairing)
+    } else {
+        out$calibration <-
+            regression_calibration(tavg=tavg,pairing=pairing,stand=stand)
     }
     class(out) <- unique(append('calibration',class(out)))
     out
@@ -89,47 +91,77 @@ time_average <- function(lr,t=NULL){
     if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
     tt <- hours(t)
     snames <- names(lr$samples)
+    rnames <- paste0(lr$method$num,'/',lr$method$den)
     out <- list()
     nlr <- length(lr$samples[[1]]$lr$b0g)/2
     J <- cbind(diag(nlr),tt*diag(nlr))
+    rownames(J) <- rnames
     ib0 <- 1:nlr
     ig <- (nlr+1):(2*nlr)
     for (sname in snames){
         LR <- lr$samples[[sname]]$lr
         out[[sname]] <- list()
-        out[[sname]]$val <- c(1,tt) %*% rbind(LR$b0g[ib0],LR$b0g[ig])
+        out[[sname]]$val <- as.vector(c(1,tt) %*% rbind(LR$b0g[ib0],LR$b0g[ig]))
+        names(out[[sname]]$val) <- rnames
         out[[sname]]$cov <- J %*% LR$cov %*% t(J)
+        
     }
     out
 }
 
-average_calibration <- function(lr,pairing=pairing,t=NULL){
-    LL <- function(par,lr){
+average_calibration <- function(tavg,pairing){
+    LL <- function(par,tavg,i){
         out <- 0
-        np <- length(par)
-        snames <- names(lr$samples)
-        for (sname in snames){
-            X <- lr$samples[[sname]]$lr$b0g[1:np]
-            E <- lr$samples[[sname]]$lr$cov[1:np,1:np]
-            LL <- stats::mahalanobis(x=X,center=par,cov=E)
-            out <- out + LL
+        for (tav in tavg){
+            out <- out +
+                stats::mahalanobis(x=tav$val[i],center=par,cov=tav$cov[i,i])
         }
         out
     }
-    ni <- length(lr$method$num)
-    init <- lr$samples[[1]]$lr$b0g[1:ni]
-    wtdmean <- stats::optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
-    data.frame(ratios=pairing$smp,
-               val=wtdmean$par,
-               cov=solve(wtdmean$hessian))
+    i <- match(pairing$smp,names(tavg[[1]]$val))
+    wtdmean <- stats::optim(tavg[[1]]$val[i],fn=LL,gr=NULL,
+                            method='BFGS',hessian=TRUE,tavg=tavg,i=i)
+    val <- as.vector(wtdmean$par)
+    covmat <- solve(wtdmean$hessian)
+    data.frame(ratios=pairing$smp,val=unname(val),cov=unname(covmat))
 }
 
-geochron_calibration <- function(lr,rpar,t=NULL){
-    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
-    yd <- beta2york(lr=lr,t=t,snames=names(lr$samples),
-                    num=num,den=den,common=common)
-    if (is.null(slope)) out$fit <- IsoplotR::york(yd)
-    else out$fit <- yorkfix(yd,b=slope)
+regression_calibration <- function(tavg,pairing,stand){
+    nr <- nrow(pairing)
+    for (i in 1:nr){
+        yd <- beta2york(tavg=tavg,pairing=pairing[i,],stand=stand)
+        slope <- pairing[i,'slope']
+        if (is.na(slope)) fit <- IsoplotR::york(yd)
+        else fit <- yorkfix(yd,b=slope)
+    }
+    out
+}
+
+beta2york <- function(tavg,pairing,stand){
+    snames <- names(tavg)
+    out <- matrix(0,nrow=length(snames),ncol=5)
+    colnames(out) <- c('X','sX','Y','sY','rXY')
+    rownames(out) <- snames
+    DP <- pairing[1,'smp']
+    OP <- pairing[1,'versus']
+    CD.smp <- pairing[1,'smp.c']
+    i.CD.smp <- which(stand[,'ratios'] %in% pairing[1,'std.c'])
+    val.CD.std <- stand[i.CD.smp,'val']
+    J <- matrix(0,nrow=2,ncol=length(tavg[[1]]$val))
+    colnames(J) <- names(tavg[[1]]$val)
+    rownames(J) <- c('X','Y')
+    J['X',OP] <- 1
+    J['Y',DP] <- 1
+    for (sname in snames){
+        val <- tavg[[sname]]$val
+        out[sname,'X'] <- val[OP]
+        out[sname,'Y'] <- val[DP] - log(1 - exp(val[CD.smp]-val.CD.std))
+        J['Y',CD.smp] <- -exp(val[CD.smp])/(1-exp(val[CD.smp]-val.CD.std))
+        E <- J %*% tavg[[sname]]$cov %*% t(J)
+        out[sname,'sX'] <- sqrt(E['X','X'])
+        out[sname,'sY'] <- sqrt(E['Y','Y'])
+        out[sname,'rXY'] <- E['X','Y']/sqrt(E['X','X']*E['Y','Y'])
+    }
     out
 }
 
@@ -158,51 +190,6 @@ yorkfix <- function(xy,b,alpha=0.05){
     out$mswd <- fit$value/out$df
     out$p.value <- as.numeric(1-stats::pchisq(fit$value,out$df))
     out$alpha <- alpha
-    out
-}
-
-beta2york <- function(lr,t=0,snames,num=c('UO2','Pb206','Pb204'),
-                      den=c('U238','U238','Pb206'),common=0){
-    if (missing(snames)) snames <- names(lr$samples)
-    out <- matrix(0,nrow=length(snames),ncol=5)
-    colnames(out) <- c('X','sX','Y','sY','rXY')
-    rownames(out) <- snames
-    for (sname in snames){
-        LR <- lr$samples[[sname]]$lr
-        b0g <- LR$b0g
-        b0gnames <- names(b0g)
-        nb0g <- length(b0gnames)
-        OP <- paste0(num[1],'/',den[1])
-        DP <- paste0(num[2],'/',den[2])
-        ib0OP <- which(b0gnames %in% paste0('b0[',OP,']'))
-        ib0DP <- which(b0gnames %in% paste0('b0[',DP,']'))
-        igOP <- which(b0gnames %in% paste0('g[',OP,']'))
-        igDP <- which(b0gnames %in% paste0('g[',DP,']'))
-        bOP <- b0g[ib0OP] + b0g[igOP]*hours(t)
-        bDP <- b0g[ib0DP] + b0g[igDP]*hours(t)
-        X <- bOP
-        Y <- bDP
-        J <- matrix(0,2,length(LR$b0g))
-        J[1,ib0OP] <- 1
-        J[1,igOP] <- hours(t)
-        J[2,ib0DP] <- 1
-        J[2,igDP] <- hours(t)
-        if (length(num)>2){ # for U-Pb and Th-Pb
-            CD <- paste0(num[3],'/',den[3])
-            ib0CD <- which(b0gnames %in% paste0('b0[',CD,']'))
-            igCD <- which(b0gnames %in% paste0('g[',CD,']'))
-            bCD <- b0g[ib0CD] + b0g[igCD]*hours(t)
-            Y <- Y + log(1-exp(bCD)*common)
-            J[2,ib0CD] <- -exp(bCD)*common/(1-exp(bCD)*common)
-            J[2,igCD] <- -exp(bCD)*common*hours(t)/(1-exp(bCD)*common)
-        }
-        E <- J %*% LR$cov %*% t(J)
-        out[sname,'X'] <- X
-        out[sname,'Y'] <- Y
-        out[sname,'sX'] <- sqrt(E[1,1])
-        out[sname,'sY'] <- sqrt(E[2,2])
-        out[sname,'rXY'] <- E[1,2]/(out[sname,'sX']*out[sname,'sY'])
-    }
     out
 }
 

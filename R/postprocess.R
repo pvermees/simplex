@@ -74,7 +74,7 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
     if (addxy & identical(x$method$instrument,'SHRIMP')){
         stop('SHRIMP data do not contain x-y stage coordinates.')
     }
-    tavg <- time_average(x,t=NULL)
+    tavg <- time_average(x,t=t)
     ns <- length(tavg) # number of aliquots
     nr <- length(tavg[[1]]$val) # number of ratios
     si <- ifelse(addxy,2,0) # start index
