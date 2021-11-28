@@ -63,13 +63,11 @@ age2stand <- function(tst,pairing=NULL){
 }
 
 del2stand <- function(del,ref){
-    if (!identical(del$num,ref$num) |
-        !identical(del$den,ref$den)){
-        stop('Standard isotopes must match reference.')
-    }
+    keep <- (ref$num %in% del$num) & (ref$den %in% del$den)
+    if (!any(keep)) stop('Standard isotopes must match reference.')
     out <- data.frame(ratios=paste0(del$num,'/',del$den))
-    out$val <- log(1 + del$val/1000) + ref$val
-    J <- diag(1/(1000 + del$val))
+    out$val <- log(1 + del$val/1000) + ref$val[keep]
+    J <- diag(sum(keep))/(1000 + del$val)
     covmat <- data.matrix(del[,4:ncol(del)])
     out$cov <- J %*% covmat %*% t(J)
     out

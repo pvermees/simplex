@@ -23,16 +23,19 @@
 calibration <- function(lr,stand,pairing,prefix=NULL,
                         snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
-    out$stand <- stand
-    out$pairing <- pairing
+    cal <- list()
+    cal$stand <- stand
+    cal$pairing <- pairing
+    cal$prefix <- prefix
     dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
-    tavg <- time_average(dat,t=t)
+    cal$tavg <- time_average(dat,t=t)
     if (ncol(pairing)==2){
-        out$calibration <- average_calibration(tavg=tavg,pairing=pairing)
+        cal$cal <- average_calibration(tavg=cal$tavg,pairing=pairing)
     } else {
-        out$calibration <-
-            regression_calibration(tavg=tavg,pairing=pairing,stand=stand)
+        cal$cal <-
+            regression_calibration(tavg=cal$tavg,pairing=pairing,stand=stand)
     }
+    out$calibration <- cal
     class(out) <- unique(append('calibration',class(out)))
     out
 }
@@ -120,7 +123,7 @@ average_calibration <- function(tavg,pairing){
         }
         out
     }
-    i <- which(names(tavg[[1]]$val) %in% pairing$smp)
+    i <- match(pairing$smp,names(tavg[[1]]$val))
     wtdmean <- stats::optim(tavg[[1]]$val[i],fn=LL,gr=NULL,
                             method='BFGS',hessian=TRUE,tavg=tavg,i=i)
     val <- as.vector(wtdmean$par)
@@ -135,7 +138,7 @@ regression_calibration <- function(tavg,pairing,stand){
     colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab')
     out[,1:2] <- pairing[,c('versus','smp')]
     for (i in 1:nr){
-        yd <- beta2york(tavg=tavg,pairing=pairing[i,],stand=stand)
+        yd <- beta2york_regression(tavg=tavg,pairing=pairing[i,],stand=stand)
         slope <- pairing[i,'slope']
         if (is.na(slope)){
             fit <- IsoplotR::york(yd)
@@ -149,7 +152,23 @@ regression_calibration <- function(tavg,pairing,stand){
     out
 }
 
-beta2york <- function(tavg,pairing,stand){
+beta2york_average <- function(tavg,i,j){
+    snames <- names(tavg)
+    out <- matrix(0,nrow=length(snames),ncol=5)
+    colnames(out) <- c('X','sX','Y','sY','rXY')
+    rownames(out) <- snames
+    for (sname in snames){
+        samp <- tavg[[sname]]
+        out[sname,'X'] <- samp$val[i]
+        out[sname,'Y'] <- samp$val[j]
+        out[sname,'sX'] <- sqrt(samp$cov[i,i])
+        out[sname,'sY'] <- sqrt(samp$cov[j,j])
+        out[sname,'rXY'] <- samp$cov[i,j]/sqrt(samp$cov[i,i]*samp$cov[j,j])
+    }
+    out
+}
+
+beta2york_regression <- function(tavg,pairing,stand){
     snames <- names(tavg)
     out <- matrix(0,nrow=length(snames),ncol=5)
     colnames(out) <- c('X','sX','Y','sY','rXY')
@@ -225,43 +244,57 @@ yorkfix <- function(xy,b,alpha=0.05){
 #' }
 #' @method plot calibration
 #'@export
-plot.calibration <- function(x,option=1,...){
-    if (stable(x)) {
-        out <- calplot_stable(dat=x,...)
+plot.calibration <- function(dat,option=1,...){
+    if (ncol(dat$calibration$pairing)==2){
+        out <- calplot_stable(cal=dat$calibration,...)
     } else {
-        out <- calplot_geochronology(dat=x,option=option,...)
+        out <- calplot_geochronology(dat=dat,option=option,...)
     }
     invisible(out)
 }
 
-calplot_stable <- function(dat,...){
-    cal <- dat$calibration
-    num <- dat$method$num
-    den <- dat$method$den
-    nn <- length(num)
-    np <- nn*(nn-1)/2       # number of plot panels
-    nc <- ceiling(sqrt(np)) # number of rows
-    nr <- ceiling(np/nc)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc))
-    ii <- 1
-    snames <- cal$snames
-    for (i in 1:(nn-1)){
-        for (j in (i+1):nn){
-            xlab <- paste0(num[i],'/',den[i])
-            ylab <- paste0(num[j],'/',den[j])
-            B <- beta2york(lr=dat,snames=snames,
-                           num=num[c(i,j)],den=den[c(i,j)])
-            IsoplotR::scatterplot(B,...)
-            graphics::mtext(side=1,text=xlab,line=2)
-            graphics::mtext(side=2,text=ylab,line=2)
-            ell <- IsoplotR::ellipse(cal$lr[i],cal$lr[j],
-                                     cal$cov[c(i,j),c(i,j)])
-            graphics::polygon(ell,col='white')
-            ii <- ii + 1
-            if (ii>np) break
+calplot_stable <- function(cal,...){
+    nn <- nrow(cal$cal)         # number of ratios
+    snames <- names(cal$tavg)
+    if (nn>1){
+        np <- nn*(nn-1)/2       # number of panels
+        nc <- ceiling(sqrt(np)) # number of rows
+        nr <- ceiling(np/nc)    # number of columns
+        oldpar <- graphics::par(mfrow=c(nr,nc))
+        ratios <- cal$cal[,'ratios']
+        ij <- match(ratios,names(cal$tavg[[1]]$val))
+        for (i in 1:(nn-1)){
+            for (j in (i+1):nn){
+                B <- beta2york_average(cal$tavg,ij[i],ij[j])
+                IsoplotR::scatterplot(B,...)
+                graphics::mtext(side=1,text=paste0('ln[',ratios[i],']'),line=2)
+                graphics::mtext(side=2,text=paste0('ln[',ratios[j],']'),line=2)
+                ell <- IsoplotR::ellipse(cal$cal[i,'val'],cal$cal[j,'val'],
+                                         cal$cal[c(i,j),2+c(i,j)])
+                graphics::polygon(ell,col='white')
+            }
         }
+        graphics::par(oldpar)
+    } else {
+        ns <- length(snames)
+        tab <- matrix(0,nrow=3,ncol=ns)
+        rownames(tab) <- c('x','ll','ul')
+        colnames(tab) <- snames
+        tfact <- qnorm(0.975)
+        for (sname in snames){
+            tab['x',sname] <- cal$tavg[[sname]]$val
+            dx <- tfact*sqrt(cal$tavg[[sname]]$cov)
+            tab['ll',sname] <- tab['x',sname] - dx
+            tab['ul',sname] <- tab['x',sname] + dx
+        }
+        matplot(rbind(1:ns,1:ns),tab[c('ll','ul'),],
+                type='l',lty=1,col='black',bty='n',
+                xlab='standard #',ylab='')
+        points(1:ns,tab['x',],pch=16)
+        lines(c(1,ns),rep(cal$cal[,'val'],2),lty=2)
+        lines(c(1,ns),rep(cal$cal[,'val']-tfact*sqrt(cal$cal[,'cov']),2),lty=3)
+        lines(c(1,ns),rep(cal$cal[,'val']+tfact*sqrt(cal$cal[,'cov']),2),lty=3)
     }
-    graphics::par(oldpar)
 }
 
 calplot_geochronology <- function(dat,option=1,title=TRUE,...){
