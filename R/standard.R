@@ -43,14 +43,14 @@ standard <- function(x){
     } else if (x=='Sonora'){ # temporary value
         del <- data.frame(num=c('S33','S34','S36'),den='S32',
                           val=c(4.79,9.56),cov=diag(c(0.05,0.11))^2)
-        out <- del2stand(del,ref=troilite())
+        out <- del2stand(ppdel,ref=troilite())
     } else {
         stop("Invalid input to standard(...).")
     }
     out
 }
 
-age2stand <- function(tst){
+age2stand <- function(tst,pairing=NULL){
     num <- c('Pb204','Pb204','Pb207','Pb206','Pb208')
     den <- c('Pb206','Pb208','Pb206','U238','Th232')
     ratios <- paste0(num,'/',den)

@@ -46,7 +46,8 @@ pairing <- function(lr,stand,type=c('average','regression')){
         smpratios <- paste0(num,'/',den)
         matches <- match(stdratios,smpratios)
         out <- data.frame(std=stdratios,
-                          smp=smpratios[matches])
+                          smp=smpratios[matches],
+                          stringsAsFactors=FALSE)
     } else {
         num_is_element <- (element(num) %in% elements())
         den_is_element <- (element(den) %in% elements())
@@ -66,7 +67,7 @@ pairing <- function(lr,stand,type=c('average','regression')){
                 smp.c <- c(smp.c,paste0(num[k],'/',den[k]))
             }
         }
-        if (any(!den_is_element)){ # any molecules?
+        if (any(!den_is_element)){
             molnum <- num[!den_is_element]
             molden <- den[!den_is_element]
             nmol <- sum(!den_is_element)
@@ -81,7 +82,8 @@ pairing <- function(lr,stand,type=c('average','regression')){
         }
         std <- stdratios[match(smp,stdratios)]
         std.c <- stdratios[match(smp.c,stdratios)]
-        out <- data.frame(std=std,smp=smp,std.c=std.c,smp.c=smp.c,versus=versus)
+        out <- data.frame(std=std,smp=smp,std.c=std.c,smp.c=smp.c,
+                          versus=versus,stringsAsFactors=FALSE)
         out$slope <- rep(NA,nrow(out))
     }
     out    
@@ -118,21 +120,31 @@ average_calibration <- function(tavg,pairing){
         }
         out
     }
-    i <- match(pairing$smp,names(tavg[[1]]$val))
+    i <- which(names(tavg[[1]]$val) %in% pairing$smp)
     wtdmean <- stats::optim(tavg[[1]]$val[i],fn=LL,gr=NULL,
                             method='BFGS',hessian=TRUE,tavg=tavg,i=i)
     val <- as.vector(wtdmean$par)
     covmat <- solve(wtdmean$hessian)
-    data.frame(ratios=pairing$smp,val=unname(val),cov=unname(covmat))
+    j <- which(pairing$smp %in% names(tavg[[1]]$val))
+    data.frame(ratios=pairing$smp[j],val=unname(val),cov=unname(covmat))
 }
 
 regression_calibration <- function(tavg,pairing,stand){
     nr <- nrow(pairing)
+    out <- as.data.frame(matrix(NA,nrow=nr,ncol=7))
+    colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab')
+    out[,1:2] <- pairing[,c('versus','smp')]
     for (i in 1:nr){
         yd <- beta2york(tavg=tavg,pairing=pairing[i,],stand=stand)
         slope <- pairing[i,'slope']
-        if (is.na(slope)) fit <- IsoplotR::york(yd)
-        else fit <- yorkfix(yd,b=slope)
+        if (is.na(slope)){
+            fit <- IsoplotR::york(yd)
+            out[i,c('a','s[a]')] <- fit$a
+            out[i,c('b','s[b]')] <- fit$b
+            out[i,'cov.ab'] <- fit$cov.ab
+        } else {
+            fit <- yorkfix(yd,b=slope)
+        }
     }
     out
 }
@@ -142,9 +154,9 @@ beta2york <- function(tavg,pairing,stand){
     out <- matrix(0,nrow=length(snames),ncol=5)
     colnames(out) <- c('X','sX','Y','sY','rXY')
     rownames(out) <- snames
-    DP <- pairing[1,'smp']
-    OP <- pairing[1,'versus']
-    CD.smp <- pairing[1,'smp.c']
+    DP <- as.character(pairing[1,'smp'])
+    OP <- as.character(pairing[1,'versus'])
+    CD.smp <- as.character(pairing[1,'smp.c'])
     i.CD.smp <- which(stand[,'ratios'] %in% pairing[1,'std.c'])
     val.CD.std <- stand[i.CD.smp,'val']
     J <- matrix(0,nrow=2,ncol=length(tavg[[1]]$val))
