@@ -297,48 +297,23 @@ calplot_stable <- function(cal,...){
     }
 }
 
-calplot_geochronology <- function(dat,option=1,title=TRUE,...){
+calplot_geochronology <- function(dat=dat,option=option,...){
     cal <- dat$calibration
-    num <- cal$num
-    den <- cal$den
-    yd <- beta2york(lr=dat,t=seconds(cal$t),snames=cal$snames,
-                    num=num,den=den,common=cal$common)
-    xlab <- paste0('log[',num[1],'/',den[1],']')
-    ylab <- paste0('log[',num[2],'/',den[2],']')
-    if (option==1){
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,ylab=ylab,...)
-    } else {
-        X <- NULL
-        Y <- NULL
-        for (sname in cal$snames){
-            sp <- spot(dat=dat,sname=sname)
-            Op <- betapars(spot=sp,ion=num[1])
-            Pp <- betapars(spot=sp,ion=den[1])
-            Dp <- betapars(spot=sp,ion=num[2])
-            Cp <- betapars(spot=sp,ion=num[3])
-            CD <- (Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg)
-            CDdc <- exp(Dp$g*(Dp$t-Cp$t))
-            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Pp$t-Op$t)
-            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Pp$t-Dp$t) +
-                log(1 - cal$common*CD*CDdc)
-            X <- cbind(X,newX)
-            Y <- cbind(Y,newY)
-        }
-        xlim <- c(0,2)
-        xlim[1] <- min(yd[cal$snames,'X']-3*yd[cal$snames,'sX'],X)
-        xlim[2] <- max(yd[cal$snames,'X']+3*yd[cal$snames,'sX'],X)
-        ylim <- c(0,2)
-        ylim[1] <- min(yd[cal$snames,'Y']-3*yd[cal$snames,'sY'],Y)
-        ylim[2] <- max(yd[cal$snames,'Y']+3*yd[cal$snames,'sY'],Y)
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,
-                              ylab=ylab,xlim=xlim,ylim=ylim,...)
-        graphics::matlines(X,Y,lty=1,col='darkgrey')
-        if (option>2){
-            graphics::points(X[1,],Y[1,],pch=21,bg='black')
-            graphics::points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
-        }
+    nr <- nrow(cal$pairing)
+    out <- as.data.frame(matrix(NA,nrow=nr,ncol=7))
+    colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab')
+    out[,1:2] <- cal$pairing[,c('versus','smp')]
+    oldpar <- graphics::par(mfrow=c(1,nr))
+    for (i in 1:nr){
+        yd <- beta2york_regression(tavg=cal$tavg,
+                                   pairing=cal$pairing[i,],
+                                   stand=cal$stand)
+        IsoplotR::scatterplot(yd,
+                              xlab=paste0('ln[',cal$cal[i,'x'],']'),
+                              ylab=paste0('ln[',cal$cal[i,'y'],']'))
+        abline(a=cal$cal[i,'a'],b=cal$cal[i,'b'])
     }
-    if (title) graphics::title(caltitle(fit=cal$fit))
+    graphics::par(oldpar)
 }
 
 caltitle <- function(fit,sigdig=2,type=NA,...){
