@@ -13,42 +13,44 @@
 #' del <- delta(cd,log=FALSE)
 #' tab <- data2table(del)
 #' @export
-calibrate <- function(cal,exterr=FALSE){
-    if (stable(cal)) out <- calibrate_stable(dat=cal,exterr=exterr)
-    else out <- calibrate_geochron(dat=cal,exterr=exterr)
+calibrate <- function(cal,exterr=TRUE){
+    if (ncol(cal$calibration$pairing)==2){
+        out <- calibrate_average(dat=cal,exterr=exterr)
+    } else {
+        out <- calibrate_regression(dat=cal,exterr=exterr)
+    }
     out
 }
 
-calibrate_stable <- function(dat,exterr=FALSE){
+calibrate_average <- function(dat,exterr=FALSE){
     out <- dat
-    scal <- do.call(dat$standard$fetchfun,args=list(dat=dat))
-    dcal <- dat$calibration
-    num <- dat$m$num
-    den <- dat$m$den
-    snames <- names(dat$samples)
-    ns <- length(snames)
-    nr <- length(num)
-    calibrated <- list()
-    calibrated$num <- num
-    calibrated$den <- den
-    calibrated$lr <- rep(0,nr*ns)
-    E <- matrix(0,nr*(ns+2),nr*(ns+2))
-    J <- matrix(0,nr*ns,nr*(ns+2))
-    J[1:(ns*nr),1:(ns*nr)] <- diag(ns*nr)
-    for (i in 1:ns){
-        sname <- snames[i]
-        selected <- (i-1)*nr + (1:nr)
-        sp <- spot(dat,sname=sname)
-        calibrated$lr[selected] <- sp$lr$b0g[1:nr] + scal$lr - dcal$lr
-        E[selected,selected] <- sp$lr$cov[1:nr,1:nr]
-        if (exterr){
-            J[selected,ns*nr+(1:nr)] <- diag(nr)
-            J[selected,(ns+1)*nr+(1:nr)] <- -diag(nr)
-        }
+    cal <- dat$calibration
+    ns <- length(dat$samples)
+    tavg <- time_average(dat,t=cal$t)
+    calibrated <- tavg
+    alliso <- names(tavg[[1]]$val)
+    caliso <- cal$cal$ratios
+    staiso <- cal$stand$ratios
+    nai <- length(alliso)
+    nci <- length(caliso)
+    nsi <- length(staiso)
+    E <- matrix(0,nrow=nai+nci+nsi,ncol=nai+nci+nsi)
+    J <- matrix(0,nrow=nci,ncol=nai+nci+nsi)
+    if (exterr){
+        E[nai+1:nci,nai+1:nci] <- as.matrix(cal$cal[,-c(1,2)])
+        E[nai+nci+1:nsi,nai+nci+1:nsi] <- as.matrix(cal$stand[,-c(1,2)])
+        i1 <- lookup(alliso,cal$pairing$smp)
+        J[,nai+1:nci] <- diag(nci)
+        J[,nai+nci+i1] <- -diag(nci)
     }
-    E[ns*nr+(1:nr),ns*nr+(1:nr)] <- scal$cov
-    E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dcal$cov
-    calibrated$cov <- J %*% E %*% t(J)
+    for (i in 1:ns){
+        i2 <- lookup(alliso,caliso)
+        calibrated[[i]]$val[i2] <-
+            tavg[[i]]$val[i2] + cal$stand$val[i1] - cal$cal$val
+        E[1:nai,1:nai] <- tavg[[i]]$cov
+        J[,1:nai] <- diag(nai)[i1,]
+        calibrated[[i]]$cov[i2,i2] <- J %*% E %*% t(J)
+    }
     out$calibrated <- calibrated
     class(out) <- unique(append("calibrated",class(out)))
     out

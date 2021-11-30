@@ -28,6 +28,8 @@ calibration <- function(lr,stand,pairing,prefix=NULL,
     cal$pairing <- pairing
     cal$prefix <- prefix
     dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
+    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
+    cal$t <- t
     cal$tavg <- time_average(dat,t=t)
     if (ncol(pairing)==2){
         cal$cal <- average_calibration(tavg=cal$tavg,pairing=pairing)
@@ -123,7 +125,7 @@ average_calibration <- function(tavg,pairing){
         }
         out
     }
-    i <- match(pairing$smp,names(tavg[[1]]$val))
+    i <- match(pairing$smp[!is.na(pairing$smp)],names(tavg[[1]]$val))
     wtdmean <- stats::optim(tavg[[1]]$val[i],fn=LL,gr=NULL,
                             method='BFGS',hessian=TRUE,tavg=tavg,i=i)
     val <- as.vector(wtdmean$par)
@@ -140,14 +142,11 @@ regression_calibration <- function(tavg,pairing,stand){
     for (i in 1:nr){
         yd <- beta2york_regression(tavg=tavg,pairing=pairing[i,],stand=stand)
         slope <- pairing[i,'slope']
-        if (is.na(slope)){
-            fit <- IsoplotR::york(yd)
-            out[i,c('a','s[a]')] <- fit$a
-            out[i,c('b','s[b]')] <- fit$b
-            out[i,'cov.ab'] <- fit$cov.ab
-        } else {
-            fit <- yorkfix(yd,b=slope)
-        }
+        if (is.na(slope)) fit <- IsoplotR::york(yd)
+        else fit <- yorkfix(yd,b=slope)
+        out[i,c('a','s[a]')] <- fit$a
+        out[i,c('b','s[b]')] <- fit$b
+        out[i,'cov.ab'] <- fit$cov.ab
     }
     out
 }
