@@ -43,11 +43,11 @@ calibration <- function(lr,stand,pairing,prefix=NULL,
 }
 
 # initialise pairing between standard and sample
-pairing <- function(lr,stand,type=c('average','regression')){
+pairing <- function(lr,stand,type=1){
     num <- lr$method$num
     den <- lr$method$den
     stdratios <- stand$ratios
-    if (identical(type[1],'average')){
+    if (type[1]==1){
         smpratios <- paste0(num,'/',den)
         matches <- match(stdratios,smpratios)
         out <- data.frame(std=stdratios,

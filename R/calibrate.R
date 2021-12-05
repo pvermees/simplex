@@ -13,7 +13,7 @@
 #' del <- delta(cd,log=FALSE)
 #' tab <- data2table(del)
 #' @export
-calibrate <- function(cal,exterr=TRUE){
+calibrate <- function(cal,exterr=FALSE){
     if (ncol(cal$calibration$pairing)==2){
         out <- calibrate_average(dat=cal,exterr=exterr)
     } else {
@@ -27,31 +27,32 @@ calibrate_average <- function(dat,exterr=FALSE){
     cal <- dat$calibration
     ns <- length(dat$samples)
     tavg <- time_average(dat,t=cal$t)
-    calibrated <- tavg
     alliso <- names(tavg[[1]]$val)
     caliso <- cal$cal$ratios
     staiso <- cal$stand$ratios
     nai <- length(alliso)
     nci <- length(caliso)
     nsi <- length(staiso)
-    E <- matrix(0,nrow=nai+nci+nsi,ncol=nai+nci+nsi)
-    J <- matrix(0,nrow=nci,ncol=nai+nci+nsi)
-    if (exterr){
-        E[nai+1:nci,nai+1:nci] <- as.matrix(cal$cal[,-c(1,2)])
-        E[nai+nci+1:nsi,nai+nci+1:nsi] <- as.matrix(cal$stand[,-c(1,2)])
-        i1 <- lookup(alliso,cal$pairing$smp)
-        J[,nai+1:nci] <- diag(nci)
-        J[,nai+nci+i1] <- -diag(nci)
-    }
+    E <- matrix(0,nrow=ns*nai+nsi+nci,ncol=ns*nai+nsi+nci)
+    J <- matrix(0,nrow=ns*nai,ncol=ns*nai+nsi+nci)
+    i1 <- lookup(alliso,cal$pairing$smp)
+    i2 <- lookup(caliso,alliso)
+    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(cal$stand[,-c(1,2)])
+    E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cal[,-c(1,2)])
+    val <- rep(0,ns*nai)
     for (i in 1:ns){
-        i2 <- lookup(alliso,caliso)
-        calibrated[[i]]$val[i2] <-
-            tavg[[i]]$val[i2] + cal$stand$val[i1] - cal$cal$val
-        E[1:nai,1:nai] <- tavg[[i]]$cov
-        J[,1:nai] <- diag(nai)[i1,]
-        calibrated[[i]]$cov[i2,i2] <- J %*% E %*% t(J)
+        i3 <- (i-1)*nai+1:nai
+        val[i3] <- tavg[[i]]$val
+        if (exterr){
+            val[i3[i2]] <- val[i3[i2]] + cal$stand$val[i1] - cal$cal$val
+            J[i3[i1],ns*nai+1:nsi] <- diag(nci)
+            J[i3[i2],ns*nai+nsi+1:nci] <- -diag(nci)
+        }
+        E[i3,i3] <- tavg[[i]]$cov
+        J[i3,i3] <- diag(nai)
     }
-    out$calibrated <- calibrated
+    out$calibrated <- list(snames=names(dat$samples),val=val,
+                           cov=J %*% E %*% t(J))
     class(out) <- unique(append("calibrated",class(out)))
     out
 }

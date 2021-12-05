@@ -51,14 +51,13 @@ standard <- function(x){
 }
 
 age2stand <- function(tst,pairing=NULL){
-    num <- c('Pb204','Pb204','Pb207','Pb206','Pb208')
-    den <- c('Pb206','Pb208','Pb206','U238','Th232')
+    num <- c('Pb204','Pb204','Pb206','Pb208')
+    den <- c('Pb206','Pb208','U238','Th232')
     ratios <- paste0(num,'/',den)
     common <- IsoplotR:::stacey.kramers(tst[1])
     D <- IsoplotR::mclean(tt=tst[1])
-    val <- c(-log(common[,c('i64','i84')]),
-             D$Pb207Pb206,D$Pb206U238,D$Pb208Th232)
-    J <- rbind(0,0,D$dPb207Pb206dt,D$dPb206U238dt,D$dPb208Th232dt)
+    val <- c(-log(common[,c('i64','i84')]),D$Pb206U238,D$Pb208Th232)
+    J <- rbind(0,0,D$dPb206U238dt,D$dPb208Th232dt)
     data.frame(ratios=ratios,val=val,cov=J%*%(tst[2]^2)%*%t(J))
 }
 
