@@ -51,8 +51,9 @@ calibrate_average <- function(dat,exterr=FALSE){
         E[i3,i3] <- tavg[[i]]$cov
         J[i3,i3] <- diag(nai)
     }
-    out$calibrated <- list(snames=names(dat$samples),val=val,
-                           cov=J %*% E %*% t(J))
+    out$calibrated <- list(snames=names(dat$samples),
+                           ratios=paste0(dat$method$num,'/',dat$method$den),
+                           val=val,cov=J %*% E %*% t(J))
     class(out) <- unique(append("calibrated",class(out)))
     out
 }
