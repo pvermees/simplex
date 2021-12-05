@@ -58,13 +58,53 @@ calibrate_average <- function(dat,exterr=FALSE){
     out
 }
 
-calibrate_geochron <- function(dat,exterr=FALSE){
+calibrate_regression <- function(dat,exterr=FALSE){
     out <- dat
-    type <- datatype(dat)
-    PD <- fractical(dat,type=type,exterr=exterr)
-    PbPb <- nofractical(dat,type=type)
-    out$calibrated <- mergecal(PD,PbPb)
-    class(out) <- unique(append("calibrated",class(out)))
+    cal <- dat$calibration
+    ns <- length(dat$samples)
+    tavg <- time_average(dat,t=cal$t)
+    ncal <- nrow(cal$cal)
+    alliso <- names(tavg[[1]]$val)
+    outiso <- alliso[!(alliso %in% cal$pairing$versus)]
+    staiso <- cal$stand$ratios
+    nai <- length(alliso)
+    noi <- length(outiso)
+    nsi <- length(staiso)
+    nab <- nrow(cal$pairing)
+    iout <- lookup(outiso,alliso)
+    istd <- ns*nai+1:nsi
+    iab <- matrix(0,nab,2)
+    iDPall <- rep(NA,nab)
+    iDPout <- rep(NA,nab)
+    iOP <- rep(NA,nab)
+    for (i in 1:nab){
+        iab[i,] <- ns*nai+nsi+(i-1)*2+1:2
+        iDPall[i] <- lookup(cal$cal[i,'y'],alliso)
+        iDPout[i] <- lookup(cal$cal[i,'y'],outiso)
+        iOP[i] <- lookup(cal$cal[i,'x'],alliso)
+    }
+    val <- rep(0,ns*noi)
+    E <- matrix(0,nrow=ns*nai+nsi+2*nab,ncol=ns*nai+nsi+2*nab)
+    E[istd,istd] <- as.matrix(cal$stand[1:nsi,2+1:nsi])
+    for (i in 1:nab){
+        E[iab[i,1],iab[i,1]] <- cal$cal[i,'s[a]']^2
+        E[iab[i,2],iab[i,2]] <- cal$cal[i,'s[b]']^2
+        E[iab[i,1],iab[i,2]] <- cal$cal[i,'cov.ab']
+        E[iab[i,2],iab[i,1]] <- cal$cal[i,'cov.ab']
+    }
+    J <- matrix(0,nrow=ns*noi,ncol=ns*nai+nsi+2*nab)
+    for (i in 1:ns){
+        ioi <- (i-1)*noi+1:noi
+        val[ioi] <- tavg[[i]]$val[iout]
+        for (j in 1:nab){
+            val[ioi[iDPout[j]]] <- tavg[[i]]$val[iDPall[j]] -
+                cal$cal[j,'a'] - cal$cal[j,'b']*tavg[[i]]$val[iOP[j]]
+        }
+        iai <- (i-1)*nai+1:nai
+        E[iai,iai] <- tavg[[i]]$cov
+        J[ioi,iai] <- diag(nai)[iout,]
+    }
+    out$calibrated <- list(val = val, cov = J%*% E %*% t(J))
     out
 }
 
