@@ -76,11 +76,13 @@ calibrate_regression <- function(dat,exterr=FALSE){
     iab <- matrix(0,nab,2)
     iDPall <- rep(NA,nab)
     iDPout <- rep(NA,nab)
+    iDPstd <- rep(NA,nab)
     iOP <- rep(NA,nab)
     for (i in 1:nab){
         iab[i,] <- ns*nai+nsi+(i-1)*2+1:2
         iDPall[i] <- lookup(cal$cal[i,'y'],alliso)
         iDPout[i] <- lookup(cal$cal[i,'y'],outiso)
+        iDPstd[i] <- lookup(cal$cal[i,'y'],staiso)
         iOP[i] <- lookup(cal$cal[i,'x'],alliso)
     }
     val <- rep(0,ns*noi)
@@ -96,123 +98,23 @@ calibrate_regression <- function(dat,exterr=FALSE){
     for (i in 1:ns){
         ioi <- (i-1)*noi+1:noi
         val[ioi] <- tavg[[i]]$val[iout]
-        for (j in 1:nab){
-            val[ioi[iDPout[j]]] <- tavg[[i]]$val[iDPall[j]] -
-                cal$cal[j,'a'] - cal$cal[j,'b']*tavg[[i]]$val[iOP[j]]
-        }
         iai <- (i-1)*nai+1:nai
         E[iai,iai] <- tavg[[i]]$cov
-        J[ioi,iai] <- diag(nai)[iout,]
-    }
-    out$calibrated <- list(val = val, cov = J%*% E %*% t(J))
-    out
-}
-
-fractical <- function(dat,type="U-Pb",exterr=FALSE){
-    scal <- do.call(dat$standard$fetch,args=list(dat=dat)) # standard calibration
-    dcal <- dat$calibration # data calibration
-    if (type=='U-Pb'){
-        num='Pb206'
-        den='U238'
-    } else if (type=='Th-Pb'){
-        num='Pb208'
-        den='Th232'
-    }
-    snames <- names(dat$samples)
-    ns <- length(snames)
-    out <- list()
-    out$num <- num
-    out$den <- den
-    fit <- dcal$fit
-    fitcov <- matrix(c(fit$a[2]^2,fit$cov.ab,
-                       fit$cov.ab,fit$b[2]^2),2,2)
-    DP <- paste0(num,den)
-    E <- matrix(0,2*ns+3,2*ns+3)
-    E[2*ns+1,2*ns+1] <- scal$cov[DP,DP]
-    E[ns+(2:3),ns+(2:3)] <- fitcov
-    J <- matrix(0,ns,2*ns+3)
-    out$lr <- rep(0,ns)
-    rownames(J) <- snames
-    names(out$lr) <- snames
-    for (i in 1:ns){
-        sp <- spot(dat,i=i)
-        b0g <- sp$lr$b0g
-        bXlab <- paste0('b0[',dcal$oxide,'/',den,']')
-        gXlab <- paste0('g[',dcal$oxide,'/',den,']')
-        bYlab <- paste0('b0[',num,'/',den,']')
-        gYlab <- paste0('g[',num,'/',den,']')
-        tt <- dcal$t
-        XY <- rep(0,2)
-        XY[1] <- b0g[bXlab] + tt*b0g[gXlab]
-        XY[2] <- b0g[bYlab] + tt*b0g[gYlab]
-        Eb0g <- sp$lr$cov[c(bXlab,gXlab,bYlab,gYlab),
-                          c(bXlab,gXlab,bYlab,gYlab)]
-        Jb0g <- matrix(0,2,4)
-        Jb0g[1,1] <- 1
-        Jb0g[1,2] <- tt
-        Jb0g[2,3] <- 1
-        Jb0g[2,4] <- tt
-        E[2*i-(1:0),2*i-(1:0)] <- Jb0g %*% Eb0g %*% t(Jb0g)
-        out$lr[i] <- XY[2] + scal$lr[DP] - (fit$a[1]+fit$b[1]*XY[1])
-        J[i,2*i-1] <- -fit$b[1]  # dlrdX
-        J[i,2*i] <- 1            # dlrdY
-        if (exterr){
-            J[i,2*ns+1] <- 1       # dlrdscalDP
-            J[i,2*ns+2] <- -1      # dlrda
-            J[i,2*ns+3] <- -XY[1]  # dlrdb
+        J[ioi,iai] <- diag(nai)[iout,] # dval/dval
+        for (j in 1:nab){
+            val[ioi[iDPout[j]]] <- tavg[[i]]$val[iDPall[j]] -
+                cal$cal[j,'a'] - cal$cal[j,'b']*tavg[[i]]$val[iOP[j]] +
+                cal$stand[iDPstd[j],'val']
+            J[ioi[iDPout[j]],iai[iOP[j]]] <- - cal$cal[j,'b'] # dval/dOP
+            if (exterr){
+                J[ioi[iDPout[j]],iab[j,1]] <- -1 # dval/da
+                J[ioi[iDPout[j]],iab[j,2]] <- -tavg[[i]]$val[iOP[j]] # dval/db
+                J[ioi[iDPout[j]],istd[iDPstd[j]]] <- 1 # dval/dDPstd
+            }
         }
     }
-    out$cov <- J %*% E %*% t(J)
-    out
-}
-
-nofractical <- function(dat,type="U-Pb"){
-    if (type=='U-Pb'){
-        num=c('Pb204','Pb207')
-        den=c('Pb206','Pb206')
-    } else if (type=='Th-Pb'){
-        num='Pb204'
-        den='Pb208'
-    }    
-    snames <- names(dat$samples)
-    ns <- length(snames)
-    nr <- length(num)
-    out <- list()
-    out$num <- num
-    out$den <- den
-    out$lr <- rep(0,nr*ns)
-    out$cov <- matrix(0,nr*ns,nr*ns)
-    for (i in 1:ns){
-        sp <- spot(dat,i=i)
-        j <- (i-1)*nr
-        lr <- paste0('b0[',num,'/',den,']')
-        out$lr[j+(1:nr)] <- sp$lr$b0g[lr]
-        out$cov[j+(1:nr),j+(1:nr)] <- sp$lr$cov[lr,lr]
-    }
-    out
-}
-
-mergecal <- function(...){
-    cals <- list(...)
-    num <- NULL
-    den <- NULL
-    for (cal in cals){
-        num <- c(num,cal$num)
-        den <- c(den,cal$den)
-    }
-    ni <- length(num)
-    ns <- length(cal$lr)/length(cal$num)
-    out <- list()
-    out$num <- num
-    out$den <- den
-    out$lr <- rep(0,ni*ns)
-    out$cov <- matrix(0,ni*ns,ni*ns)
-    for (cal in cals){
-        i <- which(num %in% cal$num)
-        ii <- as.vector(sapply((0:(ns-1))*ni,'+',i))
-        out$lr[ii] <- cal$lr
-        out$cov[ii,ii] <- cal$cov
-    }
+    out$calibrated <- list(snames=names(dat$samples),ratios=outiso,
+                           val = val, cov = J%*% E %*% t(J))
     out
 }
 
@@ -235,7 +137,7 @@ mergecal <- function(...){
 #' @method plot calibrated
 #' @export
 plot.calibrated <- function(x,option=1,...){
-    if (stable(x)) {
+    if (ncol(x$calibration$pairing)==2){
         out <- caldplot_stable(dat=x,...)
     } else {
         out <- caldplot_geochronology(dat=x,option=option,...)
@@ -244,45 +146,57 @@ plot.calibrated <- function(x,option=1,...){
 }
 
 caldplot_stable <- function(dat,...){
-    cal <- dat$calibration
-    num <- dat$method$num
-    den <- dat$method$den
-    nn <- length(num)
-    np <- nn*(nn-1)/2       # number of plot panels
-    nc <- ceiling(sqrt(np)) # number of rows
-    nr <- ceiling(np/nc)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(3.5,4))
-    ii <- 1
-    snames <- names(dat$samples)
-    for (i in 1:(nn-1)){
-        for (j in (i+1):nn){
-            xlab <- paste0('log[',num[i],'/',den[i],']')
-            ylab <- paste0('log[',num[j],'/',den[j],']')
-            B <- beta2york(lr=dat,num=num[c(i,j)],den=den[c(i,j)])
-            xlim <- c(min(cal$lr[i]-3*sqrt(cal$cov[i,i]),B[,'X']-3*B[,'sX']),
-                      max(cal$lr[i]+3*sqrt(cal$cov[i,i]),B[,'X']+3*B[,'sX']))
-            ylim <- c(min(cal$lr[j]-3*sqrt(cal$cov[j,j]),B[,'Y']-3*B[,'sY']),
-                      max(cal$lr[j]+3*sqrt(cal$cov[j,j]),B[,'Y']+3*B[,'sY']))
-            graphics::plot(xlim,ylim,type='n',ann=FALSE)
-            deltagrid(dat,i,j)
-            IsoplotR::scatterplot(B,xlim=xlim,ylim=ylim,add=TRUE,...)
-            graphics::mtext(side=1,text=xlab,line=2)
-            graphics::mtext(side=2,text=ylab,line=2)
-            ell <- IsoplotR::ellipse(cal$lr[i],cal$lr[j],
-                                     cal$cov[c(i,j),c(i,j)])
-            graphics::polygon(ell,col='white')
-            ii <- ii + 1
-            if (ii>np) break
-       }
+    nn <- length(dat$calibrated$ratios)
+    if (nn>1){
+        np <- nn*(nn-1)/2       # number of plot panels
+        nc <- ceiling(sqrt(np)) # number of rows
+        nr <- ceiling(np/nc)    # number of columns
+        oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(3.5,4))
+        ii <- 1
+        snames <- names(dat$samples)
+        tab <- data2table.calibrated(dat)
+        for (i in 1:(nn-1)){
+            for (j in (i+1):nn){
+                xlab <- dat$calibrated$ratios[i]
+                ylab <- dat$calibrated$ratios[j]
+                X <- tab[,xlab]
+                Y <- tab[,ylab]
+                sX <- tab[,paste0('s[',xlab,']')]
+                sY <- tab[,paste0('s[',ylab,']')]
+                rXY <- tab[,paste0('r[',xlab,',',ylab,']')]
+                calval <- dat$calibration$cal
+                calcov <- dat$calibration$cal[,-c(1:2)]
+                ical <- which(calval$ratios %in% xlab)
+                jcal <- which(calval$ratios %in% ylab)
+                x <- calval[ical,'val']
+                sx <- sqrt(calcov[ical,ical])
+                y <- calval[jcal,'val']
+                sy <- sqrt(calcov[jcal,jcal])
+                xlim <- c(min(x-3*sx,X-3*sX),max(x+3*sx,X+3*sX))
+                ylim <- c(min(y-3*sy,Y-3*sY),max(y+3*sy,Y+3*sY))
+                graphics::plot(xlim,ylim,type='n',ann=FALSE)
+                                        #deltagrid(dat,i,j)
+                IsoplotR::scatterplot(cbind(X,sX,Y,sY,rXY),
+                                      xlim=xlim,ylim=ylim,add=TRUE,...)
+                graphics::mtext(side=1,text=xlab,line=2)
+                graphics::mtext(side=2,text=ylab,line=2)
+                ell <- IsoplotR::ellipse(x,y,calcov[c(ical,jcal),c(ical,jcal)])
+                graphics::polygon(ell,col='white')
+                ii <- ii + 1
+                if (ii>np) break
+            }
+        }
+        graphics::par(oldpar)
+    } else {
+        
     }
-    graphics::par(oldpar)
 }
 
 deltagrid <- function(dat,i,j){
     usr <- graphics::par('usr')
     xlim <- usr[1:2]
     ylim <- usr[3:4]
-    xs <- dat$calibration$lr[i]
+    xs <- dat$calibration$cal[i]
     ys <- dat$calibration$lr[j]
     di <- dat$standard$val[i]
     dj <- dat$standard$val[j]

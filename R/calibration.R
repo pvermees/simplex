@@ -111,7 +111,6 @@ time_average <- function(lr,t=NULL){
         out[[sname]]$val <- as.vector(c(1,tt) %*% rbind(LR$b0g[ib0],LR$b0g[ig]))
         names(out[[sname]]$val) <- rnames
         out[[sname]]$cov <- J %*% LR$cov %*% t(J)
-        
     }
     out
 }
