@@ -146,6 +146,8 @@ plot.calibrated <- function(x,option=1,...){
 }
 
 caldplot_stable <- function(dat,...){
+    snames <- names(dat$samples)
+    tab <- data2table.calibrated(dat)
     nn <- length(dat$calibrated$ratios)
     if (nn>1){
         np <- nn*(nn-1)/2       # number of plot panels
@@ -153,8 +155,6 @@ caldplot_stable <- function(dat,...){
         nr <- ceiling(np/nc)    # number of columns
         oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(3.5,4))
         ii <- 1
-        snames <- names(dat$samples)
-        tab <- data2table.calibrated(dat)
         for (i in 1:(nn-1)){
             for (j in (i+1):nn){
                 xlab <- dat$calibrated$ratios[i]
@@ -188,7 +188,18 @@ caldplot_stable <- function(dat,...){
         }
         graphics::par(oldpar)
     } else {
-        
+        ns <- length(snames)
+        tfact <- qnorm(0.975)
+        lr <- tab[,1]
+        ll <- lr - tfact*tab[,2]
+        ul <- lr + tfact*tab[,2]
+        matplot(rbind(1:ns,1:ns),rbind(ll,ul),type='l',lty=1,
+                col='black',bty='n',xlab='sample #',ylab='')
+        points(1:ns,lr,pch=16)
+        cal <- dat$calibration$cal
+        lines(c(1,ns),rep(cal$val,2),lty=2)
+        lines(c(1,ns),rep(cal$val-tfact*sqrt(cal$cov),2),lty=3)
+        lines(c(1,ns),rep(cal$val+tfact*sqrt(cal$cov),2),lty=3)
     }
 }
 

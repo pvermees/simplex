@@ -99,14 +99,16 @@ data2table.calibrated <- function(x,snames=NULL,i=NULL,
         cnames[2*(1:nr)] <- paste0('s[',cal$ratios[j],']')
         ci <- 2*nr
         cormat <- cov2cor(E)
-        for (r1 in 1:(nr-1)){
-            i1 <- (0:(ns-1))*nr + r1
-            for (r2 in (r1+1):nr){
-                ci <- ci + 1
-                i2 <- (0:(ns-1))*nr + r2
-                out[,ci] <- diag(cormat[i1,i2])
-                cnames[ci] <- paste0('r[',cal$ratios[j][r1],
-                                     ',',cal$ratios[j][r2],']')
+        if (nr>1){
+            for (r1 in 1:(nr-1)){
+                i1 <- (0:(ns-1))*nr + r1
+                for (r2 in (r1+1):nr){
+                    ci <- ci + 1
+                    i2 <- (0:(ns-1))*nr + r2
+                    out[,ci] <- diag(cormat[i1,i2])
+                    cnames[ci] <- paste0('r[',cal$ratios[j][r1],
+                                         ',',cal$ratios[j][r2],']')
+                }
             }
         }
         colnames(out) <- cnames
