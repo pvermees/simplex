@@ -166,8 +166,8 @@ caldplot_stable <- function(dat,...){
                 rXY <- tab[,paste0('r[',xlab,',',ylab,']')]
                 calval <- dat$calibration$cal
                 calcov <- dat$calibration$cal[,-c(1:2)]
-                ical <- which(calval$ratios %in% xlab)
-                jcal <- which(calval$ratios %in% ylab)
+                ical <- match(xlab,calval$ratios)
+                jcal <- match(ylab,calval$ratios)
                 x <- calval[ical,'val']
                 sx <- sqrt(calcov[ical,ical])
                 y <- calval[jcal,'val']
@@ -175,7 +175,7 @@ caldplot_stable <- function(dat,...){
                 xlim <- c(min(x-3*sx,X-3*sX),max(x+3*sx,X+3*sX))
                 ylim <- c(min(y-3*sy,Y-3*sY),max(y+3*sy,Y+3*sY))
                 graphics::plot(xlim,ylim,type='n',ann=FALSE)
-                                        #deltagrid(dat,i,j)
+                deltagrid(dat,ical,jcal)
                 IsoplotR::scatterplot(cbind(X,sX,Y,sY,rXY),
                                       xlim=xlim,ylim=ylim,add=TRUE,...)
                 graphics::mtext(side=1,text=xlab,line=2)
@@ -192,14 +192,17 @@ caldplot_stable <- function(dat,...){
     }
 }
 
-deltagrid <- function(dat,i,j){
+deltagrid <- function(dat,ical,jcal){
     usr <- graphics::par('usr')
     xlim <- usr[1:2]
     ylim <- usr[3:4]
-    xs <- dat$calibration$cal[i]
-    ys <- dat$calibration$lr[j]
-    di <- dat$standard$val[i]
-    dj <- dat$standard$val[j]
+    ratios <- dat$calibration$cal$ratios
+    xs <- dat$calibration$cal$val[ical]
+    ys <- dat$calibration$cal$val[jcal]
+    ist <- match(ratios[ical],dat$calibration$pairing$smp)
+    jst <- match(ratios[jcal],dat$calibration$pairing$smp)
+    di <- dat$calibration$stand$val[ist]
+    dj <- dat$calibration$stand$val[jst]
     dxmin <- 1000*(xlim[1]-xs)+di
     dxmax <- 1000*(xlim[2]-xs)+di
     dymin <- 1000*(ylim[1]-ys)+dj
@@ -219,9 +222,9 @@ deltagrid <- function(dat,i,j){
     graphics::axis(side=4,at=yticks,labels=dyticks)
     graphics::mtext(expression(delta*"'"),side=4,line=2)
     graphics::lines(rep(xs,2),ylim,lty=2,col='red')
-    graphics::text(xs,ylim[1],labels=dat$standard$prefix,pos=4,srt=90,offset=0)
+    graphics::text(xs,ylim[1],labels=dat$calibration$prefix,pos=4,srt=90,offset=0)
     graphics::lines(xlim,rep(ys,2),lty=2,col='red')
-    graphics::text(xlim[1],ys,labels=dat$standard$prefix,pos=4,offset=0)
+    graphics::text(xlim[1],ys,labels=dat$calibration$prefix,pos=4,offset=0)
 }
 
 caldplot_geochronology <- function(dat,option=1,...){
