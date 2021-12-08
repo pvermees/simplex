@@ -146,6 +146,8 @@ plot.calibrated <- function(x,option=1,...){
 }
 
 caldplot_stable <- function(dat,...){
+    calval <- dat$calibration$cal
+    calcov <- dat$calibration$cal[,-c(1:2)]
     snames <- names(dat$samples)
     tab <- data2table.calibrated(dat)
     nn <- length(dat$calibrated$ratios)
@@ -164,8 +166,6 @@ caldplot_stable <- function(dat,...){
                 sX <- tab[,paste0('s[',xlab,']')]
                 sY <- tab[,paste0('s[',ylab,']')]
                 rXY <- tab[,paste0('r[',xlab,',',ylab,']')]
-                calval <- dat$calibration$cal
-                calcov <- dat$calibration$cal[,-c(1:2)]
                 ical <- match(xlab,calval$ratios)
                 jcal <- match(ylab,calval$ratios)
                 x <- calval[ical,'val']
@@ -186,56 +186,79 @@ caldplot_stable <- function(dat,...){
                 if (ii>np) break
             }
         }
-        graphics::par(oldpar)
     } else {
+        oldpar <- graphics::par(mar=c(3.5,3.5,1.5,3.5),mgp=c(2,0.5,0))
+        ylab <- dat$calibrated$ratios
         ns <- length(snames)
         tfact <- qnorm(0.975)
         lr <- tab[,1]
         ll <- lr - tfact*tab[,2]
         ul <- lr + tfact*tab[,2]
-        matplot(rbind(1:ns,1:ns),rbind(ll,ul),type='l',lty=1,
-                col='black',bty='n',xlab='sample #',ylab='')
+        y <- calval[,'val']
+        sy <- sqrt(calcov)
+        xlim <- c(1,ns)
+        ylim <- c(min(y-3*sy,ll),max(y+3*sy,ul))
+        graphics::plot(xlim,ylim,type='n',xlab='sample #',ylab=ylab)
+        deltagrid(dat)
+        matlines(rbind(1:ns,1:ns),rbind(ll,ul),lty=1,col='black')
         points(1:ns,lr,pch=16)
         cal <- dat$calibration$cal
-        lines(c(1,ns),rep(cal$val,2),lty=2)
-        lines(c(1,ns),rep(cal$val-tfact*sqrt(cal$cov),2),lty=3)
-        lines(c(1,ns),rep(cal$val+tfact*sqrt(cal$cov),2),lty=3)
+        xlim <- graphics::par('usr')[1:2]
+        lines(xlim,rep(cal$val,2),lty=1,col='red')
+        lines(xlim,rep(cal$val-tfact*sqrt(cal$cov),2),lty=2)
+        lines(xlim,rep(cal$val+tfact*sqrt(cal$cov),2),lty=2)
     }
+    graphics::par(oldpar)
 }
 
 deltagrid <- function(dat,ical,jcal){
+    if (missing(ical) | missing(jcal)){
+        multipanel <- FALSE
+        ical <- 1
+        jcal <- 1
+    } else {
+        multipanel <- TRUE
+    }
     usr <- graphics::par('usr')
+    ratios <- dat$calibration$cal$ratios
     xlim <- usr[1:2]
     ylim <- usr[3:4]
-    ratios <- dat$calibration$cal$ratios
-    xs <- dat$calibration$cal$val[ical]
+    if (multipanel){
+        xs <- dat$calibration$cal$val[ical]
+        ist <- match(ratios[ical],dat$calibration$pairing$smp)
+        di <- dat$calibration$stand$val[ist]
+        dxmin <- 1000*(xlim[1]-xs)+di
+        dxmax <- 1000*(xlim[2]-xs)+di
+        dxticks <- pretty(c(dxmin,dxmax))
+        xticks <- (dxticks-di)/1000+xs
+        nxt <- length(xticks)
+    }
     ys <- dat$calibration$cal$val[jcal]
-    ist <- match(ratios[ical],dat$calibration$pairing$smp)
     jst <- match(ratios[jcal],dat$calibration$pairing$smp)
-    di <- dat$calibration$stand$val[ist]
     dj <- dat$calibration$stand$val[jst]
-    dxmin <- 1000*(xlim[1]-xs)+di
-    dxmax <- 1000*(xlim[2]-xs)+di
     dymin <- 1000*(ylim[1]-ys)+dj
     dymax <- 1000*(ylim[2]-ys)+dj
-    dxticks <- pretty(c(dxmin,dxmax))
     dyticks <- pretty(c(dymin,dymax))
-    xticks <- (dxticks-di)/1000+xs
     yticks <- (dyticks-dj)/1000+ys
-    nxt <- length(xticks)
     nyt <- length(yticks)
-    graphics::matlines(rbind(xticks,xticks),matrix(rep(ylim,nxt),ncol=nxt),
-                       lty=3,col='black')
-    graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
-                       rbind(yticks,yticks),lty=3,col='black')
-    graphics::axis(side=3,at=xticks,labels=dxticks)
-    graphics::mtext(expression(delta*"'"),side=3,line=2)
+    if (multipanel){
+        graphics::matlines(rbind(xticks,xticks),matrix(rep(ylim,nxt),ncol=nxt),
+                           lty=3,col='black')
+        graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
+                           rbind(yticks,yticks),lty=3,col='black')
+        graphics::axis(side=3,at=xticks,labels=dxticks)
+        graphics::mtext(expression(delta*"'"),side=3,line=2)
+        graphics::lines(rep(xs,2),ylim,lty=2,col='red')
+        graphics::text(xs,ylim[1],labels=dat$calibration$prefix,
+                       pos=4,srt=90,offset=0)
+        graphics::lines(xlim,rep(ys,2),lty=2,col='red')
+        graphics::text(xlim[1],ys,labels=dat$calibration$prefix,pos=4,offset=0)
+    } else {
+        graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
+                           rbind(yticks,yticks),lty=3,col='black')
+    }
     graphics::axis(side=4,at=yticks,labels=dyticks)
     graphics::mtext(expression(delta*"'"),side=4,line=2)
-    graphics::lines(rep(xs,2),ylim,lty=2,col='red')
-    graphics::text(xs,ylim[1],labels=dat$calibration$prefix,pos=4,srt=90,offset=0)
-    graphics::lines(xlim,rep(ys,2),lty=2,col='red')
-    graphics::text(xlim[1],ys,labels=dat$calibration$prefix,pos=4,offset=0)
 }
 
 caldplot_geochronology <- function(dat,option=1,...){
