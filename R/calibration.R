@@ -172,7 +172,7 @@ beta2york_regression <- function(tavg,pairing,stand){
     DP <- as.character(pairing[1,'smp'])
     OP <- as.character(pairing[1,'versus'])
     CD.smp <- as.character(pairing[1,'smp.c'])
-    i.CD.smp <- which(stand[,'ratios'] %in% pairing[1,'std.c'])
+    i.CD.smp <- match(pairing[1,'std.c'],stand[,'ratios'])
     val.CD.std <- stand[i.CD.smp,'val']
     J <- matrix(0,nrow=2,ncol=length(tavg[[1]]$val))
     colnames(J) <- names(tavg[[1]]$val)

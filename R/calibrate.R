@@ -282,9 +282,27 @@ caldplot_geochronology <- function(dat,option=1,...){
         ylim <- c(min(ylim[1],fit$a[1]+fit$b[1]*xlim[1]),
                   max(ylim[2],fit$a[1]+fit$b[1]*xlim[2]))
         plot(xlim,ylim,type='n',xlab=X,ylab=Y)
+        agegrid(xlim,ylim,ratio=pairing[i,'std'])
         IsoplotR::scatterplot(XY,fit=fit,add=TRUE)
     }
     graphics::par(oldpar)
+}
+
+agegrid <- function(xlim,ylim,ratio){
+    if (as.character(ratio)=='Pb206/U238'){
+        lambda <- IsoplotR::settings('lambda','U238')[1]
+    } else if (pairing$std[i]=='Pb208/Th232'){
+        lambda <- IsoplotR::settings('lambda','Th232')[1]
+    } else {
+        return(NA)
+    }
+    tlim <- log(ylim+1)/lambda
+    tticks <- pretty(tlim)
+    yticks <- exp(lambda*tticks)-1
+    nt <- length(tticks)
+    x <- cbind(rep(xlim[1],nt),rep(xlim[2],nt))
+    y <- 
+    list(tticks=tticks,yticks=yticks)
 }
 
 cald2york <- function(cal){
