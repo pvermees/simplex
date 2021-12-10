@@ -135,17 +135,15 @@ average_calibration <- function(tavg,pairing){
 
 regression_calibration <- function(tavg,pairing,stand){
     nr <- nrow(pairing)
-    out <- as.data.frame(matrix(NA,nrow=nr,ncol=7))
-    colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab')
+    out <- as.data.frame(matrix(NA,nrow=nr,ncol=10))
+    colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab','mswd','df','p.value')
     out[,1:2] <- pairing[,c('versus','smp')]
     for (i in 1:nr){
         yd <- beta2york_regression(tavg=tavg,pairing=pairing[i,],stand=stand)
         slope <- pairing[i,'slope']
         if (is.na(slope)) fit <- IsoplotR::york(yd)
         else fit <- yorkfix(yd,b=slope)
-        out[i,c('a','s[a]')] <- fit$a
-        out[i,c('b','s[b]')] <- fit$b
-        out[i,'cov.ab'] <- fit$cov.ab
+        out[i,3:10] <- c(fit$a,fit$b,fit$cov.ab,fit$mswd,fit$df,fit$p.value)
     }
     out
 }

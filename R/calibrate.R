@@ -146,7 +146,7 @@ plot.calibrated <- function(x,option=1,...){
 }
 
 caldplot_stable <- function(dat,...){
-    calval <- dat$calibration$cal
+    calval <- dat$calibration$cal[,1:2]
     calcov <- dat$calibration$cal[,-c(1:2)]
     snames <- names(dat$samples)
     tab <- data2table.calibrated(dat)
@@ -262,50 +262,51 @@ deltagrid <- function(dat,ical,jcal){
 }
 
 caldplot_geochronology <- function(dat,option=1,...){
-    cal <- dat$calibration
-    num <- cal$num
-    den <- cal$den
-    snames <- names(dat$samples)
-    yd <- beta2york(lr=dat,t=seconds(cal$t),snames=snames,num=num,den=den)
-    xlab <- paste0('log[',num[1],'/',den[1],']')
-    ylab <- paste0('log[',num[2],'/',den[2],']')
-    xlim <- rep(0,2)
-    xlim[1] <- min(yd[,'X']-3*yd[,'sX'])
-    xlim[2] <- max(yd[,'X']+3*yd[,'sX'])
-    ylim <- rep(0,2)
-    ylim[1] <- min(yd[,'Y']-3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[1])
-    ylim[2] <- max(yd[,'Y']+3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[2])
-    graphics::plot(xlim,ylim,xlab=xlab,ylab=ylab,xlim=xlim,ylim=ylim,type='n')
-    agegrid(dat,xlim,ylim)
-    if (option==1){
-        IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
-    } else {
-        X <- NULL
-        Y <- NULL
-        for (sname in snames){
-            sp <- spot(dat=dat,sname=sname)
-            Op <- betapars(spot=sp,ion=num[1])
-            Pp <- betapars(spot=sp,ion=den[1])
-            Dp <- betapars(spot=sp,ion=num[2])
-            Cp <- betapars(spot=sp,ion=num[3])
-            CD <- (Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg)
-            CDdc <- exp(Dp$g*(Dp$t-Cp$t))
-            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Pp$t-Op$t)
-            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Pp$t-Dp$t)
-            X <- cbind(X,newX)
-            Y <- cbind(Y,newY)
-        }
-        xlim[1] <- min(xlim[1],yd[snames,'X']-3*yd[snames,'sX'],X)
-        xlim[2] <- max(xlim[2],yd[snames,'X']+3*yd[snames,'sX'],X)
-        ylim[1] <- min(ylim[1],yd[snames,'Y']-3*yd[snames,'sY'],Y)
-        ylim[2] <- max(ylim[2],yd[snames,'Y']+3*yd[snames,'sY'],Y)
-        IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
-        graphics::matlines(X,Y,lty=1,col='darkgrey')
-        if (option>2){
-            graphics::points(X[1,],Y[1,],pch=21,bg='black')
-            graphics::points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
-        }
+    cal <- dat$calibration$cal
+    pairing <- dat$calibration$pairing
+    tab <- data2table.logratios(dat,t=dat$calibration$t)
+    nr <- nrow(pairing)
+    oldpar <- graphics::par(mfrow=c(1,nr))
+    for (i in 1:nr){
+        X <- paste0('ln[',pairing[i,'versus'],']')
+        Y <- paste0('ln[',pairing[i,'smp'],']')
+        sX <- paste0('s(',X,')')
+        sY <- paste0('s(',Y,')')
+        rXY <- paste0('r(',X,',',Y,')')
+        if (!(rXY %in% colnames(tab)))
+            rXY <- paste0('r(',Y,',',X,')')
+        XY <- tab[,c(X,sX,Y,sY,rXY)]
+        xlim <- c(min(XY[,1]-3*XY[,2]),max(XY[,1]+3*XY[,2]))
+        ylim <- c(min(XY[,3]-3*XY[,4]),max(XY[,3]+3*XY[,4]))
+        fit <- cald2york(cal[i,])
+        ylim <- c(min(ylim[1],fit$a[1]+fit$b[1]*xlim[1]),
+                  max(ylim[2],fit$a[1]+fit$b[1]*xlim[2]))
+        plot(xlim,ylim,type='n',xlab=X,ylab=Y)
+        IsoplotR::scatterplot(XY,fit=fit,add=TRUE)
     }
+    graphics::par(oldpar)
+}
+
+cald2york <- function(cal){
+    out <- list()
+    out$a <- as.numeric(cal[c('a','s[a]')])
+    out$b <- as.numeric(cal[c('b','s[b]')])
+    out$cov.ab <- as.numeric(cal['cov.ab'])
+    out$df <- as.numeric(cal['df'])
+    out$mswd <- as.numeric(cal['mswd'])
+    out$p.value <- as.numeric(cal['p.value'])
+    out$type <- 'york'
+    out$alpha <- 0.05
+    out
+}
+
+plotcalline <- function(a,sa,b,sb,cov.ab,xlim){
+    x <- seq(from=xlim[1],to=xlim[2],length.out=50)
+    y <- a + b * x
+    e <- IsoplotR:::ntfact(0.05) * sqrt(a^2 + 2*x*cov.ab + (b*x)^2)
+    cix <- c(x, rev(x))
+    ciy <- c(y+e, rev(y-e))
+    graphics::polygon(cix, ciy, col='grey50', border=NA)
 }
 
 agegrid <- function(dat,xlim,ylim){
