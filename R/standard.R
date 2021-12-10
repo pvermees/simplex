@@ -59,9 +59,8 @@ age2stand <- function(tst,pairing=NULL){
     common <- IsoplotR:::stacey.kramers(tst[1])
     D <- IsoplotR::mclean(tt=tst[1])
     val <- c(-log(common[,c('i64','i84')]),D$Pb206U238,D$Pb208Th232)
-    type <- c('common','common','radiogenic','radiogenic')
     J <- rbind(0,0,D$dPb206U238dt,D$dPb208Th232dt)
-    data.frame(ratios=ratios,type=type,val=val,cov=J%*%(tst[2]^2)%*%t(J))
+    data.frame(ratios=ratios,val=val,cov=J%*%(tst[2]^2)%*%t(J))
 }
 
 del2stand <- function(del,ref){

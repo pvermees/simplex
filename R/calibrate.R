@@ -264,6 +264,7 @@ deltagrid <- function(dat,ical,jcal){
 caldplot_geochronology <- function(dat,option=1,...){
     cal <- dat$calibration$cal
     pairing <- dat$calibration$pairing
+    stand <- dat$calibration$stand
     tab <- data2table.logratios(dat,t=dat$calibration$t)
     nr <- nrow(pairing)
     oldpar <- graphics::par(mfrow=c(1,nr))
@@ -279,30 +280,34 @@ caldplot_geochronology <- function(dat,option=1,...){
         xlim <- c(min(XY[,1]-3*XY[,2]),max(XY[,1]+3*XY[,2]))
         ylim <- c(min(XY[,3]-3*XY[,4]),max(XY[,3]+3*XY[,4]))
         fit <- cald2york(cal[i,])
-        ylim <- c(min(ylim[1],fit$a[1]+fit$b[1]*xlim[1]),
-                  max(ylim[2],fit$a[1]+fit$b[1]*xlim[2]))
         plot(xlim,ylim,type='n',xlab=X,ylab=Y)
-        agegrid(xlim,ylim,ratio=pairing[i,'std'])
+        agegrid(xlim=xlim,ylim=ylim,fit=fit,pairing=pairing[i,],stand=stand)
         IsoplotR::scatterplot(XY,fit=fit,add=TRUE)
     }
     graphics::par(oldpar)
 }
 
-agegrid <- function(xlim,ylim,ratio){
-    if (as.character(ratio)=='Pb206/U238'){
+agegrid <- function(xlim,ylim,fit,pairing,stand){
+    if (pairing$std=='Pb206/U238'){
         lambda <- IsoplotR::settings('lambda','U238')[1]
-    } else if (pairing$std[i]=='Pb208/Th232'){
+    } else if (pairing$std=='Pb208/Th232'){
         lambda <- IsoplotR::settings('lambda','Th232')[1]
     } else {
         return(NA)
     }
-    tlim <- log(ylim+1)/lambda
+    a <- fit$a[1]
+    b <- fit$b[1]
+    yrange <- c(ylim[1] - b*diff(xlim),
+                ylim[2] + b*diff(xlim))
+    DPstd <- stand[match(pairing$std,stand$ratios),'val']
+    DP <- DPstd + yrange - a - b * xlim
+    tlim <- log(DP+1)/lambda
     tticks <- pretty(tlim)
-    yticks <- exp(lambda*tticks)-1
+    DPticks <- exp(lambda*tticks)-1
     nt <- length(tticks)
-    x <- cbind(rep(xlim[1],nt),rep(xlim[2],nt))
-    y <- 
-    list(tticks=tticks,yticks=yticks)
+    x <- rbind(rep(xlim[1],nt),rep(xlim[2],nt))
+    y <- DP - DPstd + a + b *x
+    matlines(x,y,lty=2)
 }
 
 cald2york <- function(cal){
@@ -316,49 +321,4 @@ cald2york <- function(cal){
     out$type <- 'york'
     out$alpha <- 0.05
     out
-}
-
-plotcalline <- function(a,sa,b,sb,cov.ab,xlim){
-    x <- seq(from=xlim[1],to=xlim[2],length.out=50)
-    y <- a + b * x
-    e <- IsoplotR:::ntfact(0.05) * sqrt(a^2 + 2*x*cov.ab + (b*x)^2)
-    cix <- c(x, rev(x))
-    ciy <- c(y+e, rev(y-e))
-    graphics::polygon(cix, ciy, col='grey50', border=NA)
-}
-
-agegrid <- function(dat,xlim,ylim){
-    ratio <- ifelse(datatype(dat)=='U-Pb','Pb206U238','Pb208Th232')
-    usr <- graphics::par('usr')
-    cal <- dat$calibration
-    st <- do.call(dat$standard$fetchfun,args=list(dat=dat))
-    lrlim <- rep(0,2)
-    a <- cal$fit$a[1]
-    b <- cal$fit$b[1]
-    adj1 <- st$lr[ratio] - a - b*xlim[2]
-    adj2 <- st$lr[ratio] - a - b*xlim[1]
-    lrlim[1] <- ylim[1] + adj1
-    lrlim[2] <- ylim[2] + adj2
-    tlim <- IsoplotR::age(exp(lrlim),method=chronometer(dat))
-    tticks <- pretty(tlim)
-    nt <- length(tticks)
-    lrmin <- log(IsoplotR::age2ratio(tticks,ratio=ratio)[,1]) - adj2
-    lrmax <- lrmin + cal$fit$b[1]*diff(xlim)
-    xticks <- list(x=NULL,t=NULL)
-    yticks <- list(y=NULL,t=NULL)
-    for (i in 1:nt){
-        if (lrmax[i]>usr[4]){
-            xticks$x <- c(xticks$x,(usr[4]-lrmin[i])/b+xlim[1])
-            xticks$t <- c(xticks$t,tticks[i])
-        } else {
-            yticks$y <- c(yticks$y,lrmax[i])
-            yticks$t <- c(yticks$t,tticks[i])
-        }
-    }
-    graphics::axis(side=3,at=xticks$x,labels=xticks$t)
-    graphics::mtext(side=3,line=2,'t (Ma)')
-    graphics::axis(side=4,at=yticks$y,labels=yticks$t)
-    graphics::mtext(side=4,line=2,'t (Ma)')
-    graphics::matlines(matrix(rep(xlim,nt),nrow=2),
-                       rbind(lrmin,lrmax),lty=2,col='gray50')
 }
