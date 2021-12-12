@@ -58,8 +58,8 @@ age2stand <- function(tst,pairing=NULL){
     ratios <- paste0(num,'/',den)
     common <- IsoplotR:::stacey.kramers(tst[1])
     D <- IsoplotR::mclean(tt=tst[1])
-    val <- c(-log(common[,c('i64','i84')]),D$Pb206U238,D$Pb208Th232)
-    J <- rbind(0,0,D$dPb206U238dt,D$dPb208Th232dt)
+    val <- c(-log(common[,c('i64','i84')]),log(D$Pb206U238),log(D$Pb208Th232))
+    J <- rbind(0,0,D$dPb206U238dt/D$Pb206U238,D$dPb208Th232dt/D$Pb208Th232)
     data.frame(ratios=ratios,val=val,cov=J%*%(tst[2]^2)%*%t(J))
 }
 

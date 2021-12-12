@@ -302,18 +302,16 @@ agegrid <- function(fit,pairing,stand){
     b <- fit$b[1]
     yrange <- c(ylim[1] - b*diff(xlim),
                 ylim[2] + b*diff(xlim))
-    DPstd <- stand[match(pairing$std,stand$ratios),'val']
-    DP <- DPstd + yrange - a - b * xlim
-    DP[1] <- max(0,DP[1])
-    DP[2] <- min(4600,DP[2])
-    tlim <- log(DP+1)/lambda
+    logDPstd <- stand[match(pairing$std,stand$ratios),'val']
+    logDPlim <- logDPstd + yrange - a - b * xlim
+    tlim <- log(exp(logDPlim)+1)/lambda
     tticks <- pretty(tlim)
-    DPticks <- exp(lambda*tticks)-1
+    logDPticks <- log(exp(lambda*tticks)-1)
     nt <- length(tticks)
     xl <- rep(xlim[1],nt)
     xu <- rep(xlim[2],nt)
-    yl <- DPticks - DPstd + a + b * xl
-    yu <- DPticks - DPstd + a + b * xu
+    yl <- logDPticks - logDPstd + a + b * xl
+    yu <- logDPticks - logDPstd + a + b * xu
     matlines(rbind(xl,xu),rbind(yl,yu),lty=3,col='black')
     top <- (yu>ylim[2])
     axis(side=3,at=xlim[1]+(ylim[2]-yl[top])/b,labels=tticks[top])
