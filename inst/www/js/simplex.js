@@ -275,8 +275,9 @@ function loadSamples(callback){
 
 function loadTable(dat,header,id,nr){
     let nc = header.length;
-    let tab = createDataEntryGrid(id,header,nr);
-    tab.putCells(0,nr+1,0,nc+1,dat);
+    let e = document.getElementById(id);
+    e.deg = createDataEntryGrid(id,header,nr);
+    e.deg.putCells(0,nr+1,0,nc+1,dat);
 }
 
 function initDrift(){
@@ -447,31 +448,91 @@ function calibration(){
     selectButton(3);
     loadPage("calibration.html").then(
 	() => {
-	    showOrHideStandards();
-	    document.getElementById('slope').value = glob.slope;
-	    if (typeof glob.simplex.standard != 'undefined'){
-		document.getElementById('standards').value =
-		    glob.simplex.standard.name[0];
-		document.getElementById('prefix').value =
-		    glob.simplex.standard.prefix;
-	    } else {
-		glob.simplex.standard = {
-		    'name': [''],
-		    'prefix': ''
-		}
-	    }
-	    markStandardsByPrefix()
+	    calibrationstep1();
+	    calibrationstep2();
+	    calibrationstep3();
 	},
 	error => alert(error)
     );
 }
 
+function calibrationstep1(){
+    if (do_average_calibration()){
+	document.getElementById('caltype').selectedIndex = 0;
+    } else {
+	document.getElementById('caltype').selectedIndex = 1;
+	hide('.hide4geochron');
+	show('.show4geochron');
+    }	    
+}
+
+function caltype(){
+    let val = document.getElementById('caltype').value;
+    if (val === 'average'){
+	show('.show4stable');
+	hide('.hide4stable');
+    } else {
+	show('.show4geochron');
+	show('.hide4geochron');
+    }
+}
+
+function calibrationstep2(){
+    standcomp();
+    let stand = glob.simplex.calibration.stand;
+    let nr = stand.length;
+    let header = new Array(nr);
+    let val = [new Array(nr)];
+    let cov = new Array(nr);
+    for (let i=0; i<nr; i++){
+	header[i] = stand[i].ratios;
+	val[0][i] = stand[i].val;
+	cov[i] = new Array(nr);
+	let keys = Object.keys(stand[i]);
+	for (let j=0; j<nr; j++){
+	    cov[i][j] = stand[i][keys[j+2]];
+	}
+    }
+    loadTable(val,header,'standlr',1);
+    loadTable(cov,header,'standcov',nr);
+}
+
+function standcomp(){
+    let val = document.getElementById('standcomp').value;
+    if (val === 'prefix2stand'){
+	show('.show4prefix');
+    } else {
+	hide('.show4prefix')
+    }    
+}
+
+function calibrationstep3(){
+    let pairing = glob.simplex.calibration.pairing;
+    let nr = pairing.length;
+    let header = Object.keys(pairing[0]);
+    let val = [new Array(nr)];
+    for (let i=0; i<nr; i++){
+	val[i] = Object.values(pairing[i]);
+    }
+    loadTable(val,header,'pairing',nr);
+}
+
 function slopefixer(){
-    let checkbox = document.getElementById('fixedslope');
-    glob.simplex.fixedslope = checkbox.checked;
-    let textbox = document.getElementById('slopespan');
-    if (checkbox.checked) textbox.classList.remove('hidden')
-    else textbox.classList.add('hidden')
+    if (document.getElementById('fixedslope').checked){
+	let deg = document.getElementById('pairing').deg;
+	let headers = deg.getColumnHeaders();
+	//let headers.push('slope');
+    }
+}
+
+function do_average_calibration(){
+    let cal = glob.simplex.calibration;
+    if (cal.hasOwnProperty('pairing')){
+	let keys = Object.keys(cal.pairing[0]);
+	return(keys.length<3);
+    } else {
+	return(glob.multi);
+    }
 }
 
 function showOrHideStandards(){

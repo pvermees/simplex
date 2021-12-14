@@ -14,7 +14,7 @@
 #' tab <- data2table(del)
 #' @export
 calibrate <- function(cal,exterr=FALSE){
-    if (ncol(cal$calibration$pairing)==2){
+    if (average.pairing(cal$calibration$pairing)){
         out <- calibrate_average(dat=cal,exterr=exterr)
     } else {
         out <- calibrate_regression(dat=cal,exterr=exterr)

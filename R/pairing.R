@@ -49,3 +49,7 @@ pairing <- function(lr,stand,type=1){
     }
     out    
 }
+
+average.pairing <- function(pairing){
+    ncol(pairing)==2
+}

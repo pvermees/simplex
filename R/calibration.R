@@ -31,7 +31,7 @@ calibration <- function(lr,stand,pairing,prefix=NULL,
     if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
     cal$t <- t
     cal$tavg <- time_average(dat,t=t)
-    if (ncol(pairing)==2){
+    if (average.pairing(pairing)){
         cal$cal <- average_calibration(tavg=cal$tavg,pairing=pairing)
     } else {
         cal$cal <-
@@ -189,7 +189,7 @@ yorkfix <- function(xy,b,alpha=0.05){
 #' @method plot calibration
 #'@export
 plot.calibration <- function(dat,option=1,...){
-    if (ncol(dat$calibration$pairing)==2){
+    if (average.pairing(dat$calibration$pairing)){
         out <- calplot_stable(cal=dat$calibration,...)
     } else {
         out <- calplot_geochronology(dat=dat,option=option,...)

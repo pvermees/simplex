@@ -2,18 +2,33 @@
 
   <ol type="I">
     <li>
-      Calibration type:<br>
-      <input type="radio" value="average" name="caltype">isotopic fractionation (averaging)<br>
-      <input type="radio" value="regression" name="caltype">elemental fractionation (regression)
+      Calibration type: &nbsp;
+      <select id="caltype" onchange="caltype();">
+	<option value="average">isotopic fractionation (averaging)</option>
+	<option value="regression">elemental fractionation (regression)</option>
+      </select>
       <p></p>
     </li>
     <li>
-      Standard composition:<br>
-      <input type="radio" value="prefix2stand" name="standcomp">Load presets<br>
-      <input type="radio" value="t2stand" name="standcomp">Convert from age<br>
-      <input type="radio" value="del2stand" name="standcomp">Convert from &delta;-values<br>
-      <input type="radio" value="manualstand" name="standcomp">Specify manually<br>
-      <span class="hidden">Choose a standard:
+      Standard composition:
+      <p></p>
+      <select id="standcomp" onchange="standcomp();">
+	<option value="manualstand">specify manually</option>
+	<option value="prefix2stand">load presets</option>
+	<option value="t2stand" class="hide4stable show4geochron">
+	  convert from age</option>
+	<option value="del2stand" class="show4stable hide4geochron">
+	  Convert from &delta;-values</option>
+      </select>
+      as
+      <select class="hide4stable show4geochron"
+	      id="standtype" onchange="standtype();">
+	<option value="measured">measured</option>
+	<option value="commonradio" selected>common + radiogenic</option>
+      </select>
+      <p></p>
+      <p></p>
+      <span class="hidden hide4stable show4prefix">Choose a standard:
 	<select id="standards" onchange="chooseStandard()">
 	  <option disabled selected value> -- select an option -- </option>
 	  <option class="hide4stable" value="Plesovice">Plesovice zircon</option>
@@ -24,22 +39,24 @@
 	  <option value="Sonora">Sonora pyrite</option>
 	  <option value="other">other</option>
 	</select>
+	<p></p>
       </span>
-      <span class="hidden">
+      Logratios: <table id="standlr" class="normalfont"></table><br>
+      Covariance matrix: <table id="standcov" class="normalfont"></table><br>
+    </li>
+    <li>
+      Pair standard ratios with measurements:<br>
+      <table id="pairing" class="normalfont"></table>
+      <p></p>
+      <span class="hidden hide4stable show4geochron">
 	<input type="checkbox" id="fixedslope" onchange="slopefixer()">
 	Fixed slope? 
-	<span class='hidden' id="slopespan">
-	  Slope: <input type="text" id="slope">
-	</span>
+	<p></p>
       </span>
-      <p></p>
     </li>
     <li>
-      Pair standard ratios with measurements:
+      Select standard aliquot:
       <p></p>
-    </li>
-    <li>
-      Select standard aliquot:<br>
       Prefix: <input type="text" id="prefix" onchange="markStandardsByPrefix()">
       <p></p>
       <table id="aliquots" class="normalfont"></table>
