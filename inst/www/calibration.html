@@ -3,16 +3,16 @@
   <ol type="I">
     <li>
       Calibration type: &nbsp;
-      <select id="caltype" onchange="caltype();">
-	<option value="average">isotopic fractionation (averaging)</option>
-	<option value="regression">elemental fractionation (regression)</option>
+      <select id="caltype" onchange="togglecaltype();">
+	<option>isotopic fractionation (averaging)</option>
+	<option>elemental fractionation (regression)</option>
       </select>
       <p></p>
     </li>
     <li>
       Standard composition:
       <p></p>
-      <select id="standcomp" onchange="standcomp();">
+      <select id="standcomp" onchange="togglestandcomp();">
 	<option value="manualstand">specify manually</option>
 	<option value="prefix2stand">load presets</option>
 	<option value="t2stand" class="hide4stable show4geochron">
@@ -49,7 +49,7 @@
       <p></p>
     </li>
     <li>
-      Select standard aliquot:
+      Select standard aliquots:
       <p></p>
       Prefix: <input type="text" id="prefix" onchange="markStandardsByPrefix()">
       <p></p>

@@ -448,38 +448,45 @@ function calibration(){
     selectButton(3);
     loadPage("calibration.html").then(
 	() => {
-	    calibrationstep1();
-	    calibrationstep2();
-	    calibrationstep3();
-	    calibrationstep4();
+	    // I
+	    document.getElementById('caltype').selectedIndex = initcaltype();
+	    togglecaltype();
+	    // II
+	    setstandcomp();
+	    // III
+	    setpairing();
+	    // IV
+	    setstandsel();
 	},
 	error => alert(error)
     );
 }
 
-function calibrationstep1(){
-    if (do_average_calibration()){
-	document.getElementById('caltype').selectedIndex = 0;
+// I.
+function initcaltype(){
+    let cal = glob.simplex.calibration;
+    let out = null;
+    if (cal.hasOwnProperty('pairing')){
+	let keys = Object.keys(cal.pairing[0]);
+	out = (keys.length<3) ? 0 : 1;
     } else {
-	document.getElementById('caltype').selectedIndex = 1;
-	hide('.hide4geochron');
-	show('.show4geochron');
-    }	    
+	out = (glob.multi) ? 1 : 0;
+    }
+    return(out);
 }
-
-function caltype(){
-    let val = document.getElementById('caltype').value;
-    if (val === 'average'){
+function togglecaltype(){
+    let val = document.getElementById('caltype').selectedIndex;
+    if (val === 0){
 	show('.show4stable');
 	hide('.hide4stable');
     } else {
 	show('.show4geochron');
-	show('.hide4geochron');
+	hide('.hide4geochron');
     }
 }
 
-function calibrationstep2(){
-    standcomp();
+// II.
+function setstandcomp(){
     let stand = glob.simplex.calibration.stand;
     let nr = stand.length;
     let header = new Array(nr);
@@ -497,8 +504,7 @@ function calibrationstep2(){
     loadTable(val,header,'standlr',1);
     loadTable(cov,header,'standcov',nr);
 }
-
-function standcomp(){
+function togglestandcomp(){
     let val = document.getElementById('standcomp').value;
     if (val === 'prefix2stand'){
 	show('.show4prefix');
@@ -507,7 +513,8 @@ function standcomp(){
     }    
 }
 
-function calibrationstep3(){
+// III.
+function setpairing(){
     let pairing = glob.simplex.calibration.pairing;
     let nr = pairing.length;
     let header = Object.keys(pairing[0]);
@@ -517,20 +524,40 @@ function calibrationstep3(){
     }
     loadTable(val,header,'pairing',nr);
 }
+function getpairing(){
+    let e = document.getElementById('pairing');
+    let pairing = glob.simplex.calibration.pairing;
+    let nr = pairing.length;
+    let header = Object.keys(pairing[0]);
+    let dat = e.deg.getCells();
+    for (let i=0; i<nr; i++){
+	for (let j=0; j<header.length; j++){
+	    pairing[i][header[j]] = dat[i][j];
+	}
+    }
+}
 
-function calibrationstep4(){
+// IV.
+function setstandsel(){
     document.getElementById('prefix').value = glob.simplex.calibration.prefix;
     markStandardsByPrefix();
 }
-
-function do_average_calibration(){
-    let cal = glob.simplex.calibration;
-    if (cal.hasOwnProperty('pairing')){
-	let keys = Object.keys(cal.pairing[0]);
-	return(keys.length<3);
-    } else {
-	return(glob.multi);
+function markStandardsByPrefix(){
+    let prefix = document.getElementById('prefix').value;
+    glob.simplex.calibration.prefix = prefix;
+    let keys = Object.keys(glob.simplex.samples);
+    let nk = keys.length;
+    let dat = new Array(nk);
+    glob.standards = new Array(nk);
+    for (let i=0; i<nk; i++){
+	if (keys[i].indexOf(prefix) !== -1){
+	    glob.standards[i] = keys[i];
+	    dat[i] = [keys[i],'yes'];
+	} else {
+	    dat[i] = [keys[i],'no'];
+	}
     }
+    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
 }
 
 function showOrHideStandards(){
@@ -556,24 +583,6 @@ function showOrHideStandards(){
     }
 }
 
-function markStandardsByPrefix(){
-    let prefix = document.getElementById('prefix').value;
-    glob.simplex.calibration.prefix = prefix;
-    let keys = Object.keys(glob.simplex.samples);
-    let nk = keys.length;
-    let dat = new Array(nk);
-    glob.standards = new Array(nk);
-    for (let i=0; i<nk; i++){
-	if (keys[i].indexOf(prefix) !== -1){
-	    glob.standards[i] = keys[i];
-	    dat[i] = [keys[i],'yes'];
-	} else {
-	    dat[i] = [keys[i],'no'];
-	}
-    }
-    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
-}
-
 function chooseStandard(){
     let stand = document.getElementById("standards").value;
     shinylight.call("getstandard", {preset:stand}, null).then(
@@ -583,6 +592,7 @@ function chooseStandard(){
 }
 
 function calibrator(){
+    getpairing();
     shinylight.call("calibrator", {x:glob},
 		    'calibration-plot', {'imgType': 'svg'}).then(
 	result => {

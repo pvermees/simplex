@@ -110,9 +110,10 @@ getstandard <- function(preset){
 
 calibrator <- function(x,...){
     dat <- as.simplex(x)
-    if (x$fixedslope) slope <- x$slope
-    else slope <- NULL
-    out <- calibration(dat,stand=x$simplex$standard,slope=slope)
+    stnd <- dat$calibration$stand
+    prng <- dat$calibration$pairing
+    prfx <- dat$calibration$prefix
+    out <- calibration(dat,stand=stnd,pairing=prng,prefix=prfx)
     plot.calibration(out,...)
     result2json(out)
 }
