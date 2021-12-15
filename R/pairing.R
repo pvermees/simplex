@@ -45,7 +45,7 @@ pairing <- function(lr,stand,type=1){
         std.c <- stdratios[match(smp.c,stdratios)]
         out <- data.frame(std=std,smp=smp,std.c=std.c,smp.c=smp.c,
                           versus=versus,stringsAsFactors=FALSE)
-        out$slope <- rep(NA,nrow(out))
+        out$slope <- rep('auto',nrow(out))
     }
     out    
 }
@@ -53,3 +53,4 @@ pairing <- function(lr,stand,type=1){
 average.pairing <- function(pairing){
     ncol(pairing)==2
 }
+

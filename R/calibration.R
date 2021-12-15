@@ -89,7 +89,7 @@ regression_calibration <- function(tavg,pairing,stand){
     for (i in 1:nr){
         yd <- beta2york_regression(tavg=tavg,pairing=pairing[i,],stand=stand)
         slope <- pairing[i,'slope']
-        if (is.na(slope)) fit <- IsoplotR::york(yd)
+        if (identical(slope,'auto')) fit <- IsoplotR::york(yd)
         else fit <- yorkfix(yd,b=slope)
         out[i,3:10] <- c(fit$a,fit$b,fit$cov.ab,fit$mswd,fit$df,fit$p.value)
     }

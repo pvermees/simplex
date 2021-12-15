@@ -451,6 +451,7 @@ function calibration(){
 	    calibrationstep1();
 	    calibrationstep2();
 	    calibrationstep3();
+	    calibrationstep4();
 	},
 	error => alert(error)
     );
@@ -517,12 +518,9 @@ function calibrationstep3(){
     loadTable(val,header,'pairing',nr);
 }
 
-function slopefixer(){
-    if (document.getElementById('fixedslope').checked){
-	let deg = document.getElementById('pairing').deg;
-	let headers = deg.getColumnHeaders();
-	//let headers.push('slope');
-    }
+function calibrationstep4(){
+    document.getElementById('prefix').value = glob.simplex.calibration.prefix;
+    markStandardsByPrefix();
 }
 
 function do_average_calibration(){
@@ -560,7 +558,7 @@ function showOrHideStandards(){
 
 function markStandardsByPrefix(){
     let prefix = document.getElementById('prefix').value;
-    glob.simplex.standard.prefix = prefix;
+    glob.simplex.calibration.prefix = prefix;
     let keys = Object.keys(glob.simplex.samples);
     let nk = keys.length;
     let dat = new Array(nk);

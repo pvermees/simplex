@@ -20,13 +20,12 @@
 	<option value="del2stand" class="show4stable hide4geochron">
 	  Convert from &delta;-values</option>
       </select>
-      as
-      <select class="hide4stable show4geochron"
-	      id="standtype" onchange="standtype();">
-	<option value="measured">measured</option>
-	<option value="commonradio" selected>common + radiogenic</option>
-      </select>
-      <p></p>
+      <span class="hide4stable show4geochron">as
+	<select id="standtype" onchange="standtype();">
+	  <option value="measured">measured</option>
+	  <option value="commonradio" selected>common + radiogenic</option>
+	</select>
+      </span>
       <p></p>
       <span class="hidden hide4stable show4prefix">Choose a standard:
 	<select id="standards" onchange="chooseStandard()">
@@ -48,11 +47,6 @@
       Pair standard ratios with measurements:<br>
       <table id="pairing" class="normalfont"></table>
       <p></p>
-      <span class="hidden hide4stable show4geochron">
-	<input type="checkbox" id="fixedslope" onchange="slopefixer()">
-	Fixed slope? 
-	<p></p>
-      </span>
     </li>
     <li>
       Select standard aliquot:
