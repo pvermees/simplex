@@ -94,7 +94,7 @@ lrstand <- function(dat){
     type <- datatype(dat)
     out <- list()
     if (type=="U-Pb"){
-        labels <- c("Pb206U238","Pb208Th232")
+        labels <- c("Pb206/U238","Pb208/Th232")
         out$common <- dat$stand$common
         names(out$common) <- labels
         out$lr <- log(val)
@@ -105,7 +105,7 @@ lrstand <- function(dat){
             J <- matrix(c(0.5,1),2,1)
             cov <- J %*% cov %*% t(J)
         }
-        labels <- c("O17O16","O18O16")
+        labels <- c("O17/O16","O18/O16")
         out$ref <- 
         out$lr <- log(1 + val/1000) + out$ref
         J <- diag(1/(1000 + val))
@@ -115,7 +115,7 @@ lrstand <- function(dat){
             J <- rbind(c(1,0),c(0,1),c(0,2))
             cov <- J %*% cov %*% t(J)
         }
-        labels <- c("S33S32","S34S32","S36S32")
+        labels <- c("S33/S32","S34/S32","S36/S32")
         out$ref <- 
         out$lr <- log(1 + val/1000) + out$ref
         J <- diag(1/(1000 + val))

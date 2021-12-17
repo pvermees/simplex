@@ -135,8 +135,3 @@ outlier <- function(x,sname=NULL,i=1,j){
     }
     out
 }
-
-lookup <- function(needles,haystack){
-    i <- match(needles,haystack)
-    i[!is.na(i)]
-}

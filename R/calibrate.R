@@ -14,7 +14,7 @@
 #' tab <- data2table(del)
 #' @export
 calibrate <- function(cal,exterr=FALSE){
-    if (average.pairing(cal$calibration$pairing)){
+    if (is.null(cal$calibration$pairing)){
         out <- calibrate_average(dat=cal,exterr=exterr)
     } else {
         out <- calibrate_regression(dat=cal,exterr=exterr)
@@ -35,8 +35,8 @@ calibrate_average <- function(dat,exterr=FALSE){
     nsi <- length(staiso)
     E <- matrix(0,nrow=ns*nai+nsi+nci,ncol=ns*nai+nsi+nci)
     J <- matrix(0,nrow=ns*nai,ncol=ns*nai+nsi+nci)
-    i1 <- lookup(alliso,cal$pairing$smp)
-    i2 <- lookup(caliso,alliso)
+    i1 <- which(staiso %in% alliso)
+    i2 <- which(alliso %in% caliso)
     E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(cal$stand$cov)
     E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cal$cov)
     val <- rep(0,ns*nai)
@@ -137,7 +137,7 @@ calibrate_regression <- function(dat,exterr=FALSE){
 #' @method plot calibrated
 #' @export
 plot.calibrated <- function(x,option=1,...){
-    if (ncol(x$calibration$pairing)==2){
+    if (is.null(x$calibration$pairing)){
         out <- caldplot_stable(dat=x,...)
     } else {
         out <- caldplot_geochronology(dat=x,option=option,...)
@@ -146,8 +146,9 @@ plot.calibrated <- function(x,option=1,...){
 }
 
 caldplot_stable <- function(dat,...){
-    calval <- dat$calibration$cal[,1:2]
-    calcov <- dat$calibration$cal[,-c(1:2)]
+    calval <- dat$calibration$cal$val
+    calcov <- dat$calibration$cal$cov
+    calrat <- dat$calibration$cal$ratios
     snames <- names(dat$samples)
     tab <- data2table.calibrated(dat)
     nn <- length(dat$calibrated$ratios)
@@ -166,11 +167,11 @@ caldplot_stable <- function(dat,...){
                 sX <- tab[,paste0('s[',xlab,']')]
                 sY <- tab[,paste0('s[',ylab,']')]
                 rXY <- tab[,paste0('r[',xlab,',',ylab,']')]
-                ical <- match(xlab,calval$ratios)
-                jcal <- match(ylab,calval$ratios)
-                x <- calval[ical,'val']
+                ical <- match(xlab,calrat)
+                jcal <- match(ylab,calrat)
+                x <- calval[ical]
                 sx <- sqrt(calcov[ical,ical])
-                y <- calval[jcal,'val']
+                y <- calval[jcal]
                 sy <- sqrt(calcov[jcal,jcal])
                 xlim <- c(min(x-3*sx,X-3*sX),max(x+3*sx,X+3*sX))
                 ylim <- c(min(y-3*sy,Y-3*sY),max(y+3*sy,Y+3*sY))
@@ -194,7 +195,7 @@ caldplot_stable <- function(dat,...){
         lr <- tab[,1]
         ll <- lr - tfact*tab[,2]
         ul <- lr + tfact*tab[,2]
-        y <- calval[,'val']
+        y <- calval
         sy <- sqrt(calcov)
         xlim <- c(1,ns)
         ylim <- c(min(y-3*sy,ll),max(y+3*sy,ul))
@@ -202,11 +203,10 @@ caldplot_stable <- function(dat,...){
         deltagrid(dat)
         matlines(rbind(1:ns,1:ns),rbind(ll,ul),lty=1,col='black')
         points(1:ns,lr,pch=16)
-        cal <- dat$calibration$cal
         xlim <- graphics::par('usr')[1:2]
-        lines(xlim,rep(cal$val,2),lty=1,col='red')
-        lines(xlim,rep(cal$val-tfact*sqrt(cal$cov),2),lty=2)
-        lines(xlim,rep(cal$val+tfact*sqrt(cal$cov),2),lty=2)
+        lines(xlim,rep(calval,2),lty=1,col='red')
+        lines(xlim,rep(calval-tfact*sqrt(calcov),2),lty=2)
+        lines(xlim,rep(calval+tfact*sqrt(calcov),2),lty=2)
     }
     graphics::par(oldpar)
 }
@@ -220,12 +220,13 @@ deltagrid <- function(dat,ical,jcal){
         multipanel <- TRUE
     }
     usr <- graphics::par('usr')
-    ratios <- dat$calibration$cal$ratios
     xlim <- usr[1:2]
     ylim <- usr[3:4]
+    standratios <- dat$calibration$stand$ratios
+    calratios <- dat$calibration$cal$ratios
     if (multipanel){
         xs <- dat$calibration$cal$val[ical]
-        ist <- match(ratios[ical],dat$calibration$pairing$smp)
+        ist <- which(standratios %in% calratios[ical])
         di <- dat$calibration$stand$val[ist]
         dxmin <- 1000*(xlim[1]-xs)+di
         dxmax <- 1000*(xlim[2]-xs)+di
@@ -234,7 +235,7 @@ deltagrid <- function(dat,ical,jcal){
         nxt <- length(xticks)
     }
     ys <- dat$calibration$cal$val[jcal]
-    jst <- match(ratios[jcal],dat$calibration$pairing$smp)
+    jst <- which(standratios %in% calratios[jcal])
     dj <- dat$calibration$stand$val[jst]
     dymin <- 1000*(ylim[1]-ys)+dj
     dymax <- 1000*(ylim[2]-ys)+dj

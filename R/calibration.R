@@ -20,22 +20,22 @@
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,stand,pairing,prefix=NULL,
+calibration <- function(lr,stand,pairing=NULL,prefix=NULL,
                         snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
     cal <- list()
     cal$stand <- stand
-    cal$pairing <- pairing
     cal$prefix <- prefix
     dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
     if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
     cal$t <- t
     cal$tavg <- time_average(dat,t=t)
-    if (average.pairing(pairing)){
-        cal$cal <- average_calibration(tavg=cal$tavg,pairing=pairing)
+    if (is.null(pairing)){
+        cal$cal <- average_calibration(tavg=cal$tavg,stand=stand)
     } else {
-        cal$cal <-
-            regression_calibration(tavg=cal$tavg,pairing=pairing,stand=stand)
+        cal$pairing <- pairing
+        cal$cal <- regression_calibration(tavg=cal$tavg,
+                                          pairing=pairing,stand=stand)
     }
     out$calibration <- cal
     class(out) <- unique(append('calibration',class(out)))
@@ -63,7 +63,7 @@ time_average <- function(lr,t=NULL){
     out
 }
 
-average_calibration <- function(tavg,pairing){
+average_calibration <- function(tavg,stand){
     LL <- function(par,tavg,i){
         out <- 0
         for (tav in tavg){
@@ -72,13 +72,13 @@ average_calibration <- function(tavg,pairing){
         }
         out
     }
-    i <- match(pairing$smp[!is.na(pairing$smp)],names(tavg[[1]]$val))
+    ratios <- names(tavg[[1]]$val)
+    i <- which(ratios %in% stand$ratios)
     wtdmean <- stats::optim(tavg[[1]]$val[i],fn=LL,gr=NULL,
                             method='BFGS',hessian=TRUE,tavg=tavg,i=i)
     val <- as.vector(wtdmean$par)
     covmat <- solve(wtdmean$hessian)
-    j <- which(pairing$smp %in% names(tavg[[1]]$val))
-    list(ratios=pairing$smp[j],val=unname(val),cov=unname(covmat))
+    list(ratios=ratios,val=unname(val),cov=unname(covmat))
 }
 
 regression_calibration <- function(tavg,pairing,stand){
@@ -189,7 +189,7 @@ yorkfix <- function(xy,b,alpha=0.05){
 #' @method plot calibration
 #'@export
 plot.calibration <- function(dat,option=1,...){
-    if (average.pairing(dat$calibration$pairing)){
+    if (is.null(dat$calibration$pairing)){
         out <- calplot_stable(cal=dat$calibration,...)
     } else {
         out <- calplot_geochronology(dat=dat,option=option,...)
@@ -198,14 +198,14 @@ plot.calibration <- function(dat,option=1,...){
 }
 
 calplot_stable <- function(cal,...){
-    nn <- nrow(cal$cal)         # number of ratios
+    nn <- length(cal$cal$ratios)         # number of ratios
     snames <- names(cal$tavg)
     if (nn>1){
         np <- nn*(nn-1)/2       # number of panels
         nc <- ceiling(sqrt(np)) # number of rows
         nr <- ceiling(np/nc)    # number of columns
         oldpar <- graphics::par(mfrow=c(nr,nc))
-        ratios <- cal$cal[,'ratios']
+        ratios <- cal$cal$ratios
         ij <- match(ratios,names(cal$tavg[[1]]$val))
         for (i in 1:(nn-1)){
             for (j in (i+1):nn){
@@ -213,8 +213,8 @@ calplot_stable <- function(cal,...){
                 IsoplotR::scatterplot(B,...)
                 graphics::mtext(side=1,text=paste0('ln[',ratios[i],']'),line=2)
                 graphics::mtext(side=2,text=paste0('ln[',ratios[j],']'),line=2)
-                ell <- IsoplotR::ellipse(cal$cal[i,'val'],cal$cal[j,'val'],
-                                         cal$cal[c(i,j),2+c(i,j)])
+                ell <- IsoplotR::ellipse(cal$cal$val[i],cal$cal$val[j],
+                                         cal$cal$cov[c(i,j),c(i,j)])
                 graphics::polygon(ell,col='white')
             }
         }
@@ -235,9 +235,9 @@ calplot_stable <- function(cal,...){
                 type='l',lty=1,col='black',bty='n',
                 xlab='standard #',ylab='')
         points(1:ns,tab['x',],pch=16)
-        lines(c(1,ns),rep(cal$cal[,'val'],2),lty=2)
-        lines(c(1,ns),rep(cal$cal[,'val']-tfact*sqrt(cal$cal[,'cov']),2),lty=3)
-        lines(c(1,ns),rep(cal$cal[,'val']+tfact*sqrt(cal$cal[,'cov']),2),lty=3)
+        lines(c(1,ns),rep(cal$cal$val,2),lty=2)
+        lines(c(1,ns),rep(cal$cal$val-tfact*sqrt(cal$cal$cov),2),lty=3)
+        lines(c(1,ns),rep(cal$cal$val+tfact*sqrt(cal$cal$cov),2),lty=3)
     }
 }
 
