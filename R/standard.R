@@ -37,14 +37,14 @@ standard <- function(x){
     } else if (x=='Temora'){
         out <- age2stand(tst=c(416.75,0.12))
     } else if (x=='NBS28'){
-        del <- data.frame(num=c('O17','O18'),den='O16',
-                          val=c(4.79,9.56),
-                          cov=diag(c(0.05,0.11))^2)
+        del <- list(num=c('O17','O18'),den='O16',
+                    val=c(4.79,9.56),
+                    cov=diag(c(0.05,0.11))^2)
         out <- del2stand(del,ref=VSMOW())
     } else if (x=='Sonora'){ # temporary value
-        del <- data.frame(num=c('S33','S34','S36'),den='S32',
-                          val=c(0.83,1.61,3.25),
-                          cov=diag(c(0.03,0.08,0.03))^2)
+        del <- list(num=c('S33','S34','S36'),den='S32',
+                    val=c(0.83,1.61,3.25),
+                    cov=diag(c(0.03,0.08,0.03))^2)
         out <- del2stand(del,ref=troilite())
     } else {
         stop("Invalid input to standard(...).")
@@ -60,16 +60,16 @@ age2stand <- function(tst,pairing=NULL){
     D <- IsoplotR::mclean(tt=tst[1])
     val <- c(-log(common[,c('i64','i84')]),log(D$Pb206U238),log(D$Pb208Th232))
     J <- rbind(0,0,D$dPb206U238dt/D$Pb206U238,D$dPb208Th232dt/D$Pb208Th232)
-    data.frame(ratios=ratios,val=val,cov=J%*%(tst[2]^2)%*%t(J))
+    list(ratios=ratios,val=val,cov=J%*%(tst[2]^2)%*%t(J))
 }
 
 del2stand <- function(del,ref){
     keep <- (ref$num %in% del$num) & (ref$den %in% del$den)
     if (!any(keep)) stop('Standard isotopes must match reference.')
-    out <- data.frame(ratios=paste0(del$num,'/',del$den))
+    out <- list(ratios=paste0(del$num,'/',del$den))
     out$val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
-    covmat <- data.matrix(del[,4:ncol(del)])
+    covmat <- data.matrix(del$cov)
     out$cov <- J %*% covmat %*% t(J)
     out
 }
@@ -77,16 +77,15 @@ del2stand <- function(del,ref){
 VSMOW <- function(){
     O678 <- c(0.3799e-3,2.00520e-3)
     relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
-    data.frame(
-        num = c('O17','O18'),den = 'O16',
-        val=log(O678),cov=diag(relerr^2))
+    list(num = c('O17','O18'),den = 'O16',
+         val=log(O678),cov=diag(relerr^2))
 }
 
 troilite <- function(){
     S2346 <- c(126.948,22.6436,6515)
     relerr <- c(0.047,0.0020,20)/S2346
-    data.frame(num=c('S33','S34','S36'),den='S32',
-               val=-log(S2346),cov=diag(relerr^2))
+    list(num=c('S33','S34','S36'),den='S32',
+         val=-log(S2346),cov=diag(relerr^2))
 }
 
 lrstand <- function(dat){

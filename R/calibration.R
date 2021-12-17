@@ -78,7 +78,7 @@ average_calibration <- function(tavg,pairing){
     val <- as.vector(wtdmean$par)
     covmat <- solve(wtdmean$hessian)
     j <- which(pairing$smp %in% names(tavg[[1]]$val))
-    data.frame(ratios=pairing$smp[j],val=unname(val),cov=unname(covmat))
+    list(ratios=pairing$smp[j],val=unname(val),cov=unname(covmat))
 }
 
 regression_calibration <- function(tavg,pairing,stand){
@@ -120,8 +120,8 @@ beta2york_regression <- function(tavg,pairing,stand){
     DP <- as.character(pairing[1,'smp'])
     OP <- as.character(pairing[1,'versus'])
     CD.smp <- as.character(pairing[1,'smp.c'])
-    i.CD.smp <- match(pairing[1,'std.c'],stand[,'ratios'])
-    val.CD.std <- stand[i.CD.smp,'val']
+    i.CD.smp <- match(pairing[1,'std.c'],stand$ratios)
+    val.CD.std <- stand$val[i.CD.smp]
     J <- matrix(0,nrow=2,ncol=length(tavg[[1]]$val))
     colnames(J) <- names(tavg[[1]]$val)
     rownames(J) <- c('X','Y')

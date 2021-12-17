@@ -488,19 +488,10 @@ function togglecaltype(){
 // II.
 function setstandcomp(){
     let stand = glob.simplex.calibration.stand;
-    let nr = stand.length;
-    let header = new Array(nr);
-    let val = [new Array(nr)];
-    let cov = new Array(nr);
-    for (let i=0; i<nr; i++){
-	header[i] = stand[i].ratios;
-	val[0][i] = stand[i].val;
-	cov[i] = new Array(nr);
-	let keys = Object.keys(stand[i]);
-	for (let j=0; j<nr; j++){
-	    cov[i][j] = stand[i][keys[j+2]];
-	}
-    }
+    let header = stand.ratios;
+    let nr = header.length;
+    let val = [stand.val];
+    let cov = stand.cov;
     loadTable(val,header,'standlr',1);
     loadTable(cov,header,'standcov',nr);
 }

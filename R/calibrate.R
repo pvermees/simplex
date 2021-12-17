@@ -37,8 +37,8 @@ calibrate_average <- function(dat,exterr=FALSE){
     J <- matrix(0,nrow=ns*nai,ncol=ns*nai+nsi+nci)
     i1 <- lookup(alliso,cal$pairing$smp)
     i2 <- lookup(caliso,alliso)
-    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(cal$stand[,-c(1,2)])
-    E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cal[,-c(1,2)])
+    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(cal$stand$cov)
+    E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cal$cov)
     val <- rep(0,ns*nai)
     for (i in 1:ns){
         i3 <- (i-1)*nai+1:nai
@@ -87,7 +87,7 @@ calibrate_regression <- function(dat,exterr=FALSE){
     }
     val <- rep(0,ns*noi)
     E <- matrix(0,nrow=ns*nai+nsi+2*nab,ncol=ns*nai+nsi+2*nab)
-    E[istd,istd] <- as.matrix(cal$stand[1:nsi,2+1:nsi])
+    E[istd,istd] <- as.matrix(cal$stand$cov)
     for (i in 1:nab){
         E[iab[i,1],iab[i,1]] <- cal$cal[i,'s[a]']^2
         E[iab[i,2],iab[i,2]] <- cal$cal[i,'s[b]']^2
@@ -104,7 +104,7 @@ calibrate_regression <- function(dat,exterr=FALSE){
         for (j in 1:nab){
             val[ioi[iDPout[j]]] <- tavg[[i]]$val[iDPall[j]] -
                 cal$cal[j,'a'] - cal$cal[j,'b']*tavg[[i]]$val[iOP[j]] +
-                cal$stand[iDPstd[j],'val']
+                cal$stand$val[iDPstd[j]]
             J[ioi[iDPout[j]],iai[iOP[j]]] <- - cal$cal[j,'b'] # dval/dOP
             if (exterr){
                 J[ioi[iDPout[j]],iab[j,1]] <- -1 # dval/da
@@ -302,7 +302,7 @@ agegrid <- function(fit,pairing,stand){
     b <- fit$b[1]
     yrange <- c(ylim[1] - b*diff(xlim),
                 ylim[2] + b*diff(xlim))
-    logDPstd <- stand[match(pairing$std,stand$ratios),'val']
+    logDPstd <- stand$val[match(pairing$std,stand$ratios)]
     logDPlim <- logDPstd + yrange - a - b * xlim
     tlim <- log(exp(logDPlim)+1)/lambda
     tticks <- pretty(tlim)
