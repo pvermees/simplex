@@ -26,16 +26,16 @@ calibration <- function(lr,stand,pairing=NULL,prefix=NULL,
     cal <- list()
     cal$stand <- stand
     cal$prefix <- prefix
-    dat <- subset(x=out,prefix=prefix,snames=snames,i=i,invert=invert)
+    cal$snames <- subset2snames(dat=lr,prefix=prefix,snames=snames,i=i)
+    dat <- subset(x=out,snames=cal$snames)
     if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
     cal$t <- t
-    cal$tavg <- time_average(dat,t=t)
+    tavg <- time_average(dat,t=t)
     if (is.null(pairing)){
-        cal$cal <- average_calibration(tavg=cal$tavg,stand=stand)
+        cal$cal <- average_calibration(tavg=tavg,stand=stand)
     } else {
         cal$pairing <- pairing
-        cal$cal <- regression_calibration(tavg=cal$tavg,
-                                          pairing=pairing,stand=stand)
+        cal$cal <- regression_calibration(tavg=tavg,pairing=pairing,stand=stand)
     }
     out$calibration <- cal
     class(out) <- unique(append('calibration',class(out)))
@@ -64,21 +64,20 @@ time_average <- function(lr,t=NULL){
 }
 
 average_calibration <- function(tavg,stand){
-    LL <- function(par,tavg,i){
+    LL <- function(par,tavg,ratios){
         out <- 0
         for (tav in tavg){
             out <- out +
-                stats::mahalanobis(x=tav$val[i],center=par,cov=tav$cov[i,i])
+                stats::mahalanobis(x=tav$val[ratios],center=par,
+                                   cov=tav$cov[ratios,ratios])
         }
         out
     }
-    ratios <- names(tavg[[1]]$val)
-    i <- which(ratios %in% stand$ratios)
-    wtdmean <- stats::optim(tavg[[1]]$val[i],fn=LL,gr=NULL,
-                            method='BFGS',hessian=TRUE,tavg=tavg,i=i)
-    val <- as.vector(wtdmean$par)
-    covmat <- solve(wtdmean$hessian)
-    list(ratios=ratios,val=unname(val),cov=unname(covmat))
+    ratios <- intersect(names(tavg[[1]]$val),names(stand$val))
+    wtdmean <- stats::optim(tavg[[1]]$val[ratios],fn=LL,gr=NULL,
+                            method='BFGS',hessian=TRUE,
+                            tavg=tavg,ratios=ratios)
+    list(val=wtdmean$par,cov=solve(wtdmean$hessian))
 }
 
 regression_calibration <- function(tavg,pairing,stand){
@@ -96,18 +95,21 @@ regression_calibration <- function(tavg,pairing,stand){
     out
 }
 
-beta2york_average <- function(tavg,i,j){
+beta2york_average <- function(tavg,xratio,yratio){
     snames <- names(tavg)
     out <- matrix(0,nrow=length(snames),ncol=5)
     colnames(out) <- c('X','sX','Y','sY','rXY')
     rownames(out) <- snames
     for (sname in snames){
         samp <- tavg[[sname]]
-        out[sname,'X'] <- samp$val[i]
-        out[sname,'Y'] <- samp$val[j]
-        out[sname,'sX'] <- sqrt(samp$cov[i,i])
-        out[sname,'sY'] <- sqrt(samp$cov[j,j])
-        out[sname,'rXY'] <- samp$cov[i,j]/sqrt(samp$cov[i,i]*samp$cov[j,j])
+        out[sname,'X'] <- samp$val[xratio]
+        out[sname,'Y'] <- samp$val[yratio]
+        vX <- samp$cov[xratio,xratio]
+        vY <- samp$cov[yratio,yratio]
+        sXY <- samp$cov[xratio,yratio]
+        out[sname,'sX'] <- sqrt(vX)
+        out[sname,'sY'] <- sqrt(vY)
+        out[sname,'rXY'] <- sXY/sqrt(vX*vY)
     }
     out
 }
@@ -190,44 +192,44 @@ yorkfix <- function(xy,b,alpha=0.05){
 #'@export
 plot.calibration <- function(dat,option=1,...){
     if (is.null(dat$calibration$pairing)){
-        out <- calplot_stable(cal=dat$calibration,...)
+        out <- calplot_stable(dat=dat,...)
     } else {
         out <- calplot_geochronology(dat=dat,option=option,...)
     }
     invisible(out)
 }
 
-calplot_stable <- function(cal,...){
-    nn <- length(cal$cal$ratios)         # number of ratios
-    snames <- names(cal$tavg)
-    if (nn>1){
-        np <- nn*(nn-1)/2       # number of panels
+calplot_stable <- function(dat,...){
+    cal <- dat$calibration$cal
+    ratios <- names(cal$val)
+    nrat <- length(ratios)
+    tavg <- time_average(subset(x=dat,snames=cal$snames),t=cal$t)
+    if (nrat>1){
+        np <- nrat*(nrat-1)/2   # number of panels
         nc <- ceiling(sqrt(np)) # number of rows
         nr <- ceiling(np/nc)    # number of columns
-        oldpar <- graphics::par(mfrow=c(nr,nc))
-        ratios <- cal$cal$ratios
-        ij <- match(ratios,names(cal$tavg[[1]]$val))
-        for (i in 1:(nn-1)){
-            for (j in (i+1):nn){
-                B <- beta2york_average(cal$tavg,ij[i],ij[j])
+        oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,1,1))
+        for (i in 1:(nrat-1)){
+            for (j in (i+1):nrat){
+                B <- beta2york_average(tavg,ratios[i],ratios[j])
                 IsoplotR::scatterplot(B,...)
                 graphics::mtext(side=1,text=paste0('ln[',ratios[i],']'),line=2)
                 graphics::mtext(side=2,text=paste0('ln[',ratios[j],']'),line=2)
-                ell <- IsoplotR::ellipse(cal$cal$val[i],cal$cal$val[j],
-                                         cal$cal$cov[c(i,j),c(i,j)])
+                ell <- IsoplotR::ellipse(cal$val[i],cal$val[j],
+                                         cal$cov[c(i,j),c(i,j)])
                 graphics::polygon(ell,col='white')
             }
         }
         graphics::par(oldpar)
     } else {
-        ns <- length(snames)
+        ns <- length(cal$snames)
         tab <- matrix(0,nrow=3,ncol=ns)
         rownames(tab) <- c('x','ll','ul')
-        colnames(tab) <- snames
+        colnames(tab) <- cal$snames
         tfact <- qnorm(0.975)
-        for (sname in snames){
-            tab['x',sname] <- cal$tavg[[sname]]$val
-            dx <- tfact*sqrt(cal$tavg[[sname]]$cov)
+        for (sname in cal$snames){
+            tab['x',sname] <- tavg[[sname]]$val
+            dx <- tfact*sqrt(tavg[[sname]]$cov)
             tab['ll',sname] <- tab['x',sname] - dx
             tab['ul',sname] <- tab['x',sname] + dx
         }
@@ -248,8 +250,9 @@ calplot_geochronology <- function(dat=dat,option=option,...){
     colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab')
     out[,1:2] <- cal$pairing[,c('versus','smp')]
     oldpar <- graphics::par(mfrow=c(1,nr))
+    tavg <- time_average(subset(x=dat,snames=cal$snames),t=cal$t)
     for (i in 1:nr){
-        yd <- beta2york_regression(tavg=cal$tavg,
+        yd <- beta2york_regression(tavg=tavg,
                                    pairing=cal$pairing[i,],
                                    stand=cal$stand)
         IsoplotR::scatterplot(yd,

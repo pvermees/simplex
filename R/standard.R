@@ -60,18 +60,24 @@ age2stand <- function(tst,pairing=NULL){
     D <- IsoplotR::mclean(tt=tst[1])
     val <- c(-log(common[,c('i64','i84')]),log(D$Pb206U238),log(D$Pb208Th232))
     J <- rbind(0,0,D$dPb206U238dt/D$Pb206U238,D$dPb208Th232dt/D$Pb208Th232)
-    list(ratios=ratios,val=val,cov=J%*%(tst[2]^2)%*%t(J))
+    covmat <- J%*%(tst[2]^2)%*%t(J)
+    names(val) <- ratios
+    rownames(covmat) <- ratios
+    colnames(covmat) <- ratios
+    list(val=val,cov=covmat)
 }
 
 del2stand <- function(del,ref){
     keep <- (ref$num %in% del$num) & (ref$den %in% del$den)
     if (!any(keep)) stop('Standard isotopes must match reference.')
-    out <- list(ratios=paste0(del$num,'/',del$den))
-    out$val <- log(1 + del$val/1000) + ref$val[keep]
+    ratios <- paste0(del$num,'/',del$den)
+    val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
-    covmat <- data.matrix(del$cov)
-    out$cov <- J %*% covmat %*% t(J)
-    out
+    covmat <- J %*% data.matrix(del$cov) %*% t(J)
+    names(val) <- ratios
+    rownames(covmat) <- ratios
+    colnames(covmat) <- ratios
+    list(val=val,cov=covmat)
 }
 
 VSMOW <- function(){
