@@ -203,7 +203,8 @@ calplot_stable <- function(dat,...){
     cal <- dat$calibration$cal
     ratios <- names(cal$val)
     nrat <- length(ratios)
-    tavg <- time_average(subset(x=dat,snames=cal$snames),t=cal$t)
+    caldat <- subset(x=dat,snames=dat$calibration$snames)
+    tavg <- time_average(caldat,t=dat$calibration$t)
     if (nrat>1){
         np <- nrat*(nrat-1)/2   # number of panels
         nc <- ceiling(sqrt(np)) # number of rows

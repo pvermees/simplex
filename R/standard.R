@@ -71,13 +71,18 @@ del2stand <- function(del,ref){
     keep <- (ref$num %in% del$num) & (ref$den %in% del$den)
     if (!any(keep)) stop('Standard isotopes must match reference.')
     ratios <- paste0(del$num,'/',del$den)
-    val <- log(1 + del$val/1000) + ref$val[keep]
+    out <- list()
+    out$val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
-    covmat <- J %*% data.matrix(del$cov) %*% t(J)
-    names(val) <- ratios
-    rownames(covmat) <- ratios
-    colnames(covmat) <- ratios
-    list(val=val,cov=covmat)
+    out$covmat <- J %*% data.matrix(del$cov) %*% t(J)
+    out$ref <- list(val=ref$val,cov=ref$cov)
+    names(out$val) <- ratios
+    rownames(out$cov) <- ratios
+    colnames(out$cov) <- ratios
+    names(out$ref$val) <- ratios
+    rownames(out$ref$cov) <- ratios
+    colnames(out$ref$cov) <- ratios
+    out
 }
 
 VSMOW <- function(){

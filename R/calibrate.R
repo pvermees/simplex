@@ -24,35 +24,35 @@ calibrate <- function(cal,exterr=FALSE){
 
 calibrate_average <- function(dat,exterr=FALSE){
     out <- dat
-    cal <- dat$calibration
+    cal <- dat$calibration$cal
+    stand <- dat$calibration$stand
     ns <- length(dat$samples)
-    tavg <- time_average(dat,t=cal$t)
+    tavg <- time_average(dat,t=dat$calibration$t)
     alliso <- names(tavg[[1]]$val)
-    caliso <- cal$cal$ratios
-    staiso <- cal$stand$ratios
+    staiso <- names(stand$val)
+    caliso <- names(cal$val) # caliso is a subset of staiso
     nai <- length(alliso)
-    nci <- length(caliso)
     nsi <- length(staiso)
+    nci <- length(caliso)
     E <- matrix(0,nrow=ns*nai+nsi+nci,ncol=ns*nai+nsi+nci)
     J <- matrix(0,nrow=ns*nai,ncol=ns*nai+nsi+nci)
-    i1 <- which(staiso %in% alliso)
-    i2 <- which(alliso %in% caliso)
-    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(cal$stand$cov)
-    E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cal$cov)
+    ical <- which(alliso %in% caliso)
+    ista <- which(staiso %in% caliso)
+    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(stand$cov)
+    E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cov)
     val <- rep(0,ns*nai)
     for (i in 1:ns){
-        i3 <- (i-1)*nai+1:nai
-        val[i3] <- tavg[[i]]$val
+        iall <- (i-1)*nai+1:nai
+        val[iall] <- tavg[[i]]$val
+        E[iall,iall] <- tavg[[i]]$cov
+        J[iall,iall] <- diag(nai)
+        val[iall[ical]] <- val[iall[ical]] + stand$val[ista] - cal$val
         if (exterr){
-            val[i3[i2]] <- val[i3[i2]] + cal$stand$val[i1] - cal$cal$val
-            J[i3[i1],ns*nai+1:nsi] <- diag(nci)
-            J[i3[i2],ns*nai+nsi+1:nci] <- -diag(nci)
+            J[iall[ista],ns*nai+1:nsi] <- diag(nsi)[ista,]
+            J[iall[ical],ns*nai+nsi+1:nci] <- -diag(nci)
         }
-        E[i3,i3] <- tavg[[i]]$cov
-        J[i3,i3] <- diag(nai)
     }
-    out$calibrated <- list(snames=names(dat$samples),
-                           ratios=paste0(dat$method$num,'/',dat$method$den),
+    out$calibrated <- list(snames=names(dat$samples),ratios=alliso,
                            val=val,cov=J %*% E %*% t(J))
     class(out) <- unique(append("calibrated",class(out)))
     out
@@ -136,7 +136,7 @@ calibrate_regression <- function(dat,exterr=FALSE){
 #' plot(cd)
 #' @method plot calibrated
 #' @export
-plot.calibrated <- function(x,option=1,...){
+plot.calibrated <- function(x,...){
     if (is.null(x$calibration$pairing)){
         out <- caldplot_stable(dat=x,...)
     } else {
@@ -146,114 +146,104 @@ plot.calibrated <- function(x,option=1,...){
 }
 
 caldplot_stable <- function(dat,...){
-    calval <- dat$calibration$cal$val
-    calcov <- dat$calibration$cal$cov
-    calrat <- dat$calibration$cal$ratios
-    snames <- names(dat$samples)
+    sta <- dat$calibration$stand
+    cal <- dat$calibrated
     tab <- data2table.calibrated(dat)
-    nn <- length(dat$calibrated$ratios)
-    if (nn>1){
-        np <- nn*(nn-1)/2       # number of plot panels
+    nrat <- length(cal$ratios)
+    if (nrat>1){
+        np <- nrat*(nrat-1)/2   # number of plot panels
         nc <- ceiling(sqrt(np)) # number of rows
         nr <- ceiling(np/nc)    # number of columns
         oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(3.5,4))
-        ii <- 1
-        for (i in 1:(nn-1)){
-            for (j in (i+1):nn){
-                xlab <- dat$calibrated$ratios[i]
-                ylab <- dat$calibrated$ratios[j]
-                X <- tab[,xlab]
-                Y <- tab[,ylab]
-                sX <- tab[,paste0('s[',xlab,']')]
-                sY <- tab[,paste0('s[',ylab,']')]
-                rXY <- tab[,paste0('r[',xlab,',',ylab,']')]
-                ical <- match(xlab,calrat)
-                jcal <- match(ylab,calrat)
-                x <- calval[ical]
-                sx <- sqrt(calcov[ical,ical])
-                y <- calval[jcal]
-                sy <- sqrt(calcov[jcal,jcal])
-                xlim <- c(min(x-3*sx,X-3*sX),max(x+3*sx,X+3*sX))
-                ylim <- c(min(y-3*sy,Y-3*sY),max(y+3*sy,Y+3*sY))
+        for (i in 1:(nrat-1)){
+            for (j in (i+1):nrat){
+                xratio <- cal$ratios[i]
+                yratio <- cal$ratios[j]
+                Xc <- tab[,xratio]
+                Yc <- tab[,yratio]
+                sXc <- tab[,paste0('s[',xratio,']')]
+                sYc <- tab[,paste0('s[',yratio,']')]
+                rXYc <- tab[,paste0('r[',xratio,',',yratio,']')]
+                Xs <- sta$val[xratio]
+                sXs <- sqrt(sta$cov[xratio,xratio])
+                Ys <- sta$val[yratio]
+                sYs <- sqrt(sta$cov[yratio,yratio])
+                xlim <- c(min(Xc-3*sXc,Xs-3*sXs),max(Xc+3*sXc,Xs+3*sXs))
+                ylim <- c(min(Yc-3*sYc,Ys-3*sYs),max(Yc+3*sYc,Ys+3*sYs))
                 graphics::plot(xlim,ylim,type='n',ann=FALSE)
-                deltagrid(dat,ical,jcal)
-                IsoplotR::scatterplot(cbind(X,sX,Y,sY,rXY),
+                deltagrid(dat,xratio,yratio)
+                IsoplotR::scatterplot(cbind(Xc,sXc,Yc,sYc,rXYc),
                                       xlim=xlim,ylim=ylim,add=TRUE,...)
-                graphics::mtext(side=1,text=xlab,line=2)
-                graphics::mtext(side=2,text=ylab,line=2)
-                ell <- IsoplotR::ellipse(x,y,calcov[c(ical,jcal),c(ical,jcal)])
-                graphics::polygon(ell,col='white')
-                ii <- ii + 1
-                if (ii>np) break
+                graphics::mtext(side=1,text=paste0('ln[',xratio,']'),line=2)
+                graphics::mtext(side=2,text=paste0('ln[',yratio,']'),line=2)
             }
         }
     } else {
-        oldpar <- graphics::par(mar=c(3.5,3.5,1.5,3.5),mgp=c(2,0.5,0))
-        ylab <- dat$calibrated$ratios
-        ns <- length(snames)
+        oldpar <- graphics::par(mar=c(3.5,3.5,1.5,3.5),mgp=c(2,0.75,0))
+        ylab <- cal$ratios
+        ns <- length(cal$snames)
         tfact <- qnorm(0.975)
         lr <- tab[,1]
         ll <- lr - tfact*tab[,2]
         ul <- lr + tfact*tab[,2]
-        y <- calval
-        sy <- sqrt(calcov)
+        Ys <- sta$val[ylab]
+        sYs <- as.numeric(sqrt(sta$cov[ylab,ylab]))
         xlim <- c(1,ns)
-        ylim <- c(min(y-3*sy,ll),max(y+3*sy,ul))
+        ylim <- c(min(Ys-3*sYs,ll),max(Ys+3*sYs,ul))
         graphics::plot(xlim,ylim,type='n',xlab='sample #',ylab=ylab)
         deltagrid(dat)
         matlines(rbind(1:ns,1:ns),rbind(ll,ul),lty=1,col='black')
         points(1:ns,lr,pch=16)
         xlim <- graphics::par('usr')[1:2]
-        lines(xlim,rep(calval,2),lty=1,col='red')
-        lines(xlim,rep(calval-tfact*sqrt(calcov),2),lty=2)
-        lines(xlim,rep(calval+tfact*sqrt(calcov),2),lty=2)
+        lines(xlim,rep(Ys,2),lty=1,col='red')
+        lines(xlim,rep(Ys-tfact*sYs,2),lty=2)
+        lines(xlim,rep(Ys+tfact*sYs,2),lty=2)
     }
     graphics::par(oldpar)
 }
 
-deltagrid <- function(dat,ical,jcal){
-    if (missing(ical) | missing(jcal)){
+deltagrid <- function(dat,xratio,yratio){
+    if (missing(xratio) | missing(yratio)){
         multipanel <- FALSE
-        ical <- 1
-        jcal <- 1
+        xratio <- dat$calibrated$ratios
+        yratio <- xratio
     } else {
         multipanel <- TRUE
     }
     usr <- graphics::par('usr')
     xlim <- usr[1:2]
     ylim <- usr[3:4]
-    standratios <- dat$calibration$stand$ratios
-    calratios <- dat$calibration$cal$ratios
+    sta <- dat$calibration$stand
+    staratios <- names(sta$val)
+    calratios <- names(dat$calibrated$val)
     if (multipanel){
-        xs <- dat$calibration$cal$val[ical]
-        ist <- which(standratios %in% calratios[ical])
-        di <- dat$calibration$stand$val[ist]
-        dxmin <- 1000*(xlim[1]-xs)+di
-        dxmax <- 1000*(xlim[2]-xs)+di
+        x <- sta$val[xratio]
+        dxmin <- 1000*(xlim[1]-sta$ref$val[xratio])
+        dxmax <- 1000*(xlim[2]-sta$ref$val[xratio])
         dxticks <- pretty(c(dxmin,dxmax))
-        xticks <- (dxticks-di)/1000+xs
+        xticks <- sta$ref$val[xratio] + dxticks/1000
         nxt <- length(xticks)
     }
-    ys <- dat$calibration$cal$val[jcal]
-    jst <- which(standratios %in% calratios[jcal])
-    dj <- dat$calibration$stand$val[jst]
-    dymin <- 1000*(ylim[1]-ys)+dj
-    dymax <- 1000*(ylim[2]-ys)+dj
+    y <- sta$val[yratio]
+    dymin <- 1000*(ylim[1]-sta$ref$val[yratio])
+    dymax <- 1000*(ylim[2]-sta$ref$val[yratio])
     dyticks <- pretty(c(dymin,dymax))
-    yticks <- (dyticks-dj)/1000+ys
+    yticks <- sta$ref$val[yratio] + dyticks/1000
     nyt <- length(yticks)
     if (multipanel){
-        graphics::matlines(rbind(xticks,xticks),matrix(rep(ylim,nxt),ncol=nxt),
+        graphics::matlines(rbind(xticks,xticks),
+                           matrix(rep(ylim,nxt),ncol=nxt),
                            lty=3,col='black')
         graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
                            rbind(yticks,yticks),lty=3,col='black')
         graphics::axis(side=3,at=xticks,labels=dxticks)
         graphics::mtext(expression(delta*"'"),side=3,line=2)
-        graphics::lines(rep(xs,2),ylim,lty=2,col='red')
-        graphics::text(xs,ylim[1],labels=dat$calibration$prefix,
+        graphics::lines(rep(x,2),ylim,lty=2,col='red')
+        graphics::text(x,ylim[1],labels=dat$calibration$prefix,
                        pos=4,srt=90,offset=0)
-        graphics::lines(xlim,rep(ys,2),lty=2,col='red')
-        graphics::text(xlim[1],ys,labels=dat$calibration$prefix,pos=4,offset=0)
+        graphics::lines(xlim,rep(y,2),lty=2,col='red')
+        graphics::text(xlim[1],y,pos=4,offset=0,
+                       labels=dat$calibration$prefix)
     } else {
         graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
                            rbind(yticks,yticks),lty=3,col='black')
