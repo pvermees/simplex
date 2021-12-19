@@ -137,16 +137,16 @@ calibrate_regression <- function(dat,exterr=FALSE){
 #' plot(cd)
 #' @method plot calibrated
 #' @export
-plot.calibrated <- function(x,...){
+plot.calibrated <- function(x,show.numbers=TRUE,...){
     if (is.null(x$calibration$pairing)){
-        out <- caldplot_stable(dat=x,...)
+        out <- caldplot_stable(dat=x,show.numbers=show.numbers,...)
     } else {
-        out <- caldplot_geochronology(dat=x,...)
+        out <- caldplot_geochronology(dat=x,show.numbers=show.numbers,...)
     }
     invisible(out)
 }
 
-caldplot_stable <- function(dat,...){
+caldplot_stable <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
     sta <- dat$calibration$stand
     cal <- dat$calibrated
     tab <- data2table.calibrated(dat)
@@ -165,16 +165,23 @@ caldplot_stable <- function(dat,...){
                 sXc <- tab[,paste0('s[',xratio,']')]
                 sYc <- tab[,paste0('s[',yratio,']')]
                 rXYc <- tab[,paste0('r[',xratio,',',yratio,']')]
-                Xs <- sta$val[xratio]
-                sXs <- sqrt(sta$cov[xratio,xratio])
-                Ys <- sta$val[yratio]
-                sYs <- sqrt(sta$cov[yratio,yratio])
-                xlim <- c(min(Xc-3*sXc,Xs-3*sXs),max(Xc+3*sXc,Xs+3*sXs))
-                ylim <- c(min(Yc-3*sYc,Ys-3*sYs),max(Yc+3*sYc,Ys+3*sYs))
+                xlim <- c(min(Xc-3*sXc),max(Xc+3*sXc))
+                ylim <- c(min(Yc-3*sYc),max(Yc+3*sYc))
+                if (calfit){
+                    Xs <- sta$val[xratio]
+                    sXs <- sqrt(sta$cov[xratio,xratio])
+                    Ys <- sta$val[yratio]
+                    sYs <- sqrt(sta$cov[yratio,yratio])
+                    xlim[1] <- min(xlim[1],min(Xs-3*sXs))
+                    xlim[2] <- max(xlim[2],max(Xs+3*sXs))
+                    ylim[1] <- min(ylim[1],min(Ys-3*sYs))
+                    ylim[2] <- max(ylim[2],max(Ys+3*sYs))
+                }
                 graphics::plot(xlim,ylim,type='n',ann=FALSE)
                 deltagrid(dat,xratio,yratio)
                 IsoplotR::scatterplot(cbind(Xc,sXc,Yc,sYc,rXYc),
-                                      xlim=xlim,ylim=ylim,add=TRUE,...)
+                                      xlim=xlim,ylim=ylim,add=TRUE,
+                                      show.numbers=show.numbers,...)
                 graphics::mtext(side=1,text=paste0('ln[',xratio,']'),line=2)
                 graphics::mtext(side=2,text=paste0('ln[',yratio,']'),line=2)
             }
@@ -253,7 +260,7 @@ deltagrid <- function(dat,xratio,yratio){
     graphics::mtext(expression(delta*"'"),side=4,line=2)
 }
 
-caldplot_geochronology <- function(dat,...){
+caldplot_geochronology <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
     cal <- dat$calibration$cal
     pairing <- dat$calibration$pairing
     stand <- dat$calibration$stand
@@ -267,13 +274,18 @@ caldplot_geochronology <- function(dat,...){
         sY <- paste0('s(',Y,')')
         rXY <- paste0('r(',X,',',Y,')')
         if (!(rXY %in% colnames(tab))) rXY <- paste0('r(',Y,',',X,')')
-        XY <- tab[,c(X,sX,Y,sY,rXY)]
-        xlim <- c(min(XY[,1]-3*XY[,2]),max(XY[,1]+3*XY[,2]))
-        ylim <- c(min(XY[,3]-3*XY[,4]),max(XY[,3]+3*XY[,4]))
-        fit <- cald2york(cal[i,])
+        xy <- tab[,c(X,sX,Y,sY,rXY)]
+        xlim <- c(min(xy[,1]-3*xy[,2]),max(xy[,1]+3*xy[,2]))
+        ylim <- c(min(xy[,3]-3*xy[,4]),max(xy[,3]+3*xy[,4]))
+        if (calfit){
+            yc <- cal[i,'a'] + cal[i,'b']*tab[,X]
+            ylim[1] <- min(ylim[1],min(yc))
+            ylim[2] <- max(ylim[2],max(yc))
+        }
+        fit <- cal2york(cal[i,])
         plot(xlim,ylim,type='n',xlab=X,ylab=Y)
         agegrid(fit=fit,pairing=pairing[i,],stand=stand)
-        IsoplotR::scatterplot(XY,fit=fit,add=TRUE)
+        IsoplotR::scatterplot(xy,fit=fit,add=TRUE,show.numbers=show.numbers)
     }
     graphics::par(oldpar)
 }
@@ -309,17 +321,4 @@ agegrid <- function(fit,pairing,stand){
     axis(side=4,at=yu[!top],labels=tticks[!top])
     mtext('age (Ma)',side=3,line=1.5)
     mtext('age (Ma)',side=4,line=1.5)
-}
-
-cald2york <- function(cal){
-    out <- list()
-    out$a <- as.numeric(cal[c('a','s[a]')])
-    out$b <- as.numeric(cal[c('b','s[b]')])
-    out$cov.ab <- as.numeric(cal['cov.ab'])
-    out$df <- as.numeric(cal['df'])
-    out$mswd <- as.numeric(cal['mswd'])
-    out$p.value <- as.numeric(cal['p.value'])
-    out$type <- 'york'
-    out$alpha <- 0.05
-    out
 }

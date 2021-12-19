@@ -449,13 +449,12 @@ function calibration(){
     loadPage("calibration.html").then(
 	() => {
 	    // I
-	    document.getElementById('caltype').selectedIndex = initcaltype();
+	    document.getElementById('caltype').selectedIndex =
+		(glob.simplex.calibration.hasOwnProperty('pairing')) ? 1 : 0;
 	    togglecaltype();
 	    // II
 	    setstandcomp();
 	    // III
-	    setpairing();
-	    // IV
 	    setstandsel();
 	},
 	error => alert(error)
@@ -463,17 +462,6 @@ function calibration(){
 }
 
 // I.
-function initcaltype(){
-    let cal = glob.simplex.calibration;
-    let out = null;
-    if (cal.hasOwnProperty('pairing')){
-	let keys = Object.keys(cal.pairing[0]);
-	out = (keys.length<3) ? 0 : 1;
-    } else {
-	out = (glob.multi) ? 1 : 0;
-    }
-    return(out);
-}
 function togglecaltype(){
     let val = document.getElementById('caltype').selectedIndex;
     if (val === 0){
@@ -482,6 +470,7 @@ function togglecaltype(){
     } else {
 	show('.show4geochron');
 	hide('.hide4geochron');
+	setpairing();
     }
 }
 function setpairing(){
@@ -528,7 +517,9 @@ function togglestandcomp(){
 
 // III.
 function setstandsel(){
-    document.getElementById('prefix').value = glob.simplex.calibration.prefix;
+    let cal = glob.simplex.calibration;
+    let hasprefix = cal.hasOwnProperty('prefix');
+    document.getElementById('prefix').value = hasprefix ? cal.prefix : '';
     markStandardsByPrefix();
 }
 function markStandardsByPrefix(){
@@ -551,8 +542,7 @@ function markStandardsByPrefix(){
 
 // IV.
 function calibrator(){
-    getpairing();
-    shinylight.call("calibrator", {x:glob},
+    shinylight.call('calibrator', {x:glob},
 		    'calibration-plot', {'imgType': 'svg'}).then(
 	result => {
 	    result2simplex(result),

@@ -247,42 +247,56 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
 }
 
 calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
-    cal <- dat$calibration
-    nr <- nrow(cal$pairing)
+    cal <- dat$calibration$cal
+    pair <- dat$calibration$pairing
+    nr <- nrow(pair)
     cnames <- c('a','s[a]','b','s[b]','cov.ab')
     nc <- length(cnames)
     out <- as.data.frame(matrix(NA,nrow=nr,ncol=nc))
-    oldpar <- graphics::par(mfrow=c(1,nr),mar=c(3.5,3.5,1,1),mgp=c(2,0.5,0))
-    tavg <- time_average(subset(x=dat,snames=cal$snames),t=cal$t)
+    oldpar <- graphics::par(mfrow=c(1,nr),mar=c(3.5,3.5,3.5,1),mgp=c(2,0.5,0))
+    tavg <- time_average(subset(x=dat,snames=dat$calibration$snames),
+                         t=dat$calibration$t)
     for (i in 1:nr){
         yd <- beta2york_regression(tavg=tavg,
-                                   pairing=cal$pairing[i,],
-                                   stand=cal$stand)
-        IsoplotR::scatterplot(yd,
-                              xlab=paste0('ln[',cal$pairing[i,'X'],']'),
-                              ylab=paste0('ln[',cal$pairing[i,'Y'],']'),
+                                   pairing=pair[i,],
+                                   stand=dat$calibration$stand)
+        fit <- cal2york(cal[i,])
+        IsoplotR::scatterplot(yd,fit=fit,
+                              xlab=paste0('ln[',pair[i,'X'],']'),
+                              ylab=paste0('ln[',pair[i,'Y'],']'),
                               show.numbers=show.numbers)
-        abline(a=cal$cal[i,'a'],b=cal$cal[i,'b'])
+        caltitle(fit,...)
     }
     graphics::par(oldpar)
 }
 
-caltitle <- function(fit,sigdig=2,type=NA,...){
+cal2york <- function(cal){
+    out <- list()
+    out$a <- as.numeric(cal[c('a','s[a]')])
+    out$b <- as.numeric(cal[c('b','s[b]')])
+    out$cov.ab <- as.numeric(cal['cov.ab'])
+    out$df <- as.numeric(cal['df'])
+    out$mswd <- as.numeric(cal['mswd'])
+    out$p.value <- as.numeric(cal['p.value'])
+    out$type <- 'york'
+    out$alpha <- 0.05
+    out
+}
+
+caltitle <- function(fit,sigdig=2,...){
     args1 <- quote(a%+-%b~'(n='*n*')')
     args2 <- quote(a%+-%b)
-    if (is.na(type)){
-        intercept <- IsoplotR:::roundit(fit$a[1],fit$a[2],sigdig=sigdig)
-        slope <- IsoplotR:::roundit(fit$b[1],fit$b[2],sigdig=sigdig)
-        expr1 <- 'slope ='
-        expr2 <- 'intercept ='
-        list1 <- list(a=slope[1],
-                      b=slope[2],
-                      u='',
-                      n=fit$df+2)
-        list2 <- list(a=intercept[1],
-                      b=intercept[2],
-                      u='')
-    }
+    intercept <- IsoplotR:::roundit(fit$a[1],fit$a[2],sigdig=sigdig)
+    slope <- IsoplotR:::roundit(fit$b[1],fit$b[2],sigdig=sigdig)
+    expr1 <- 'slope ='
+    expr2 <- 'intercept ='
+    list1 <- list(a=slope[1],
+                  b=slope[2],
+                  u='',
+                  n=fit$df+2)
+    list2 <- list(a=intercept[1],
+                  b=intercept[2],
+                  u='')
     call1 <- substitute(e~a,list(e=expr1,a=args1))
     call2 <- substitute(e~a,list(e=expr2,a=args2))
     line1 <- do.call(substitute,list(eval(call1),list1))
