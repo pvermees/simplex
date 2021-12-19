@@ -125,7 +125,12 @@ calibrator <- function(x,...){
 
 calibrate_it <- function(x){
     dat <- as.simplex(x)
-    selection <- subset(dat,prefix=x$sampleprefix)
+    if (length(x$samples)>0){
+        snms <- x$samples
+    } else {
+        snms <- NULL
+    }
+    selection <- subset(dat,prefix=x$sampleprefix,snames=snms)
     out <- calibrate(selection)
 }
 

@@ -20,8 +20,7 @@ var glob = {
     'xy': false,
     'sampleprefix': null,
     'standards': [],
-    'fixedslope': false,
-    'slope': 1,
+    'samples': [],
     'datatype': null,
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 }
@@ -517,9 +516,7 @@ function togglestandcomp(){
 
 // III.
 function setstandsel(){
-    if (glob.standards.length>0){
-	markStandards();
-    } else {
+    if (glob.standards.length<1){
 	let cal = glob.simplex.calibration;
 	let hasprefix = cal.hasOwnProperty('prefix');
 	if (!hasprefix) cal.prefix === '';
@@ -547,9 +544,8 @@ function markStandards(){
     let keys = Object.keys(glob.simplex.samples);
     let nk = keys.length;
     let dat = new Array(nk);
-    let standards = glob.standards;
     for (let i=0; i<nk; i++){
-	if (standards.includes(keys[i])){
+	if (glob.standards.includes(keys[i])){
 	    dat[i] = [keys[i],'yes'];
 	} else {
 	    dat[i] = [keys[i],'no'];
@@ -583,27 +579,48 @@ function registerStandards(){
 function samples(){
     selectButton(4);
     loadPage("samples.html").then(
-	() => markSamplesByPrefix(),
-	error => alert(error)
+	() => {
+	    setsampsel();
+	}, error => alert(error)
     );
 }
-
-function markSamplesByPrefix(){
+function setsampsel(){
+    if (glob.samples.length<1){
+	document.getElementById('prefix').value = glob.sampleprefix;
+	prefix2samples();	
+    }
+    markSamples();
+}
+function prefix2samples(){
+    let keys = Object.keys(glob.simplex.samples);
+    glob.samples = [];
+    for (let i=0; i<keys.length; i++){
+	if (keys[i].indexOf(glob.sampleprefix) !== -1){
+	    glob.samples.push(keys[i]);
+	}
+    }
+}
+function updateSamplePrefix(){
     glob.sampleprefix = document.getElementById('prefix').value;
+    prefix2samples();
+    markSamples();
+}
+function markSamples(){
     let keys = Object.keys(glob.simplex.samples);
     let nk = keys.length;
     let dat = new Array(nk);
     for (let i=0; i<nk; i++){
-	if (keys[i].indexOf(glob.sampleprefix) !== -1){
+	if (glob.samples.includes(keys[i])){
 	    dat[i] = [keys[i],'yes'];
 	} else {
 	    dat[i] = [keys[i],'no'];
 	}
     }
-    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
+    loadTable(dat,['aliquots','selected?'],'aliquots',nk);
 }
 
 function calibrate(){
+    registerSamples();
     shinylight.call("calibrateSamples",
 		    {x:glob},
 		    'sample-calibration-plot',
@@ -612,9 +629,16 @@ function calibrate(){
 	error => alert(error)
     )
 }
+function registerSamples(){
+    let e = document.getElementById('aliquots');
+    let dat = e.deg.getColumns();
+    glob.samples = [];
+    for (let i=0; i<dat.aliquots.length; i++){
+	if (dat['selected?'][i]==='yes') glob.samples.push(dat.aliquots[i]);
+    }
+}
 
 // 6. finish
-
 function finish(){
     selectButton(5);
     loadPage("finish.html").then(
@@ -622,7 +646,6 @@ function finish(){
 	    if (stable()) hide('.hide4stable')
 	    else show('.hide4stable')
 	    document.getElementById('prefix').value = glob.sampleprefix;
-	    markSamplesByPrefix();
 	}, error => alert(error)
     );
 }
