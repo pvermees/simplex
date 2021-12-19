@@ -25,20 +25,20 @@ calibrate <- function(cal,exterr=FALSE){
 calibrate_average <- function(dat,exterr=FALSE){
     out <- dat
     cal <- dat$calibration$cal
-    stand <- dat$calibration$stand
+    std <- dat$calibration$stand
     ns <- length(dat$samples)
     tavg <- time_average(dat,t=dat$calibration$t)
     alliso <- names(tavg[[1]]$val)
-    staiso <- names(stand$val)
-    caliso <- names(cal$val) # caliso is a subset of staiso
+    stdiso <- names(std$val)
+    caliso <- names(cal$val) # caliso is a subset of stdiso
     nai <- length(alliso)
-    nsi <- length(staiso)
+    nsi <- length(stdiso)
     nci <- length(caliso)
     E <- matrix(0,nrow=ns*nai+nsi+nci,ncol=ns*nai+nsi+nci)
     J <- matrix(0,nrow=ns*nai,ncol=ns*nai+nsi+nci)
     ical <- which(alliso %in% caliso)
-    ista <- which(staiso %in% caliso)
-    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(stand$cov)
+    istd <- which(stdiso %in% caliso)
+    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(std$cov)
     E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cov)
     val <- rep(0,ns*nai)
     for (i in 1:ns){
@@ -46,9 +46,9 @@ calibrate_average <- function(dat,exterr=FALSE){
         val[iall] <- tavg[[i]]$val
         E[iall,iall] <- tavg[[i]]$cov
         J[iall,iall] <- diag(nai)
-        val[iall[ical]] <- val[iall[ical]] + stand$val[ista] - cal$val
+        val[iall[ical]] <- val[iall[ical]] + std$val[istd] - cal$val
         if (exterr){
-            J[iall[ista],ns*nai+1:nsi] <- diag(nsi)[ista,]
+            J[iall[istd],ns*nai+1:nsi] <- diag(nsi)[istd,]
             J[iall[ical],ns*nai+nsi+1:nci] <- -diag(nci)
         }
     }
@@ -60,39 +60,40 @@ calibrate_average <- function(dat,exterr=FALSE){
 
 calibrate_regression <- function(dat,exterr=FALSE){
     out <- dat
-    cal <- dat$calibration
-    ns <- length(dat$samples)
-    tavg <- time_average(dat,t=cal$t)
-    ncal <- nrow(cal$cal)
+    cal <- dat$calibration$cal
+    std <- dat$calibration$stand
+    pairing <- dat$calibration$pairing
+    tavg <- time_average(dat,t=dat$calibration$t)
     alliso <- names(tavg[[1]]$val)
-    outiso <- alliso[!(alliso %in% cal$pairing$versus)]
-    staiso <- cal$stand$ratios
+    outiso <- alliso[!(alliso %in% pairing$X)]
+    stdiso <- names(std$val)
+    ns <- length(tavg)
     nai <- length(alliso)
     noi <- length(outiso)
-    nsi <- length(staiso)
-    nab <- nrow(cal$pairing)
-    iout <- lookup(outiso,alliso)
+    nsi <- length(stdiso)
+    nab <- nrow(pairing)
+    iout <- which(alliso %in% outiso)
     istd <- ns*nai+1:nsi
     iab <- matrix(0,nab,2)
-    iDPall <- rep(NA,nab)
-    iDPout <- rep(NA,nab)
-    iDPstd <- rep(NA,nab)
+    iDPa <- rep(NA,nab)
+    iDPo <- rep(NA,nab)
+    iDPs <- rep(NA,nab)
     iOP <- rep(NA,nab)
     for (i in 1:nab){
         iab[i,] <- ns*nai+nsi+(i-1)*2+1:2
-        iDPall[i] <- lookup(cal$cal[i,'y'],alliso)
-        iDPout[i] <- lookup(cal$cal[i,'y'],outiso)
-        iDPstd[i] <- lookup(cal$cal[i,'y'],staiso)
-        iOP[i] <- lookup(cal$cal[i,'x'],alliso)
+        iDPa[i] <- which(alliso %in% pairing[i,'Y'])
+        iDPo[i] <- which(outiso %in% pairing[i,'Y'])
+        iDPs[i] <- which(stdiso %in% pairing[i,'Y'])
+        iOP[i] <- which(alliso %in% pairing[i,'X'])
     }
     val <- rep(0,ns*noi)
     E <- matrix(0,nrow=ns*nai+nsi+2*nab,ncol=ns*nai+nsi+2*nab)
-    E[istd,istd] <- as.matrix(cal$stand$cov)
+    E[istd,istd] <- as.matrix(std$cov)
     for (i in 1:nab){
-        E[iab[i,1],iab[i,1]] <- cal$cal[i,'s[a]']^2
-        E[iab[i,2],iab[i,2]] <- cal$cal[i,'s[b]']^2
-        E[iab[i,1],iab[i,2]] <- cal$cal[i,'cov.ab']
-        E[iab[i,2],iab[i,1]] <- cal$cal[i,'cov.ab']
+        E[iab[i,1],iab[i,1]] <- cal[i,'s[a]']^2
+        E[iab[i,2],iab[i,2]] <- cal[i,'s[b]']^2
+        E[iab[i,1],iab[i,2]] <- cal[i,'cov.ab']
+        E[iab[i,2],iab[i,1]] <- cal[i,'cov.ab']
     }
     J <- matrix(0,nrow=ns*noi,ncol=ns*nai+nsi+2*nab)
     for (i in 1:ns){
@@ -102,14 +103,14 @@ calibrate_regression <- function(dat,exterr=FALSE){
         E[iai,iai] <- tavg[[i]]$cov
         J[ioi,iai] <- diag(nai)[iout,] # dval/dval
         for (j in 1:nab){
-            val[ioi[iDPout[j]]] <- tavg[[i]]$val[iDPall[j]] -
-                cal$cal[j,'a'] - cal$cal[j,'b']*tavg[[i]]$val[iOP[j]] +
-                cal$stand$val[iDPstd[j]]
-            J[ioi[iDPout[j]],iai[iOP[j]]] <- - cal$cal[j,'b'] # dval/dOP
+            val[ioi[iDPo[j]]] <- tavg[[i]]$val[iDPa[j]] -
+                cal[j,'a'] - cal[j,'b']*tavg[[i]]$val[iOP[j]] +
+                std$val[iDPs[j]]
+            J[ioi[iDPo[j]],iai[iOP[j]]] <- -cal[j,'b'] # dval/dOP
             if (exterr){
-                J[ioi[iDPout[j]],iab[j,1]] <- -1 # dval/da
-                J[ioi[iDPout[j]],iab[j,2]] <- -tavg[[i]]$val[iOP[j]] # dval/db
-                J[ioi[iDPout[j]],istd[iDPstd[j]]] <- 1 # dval/dDPstd
+                J[ioi[iDPo[j]],iab[j,1]] <- -1 # dval/da
+                J[ioi[iDPo[j]],iab[j,2]] <- -tavg[[i]]$val[iOP[j]] # dval/db
+                J[ioi[iDPo[j]],istd[iDPs[j]]] <- 1 # dval/dDPs
             }
         }
     }
@@ -140,7 +141,7 @@ plot.calibrated <- function(x,...){
     if (is.null(x$calibration$pairing)){
         out <- caldplot_stable(dat=x,...)
     } else {
-        out <- caldplot_geochronology(dat=x,option=option,...)
+        out <- caldplot_geochronology(dat=x,...)
     }
     invisible(out)
 }
@@ -252,21 +253,20 @@ deltagrid <- function(dat,xratio,yratio){
     graphics::mtext(expression(delta*"'"),side=4,line=2)
 }
 
-caldplot_geochronology <- function(dat,option=1,...){
+caldplot_geochronology <- function(dat,...){
     cal <- dat$calibration$cal
     pairing <- dat$calibration$pairing
     stand <- dat$calibration$stand
     tab <- data2table.logratios(dat,t=dat$calibration$t)
     nr <- nrow(pairing)
-    oldpar <- graphics::par(mfrow=c(1,nr))
+    oldpar <- graphics::par(mfrow=c(1,nr),mar=rep(3,4),mgp=c(1.5,0.5,0))
     for (i in 1:nr){
-        X <- paste0('ln[',pairing[i,'versus'],']')
-        Y <- paste0('ln[',pairing[i,'smp'],']')
+        X <- paste0('ln[',pairing[i,'X'],']')
+        Y <- paste0('ln[',pairing[i,'Y'],']')
         sX <- paste0('s(',X,')')
         sY <- paste0('s(',Y,')')
         rXY <- paste0('r(',X,',',Y,')')
-        if (!(rXY %in% colnames(tab)))
-            rXY <- paste0('r(',Y,',',X,')')
+        if (!(rXY %in% colnames(tab))) rXY <- paste0('r(',Y,',',X,')')
         XY <- tab[,c(X,sX,Y,sY,rXY)]
         xlim <- c(min(XY[,1]-3*XY[,2]),max(XY[,1]+3*XY[,2]))
         ylim <- c(min(XY[,3]-3*XY[,4]),max(XY[,3]+3*XY[,4]))
@@ -279,9 +279,9 @@ caldplot_geochronology <- function(dat,option=1,...){
 }
 
 agegrid <- function(fit,pairing,stand){
-    if (pairing$std=='Pb206/U238'){
+    if (identical(pairing$Y,'Pb206/U238')){
         lambda <- IsoplotR::settings('lambda','U238')[1]
-    } else if (pairing$std=='Pb208/Th232'){
+    } else if (identical(pairing$Y,'Pb208/Th232')){
         lambda <- IsoplotR::settings('lambda','Th232')[1]
     } else {
         return(NA)
@@ -293,7 +293,7 @@ agegrid <- function(fit,pairing,stand){
     b <- fit$b[1]
     yrange <- c(ylim[1] - b*diff(xlim),
                 ylim[2] + b*diff(xlim))
-    logDPstd <- stand$val[match(pairing$std,stand$ratios)]
+    logDPstd <- stand$val[pairing$Y]
     logDPlim <- logDPstd + yrange - a - b * xlim
     tlim <- log(exp(logDPlim)+1)/lambda
     tticks <- pretty(tlim)
@@ -307,6 +307,8 @@ agegrid <- function(fit,pairing,stand){
     top <- (yu>ylim[2])
     axis(side=3,at=xlim[1]+(ylim[2]-yl[top])/b,labels=tticks[top])
     axis(side=4,at=yu[!top],labels=tticks[!top])
+    mtext('age (Ma)',side=3,line=1.5)
+    mtext('age (Ma)',side=4,line=1.5)
 }
 
 cald2york <- function(cal){
