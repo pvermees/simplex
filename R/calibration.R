@@ -215,7 +215,11 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
         for (i in 1:(nrat-1)){
             for (j in (i+1):nrat){
                 B <- beta2york_average(tavg,ratios[i],ratios[j])
-                IsoplotR::scatterplot(B,show.numbers=show.numbers,...)
+                IsoplotR::scatterplot(B,...)
+                if (show.numbers){
+                    istd <- which(names(dat$samples) %in% dat$calibration$snames)
+                    text(x=B[,'X'],y=B[,'Y'],labels=istd,pos=3,offset=0.1)
+                }
                 graphics::mtext(side=1,text=paste0('ln[',ratios[i],']'),line=2)
                 graphics::mtext(side=2,text=paste0('ln[',ratios[j],']'),line=2)
                 ell <- IsoplotR::ellipse(cal$val[i],cal$val[j],
@@ -263,8 +267,11 @@ calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
         fit <- cal2york(cal[i,])
         IsoplotR::scatterplot(yd,fit=fit,
                               xlab=paste0('ln[',pair[i,'X'],']'),
-                              ylab=paste0('ln[',pair[i,'Y'],']'),
-                              show.numbers=show.numbers)
+                              ylab=paste0('ln[',pair[i,'Y'],']'))
+        if (show.numbers){
+            istd <- which(names(dat$samples) %in% dat$calibration$snames)
+            text(x=yd[,'X'],y=yd[,'Y'],labels=istd,pos=3,offset=0.1)
+        }
         caltitle(fit,...)
     }
     graphics::par(oldpar)

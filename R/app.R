@@ -113,7 +113,12 @@ calibrator <- function(x,...){
     stnd <- dat$calibration$stand
     prng <- dat$calibration$pairing
     prfx <- dat$calibration$prefix
-    out <- calibration(dat,stand=stnd,pairing=prng,prefix=prfx)
+    if (length(x$standards)>0){
+        snms <- x$standards
+    } else {
+        snms <- NULL
+    }
+    out <- calibration(dat,stand=stnd,pairing=prng,prefix=prfx,snames=snms)
     plot.calibration(out,...)
     result2json(out)
 }

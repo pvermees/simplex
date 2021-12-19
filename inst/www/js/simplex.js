@@ -517,31 +517,50 @@ function togglestandcomp(){
 
 // III.
 function setstandsel(){
-    let cal = glob.simplex.calibration;
-    let hasprefix = cal.hasOwnProperty('prefix');
-    document.getElementById('prefix').value = hasprefix ? cal.prefix : '';
-    markStandardsByPrefix();
+    if (glob.standards.length>0){
+	markStandards();
+    } else {
+	let cal = glob.simplex.calibration;
+	let hasprefix = cal.hasOwnProperty('prefix');
+	if (!hasprefix) cal.prefix === '';
+	document.getElementById('prefix').value = cal.prefix;
+	prefix2standards();	
+    }
+    markStandards();
 }
-function markStandardsByPrefix(){
-    let prefix = document.getElementById('prefix').value;
-    glob.simplex.calibration.prefix = prefix;
+function prefix2standards(){
+    let keys = Object.keys(glob.simplex.samples);
+    let prefix = glob.simplex.calibration.prefix;
+    glob.standards = [];
+    for (let i=0; i<keys.length; i++){
+	if (keys[i].indexOf(prefix) !== -1){
+	    glob.standards.push(keys[i]);
+	}
+    }
+}
+function updateStandardPrefix(){
+    glob.simplex.calibration.prefix = document.getElementById('prefix').value;
+    prefix2standards();
+    markStandards();
+}
+function markStandards(){
     let keys = Object.keys(glob.simplex.samples);
     let nk = keys.length;
     let dat = new Array(nk);
-    glob.standards = new Array(nk);
+    let standards = glob.standards;
     for (let i=0; i<nk; i++){
-	if (keys[i].indexOf(prefix) !== -1){
-	    glob.standards[i] = keys[i];
+	if (standards.includes(keys[i])){
 	    dat[i] = [keys[i],'yes'];
 	} else {
 	    dat[i] = [keys[i],'no'];
 	}
     }
-    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
+    loadTable(dat,['aliquots','selected?'],'aliquots',nk);
 }
 
 // IV.
 function calibrator(){
+    registerStandards();
     shinylight.call('calibrator', {x:glob},
 		    'calibration-plot', {'imgType': 'svg'}).then(
 	result => {
@@ -551,9 +570,16 @@ function calibrator(){
 	error => alert(error)
     )
 }
+function registerStandards(){
+    let e = document.getElementById('aliquots');
+    let dat = e.deg.getColumns();
+    glob.standards = [];
+    for (let i=0; i<dat.aliquots.length; i++){
+	if (dat['selected?'][i]==='yes') glob.standards.push(dat.aliquots[i]);
+    }
+}
 
 // 5. samples
-
 function samples(){
     selectButton(4);
     loadPage("samples.html").then(
