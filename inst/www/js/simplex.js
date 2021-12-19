@@ -484,27 +484,6 @@ function togglecaltype(){
 	hide('.hide4geochron');
     }
 }
-
-// II.
-function setstandcomp(){
-    let stand = glob.simplex.calibration.stand;
-    let header = stand.ratios;
-    let nr = header.length;
-    let val = [stand.val];
-    let cov = stand.cov;
-    loadTable(val,header,'standlr',1);
-    loadTable(cov,header,'standcov',nr);
-}
-function togglestandcomp(){
-    let val = document.getElementById('standcomp').value;
-    if (val === 'prefix2stand'){
-	show('.show4prefix');
-    } else {
-	hide('.show4prefix')
-    }    
-}
-
-// III.
 function setpairing(){
     let pairing = glob.simplex.calibration.pairing;
     let nr = pairing.length;
@@ -528,7 +507,26 @@ function getpairing(){
     }
 }
 
-// IV.
+// II.
+function setstandcomp(){
+    let stand = glob.simplex.calibration.stand;
+    let header = glob.names.calibration.stand.val;
+    let nr = header.length;
+    let val = [stand.val];
+    let cov = stand.cov;
+    loadTable(val,header,'standlr',1);
+    loadTable(cov,header,'standcov',nr);
+}
+function togglestandcomp(){
+    let val = document.getElementById('standcomp').value;
+    if (val === 'prefix2stand'){
+	show('.show4prefix');
+    } else {
+	hide('.show4prefix')
+    }    
+}
+
+// III.
 function setstandsel(){
     document.getElementById('prefix').value = glob.simplex.calibration.prefix;
     markStandardsByPrefix();
@@ -551,37 +549,7 @@ function markStandardsByPrefix(){
     loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
 }
 
-function showOrHideStandards(){
-    let disable = null;
-    switch(glob.datatype) {
-    case 'U-Pb':
-	disable = [5,6];
-        break; 
-    case 'Th-Pb':
-	disable = [1,2,5,6];
-	break;
-    case 'oxygen': 
-        disable = [1,2,3,4,6];
-        break;
-    case 'sulphur':
-	disable = [1,2,3,4,5];
-        break; 
-    default: //optional
-	//statements
-    }
-    for (let i=0; i<disable.length; i++){
-	document.getElementById("standards").options[disable[i]].disabled = true;
-    }
-}
-
-function chooseStandard(){
-    let stand = document.getElementById("standards").value;
-    shinylight.call("getstandard", {preset:stand}, null).then(
-	result => glob.simplex.standard = result.data,
-	error => alert(error)
-    )
-}
-
+// IV.
 function calibrator(){
     getpairing();
     shinylight.call("calibrator", {x:glob},
