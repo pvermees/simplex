@@ -27,7 +27,7 @@
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(x){
+standard <- function(x,measured=FALSE){
     if (x=='Plesovice'){
         out <- age2stand(tst=c(337.13,0.18))
     } else if (x=='Qinghu'){
@@ -49,6 +49,17 @@ standard <- function(x){
     } else {
         stop("Invalid input to standard(...).")
     }
+    if (measured){
+        out$measured <- TRUE
+        out$val <- out$val[-c(1:2)]
+        out$cov <- out$cov[-c(1:2),-c(1:2)]
+        if (x=='Plesovice'){
+            out$val['Pb206/U238'] <- log(0.053707)
+            out$cov['Pb206/U238','Pb206/U238'] <- 0.02
+            out$cov['Pb206/U238','Pb208/Th232'] <- 0
+            out$cov['Pb208/Th232','Pb206/U238'] <- 0
+        }
+    }
     out
 }
 
@@ -64,7 +75,7 @@ age2stand <- function(tst,pairing=NULL){
     names(val) <- ratios
     rownames(covmat) <- ratios
     colnames(covmat) <- ratios
-    list(val=val,cov=covmat)
+    list(val=val,cov=covmat,measured=FALSE)
 }
 
 del2stand <- function(del,ref){
@@ -97,45 +108,4 @@ troilite <- function(){
     relerr <- c(0.047,0.0020,20)/S2346
     list(num=c('S33','S34','S36'),den='S32',
          val=-log(S2346),cov=diag(relerr^2))
-}
-
-lrstand <- function(dat){
-    val <- dat$stand$val
-    cov <- dat$stand$cov
-    type <- datatype(dat)
-    out <- list()
-    if (type=="U-Pb"){
-        labels <- c("Pb206/U238","Pb208/Th232")
-        out$common <- dat$stand$common
-        names(out$common) <- labels
-        out$lr <- log(val)
-        J <- diag(1/val)
-    } else if (type=="oxygen"){
-        if (length(val)==1){ # if d17O is missing
-            val <- c(val/2,val)
-            J <- matrix(c(0.5,1),2,1)
-            cov <- J %*% cov %*% t(J)
-        }
-        labels <- c("O17/O16","O18/O16")
-        out$ref <- 
-        out$lr <- log(1 + val/1000) + out$ref
-        J <- diag(1/(1000 + val))
-    } else if (type=="sulphur"){
-        if (length(val)==2){ # if d36S is missing
-            val <- c(val,val[2]*2)
-            J <- rbind(c(1,0),c(0,1),c(0,2))
-            cov <- J %*% cov %*% t(J)
-        }
-        labels <- c("S33/S32","S34/S32","S36/S32")
-        out$ref <- 
-        out$lr <- log(1 + val/1000) + out$ref
-        J <- diag(1/(1000 + val))
-    } else {
-        stop('Invalid type argument supplied to lrstand')
-    }
-    out$cov <- J %*% cov %*% t(J)
-    names(out$lr) <- labels
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
-    out
 }

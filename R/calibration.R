@@ -82,15 +82,16 @@ average_calibration <- function(tavg,stand){
 
 regression_calibration <- function(tavg,pairing,stand){
     nr <- nrow(pairing)
-    out <- as.data.frame(matrix(NA,nrow=nr,ncol=10))
-    colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab','mswd','df','p.value')
-    out[,1:2] <- pairing[,c('versus','smp')]
+    cnames <- c('a','s[a]','b','s[b]','cov.ab','mswd','df','p.value')
+    nc <- length(cnames)
+    out <- as.data.frame(matrix(NA,nrow=nr,ncol=nc))
+    colnames(out) <- cnames
     for (i in 1:nr){
         yd <- beta2york_regression(tavg=tavg,pairing=pairing[i,],stand=stand)
         slope <- pairing[i,'slope']
         if (identical(slope,'auto')) fit <- IsoplotR::york(yd)
         else fit <- yorkfix(yd,b=as.numeric(slope))
-        out[i,3:10] <- c(fit$a,fit$b,fit$cov.ab,fit$mswd,fit$df,fit$p.value)
+        out[i,] <- c(fit$a,fit$b,fit$cov.ab,fit$mswd,fit$df,fit$p.value)
     }
     out
 }
@@ -119,21 +120,22 @@ beta2york_regression <- function(tavg,pairing,stand){
     out <- matrix(0,nrow=length(snames),ncol=5)
     colnames(out) <- c('X','sX','Y','sY','rXY')
     rownames(out) <- snames
-    DP <- as.character(pairing[1,'smp'])
-    OP <- as.character(pairing[1,'versus'])
-    CD.smp <- as.character(pairing[1,'smp.c'])
-    i.CD.smp <- match(pairing[1,'std.c'],stand$ratios)
-    val.CD.std <- stand$val[i.CD.smp]
     J <- matrix(0,nrow=2,ncol=length(tavg[[1]]$val))
     colnames(J) <- names(tavg[[1]]$val)
     rownames(J) <- c('X','Y')
-    J['X',OP] <- 1
-    J['Y',DP] <- 1
+    J['X',pairing$X] <- 1
+    J['Y',pairing$Y] <- 1
     for (sname in snames){
         val <- tavg[[sname]]$val
-        out[sname,'X'] <- val[OP]
-        out[sname,'Y'] <- val[DP] - log(1 - exp(val[CD.smp]-val.CD.std))
-        J['Y',CD.smp] <- -exp(val[CD.smp])/(1-exp(val[CD.smp]-val.CD.std))
+        if (stand$measured){
+            CD <- 0
+        } else {
+            CD <- log(1-exp(val[pairing$C]-stand$val[pairing$C]))
+            J['Y',pairing$C] <-
+                -exp(val[pairing$C])/(1-exp(val[pairing$C]-stand$val[pairing$C]))
+        }
+        out[sname,'X'] <- val[pairing$X]
+        out[sname,'Y'] <- val[pairing$Y] - CD
         E <- J %*% tavg[[sname]]$cov %*% t(J)
         out[sname,'sX'] <- sqrt(E['X','X'])
         out[sname,'sY'] <- sqrt(E['Y','Y'])
@@ -190,16 +192,16 @@ yorkfix <- function(xy,b,alpha=0.05){
 #' }
 #' @method plot calibration
 #'@export
-plot.calibration <- function(dat,option=1,...){
+plot.calibration <- function(dat,show.numbers=TRUE,...){
     if (is.null(dat$calibration$pairing)){
-        out <- calplot_stable(dat=dat,...)
+        out <- calplot_stable(dat=dat,show.numbers=show.numbers,...)
     } else {
-        out <- calplot_geochronology(dat=dat,option=option,...)
+        out <- calplot_geochronology(dat=dat,show.numbers=show.numbers,...)
     }
     invisible(out)
 }
 
-calplot_stable <- function(dat,...){
+calplot_stable <- function(dat,show.numbers=TRUE,...){
     cal <- dat$calibration$cal
     ratios <- names(cal$val)
     nrat <- length(ratios)
@@ -213,7 +215,7 @@ calplot_stable <- function(dat,...){
         for (i in 1:(nrat-1)){
             for (j in (i+1):nrat){
                 B <- beta2york_average(tavg,ratios[i],ratios[j])
-                IsoplotR::scatterplot(B,...)
+                IsoplotR::scatterplot(B,show.numbers=show.numbers,...)
                 graphics::mtext(side=1,text=paste0('ln[',ratios[i],']'),line=2)
                 graphics::mtext(side=2,text=paste0('ln[',ratios[j],']'),line=2)
                 ell <- IsoplotR::ellipse(cal$val[i],cal$val[j],
@@ -244,21 +246,22 @@ calplot_stable <- function(dat,...){
     }
 }
 
-calplot_geochronology <- function(dat=dat,option=option,...){
+calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
     cal <- dat$calibration
     nr <- nrow(cal$pairing)
-    out <- as.data.frame(matrix(NA,nrow=nr,ncol=7))
-    colnames(out) <- c('x','y','a','s[a]','b','s[b]','cov.ab')
-    out[,1:2] <- cal$pairing[,c('versus','smp')]
-    oldpar <- graphics::par(mfrow=c(1,nr))
+    cnames <- c('a','s[a]','b','s[b]','cov.ab')
+    nc <- length(cnames)
+    out <- as.data.frame(matrix(NA,nrow=nr,ncol=nc))
+    oldpar <- graphics::par(mfrow=c(1,nr),mar=c(3.5,3.5,1,1),mgp=c(2,0.5,0))
     tavg <- time_average(subset(x=dat,snames=cal$snames),t=cal$t)
     for (i in 1:nr){
         yd <- beta2york_regression(tavg=tavg,
                                    pairing=cal$pairing[i,],
                                    stand=cal$stand)
         IsoplotR::scatterplot(yd,
-                              xlab=paste0('ln[',cal$cal[i,'x'],']'),
-                              ylab=paste0('ln[',cal$cal[i,'y'],']'))
+                              xlab=paste0('ln[',cal$pairing[i,'X'],']'),
+                              ylab=paste0('ln[',cal$pairing[i,'Y'],']'),
+                              show.numbers=show.numbers)
         abline(a=cal$cal[i,'a'],b=cal$cal[i,'b'])
     }
     graphics::par(oldpar)

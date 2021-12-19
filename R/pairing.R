@@ -1,12 +1,9 @@
-# calibration settings for elemental fractionation
-# measured=TRUE produces a 3-column calibration with X, Y and slope
-# measured=FALSE produces a 4-column calibration with X, Y, C and slope
-pairing <- function(lr,measured=FALSE){
+pairing <- function(lr,stand){
     num <- lr$method$num
     den <- lr$method$den
     OP <- NULL
     DP <- NULL
-    if (!measured) CD <- NULL
+    if (!stand$measured) CD <- NULL
     num_is_element <- (element(num) %in% elements())
     den_is_element <- (element(den) %in% elements())
     if (any(!num_is_element)){ # any molecules?
@@ -18,7 +15,7 @@ pairing <- function(lr,measured=FALSE){
             j <- which(num_is_element & has_mol_pair)
             DP <- c(DP,paste0(num[j],'/',den[j]))
             OP <- c(OP,paste0(molnum[i],'/',molden[i]))
-            if (!measured){
+            if (!stand$measured){
                 k <- which(grepl('204',num) & (den %in% num[j]))
                 CD <- c(CD,paste0(num[k],'/',den[k]))
             }
@@ -33,14 +30,14 @@ pairing <- function(lr,measured=FALSE){
             j <- which(den_is_element & has_mol_pair)
             DP <- c(DP,paste0(num[j],'/',den[j]))
             OP <- c(OP,paste0(molnum[i],'/',molden[i]))
-            if (!measured){
+            if (!stand$measured){
                 k <- which(grepl('204',den) & (num %in% den[j]))
                 CD <- c(CD,paste0(num[k],'/',den[k]))
             }
         }
     }
     out <- data.frame(X=OP,Y=DP,stringsAsFactors=FALSE)
-    if (!measured) out$C <- CD
+    if (!stand$measured) out$C <- CD
     out$slope <- rep('auto',nrow(out))
     out    
 }
