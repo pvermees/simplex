@@ -21,7 +21,6 @@ var glob = {
     'sampleprefix': null,
     'standards': [],
     'samples': [],
-    'datatype': null,
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 }
 
@@ -72,23 +71,25 @@ function initpreset(){
 }
 
 function loadPresets(){
+    resetglob();
     const m = document.getElementById("methods").value;
     glob.simplex.method.method[0] = m;
-    shinylight.call('presets', { method: m }, null)
-	.then(
-	    result => result2simplex(result),
-	    err => alert(err)
-	)
-	.then(
-	    () => shinylight.call('getdatatype', { x: glob }, null).then(
-		result => {
-		    glob.datatype = result.data[0]
-		    showPresets();
-		    fileFormats();
-		},
-		error => alert(error)
-	    )
-	)
+    shinylight.call('presets', { method: m }, null).then(
+	result => {
+	    result2simplex(result)
+	    showPresets();
+	    fileFormats();
+	},
+	err => alert(err)
+    )
+}
+
+function resetglob(){
+    glob.i =  0;
+    glob.multi = false;
+    glob.sampleprefix = null;
+    glob.standards = [];
+    glob.samples = [];
 }
 
 function method(el){
@@ -135,14 +136,6 @@ function hide(cls){
 	function(item){
 	    item.classList.add("hidden");
 	});
-}
-
-function stable(){
-    return(["oxygen","sulphur"].includes(glob.datatype))
-}
-
-function geochron(){
-    return(["U-Pb","Th-Pb"].includes(glob.datatype))
 }
 
 function fileFormats(){
@@ -516,13 +509,13 @@ function togglestandcomp(){
 
 // III.
 function setstandsel(){
+    let cal = glob.simplex.calibration;
+    let hasprefix = cal.hasOwnProperty('prefix');
+    if (!hasprefix) cal.prefix === '';
     if (glob.standards.length<1){
-	let cal = glob.simplex.calibration;
-	let hasprefix = cal.hasOwnProperty('prefix');
-	if (!hasprefix) cal.prefix === '';
-	document.getElementById('prefix').value = cal.prefix;
-	prefix2standards();	
+	prefix2standards();
     }
+    document.getElementById('prefix').value = cal.prefix;
     markStandards();
 }
 function prefix2standards(){
