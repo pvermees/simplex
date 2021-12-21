@@ -27,21 +27,27 @@
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(x,measured=FALSE){
+standard <- function(x,measured){
     if (x=='Plesovice'){
+        geochron <- TRUE
         out <- age2stand(tst=c(337.13,0.18))
     } else if (x=='Qinghu'){
+        geochron <- TRUE
         out <- age2stand(tst=c(159.5,0.1))
     } else if (x=='44069'){
+        geochron <- TRUE
         out <- age2stand(tst=c(424.86,0.25))
     } else if (x=='Temora'){
+        geochron <- TRUE
         out <- age2stand(tst=c(416.75,0.12))
     } else if (x=='NBS28'){
+        geochron <- FALSE
         del <- list(num=c('O17','O18'),den='O16',
                     val=c(4.79,9.56),
                     cov=diag(c(0.05,0.11))^2)
         out <- del2stand(del,ref=VSMOW())
     } else if (x=='Sonora'){ # temporary value
+        geochron <- FALSE
         del <- list(num=c('S33','S34','S36'),den='S32',
                     val=c(0.83,1.61,3.25),
                     cov=diag(c(0.03,0.08,0.03))^2)
@@ -49,16 +55,21 @@ standard <- function(x,measured=FALSE){
     } else {
         stop("Invalid input to standard(...).")
     }
-    if (measured){
-        out$measured <- TRUE
-        out$val <- out$val[-c(1:2)]
-        out$cov <- out$cov[-c(1:2),-c(1:2)]
-        if (x=='Plesovice'){
-            out$val['Pb206/U238'] <- log(0.053707)
-            out$cov['Pb206/U238','Pb206/U238'] <- 0.02
-            out$cov['Pb206/U238','Pb208/Th232'] <- 0
-            out$cov['Pb208/Th232','Pb206/U238'] <- 0
+    if (geochron){
+        if (missing(measured)) measured <- FALSE
+        out$measured <- measured
+        if (out$measured) {
+            out$val <- out$val[-c(1:2)]
+            out$cov <- out$cov[-c(1:2),-c(1:2)]
+            if (x=='Plesovice'){
+                out$val['Pb206/U238'] <- log(0.053707)
+                out$cov['Pb206/U238','Pb206/U238'] <- 0.02
+                out$cov['Pb206/U238','Pb208/Th232'] <- 0
+                out$cov['Pb208/Th232','Pb206/U238'] <- 0
+            }
         }
+    } else {
+        out$measured <- TRUE
     }
     out
 }
@@ -108,4 +119,28 @@ troilite <- function(){
     relerr <- c(0.047,0.0020,20)/S2346
     list(num=c('S33','S34','S36'),den='S32',
          val=-log(S2346),cov=diag(relerr^2))
+}
+
+skeletonstand <- function(lr,measured=TRUE){
+    num <- lr$method$num
+    den <- lr$method$den
+    geochron <- ( all(c("Pb206","U238") %in% c(num,den)) |
+                  all(c("Pb208","Th232") %in% c(num,den)) )
+    num_is_element <- (element(num) %in% elements())
+    den_is_element <- (element(den) %in% elements())
+    ratios <- paste0(num,'/',den)
+    if (geochron & measured){
+        hasPb204 <- (num %in% "Pb204") | (den %in% "Pb204")
+        selection <- ratios[num_is_element & den_is_element & !hasPb204]
+    } else {
+        selection <- ratios[num_is_element & den_is_element]
+    }
+    n2r <- length(selection)
+    out <- list()
+    out$val <- rep(0,n2r)
+    out$cov <- matrix(0,n2r,n2r)
+    names(out$val) <- selection
+    rownames(out$cov) <- selection
+    colnames(out$cov) <- selection
+    out
 }

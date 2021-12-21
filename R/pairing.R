@@ -1,4 +1,5 @@
 pairing <- function(lr,stand){
+    if (missing(stand)) stand <- skeletonstand(lr)
     num <- lr$method$num
     den <- lr$method$den
     OP <- NULL
@@ -39,5 +40,5 @@ pairing <- function(lr,stand){
     out <- data.frame(X=OP,Y=DP,stringsAsFactors=FALSE)
     if (!stand$measured) out$C <- CD
     out$slope <- rep('auto',nrow(out))
-    out    
+    out
 }
