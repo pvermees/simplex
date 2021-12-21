@@ -108,6 +108,15 @@ getstandard <- function(preset){
     standard(preset)
 }
 
+createcalibration <- function(x,measured=TRUE){
+    dat <- as.simplex(x)
+    s <- skeletonstand(dat,measured=measured)
+    p <- pairing(dat,s)
+    out <- dat
+    out$calibration <- list(stand=s,pairing=p)
+    result2json(out)
+}
+
 calibrator <- function(x,...){
     dat <- as.simplex(x)
     stnd <- dat$calibration$stand
@@ -201,6 +210,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
             logratioPlot=logratioPlot,
             logratioTable=logratioTable,
             getstandard=getstandard,
+            createcalibration=createcalibration,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,

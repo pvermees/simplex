@@ -48,7 +48,3 @@ pairing <- function(lr,stand){
     out$slope <- rep('auto',nrow(out))
     out
 }
-
-skeletonpairing <- function(){
-    
-}

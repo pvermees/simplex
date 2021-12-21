@@ -440,15 +440,31 @@ function calibration(){
     selectButton(3);
     loadPage("calibration.html").then(
 	() => {
-	    // I
-	    document.getElementById('caltype').selectedIndex =
-		(glob.simplex.calibration.hasOwnProperty('pairing')) ? 1 : 0;
-	    togglecaltype();
-	    // II
-	    setstandcomp();
-	    // III
-	    setstandsel();
+	    if (!glob.simplex.hasOwnProperty('calibration')){
+		createCalibration(showCalibration);
+	    } else {
+		showCalibration();
+	    }
 	},
+	error => alert(error)
+    );
+}
+function showCalibration(){
+    document.getElementById('caltype').selectedIndex = glob.simplex.multi ? 0 : 1;
+    // I
+    togglecaltype();
+    // II
+    setstandcomp();
+    // III
+    setstandsel();
+}
+
+function createCalibration(callback){
+    shinylight.call('createcalibration', {x:glob}, null).then(
+	result => result2simplex(result),
+	error => alert(error)
+    ).then(
+	() => callback(),
 	error => alert(error)
     );
 }
@@ -466,12 +482,41 @@ function togglecaltype(){
     }
 }
 function setpairing(){
-    let pairing = glob.simplex.calibration.pairing;
-    let nr = pairing.length;
-    let header = Object.keys(pairing[0]);
+    let hascalibration = glob.simplex.hasOwnProperty('calibration');
+    if (hascalibration){
+	let haspairing = glob.simplex.calibration.hasOwnProperty('pairing');
+	if (haspairing){
+	    showpairing();
+	} else {
+	    createpairing(null);
+	}
+    } else {
+	createstandard(createpairing);
+    }
+}
+function createstandard(myCallback){
+    shinylight.call('createstandard', {x:glob}, null).then(
+	result => {
+	    let dat = result.data;
+	},
+	error => alert(error)
+    )
+}
+function createpairing(){
+    shinylight.call('createpairing', {x:glob}, null).then(
+	result => {
+	    let dat = result.data;
+	},
+	error => alert(error)
+    )
+}
+function showpairing(){
+    let cal = glob.simplex.calibration;
+    let nr = cal.pairing.length;
+    let header = Object.keys(cal.pairing[0]);
     let val = [new Array(nr)];
     for (let i=0; i<nr; i++){
-	val[i] = Object.values(pairing[i]);
+	val[i] = Object.values(cal.pairing[i]);
     }
     loadTable(val,header,'pairing',nr);
 }
