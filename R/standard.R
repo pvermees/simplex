@@ -137,6 +137,7 @@ skeletonstand <- function(lr,measured=TRUE){
     }
     n2r <- length(selection)
     out <- list()
+    out$measured <- measured
     out$val <- rep(0,n2r)
     out$cov <- matrix(0,n2r,n2r)
     names(out$val) <- selection
