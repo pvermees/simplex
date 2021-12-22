@@ -95,6 +95,10 @@ function resetglob(){
 function method(el){
     glob.simplex.method[el.id] = el.value.split(',')
     glob.class = ['simplex']; // reset calculations
+    shinylight.call('checkmulti', { x: glob }, null).then(
+	result => glob.multi = result.data[0],
+	err => alert(err)
+    )
 }
 
 function renameIons(){
@@ -450,7 +454,7 @@ function calibration(){
     );
 }
 function showCalibration(){
-    document.getElementById('caltype').selectedIndex = glob.simplex.multi ? 0 : 1;
+    document.getElementById('caltype').selectedIndex = glob.multi ? 0 : 1;
     // I
     togglecaltype();
     // II

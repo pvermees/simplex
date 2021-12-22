@@ -71,6 +71,11 @@ getdatatype <- function(x){
     datatype(dat)
 }
 
+checkmulti <- function(x){
+    dat <- as.simplex(x)
+    multicollector(dat)
+}
+
 getdrift <- function(x){
     out <- drift_helper(x=as.simplex(x),gui=TRUE)
     result2json(out)
@@ -204,6 +209,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
             presets=presets,
             upload=upload,
             getdatatype=getdatatype,
+            checkmulti=checkmulti,
             getdrift=getdrift,
             driftPlot=driftPlot,
             getlogratios=getlogratios,
