@@ -95,10 +95,6 @@ function resetglob(){
 function method(el){
     glob.simplex.method[el.id] = el.value.split(',')
     glob.class = ['simplex']; // reset calculations
-    shinylight.call('checkmulti', { x: glob }, null).then(
-	result => glob.multi = result.data[0],
-	err => alert(err)
-    )
 }
 
 function renameIons(){
@@ -444,10 +440,10 @@ function calibration(){
     selectButton(3);
     loadPage("calibration.html").then(
 	() => {
-	    if (!glob.simplex.hasOwnProperty('calibration')){
-		createCalibration(showCalibration);
-	    } else {
+	    if (glob.simplex.hasOwnProperty('calibration')){
 		showCalibration();
+	    } else {
+		createCalibration(showCalibration);
 	    }
 	},
 	error => alert(error)
@@ -486,33 +482,12 @@ function togglecaltype(){
     }
 }
 function setpairing(){
-    let hascalibration = glob.simplex.hasOwnProperty('calibration');
-    if (hascalibration){
-	let haspairing = glob.simplex.calibration.hasOwnProperty('pairing');
-	if (haspairing){
-	    showpairing();
-	} else {
-	    createpairing(null);
-	}
+    let haspairing = glob.simplex.calibration.hasOwnProperty('pairing');
+    if (haspairing){
+	showpairing();
     } else {
-	createstandard(createpairing);
+	createPairing(showpairing);
     }
-}
-function createstandard(myCallback){
-    shinylight.call('createstandard', {x:glob}, null).then(
-	result => {
-	    let dat = result.data;
-	},
-	error => alert(error)
-    )
-}
-function createpairing(){
-    shinylight.call('createpairing', {x:glob}, null).then(
-	result => {
-	    let dat = result.data;
-	},
-	error => alert(error)
-    )
 }
 function showpairing(){
     let cal = glob.simplex.calibration;
@@ -523,6 +498,15 @@ function showpairing(){
 	val[i] = Object.values(cal.pairing[i]);
     }
     loadTable(val,header,'pairing',nr);
+}
+function createPairing(callback){
+    shinylight.call('createpairing', {x:glob}, null).then(
+	result => result2simplex(result),
+	error => alert(error)
+    ).then(
+	() => callback(),
+	error => alert(error)
+    );
 }
 function getpairing(){
     let e = document.getElementById('pairing');

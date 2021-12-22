@@ -71,11 +71,6 @@ getdatatype <- function(x){
     datatype(dat)
 }
 
-checkmulti <- function(x){
-    dat <- as.simplex(x)
-    multicollector(dat)
-}
-
 getdrift <- function(x){
     out <- drift_helper(x=as.simplex(x),gui=TRUE)
     result2json(out)
@@ -116,6 +111,14 @@ getstandard <- function(preset){
 createcalibration <- function(x,measured=TRUE){
     dat <- as.simplex(x)
     s <- skeletonstand(dat,measured=measured)
+    p <- pairing(dat,s)
+    out <- dat
+    out$calibration <- list(stand=s,pairing=p)
+    result2json(out)
+}
+createpairing <- function(x){
+    dat <- as.simplex(x)
+    s <- dat$calibration$stand
     p <- pairing(dat,s)
     out <- dat
     out$calibration <- list(stand=s,pairing=p)
@@ -209,7 +212,6 @@ freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
             presets=presets,
             upload=upload,
             getdatatype=getdatatype,
-            checkmulti=checkmulti,
             getdrift=getdrift,
             driftPlot=driftPlot,
             getlogratios=getlogratios,
@@ -217,6 +219,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
             logratioTable=logratioTable,
             getstandard=getstandard,
             createcalibration=createcalibration,
+            createpairing=createpairing,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,
