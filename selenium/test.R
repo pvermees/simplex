@@ -14,4 +14,4 @@ source('R/trim.R')
 source('R/app.R')
 
 shinylight::slStop()
-freeformServer(port=8000,test=TRUE)
+freeformServer(port=8000,test=TRUE,daemonize=FALSE)

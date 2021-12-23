@@ -203,11 +203,11 @@ upload <- function(f,x){
     result2json(read_data(f=tcs,m=as.simplex(x)$method))
 }
 
-freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
+freeformServer <- function(port=NULL,host='127.0.0.1',
+                           test=FALSE,daemonize=!is.null(port)) {
     if (test) appDir <- R.utils::getAbsolutePath("inst/www")
     else appDir <- system.file("www",package="simplex")
-    shinylight::slServer(host=host,port=port,appDir=appDir,
-                         daemonize=!is.null(port),
+    shinylight::slServer(host=host,port=port,appDir=appDir,daemonize=daemonize,
         interface=list(
             presets=presets,
             upload=upload,
