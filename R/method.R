@@ -45,8 +45,14 @@ method <- function(m='IGG-UPb',instrument,ions,num,
     invisible(out)
 }
 
-checkmethod <- function(m){
-    all((m$num %in% m$ions) & (m$den %in% m$ions))
+fixmethod <- function(x){
+    out <- x
+    m <- x$method
+    ions <- colnames(x$samples[[1]]$signal)
+    if (length(m$ions)!=length(ions)) out$method$ions <- ions
+    matches <- all((m$num %in% m$ions) & (m$den %in% m$ions))
+    if (!matches) warning("method$num and method$den not found among method$ions")
+    invisible(out)
 }
 
 defaultmethod <- function(m){

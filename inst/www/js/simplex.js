@@ -93,8 +93,9 @@ function resetglob(){
 }
 
 function method(el){
-    glob.simplex.method[el.id] = el.value.split(',')
+    glob.simplex.method[el.id] = el.value.split(',');
     glob.class = ['simplex']; // reset calculations
+    checkmethod();
 }
 
 function renameIons(){
@@ -191,12 +192,31 @@ async function upload(){
 			glob.simplex.method.num.toString();
 		    document.getElementById('den').value =
 			glob.simplex.method.den.toString();
+		    checkmethod();
 		},
 		error => alert(error)
 	    )
 	},
 	err => alert(err)
     )
+}
+function checkmethod(){
+    let m = glob.simplex.method;
+    let checker = (arr, target) => target.every(v => arr.includes(v));
+    let ok = checker(m.ions,m.num) & checker(m.ions,m.den)
+    togglemethodwarning(ok);
+}
+
+function togglemethodwarning(ok){
+    let witem = document.getElementById("methodmismatch");
+    let iitem = document.getElementById("ions");
+    if (ok){
+	witem.classList.add("hidden");
+	iitem.classList.remove("red");
+    } else {
+	witem.classList.remove("hidden");
+	iitem.classList.add("red");
+    }
 }
 
 function result2simplex(result){

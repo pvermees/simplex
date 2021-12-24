@@ -25,10 +25,7 @@ read_data <- function(f,m='IGG-UPb'){
         out$samples <- read_samples_fn(fn=f,m=out$method)
     }
     class(out) <- 'simplex'
-    # fix method:
-    ions <- colnames(out$samples[[1]]$signal)
-    if (length(m$ions)!=length(ions)) out$method$ions <- ions
-    out
+    fixmethod(out)
 }
 read_samples_tc <- function(tc,m){
     out <- list()

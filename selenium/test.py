@@ -20,6 +20,11 @@ def blank(val):
     blank = d.find_element("id","blank")
     blank.clear()
     blank.send_keys(val)
+
+def ions(inst):
+    ions = d.find_element("id","ions")
+    ions.clear()
+    ions.send_keys(inst)
     
 def upload(fname):
     upload = d.find_element("id","upload")
@@ -38,3 +43,4 @@ def Camecatest():
     for i in range(1,len(fnames)):
         unames += "\n" + fnames[i]
     upload(unames)
+    #ions("Zr2O,Zr2O,200.5,Zr2O,Pb204,Pb206,Pb207,Pb208,HfO2,Th232,U238,ThO,UO,UO2")

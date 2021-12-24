@@ -135,3 +135,7 @@ input[type="file"] {
     cursor: pointer;
     background-color: #ffdddd;
 }
+
+.red {
+    color: red;
+}
