@@ -1,4 +1,4 @@
-import time, os
+import time, os, glob
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
@@ -30,3 +30,11 @@ def SHRIMPtest():
     instrument("SHRIMP")
     blank("bkg")
     upload("/home/pvermees/Documents/Programming/R/simplex/inst/SHRIMP.op")
+
+def Camecatest():
+    setup()
+    fnames = glob.glob("/home/pvermees/Documents/SIMS/20210528 Tanz U-Th-Pb/*.asc")
+    unames = fnames[0]
+    for i in range(1,len(fnames)):
+        unames += "\n" + fnames[i]
+    upload(unames)

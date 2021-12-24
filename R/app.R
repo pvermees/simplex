@@ -200,7 +200,8 @@ upload <- function(f,x){
     for (i in 1:ntcs){
         tcs[[f$fns[[i]]]] <- textConnection(f$tcs[[i]])
     }
-    result2json(read_data(f=tcs,m=as.simplex(x)$method))
+    out <- read_data(f=tcs,m=as.simplex(x)$method)
+    result2json(out)
 }
 
 freeformServer <- function(port=NULL,host='127.0.0.1',
