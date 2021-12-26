@@ -7,9 +7,9 @@ def boot():
     global d
     d = webdriver.Firefox()
     d.get("http://127.0.0.1:8000")
-    
-def setup():
-    d.find_element('id',"setup").click()
+
+def click(id):
+    d.find_element('id',id).click()
 
 def instrument(inst):
     instrument = d.find_element("id","instrument")
@@ -21,26 +21,28 @@ def blank(val):
     blank.clear()
     blank.send_keys(val)
 
-def ions(inst):
+def ions(val):
     ions = d.find_element("id","ions")
     ions.clear()
-    ions.send_keys(inst)
+    ions.send_keys(val)
+    ions.send_keys(Keys.ENTER);
     
 def upload(fname):
     upload = d.find_element("id","upload")
     upload.send_keys(fname)
 
 def SHRIMPtest():
-    setup()
+    click("setup")
     instrument("SHRIMP")
     blank("bkg")
     upload("/home/pvermees/Documents/Programming/R/simplex/inst/SHRIMP.op")
 
 def Camecatest():
-    setup()
+    click("setup")
     fnames = glob.glob("/home/pvermees/Documents/SIMS/20210528 Tanz U-Th-Pb/*.asc")
     unames = fnames[0]
     for i in range(1,len(fnames)):
         unames += "\n" + fnames[i]
     upload(unames)
-    #ions("Zr2O,Zr2O,200.5,Zr2O,Pb204,Pb206,Pb207,Pb208,HfO2,Th232,U238,ThO,UO,UO2")
+    ions("90Zr2O,92Zr2O,200.5,94Zr2O,Pb204,Pb206,Pb207,Pb208,HfO2,Th232,U238,ThO,UO,UO2")
+    

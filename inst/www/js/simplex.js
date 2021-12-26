@@ -183,7 +183,8 @@ async function readFiles(){
 async function upload(){
     readFiles().then(
 	f => {
-	    shinylight.call('upload', {f:f, x:glob}, null).then(
+	    m = glob.simplex.method;
+	    shinylight.call('upload', {f:f, m:m}, null).then(
 		result => {
 		    result2simplex(result);
 		    document.getElementById('ions').value =
