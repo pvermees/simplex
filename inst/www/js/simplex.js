@@ -560,6 +560,22 @@ function togglestandcomp(){
 	hide('.show4prefix')
     }    
 }
+function standtype(){
+    let measured = (document.getElementById('standtype').value === 'measured');
+    
+}
+function chooseStandard(){
+    let preset = document.getElementById('standards').value;
+    let measured = (document.getElementById('standtype').value === 'measured');
+    let args = {x: glob, preset:preset, measured:measured};
+    shinylight.call('getstandard', args, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
 
 // III.
 function setstandsel(){
