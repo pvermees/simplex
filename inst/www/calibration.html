@@ -4,8 +4,8 @@
     <li>
       Calibration type: &nbsp;
       <select id="caltype" onchange="togglecaltype();">
-	<option>isotopic fractionation (averaging)</option>
-	<option>elemental fractionation (regression)</option>
+	<option value="average">isotopic fractionation (averaging)</option>
+	<option value="regression">elemental fractionation (regression)</option>
       </select>
       <p></p>
     </li>
@@ -21,7 +21,7 @@
 	  Convert from &delta;-values</option>
       </select>
       <span class="hide4stable show4geochron">as
-	<select id="standtype" onchange="standtype();">
+	<select id="standtype" onchange="togglestandtype();">
 	  <option value="measured">measured</option>
 	  <option value="commonradio" selected>common + radiogenic</option>
 	</select>

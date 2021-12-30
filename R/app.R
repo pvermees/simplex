@@ -104,7 +104,9 @@ logratioTable <- function(x){
     as.data.frame(tab)
 }
 
-getstandard <- function(x,preset,measured){
+getstandard <- function(x){
+    preset <- x$calibration$preset
+    measured <- identical(x$calibration$caltype,'measured')
     out <- as.simplex(x)
     out$calibration$stand <- standard(preset,measured)
     result2json(out)

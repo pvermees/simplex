@@ -138,3 +138,10 @@ JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't fin
 JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
 JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: standtype is not a function
 JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: standtype is not a function
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 471: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 471: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 522: TypeError: cal.pairing is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.

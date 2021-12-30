@@ -18,6 +18,12 @@ var glob = {
     'ratios': true,
     'log': true,
     'xy': false,
+    'calibration': {
+	'caltype': null, // 'average' or 'regression'
+	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'del2stand'
+	'standtype': 'measured', // 'measured' or 'commonradio'
+	'preset': null // 'Plesovice', 'NBS28', ...
+    },
     'sampleprefix': null,
     'standards': [],
     'samples': [],
@@ -471,15 +477,27 @@ function calibration(){
     );
 }
 function showCalibration(){
-    document.getElementById('caltype').selectedIndex = glob.multi ? 0 : 1;
+    prepareCalibration();
     // I
     togglecaltype();
     // II
     setstandcomp();
     // III
     setstandsel();
+    // set and act upon glob.calibration
 }
-
+function prepareCalibration(){
+    let cal = glob.calibration;
+    if (cal.caltype==null){
+	cal.caltype = glob.multi ? 'average' : 'regression';
+    }
+    document.getElementById('caltype').value = cal.caltype;
+    document.getElementById('standcomp').value = cal.standcomp;
+    document.getElementById('standtype').value = cal.standtype;
+    if (cal.prefix!==null){
+	document.getElementById('standards').value = cal.prefix;
+    }
+}
 function createCalibration(callback){
     shinylight.call('createcalibration', {x:glob}, null).then(
 	result => result2simplex(result),
@@ -491,12 +509,14 @@ function createCalibration(callback){
 }
 
 // I.
+
 function togglecaltype(){
-    let val = document.getElementById('caltype').selectedIndex;
-    if (val === 0){
+    let ct = glob.calibration.caltype;
+    ct = document.getElementById('caltype').value;
+    if (ct === 'average'){
 	show('.show4stable');
 	hide('.hide4stable');
-    } else {
+    } else { // regression
 	show('.show4geochron');
 	hide('.hide4geochron');
 	setpairing();
@@ -553,22 +573,20 @@ function setstandcomp(){
     loadTable(cov,header,'standcov',nr);
 }
 function togglestandcomp(){
-    let val = document.getElementById('standcomp').value;
-    if (val === 'prefix2stand'){
+    let sc = glob.calibration.standcomp;
+    sc = document.getElementById('standcomp').value;
+    if (sc === 'prefix2stand'){
 	show('.show4prefix');
     } else {
 	hide('.show4prefix')
     }    
 }
-function standtype(){
-    let measured = (document.getElementById('standtype').value === 'measured');
-    
+function togglestandtype(){
+    glob.calibration.standtype = document.getElementById('standtype').value;
 }
 function chooseStandard(){
-    let preset = document.getElementById('standards').value;
-    let measured = (document.getElementById('standtype').value === 'measured');
-    let args = {x: glob, preset:preset, measured:measured};
-    shinylight.call('getstandard', args, null).then(
+    glob.calibration.prefix = document.getElementById('standards').value;
+    shinylight.call('getstandard', {x:glob}, null).then(
 	result => {
 	    result2simplex(result);
 	    setstandcomp();
