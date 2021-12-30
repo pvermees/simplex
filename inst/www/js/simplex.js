@@ -9,20 +9,20 @@ var glob = {
 	'calibration': null,
 	'calibrated': null
     },
-    'i': 0,
+    'i': null,
     'start': true,
     'names': null,
     'class': 'simplex',
-    'multi': false,
+    'multi': null,
     'selected': 0,
     'ratios': true,
     'log': true,
     'xy': false,
     'calibration': {
-	'caltype': null, // 'average' or 'regression'
-	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'del2stand'
-	'standtype': 'measured', // 'measured' or 'commonradio'
-	'preset': null // 'Plesovice', 'NBS28', ...
+	'caltype': null,
+	'standcomp': null,
+	'standtype': null,
+	'preset': null
     },
     'sampleprefix': null,
     'standards': [],
@@ -96,6 +96,12 @@ function resetglob(){
     glob.sampleprefix = null;
     glob.standards = [];
     glob.samples = [];
+    glob.calibration = {
+	'caltype': null, // 'average' or 'regression'
+	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'del2stand'
+	'standtype': 'measured', // 'measured' or 'commonradio'
+	'preset': null // 'Plesovice', 'NBS28', ...
+    }
 }
 
 function method(el){
@@ -494,8 +500,8 @@ function prepareCalibration(){
     document.getElementById('caltype').value = cal.caltype;
     document.getElementById('standcomp').value = cal.standcomp;
     document.getElementById('standtype').value = cal.standtype;
-    if (cal.prefix!==null){
-	document.getElementById('standards').value = cal.prefix;
+    if (cal.preset!==null){
+	document.getElementById('standards').value = cal.preset;
     }
 }
 function createCalibration(callback){
@@ -585,7 +591,7 @@ function togglestandtype(){
     glob.calibration.standtype = document.getElementById('standtype').value;
 }
 function chooseStandard(){
-    glob.calibration.prefix = document.getElementById('standards').value;
+    glob.calibration.preset = document.getElementById('standards').value;
     shinylight.call('getstandard', {x:glob}, null).then(
 	result => {
 	    result2simplex(result);
