@@ -589,6 +589,7 @@ function togglestandcomp(){
 }
 function togglestandtype(){
     glob.calibration.standtype = document.getElementById('standtype').value;
+    createCalibration(showCalibration);
 }
 function chooseStandard(){
     glob.calibration.preset = document.getElementById('standards').value;

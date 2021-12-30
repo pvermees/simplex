@@ -112,7 +112,8 @@ getstandard <- function(x){
     result2json(out)
 }
 
-createcalibration <- function(x,measured=TRUE){
+createcalibration <- function(x){
+    measured <- (x$calibration$standtype=='measured')
     dat <- as.simplex(x)
     s <- skeletonstand(dat,measured=measured)
     p <- pairing(dat,s)
