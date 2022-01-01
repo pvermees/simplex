@@ -474,6 +474,9 @@ function calibration(){
     loadPage("calibration.html").then(
 	() => {
 	    if (glob.simplex.hasOwnProperty('calibration')){
+		glob.calibration.standtype =
+		    glob.simplex.calibration.stand.measured[0] ?
+		    "measured" : "commonradio";
 		showCalibration();
 	    } else {
 		createCalibration(showCalibration);
@@ -522,10 +525,14 @@ function togglecaltype(){
     if (ct === 'average'){
 	show('.show4stable');
 	hide('.hide4stable');
+	if (glob.multi) hide('#caltype-warning');
+	else show('#caltype-warning');
     } else { // regression
 	show('.show4geochron');
 	hide('.hide4geochron');
 	setpairing();
+	if (glob.multi) show('#caltype-warning');
+	else hide('#caltype-warning');
     }
 }
 function setpairing(){

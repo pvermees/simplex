@@ -7,6 +7,7 @@
 	<option value="average">isotopic fractionation (averaging)</option>
 	<option value="regression">elemental fractionation (regression)</option>
       </select>
+      <span id="caltype-warning" class="hidden red">Are you sure?</span>
       <p></p>
     </li>
     <li>
@@ -30,13 +31,17 @@
       <span class="hidden hide4stable show4prefix">Choose a standard:
 	<select id="standards" onchange="chooseStandard()">
 	  <option disabled selected value="select"> -- select an option -- </option>
-	  <option class="hide4stable" value="Plesovice">Plesovice zircon</option>
-	  <option class="hide4stable" value="Qinghu">Qinghu zircon</option>
-	  <option class="hide4stable" value="Temora">Temora zircon</option>
-	  <option value="44069">44069 monazite</option>
-	  <option value="NBS28">NBS28 quartz</option>
-	  <option value="Sonora">Sonora pyrite</option>
-	  <option value="other">other</option>
+	  <option class="hide4stable show4geochron" value="Plesovice">Plesovice zircon</option>
+	  <option class="hide4stable show4geochron" value="Qinghu">Qinghu zircon</option>
+	  <option class="hide4stable show4geochron" value="Temora">Temora zircon</option>
+	  <option class="hide4stable show4geochron" value="44069">44069 monazite</option>
+	  <optgroup class="show4stable hide4geochron" label="oxygen">
+	    <option class="show4stable hide4geochron" value="NBS28">NBS28 quartz</option>
+	  </optgroup>
+	  <optgroup class="show4stable hide4geochron" label="sulphur">
+	    <option class="show4stable hide4geochron" value="Sonora">Sonora pyrite</option>
+	  </optgroup>
+	  <option class="show4stable hide4geochron" value="other">other</option>
 	</select>
 	<p></p>
       </span>

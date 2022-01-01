@@ -133,7 +133,8 @@ createpairing <- function(x){
 calibrator <- function(x,...){
     dat <- as.simplex(x)
     stnd <- dat$calibration$stand
-    prng <- dat$calibration$pairing
+    if (identical(x$calibration$caltype,"average")) prng <- NULL
+    else prng <- dat$calibration$pairing
     prfx <- dat$calibration$prefix
     if (length(x$standards)>0){
         snms <- x$standards
