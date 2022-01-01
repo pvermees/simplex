@@ -28,7 +28,7 @@
 	</select>
       </span>
       <p></p>
-      <span class="hidden hide4stable show4prefix">Choose a standard:
+      <span class="hidden show4prefix">Choose a standard:
 	<select id="standards" onchange="chooseStandard()">
 	  <option disabled selected value="select"> -- select an option -- </option>
 	  <option class="hide4stable show4geochron" value="Plesovice">Plesovice zircon</option>
@@ -45,6 +45,7 @@
 	</select>
 	<p></p>
       </span>
+      <span id="mismatch-warning" class="hidden red">Standard ratios do not match measured ratios!<p></p></span>
       Logratios: <table id="standlr" class="normalfont"></table><br>
       Covariance matrix: <table id="standcov" class="normalfont"></table><br>
       <span class="show4geochron hide4stable">

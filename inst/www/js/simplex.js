@@ -584,6 +584,21 @@ function setstandcomp(){
     let cov = stand.cov;
     loadTable(val,header,'standlr',1);
     loadTable(cov,header,'standcov',nr);
+    togglemismatchwarning();
+}
+function togglemismatchwarning(){
+    let header = glob.names.calibration.stand.val;
+    let m = glob.simplex.method;
+    let warn = true;
+    for (let i=0; i<m.num.length; i++){
+	ratio = m.num[i] + '/' + m.den[i];
+	if (header.includes(ratio)) {
+	    warn = false;
+	    break;
+	}
+    }
+    if (warn) show("#mismatch-warning")
+    else hide("#mismatch-warning")
 }
 function togglestandcomp(){
     let sc = glob.calibration.standcomp;
