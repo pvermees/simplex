@@ -229,12 +229,13 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
         }
         graphics::par(oldpar)
     } else {
-        ns <- length(cal$snames)
+        snames <- dat$calibration$snames
+        ns <- length(snames)
         tab <- matrix(0,nrow=3,ncol=ns)
         rownames(tab) <- c('x','ll','ul')
-        colnames(tab) <- cal$snames
+        colnames(tab) <- snames
         tfact <- qnorm(0.975)
-        for (sname in cal$snames){
+        for (sname in snames){
             tab['x',sname] <- tavg[[sname]]$val
             dx <- tfact*sqrt(tavg[[sname]]$cov)
             tab['ll',sname] <- tab['x',sname] - dx
@@ -244,9 +245,9 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
                 type='l',lty=1,col='black',bty='n',
                 xlab='standard #',ylab='')
         points(1:ns,tab['x',],pch=16)
-        lines(c(1,ns),rep(cal$cal$val,2),lty=2)
-        lines(c(1,ns),rep(cal$cal$val-tfact*sqrt(cal$cal$cov),2),lty=3)
-        lines(c(1,ns),rep(cal$cal$val+tfact*sqrt(cal$cal$cov),2),lty=3)
+        lines(c(1,ns),rep(cal$val,2),lty=2)
+        lines(c(1,ns),rep(cal$val-tfact*sqrt(cal$cov),2),lty=3)
+        lines(c(1,ns),rep(cal$val+tfact*sqrt(cal$cov),2),lty=3)
     }
 }
 
@@ -258,8 +259,8 @@ calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
     nc <- length(cnames)
     out <- as.data.frame(matrix(NA,nrow=nr,ncol=nc))
     oldpar <- graphics::par(mfrow=c(1,nr),mar=c(3.5,3.5,3.5,1),mgp=c(2,0.5,0))
-    tavg <- time_average(subset(x=dat,snames=dat$calibration$snames),
-                         t=dat$calibration$t)
+    snames <- dat$calibration$snames
+    tavg <- time_average(subset(x=dat,snames=snames),t=dat$calibration$t)
     for (i in 1:nr){
         yd <- beta2york_regression(tavg=tavg,
                                    pairing=pair[i,],
@@ -269,7 +270,7 @@ calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
                               xlab=paste0('ln[',pair[i,'X'],']'),
                               ylab=paste0('ln[',pair[i,'Y'],']'))
         if (show.numbers){
-            istd <- which(names(dat$samples) %in% dat$calibration$snames)
+            istd <- which(names(dat$samples) %in% snames)
             text(x=yd[,'X'],y=yd[,'Y'],labels=istd,pos=3,offset=0.1)
         }
         caltitle(fit,...)

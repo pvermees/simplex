@@ -35,19 +35,19 @@ standard <- function(preset,tst,measured){
         } else if (preset=='Qinghu'){
             geochron <- TRUE
             out <- age2standard(tst=c(159.5,0.1))
-        } else if (x=='44069'){
+        } else if (preset=='44069'){
             geochron <- TRUE
             out <- age2standard(tst=c(424.86,0.25))
-        } else if (x=='Temora'){
+        } else if (preset=='Temora'){
             geochron <- TRUE
             out <- age2standard(tst=c(416.75,0.12))
-        } else if (x=='NBS28'){
+        } else if (preset=='NBS28'){
             geochron <- FALSE
             del <- list(num=c('O17','O18'),den='O16',
                         val=c(4.79,9.56),
                         cov=diag(c(0.05,0.11))^2)
             out <- del2stand(del,ref=VSMOW())
-        } else if (x=='Sonora'){ # temporary value
+        } else if (preset=='Sonora'){ # temporary value
             geochron <- FALSE
             del <- list(num=c('S33','S34','S36'),den='S32',
                         val=c(0.83,1.61,3.25),

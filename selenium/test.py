@@ -26,8 +26,8 @@ def blank(val):
     blank.send_keys(val)
     blank.send_keys(Keys.ENTER);
 
-def ions(val):
-    ions = d.find_element("id","ions")
+def ions(val,identifier="ions"):
+    ions = d.find_element("id",identifier)
     ions.clear()
     ions.send_keys(val)
     ions.send_keys(Keys.ENTER);
@@ -57,7 +57,7 @@ def Camecatest():
     time.sleep(5)
     click("logratios")
     
-def calibrationtest():
+def geochroncalibrationtest():
     click("calibration")
     select("standtype","measured")
     select("standcomp","t2stand")
@@ -68,3 +68,18 @@ def calibrationtest():
     st.clear()
     st.send_keys(10)
     click("convert")
+
+def oxygencalibrationtest():
+    click("setup")
+    select("methods","IGG-O")
+    ions("O18",identifier="num")
+    ions("O16",identifier="den")
+    click("drift")
+    time.sleep(1)
+    click("logratios")
+    time.sleep(1)    
+    click("calibration")
+    select("standcomp","preset2stand")
+    select("presets","NBS28")
+    click("calibrate")
+    

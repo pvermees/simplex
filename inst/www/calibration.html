@@ -29,7 +29,7 @@
       </span>
       <p></p>
       <span class="hidden show4preset">Choose a standard:
-	<select id="standards" onchange="preset2standard()">
+	<select id="presets" onchange="preset2standard()">
 	  <option disabled selected value="select"> -- select an option -- </option>
 	  <option class="hide4stable show4geochron" value="Plesovice">Plesovice zircon</option>
 	  <option class="hide4stable show4geochron" value="Qinghu">Qinghu zircon</option>
@@ -71,7 +71,7 @@
       <p></p>
     </li>
     <li>
-      <button class="mainbutton" onclick="calibrator()">Calibrate</button>
+      <button class="mainbutton" id="calibrate" onclick="calibrator()">Calibrate</button>
     </li>
   </ol>
 </left>

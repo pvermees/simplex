@@ -506,7 +506,7 @@ function prepareCalibration(){
     document.getElementById('standcomp').value = cal.standcomp;
     document.getElementById('standtype').value = cal.standtype;
     if (cal.preset!==null){
-	document.getElementById('standards').value = cal.preset;
+	document.getElementById('presets').value = cal.preset;
     }
     document.getElementById('t').value = cal.tst[0];
     document.getElementById('st').value = cal.tst[1];
@@ -623,7 +623,7 @@ function togglestandtype(){
     createCalibration(showCalibration);
 }
 function preset2standard(){
-    glob.calibration.preset = document.getElementById('standards').value;
+    glob.calibration.preset = document.getElementById('presets').value;
     shinylight.call('preset2standard', {x:glob}, null).then(
 	result => {
 	    result2simplex(result);
