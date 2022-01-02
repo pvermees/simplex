@@ -27,33 +27,38 @@
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(x,measured){
-    if (x=='Plesovice'){
+standard <- function(preset,tst,measured){
+    if (!missing(preset)){
+        if (preset=='Plesovice'){
+            geochron <- TRUE
+            out <- age2standard(tst=c(337.13,0.18))
+        } else if (preset=='Qinghu'){
+            geochron <- TRUE
+            out <- age2standard(tst=c(159.5,0.1))
+        } else if (x=='44069'){
+            geochron <- TRUE
+            out <- age2standard(tst=c(424.86,0.25))
+        } else if (x=='Temora'){
+            geochron <- TRUE
+            out <- age2standard(tst=c(416.75,0.12))
+        } else if (x=='NBS28'){
+            geochron <- FALSE
+            del <- list(num=c('O17','O18'),den='O16',
+                        val=c(4.79,9.56),
+                        cov=diag(c(0.05,0.11))^2)
+            out <- del2stand(del,ref=VSMOW())
+        } else if (x=='Sonora'){ # temporary value
+            geochron <- FALSE
+            del <- list(num=c('S33','S34','S36'),den='S32',
+                        val=c(0.83,1.61,3.25),
+                        cov=diag(c(0.03,0.08,0.03))^2)
+            out <- del2stand(del,ref=troilite())
+        } else {
+            stop("Invalid input to standard(...).")
+        }
+    } else if (!missing(tst)){
         geochron <- TRUE
-        out <- age2stand(tst=c(337.13,0.18))
-    } else if (x=='Qinghu'){
-        geochron <- TRUE
-        out <- age2stand(tst=c(159.5,0.1))
-    } else if (x=='44069'){
-        geochron <- TRUE
-        out <- age2stand(tst=c(424.86,0.25))
-    } else if (x=='Temora'){
-        geochron <- TRUE
-        out <- age2stand(tst=c(416.75,0.12))
-    } else if (x=='NBS28'){
-        geochron <- FALSE
-        del <- list(num=c('O17','O18'),den='O16',
-                    val=c(4.79,9.56),
-                    cov=diag(c(0.05,0.11))^2)
-        out <- del2stand(del,ref=VSMOW())
-    } else if (x=='Sonora'){ # temporary value
-        geochron <- FALSE
-        del <- list(num=c('S33','S34','S36'),den='S32',
-                    val=c(0.83,1.61,3.25),
-                    cov=diag(c(0.03,0.08,0.03))^2)
-        out <- del2stand(del,ref=troilite())
-    } else {
-        stop("Invalid input to standard(...).")
+        out <- age2stand(tst)
     }
     if (geochron){
         if (missing(measured)) measured <- FALSE
@@ -61,11 +66,13 @@ standard <- function(x,measured){
         if (out$measured) {
             out$val <- out$val[-c(1:2)]
             out$cov <- out$cov[-c(1:2),-c(1:2)]
-            if (x=='Plesovice'){
-                out$val['Pb206/U238'] <- log(0.053707)
-                out$cov['Pb206/U238','Pb206/U238'] <- 0.02
-                out$cov['Pb206/U238','Pb208/Th232'] <- 0
-                out$cov['Pb208/Th232','Pb206/U238'] <- 0
+            if (!missing(preset)){
+                if (preset=='Plesovice'){
+                    out$val['Pb206/U238'] <- log(0.053707)
+                    out$cov['Pb206/U238','Pb206/U238'] <- 0.02
+                    out$cov['Pb206/U238','Pb208/Th232'] <- 0
+                    out$cov['Pb208/Th232','Pb206/U238'] <- 0
+                }
             }
         }
     } else {
@@ -74,7 +81,7 @@ standard <- function(x,measured){
     out
 }
 
-age2stand <- function(tst,pairing=NULL){
+age2stand <- function(tst){
     num <- c('Pb204','Pb204','Pb206','Pb208')
     den <- c('Pb206','Pb208','U238','Th232')
     ratios <- paste0(num,'/',den)

@@ -104,11 +104,19 @@ logratioTable <- function(x){
     as.data.frame(tab)
 }
 
-getstandard <- function(x){
+preset2standard <- function(x){
     preset <- x$calibration$preset
-    measured <- identical(x$calibration$caltype,'measured')
+    measured <- identical(x$calibration$standtype,'measured')
     out <- as.simplex(x)
-    out$calibration$stand <- standard(preset,measured)
+    out$calibration$stand <- standard(preset=preset,measured=measured)
+    result2json(out)
+}
+
+t2stand <- function(x){
+    tst <- x$calibration$tst
+    measured <- identical(x$calibration$standtype,'measured')
+    out <- as.simplex(x)
+    out$calibration$stand <- standard(tst=tst,measured=measured)
     result2json(out)
 }
 
@@ -224,9 +232,10 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             getlogratios=getlogratios,
             logratioPlot=logratioPlot,
             logratioTable=logratioTable,
-            getstandard=getstandard,
+            preset2standard=preset2standard,
             createcalibration=createcalibration,
             createpairing=createpairing,
+            t2stand=t2stand,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,

@@ -1,6 +1,7 @@
 import time, os, glob
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 
 # start test.R first
 def boot():
@@ -11,6 +12,9 @@ def boot():
 def click(id):
     d.find_element('id',id).click()
 
+def select(parent,daughter):
+    Select(d.find_element("id",parent)).select_by_value(daughter)
+    
 def instrument(inst):
     instrument = d.find_element("id","instrument")
     instrument.clear()
@@ -52,3 +56,15 @@ def Camecatest():
     click("drift")
     time.sleep(5)
     click("logratios")
+    
+def calibrationtest():
+    click("calibration")
+    select("standtype","measured")
+    select("standcomp","t2stand")
+    t = d.find_element("id","t")
+    t.clear()
+    t.send_keys(500)
+    st = d.find_element("id","st")
+    st.clear()
+    st.send_keys(10)
+    click("convert")

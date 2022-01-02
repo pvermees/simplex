@@ -15,7 +15,7 @@
       <p></p>
       <select id="standcomp" onchange="togglestandcomp();">
 	<option value="manualstand">specify manually</option>
-	<option value="prefix2stand">load presets</option>
+	<option value="preset2stand">load presets</option>
 	<option value="t2stand" class="hide4stable show4geochron">
 	  convert from age</option>
 	<option value="del2stand" class="show4stable hide4geochron">
@@ -28,8 +28,8 @@
 	</select>
       </span>
       <p></p>
-      <span class="hidden show4prefix">Choose a standard:
-	<select id="standards" onchange="chooseStandard()">
+      <span class="hidden show4preset">Choose a standard:
+	<select id="standards" onchange="preset2standard()">
 	  <option disabled selected value="select"> -- select an option -- </option>
 	  <option class="hide4stable show4geochron" value="Plesovice">Plesovice zircon</option>
 	  <option class="hide4stable show4geochron" value="Qinghu">Qinghu zircon</option>
@@ -45,7 +45,15 @@
 	</select>
 	<p></p>
       </span>
-      <span id="mismatch-warning" class="hidden red">Standard ratios do not match measured ratios!<p></p></span>
+      <span class="hidden show4t2stand">
+	t=<input type="text" id="t" class="narrowtext">,
+	s[t]=<input type="text" id="st" class="narrowtext">Ma
+	<button class="mainbutton" id="convert" onclick="t2stand()">Convert</button>
+	<p></p>
+      </span>
+      <span id="mismatch-warning" class="hidden red">
+	Standard ratios do not match measured ratios!<p></p>
+      </span>
       Logratios: <table id="standlr" class="normalfont"></table><br>
       Covariance matrix: <table id="standcov" class="normalfont"></table><br>
       <span class="show4geochron hide4stable">

@@ -139,3 +139,7 @@ input[type="file"] {
 .red {
     color: red;
 }
+
+.narrowtext {
+    width: 10ch
+}

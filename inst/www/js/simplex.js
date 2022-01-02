@@ -22,7 +22,8 @@ var glob = {
 	'caltype': null,
 	'standcomp': null,
 	'standtype': null,
-	'preset': null
+	'preset': null,
+	'tst': []
     },
     'sampleprefix': null,
     'standards': [],
@@ -100,7 +101,8 @@ function resetglob(){
 	'caltype': null, // 'average' or 'regression'
 	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'del2stand'
 	'standtype': 'measured', // 'measured' or 'commonradio'
-	'preset': null // 'Plesovice', 'NBS28', ...
+	'preset': null, // 'Plesovice', 'NBS28', ...
+	'tst': [0,0]
     }
 }
 
@@ -506,6 +508,8 @@ function prepareCalibration(){
     if (cal.preset!==null){
 	document.getElementById('standards').value = cal.preset;
     }
+    document.getElementById('t').value = cal.tst[0];
+    document.getElementById('st').value = cal.tst[1];
 }
 function createCalibration(callback){
     shinylight.call('createcalibration', {x:glob}, null).then(
@@ -603,19 +607,36 @@ function togglemismatchwarning(){
 function togglestandcomp(){
     let sc = glob.calibration.standcomp;
     sc = document.getElementById('standcomp').value;
-    if (sc === 'prefix2stand'){
-	show('.show4prefix');
+    if (sc === 'preset2stand'){
+	show('.show4preset');
     } else {
-	hide('.show4prefix')
-    }    
+	hide('.show4preset')
+    }
+    if (sc === 't2stand'){
+	show('.show4t2stand');
+    } else {
+	hide('.show4t2stand');
+    }
 }
 function togglestandtype(){
     glob.calibration.standtype = document.getElementById('standtype').value;
     createCalibration(showCalibration);
 }
-function chooseStandard(){
+function preset2standard(){
     glob.calibration.preset = document.getElementById('standards').value;
-    shinylight.call('getstandard', {x:glob}, null).then(
+    shinylight.call('preset2standard', {x:glob}, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
+function t2stand(){
+    let cal = glob.calibration;
+    cal.tst[0] = parseFloat(document.getElementById('t').value);
+    cal.tst[1] = parseFloat(document.getElementById('st').value);
+    shinylight.call('t2stand', {x:glob}, null).then(
 	result => {
 	    result2simplex(result);
 	    setstandcomp();
@@ -628,7 +649,7 @@ function chooseStandard(){
 function setstandsel(){
     let cal = glob.simplex.calibration;
     let hasprefix = cal.hasOwnProperty('prefix');
-    if (!hasprefix) cal.prefix === '';
+    if (!hasprefix) cal.prefix = '';
     if (glob.standards.length<1){
 	prefix2standards();
     }
