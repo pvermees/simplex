@@ -23,7 +23,8 @@ var glob = {
 	'standcomp': null,
 	'standtype': null,
 	'preset': null,
-	'tst': []
+	'tst': [],
+	'delref': null
     },
     'sampleprefix': null,
     'standards': [],
@@ -590,6 +591,21 @@ function setstandcomp(){
     loadTable(cov,header,'standcov',nr);
     togglemismatchwarning();
 }
+function showdelcovref(){
+    let elr = document.getElementById('standlr');
+    let header = elr.deg.getColumnHeaders();
+    let edel = document.getElementById('deltab');
+    let ecov = document.getElementById('deltab');
+    edel.deg = createDataEntryGrid('deltab',header,1);
+    ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
+    let cal = glob.simplex.calibration;
+    if (cal.hasOwnProperty('ref')){
+	loadTable(cal.ref.val,header,'delreftab',1);
+    } else {
+	let eref = document.getElementById('delreftab');
+	eref.deg = createDataEntryGrid('delreftab',header,1);
+    }
+}
 function togglemismatchwarning(){
     let header = glob.names.calibration.stand.val;
     let m = glob.simplex.method;
@@ -617,6 +633,12 @@ function togglestandcomp(){
     } else {
 	hide('.show4t2stand');
     }
+    if (sc === 'del2stand'){
+	showdelcovref();
+	show('.show4del2stand');
+    } else {
+	hide('.show4del2stand');
+    }
 }
 function togglestandtype(){
     glob.calibration.standtype = document.getElementById('standtype').value;
@@ -637,6 +659,16 @@ function t2stand(){
     cal.tst[0] = parseFloat(document.getElementById('t').value);
     cal.tst[1] = parseFloat(document.getElementById('st').value);
     shinylight.call('t2stand', {x:glob}, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
+function deltaref(){
+    let ref = document.getElementById('deltaref').value;
+    shinylight.call('deltaref', {ref:ref}, null).then(
 	result => {
 	    result2simplex(result);
 	    setstandcomp();

@@ -27,7 +27,7 @@
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(preset,tst,measured){
+standard <- function(preset,tst,measured,del,ref){
     if (!missing(preset)){
         if (preset=='Plesovice'){
             geochron <- TRUE
@@ -59,6 +59,11 @@ standard <- function(preset,tst,measured){
     } else if (!missing(tst)){
         geochron <- TRUE
         out <- age2stand(tst)
+    } else if (!missing(del) & !missing(ref)){
+        geochron <- FALSE
+        out <- del2stand(del,ref)
+    } else {
+        stop('Illegal input to standard().')
     }
     if (geochron){
         if (missing(measured)) measured <- FALSE

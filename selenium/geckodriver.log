@@ -198,3 +198,9 @@ JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: th
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a function
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a function
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a function
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 602: TypeError: eref is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 602: TypeError: eref is null
