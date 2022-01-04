@@ -244,3 +244,30 @@ JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't fin
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 661: TypeError: stand.del.ref is undefined
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 675: ReferenceError: cal is not defined
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 649: ReferenceError: cal is not defined
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: http://127.0.0.1:8000/, line 1: ReferenceError: del2stand is not defined

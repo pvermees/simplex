@@ -108,7 +108,7 @@ del2stand <- function(del,ref){
     ratios <- paste0(del$num,'/',del$den)
     out <- list()
     out$del <- list(val=del$val,cov=del$cov)
-    out$ref <- list(val=ref$val,cov=ref$cov)
+    out$ref <- list(ref=ref$ref,val=ref$val,cov=ref$cov)
     out$val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
     out$covmat <- J %*% data.matrix(del$cov) %*% t(J)
@@ -127,14 +127,16 @@ del2stand <- function(del,ref){
 VSMOW <- function(){
     O678 <- c(0.3799e-3,2.00520e-3)
     relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
-    list(num = c('O17','O18'),den = 'O16',
+    list(ref='VSMOW',
+         num = c('O17','O18'),den = 'O16',
          val=log(O678),cov=diag(relerr^2))
 }
 
 troilite <- function(){
     S2346 <- c(126.948,22.6436,6515)
     relerr <- c(0.047,0.0020,20)/S2346
-    list(num=c('S33','S34','S36'),den='S32',
+    list(ref='troilite',
+         num=c('S33','S34','S36'),den='S32',
          val=-log(S2346),cov=diag(relerr^2))
 }
 

@@ -620,6 +620,7 @@ function togglestandcomp(){
     let sc = glob.calibration.standcomp;
     sc = document.getElementById('standcomp').value;
     if (sc === 'preset2stand'){
+	showcalpreset();
 	show('.show4preset');
     } else {
 	hide('.show4preset')
@@ -635,6 +636,16 @@ function togglestandcomp(){
 	show('.show4del2stand');
     } else {
 	hide('.show4del2stand');
+    }
+}
+function showcalpreset(){
+    let cal = glob.calibration;
+    if (glob.simplex.hasOwnProperty('calibration')){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.hasOwnProperty('preset')){
+	    cal.preset = stand.preset[0];
+	    document.getElementById('presets').value = cal.preset;
+	}
     }
 }
 function showtst(){
@@ -660,6 +671,18 @@ function showcaldel(){
 	    cal.del.cov = stand.del.cov;
 	    cal.del.refval = stand.ref.val;
 	    cal.del.refcov = stand.ref.cov;
+	}
+	if (stand.hasOwnProperty('ref') & stand.ref.hasOwnProperty('ref')){
+	    switch(stand.ref.ref[0]){
+	    case 'VSMOW':
+		document.getElementById('deltaref').value = 'VSMOW-O';
+		break;
+	    case 'troilite':
+		document.getElementById('deltaref').value = 'troilite-S';
+		break;
+	    default:
+		// do nothing
+	    }
 	}
     }
     let elr = document.getElementById('standlr');
