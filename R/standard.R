@@ -31,16 +31,16 @@ standard <- function(preset,tst,measured,del,ref){
     if (!missing(preset)){
         if (preset=='Plesovice'){
             geochron <- TRUE
-            out <- age2standard(tst=c(337.13,0.18))
+            out <- age2stand(tst=c(337.13,0.18))
         } else if (preset=='Qinghu'){
             geochron <- TRUE
-            out <- age2standard(tst=c(159.5,0.1))
+            out <- age2stand(tst=c(159.5,0.1))
         } else if (preset=='44069'){
             geochron <- TRUE
-            out <- age2standard(tst=c(424.86,0.25))
+            out <- age2stand(tst=c(424.86,0.25))
         } else if (preset=='Temora'){
             geochron <- TRUE
-            out <- age2standard(tst=c(416.75,0.12))
+            out <- age2stand(tst=c(416.75,0.12))
         } else if (preset=='NBS28'){
             geochron <- FALSE
             del <- list(num=c('O17','O18'),den='O16',
@@ -98,7 +98,7 @@ age2stand <- function(tst){
     names(val) <- ratios
     rownames(covmat) <- ratios
     colnames(covmat) <- ratios
-    list(val=val,cov=covmat,measured=FALSE)
+    list(tst=tst,val=val,cov=covmat,measured=FALSE)
 }
 
 del2stand <- function(del,ref){
@@ -106,13 +106,17 @@ del2stand <- function(del,ref){
     if (!any(keep)) stop('Standard isotopes must match reference.')
     ratios <- paste0(del$num,'/',del$den)
     out <- list()
+    out$del <- list(val=del$val,cov=del$cov)
+    out$ref <- list(val=ref$val,cov=ref$cov)
     out$val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
     out$covmat <- J %*% data.matrix(del$cov) %*% t(J)
-    out$ref <- list(val=ref$val,cov=ref$cov)
     names(out$val) <- ratios
     rownames(out$cov) <- ratios
     colnames(out$cov) <- ratios
+    names(out$del$val) <- ratios
+    rownames(out$del$cov) <- ratios
+    colnames(out$del$cov) <- ratios
     names(out$ref$val) <- ratios
     rownames(out$ref$cov) <- ratios
     colnames(out$ref$cov) <- ratios

@@ -592,17 +592,25 @@ function setstandcomp(){
     togglemismatchwarning();
 }
 function showdelcovref(){
-    let elr = document.getElementById('standlr');
-    let header = elr.deg.getColumnHeaders();
-    let edel = document.getElementById('deltab');
-    let ecov = document.getElementById('deltab');
-    edel.deg = createDataEntryGrid('deltab',header,1);
-    ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
-    let cal = glob.simplex.calibration;
-    if (cal.hasOwnProperty('ref')){
-	loadTable(cal.ref.val,header,'delreftab',1);
-    } else {
+    let init = false;
+    if (glob.simplex.hasOwnProperty('calibration')){ // write something similar for tst
+	let stand = glob.simplex.calibration.stand;
+	if (stand.hasOwnProperty('del')){
+	    let header = glob.names.calibration.stand.del.val;
+	    let nr = header.length;
+	    loadTable([stand.del.val],header,'deltab',1);
+	    loadTable(stand.del.cov,header,'delcovtab',nr);
+	    loadTable([stand.ref.val],header,'delreftab',1);
+	}
+    }
+    if (init){
+	let elr = document.getElementById('standlr');
+	let header = elr.deg.getColumnHeaders();
+	let edel = document.getElementById('deltab');
+	let ecov = document.getElementById('deltab');
 	let eref = document.getElementById('delreftab');
+	edel.deg = createDataEntryGrid('deltab',header,1);
+	ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
 	eref.deg = createDataEntryGrid('delreftab',header,1);
     }
 }

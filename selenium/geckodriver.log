@@ -204,3 +204,34 @@ JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a f
 JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a function
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 602: TypeError: eref is null
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 602: TypeError: eref is null
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 599: TypeError: glob.names.calibration.del is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 599: TypeError: glob.names.calibration.del is undefined
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
