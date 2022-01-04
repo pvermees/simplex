@@ -14,161 +14,108 @@
 #' tab <- data2table(del)
 #' @export
 calibrate <- function(cal,exterr=FALSE){
-    if (stable(cal)) out <- calibrate_stable(dat=cal,exterr=exterr)
-    else out <- calibrate_geochron(dat=cal,exterr=exterr)
+    if (is.null(cal$calibration$pairing)){
+        out <- calibrate_average(dat=cal,exterr=exterr)
+    } else {
+        out <- calibrate_regression(dat=cal,exterr=exterr)
+    }
     out
 }
 
-calibrate_stable <- function(dat,exterr=FALSE){
+calibrate_average <- function(dat,exterr=FALSE){
     out <- dat
-    scal <- do.call(dat$standard$fetchfun,args=list(dat=dat))
-    dcal <- dat$calibration
-    num <- dat$m$num
-    den <- dat$m$den
-    snames <- names(dat$samples)
-    ns <- length(snames)
-    nr <- length(num)
-    calibrated <- list()
-    calibrated$num <- num
-    calibrated$den <- den
-    calibrated$lr <- rep(0,nr*ns)
-    E <- matrix(0,nr*(ns+2),nr*(ns+2))
-    J <- matrix(0,nr*ns,nr*(ns+2))
-    J[1:(ns*nr),1:(ns*nr)] <- diag(ns*nr)
+    cal <- dat$calibration$cal
+    std <- dat$calibration$stand
+    ns <- length(dat$samples)
+    tavg <- time_average(dat,t=dat$calibration$t)
+    alliso <- names(tavg[[1]]$val)
+    stdiso <- names(std$val)
+    caliso <- names(cal$val) # caliso is a subset of stdiso
+    nai <- length(alliso)
+    nsi <- length(stdiso)
+    nci <- length(caliso)
+    E <- matrix(0,nrow=ns*nai+nsi+nci,ncol=ns*nai+nsi+nci)
+    J <- matrix(0,nrow=ns*nai,ncol=ns*nai+nsi+nci)
+    ical <- which(alliso %in% caliso)
+    istd <- which(stdiso %in% caliso)
+    E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(std$cov)
+    E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cov)
+    val <- rep(0,ns*nai)
     for (i in 1:ns){
-        sname <- snames[i]
-        selected <- (i-1)*nr + (1:nr)
-        sp <- spot(dat,sname=sname)
-        calibrated$lr[selected] <- sp$lr$b0g[1:nr] + scal$lr - dcal$lr
-        E[selected,selected] <- sp$lr$cov[1:nr,1:nr]
+        iall <- (i-1)*nai+1:nai
+        val[iall] <- tavg[[i]]$val
+        E[iall,iall] <- tavg[[i]]$cov
+        J[iall,iall] <- diag(nai)
+        val[iall[ical]] <- val[iall[ical]] + std$val[istd] - cal$val
         if (exterr){
-            J[selected,ns*nr+(1:nr)] <- diag(nr)
-            J[selected,(ns+1)*nr+(1:nr)] <- -diag(nr)
+            J[iall[istd],ns*nai+1:nsi] <- diag(nsi)[istd,]
+            J[iall[ical],ns*nai+nsi+1:nci] <- -diag(nci)
         }
     }
-    E[ns*nr+(1:nr),ns*nr+(1:nr)] <- scal$cov
-    E[(ns+1)*nr+(1:nr),(ns+1)*nr+(1:nr)] <- dcal$cov
-    calibrated$cov <- J %*% E %*% t(J)
-    out$calibrated <- calibrated
+    out$calibrated <- list(snames=names(dat$samples),ratios=alliso,
+                           val=val,cov=J %*% E %*% t(J))
     class(out) <- unique(append("calibrated",class(out)))
     out
 }
 
-calibrate_geochron <- function(dat,exterr=FALSE){
+calibrate_regression <- function(dat,exterr=FALSE){
     out <- dat
-    type <- datatype(dat)
-    PD <- fractical(dat,type=type,exterr=exterr)
-    PbPb <- nofractical(dat,type=type)
-    out$calibrated <- mergecal(PD,PbPb)
-    class(out) <- unique(append("calibrated",class(out)))
-    out
-}
-
-fractical <- function(dat,type="U-Pb",exterr=FALSE){
-    scal <- do.call(dat$standard$fetch,args=list(dat=dat)) # standard calibration
-    dcal <- dat$calibration # data calibration
-    if (type=='U-Pb'){
-        num='Pb206'
-        den='U238'
-    } else if (type=='Th-Pb'){
-        num='Pb208'
-        den='Th232'
+    cal <- dat$calibration$cal
+    std <- dat$calibration$stand
+    pairing <- dat$calibration$pairing
+    tavg <- time_average(dat,t=dat$calibration$t)
+    alliso <- names(tavg[[1]]$val)
+    outiso <- alliso[!(alliso %in% pairing$X)]
+    stdiso <- names(std$val)
+    ns <- length(tavg)
+    nai <- length(alliso)
+    noi <- length(outiso)
+    nsi <- length(stdiso)
+    nab <- nrow(pairing)
+    iout <- which(alliso %in% outiso)
+    istd <- ns*nai+1:nsi
+    iab <- matrix(0,nab,2)
+    iDPa <- rep(NA,nab)
+    iDPo <- rep(NA,nab)
+    iDPs <- rep(NA,nab)
+    iOP <- rep(NA,nab)
+    for (i in 1:nab){
+        iab[i,] <- ns*nai+nsi+(i-1)*2+1:2
+        iDPa[i] <- which(alliso %in% pairing[i,'Y'])
+        iDPo[i] <- which(outiso %in% pairing[i,'Y'])
+        iDPs[i] <- which(stdiso %in% pairing[i,'Y'])
+        iOP[i] <- which(alliso %in% pairing[i,'X'])
     }
-    snames <- names(dat$samples)
-    ns <- length(snames)
-    out <- list()
-    out$num <- num
-    out$den <- den
-    fit <- dcal$fit
-    fitcov <- matrix(c(fit$a[2]^2,fit$cov.ab,
-                       fit$cov.ab,fit$b[2]^2),2,2)
-    DP <- paste0(num,den)
-    E <- matrix(0,2*ns+3,2*ns+3)
-    E[2*ns+1,2*ns+1] <- scal$cov[DP,DP]
-    E[ns+(2:3),ns+(2:3)] <- fitcov
-    J <- matrix(0,ns,2*ns+3)
-    out$lr <- rep(0,ns)
-    rownames(J) <- snames
-    names(out$lr) <- snames
+    val <- rep(0,ns*noi)
+    E <- matrix(0,nrow=ns*nai+nsi+2*nab,ncol=ns*nai+nsi+2*nab)
+    E[istd,istd] <- as.matrix(std$cov)
+    for (i in 1:nab){
+        E[iab[i,1],iab[i,1]] <- cal[i,'s[a]']^2
+        E[iab[i,2],iab[i,2]] <- cal[i,'s[b]']^2
+        E[iab[i,1],iab[i,2]] <- cal[i,'cov.ab']
+        E[iab[i,2],iab[i,1]] <- cal[i,'cov.ab']
+    }
+    J <- matrix(0,nrow=ns*noi,ncol=ns*nai+nsi+2*nab)
     for (i in 1:ns){
-        sp <- spot(dat,i=i)
-        b0g <- sp$lr$b0g
-        bXlab <- paste0('b0[',dcal$oxide,'/',den,']')
-        gXlab <- paste0('g[',dcal$oxide,'/',den,']')
-        bYlab <- paste0('b0[',num,'/',den,']')
-        gYlab <- paste0('g[',num,'/',den,']')
-        tt <- dcal$t
-        XY <- rep(0,2)
-        XY[1] <- b0g[bXlab] + tt*b0g[gXlab]
-        XY[2] <- b0g[bYlab] + tt*b0g[gYlab]
-        Eb0g <- sp$lr$cov[c(bXlab,gXlab,bYlab,gYlab),
-                          c(bXlab,gXlab,bYlab,gYlab)]
-        Jb0g <- matrix(0,2,4)
-        Jb0g[1,1] <- 1
-        Jb0g[1,2] <- tt
-        Jb0g[2,3] <- 1
-        Jb0g[2,4] <- tt
-        E[2*i-(1:0),2*i-(1:0)] <- Jb0g %*% Eb0g %*% t(Jb0g)
-        out$lr[i] <- XY[2] + scal$lr[DP] - (fit$a[1]+fit$b[1]*XY[1])
-        J[i,2*i-1] <- -fit$b[1]  # dlrdX
-        J[i,2*i] <- 1            # dlrdY
-        if (exterr){
-            J[i,2*ns+1] <- 1       # dlrdscalDP
-            J[i,2*ns+2] <- -1      # dlrda
-            J[i,2*ns+3] <- -XY[1]  # dlrdb
+        ioi <- (i-1)*noi+1:noi
+        val[ioi] <- tavg[[i]]$val[iout]
+        iai <- (i-1)*nai+1:nai
+        E[iai,iai] <- tavg[[i]]$cov
+        J[ioi,iai] <- diag(nai)[iout,] # dval/dval
+        for (j in 1:nab){
+            val[ioi[iDPo[j]]] <- tavg[[i]]$val[iDPa[j]] -
+                cal[j,'a'] - cal[j,'b']*tavg[[i]]$val[iOP[j]] +
+                std$val[iDPs[j]]
+            J[ioi[iDPo[j]],iai[iOP[j]]] <- -cal[j,'b'] # dval/dOP
+            if (exterr){
+                J[ioi[iDPo[j]],iab[j,1]] <- -1 # dval/da
+                J[ioi[iDPo[j]],iab[j,2]] <- -tavg[[i]]$val[iOP[j]] # dval/db
+                J[ioi[iDPo[j]],istd[iDPs[j]]] <- 1 # dval/dDPs
+            }
         }
     }
-    out$cov <- J %*% E %*% t(J)
-    out
-}
-
-nofractical <- function(dat,type="U-Pb"){
-    if (type=='U-Pb'){
-        num=c('Pb204','Pb207')
-        den=c('Pb206','Pb206')
-    } else if (type=='Th-Pb'){
-        num='Pb204'
-        den='Pb208'
-    }    
-    snames <- names(dat$samples)
-    ns <- length(snames)
-    nr <- length(num)
-    out <- list()
-    out$num <- num
-    out$den <- den
-    out$lr <- rep(0,nr*ns)
-    out$cov <- matrix(0,nr*ns,nr*ns)
-    for (i in 1:ns){
-        sp <- spot(dat,i=i)
-        j <- (i-1)*nr
-        lr <- paste0('b0[',num,'/',den,']')
-        out$lr[j+(1:nr)] <- sp$lr$b0g[lr]
-        out$cov[j+(1:nr),j+(1:nr)] <- sp$lr$cov[lr,lr]
-    }
-    out
-}
-
-mergecal <- function(...){
-    cals <- list(...)
-    num <- NULL
-    den <- NULL
-    for (cal in cals){
-        num <- c(num,cal$num)
-        den <- c(den,cal$den)
-    }
-    ni <- length(num)
-    ns <- length(cal$lr)/length(cal$num)
-    out <- list()
-    out$num <- num
-    out$den <- den
-    out$lr <- rep(0,ni*ns)
-    out$cov <- matrix(0,ni*ns,ni*ns)
-    for (cal in cals){
-        i <- which(num %in% cal$num)
-        ii <- as.vector(sapply((0:(ns-1))*ni,'+',i))
-        out$lr[ii] <- cal$lr
-        out$cov[ii,ii] <- cal$cov
-    }
+    out$calibrated <- list(snames=names(dat$samples),ratios=outiso,
+                           val = val, cov = J%*% E %*% t(J))
     out
 }
 
@@ -190,161 +137,188 @@ mergecal <- function(...){
 #' plot(cd)
 #' @method plot calibrated
 #' @export
-plot.calibrated <- function(x,option=1,...){
-    if (stable(x)) {
-        out <- caldplot_stable(dat=x,...)
+plot.calibrated <- function(x,show.numbers=TRUE,...){
+    if (is.null(x$calibration$pairing)){
+        out <- caldplot_stable(dat=x,show.numbers=show.numbers,...)
     } else {
-        out <- caldplot_geochronology(dat=x,option=option,...)
+        out <- caldplot_geochronology(dat=x,show.numbers=show.numbers,...)
     }
     invisible(out)
 }
 
-caldplot_stable <- function(dat,...){
-    cal <- dat$calibration
-    num <- dat$method$num
-    den <- dat$method$den
-    nn <- length(num)
-    np <- nn*(nn-1)/2       # number of plot panels
-    nc <- ceiling(sqrt(np)) # number of rows
-    nr <- ceiling(np/nc)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(3.5,4))
-    ii <- 1
-    snames <- names(dat$samples)
-    for (i in 1:(nn-1)){
-        for (j in (i+1):nn){
-            xlab <- paste0('log[',num[i],'/',den[i],']')
-            ylab <- paste0('log[',num[j],'/',den[j],']')
-            B <- beta2york(lr=dat,num=num[c(i,j)],den=den[c(i,j)])
-            xlim <- c(min(cal$lr[i]-3*sqrt(cal$cov[i,i]),B[,'X']-3*B[,'sX']),
-                      max(cal$lr[i]+3*sqrt(cal$cov[i,i]),B[,'X']+3*B[,'sX']))
-            ylim <- c(min(cal$lr[j]-3*sqrt(cal$cov[j,j]),B[,'Y']-3*B[,'sY']),
-                      max(cal$lr[j]+3*sqrt(cal$cov[j,j]),B[,'Y']+3*B[,'sY']))
-            graphics::plot(xlim,ylim,type='n',ann=FALSE)
-            deltagrid(dat,i,j)
-            IsoplotR::scatterplot(B,xlim=xlim,ylim=ylim,add=TRUE,...)
-            graphics::mtext(side=1,text=xlab,line=2)
-            graphics::mtext(side=2,text=ylab,line=2)
-            ell <- IsoplotR::ellipse(cal$lr[i],cal$lr[j],
-                                     cal$cov[c(i,j),c(i,j)])
-            graphics::polygon(ell,col='white')
-            ii <- ii + 1
-            if (ii>np) break
-       }
+caldplot_stable <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
+    sta <- dat$calibration$stand
+    cal <- dat$calibrated
+    tab <- data2table.calibrated(dat)
+    nrat <- length(cal$ratios)
+    if (nrat>1){
+        np <- nrat*(nrat-1)/2   # number of plot panels
+        nc <- ceiling(sqrt(np)) # number of rows
+        nr <- ceiling(np/nc)    # number of columns
+        oldpar <- graphics::par(mfrow=c(nr,nc),mar=rep(3.5,4))
+        for (i in 1:(nrat-1)){
+            for (j in (i+1):nrat){
+                xratio <- cal$ratios[i]
+                yratio <- cal$ratios[j]
+                Xc <- tab[,xratio]
+                Yc <- tab[,yratio]
+                sXc <- tab[,paste0('s[',xratio,']')]
+                sYc <- tab[,paste0('s[',yratio,']')]
+                rXYc <- tab[,paste0('r[',xratio,',',yratio,']')]
+                xlim <- c(min(Xc-3*sXc),max(Xc+3*sXc))
+                ylim <- c(min(Yc-3*sYc),max(Yc+3*sYc))
+                if (calfit){
+                    Xs <- sta$val[xratio]
+                    sXs <- sqrt(sta$cov[xratio,xratio])
+                    Ys <- sta$val[yratio]
+                    sYs <- sqrt(sta$cov[yratio,yratio])
+                    xlim[1] <- min(xlim[1],min(Xs-3*sXs))
+                    xlim[2] <- max(xlim[2],max(Xs+3*sXs))
+                    ylim[1] <- min(ylim[1],min(Ys-3*sYs))
+                    ylim[2] <- max(ylim[2],max(Ys+3*sYs))
+                }
+                graphics::plot(xlim,ylim,type='n',ann=FALSE)
+                deltagrid(dat,xratio,yratio)
+                IsoplotR::scatterplot(cbind(Xc,sXc,Yc,sYc,rXYc),
+                                      xlim=xlim,ylim=ylim,add=TRUE,
+                                      show.numbers=show.numbers,...)
+                graphics::mtext(side=1,text=paste0('ln[',xratio,']'),line=2)
+                graphics::mtext(side=2,text=paste0('ln[',yratio,']'),line=2)
+            }
+        }
+    } else {
+        oldpar <- graphics::par(mar=c(3.5,3.5,1.5,3.5),mgp=c(2,0.75,0))
+        ylab <- cal$ratios
+        ns <- length(cal$snames)
+        tfact <- qnorm(0.975)
+        lr <- tab[,1]
+        ll <- lr - tfact*tab[,2]
+        ul <- lr + tfact*tab[,2]
+        Ys <- sta$val[ylab]
+        sYs <- as.numeric(sqrt(sta$cov[ylab,ylab]))
+        xlim <- c(1,ns)
+        ylim <- c(min(Ys-3*sYs,ll),max(Ys+3*sYs,ul))
+        graphics::plot(xlim,ylim,type='n',xlab='sample #',ylab=ylab)
+        deltagrid(dat)
+        matlines(rbind(1:ns,1:ns),rbind(ll,ul),lty=1,col='black')
+        points(1:ns,lr,pch=16)
+        xlim <- graphics::par('usr')[1:2]
+        lines(xlim,rep(Ys,2),lty=1,col='red')
+        lines(xlim,rep(Ys-tfact*sYs,2),lty=2)
+        lines(xlim,rep(Ys+tfact*sYs,2),lty=2)
     }
     graphics::par(oldpar)
 }
 
-deltagrid <- function(dat,i,j){
+deltagrid <- function(dat,xratio,yratio){
+    if (missing(xratio) | missing(yratio)){
+        multipanel <- FALSE
+        xratio <- dat$calibrated$ratios
+        yratio <- xratio
+    } else {
+        multipanel <- TRUE
+    }
     usr <- graphics::par('usr')
     xlim <- usr[1:2]
     ylim <- usr[3:4]
-    xs <- dat$calibration$lr[i]
-    ys <- dat$calibration$lr[j]
-    di <- dat$standard$val[i]
-    dj <- dat$standard$val[j]
-    dxmin <- 1000*(xlim[1]-xs)+di
-    dxmax <- 1000*(xlim[2]-xs)+di
-    dymin <- 1000*(ylim[1]-ys)+dj
-    dymax <- 1000*(ylim[2]-ys)+dj
-    dxticks <- pretty(c(dxmin,dxmax))
+    sta <- dat$calibration$stand
+    staratios <- names(sta$val)
+    calratios <- names(dat$calibrated$val)
+    if (multipanel){
+        x <- sta$val[xratio]
+        dxmin <- 1000*(xlim[1]-sta$ref$val[xratio])
+        dxmax <- 1000*(xlim[2]-sta$ref$val[xratio])
+        dxticks <- pretty(c(dxmin,dxmax))
+        xticks <- sta$ref$val[xratio] + dxticks/1000
+        nxt <- length(xticks)
+    }
+    y <- sta$val[yratio]
+    dymin <- 1000*(ylim[1]-sta$ref$val[yratio])
+    dymax <- 1000*(ylim[2]-sta$ref$val[yratio])
     dyticks <- pretty(c(dymin,dymax))
-    xticks <- (dxticks-di)/1000+xs
-    yticks <- (dyticks-dj)/1000+ys
-    nxt <- length(xticks)
+    yticks <- sta$ref$val[yratio] + dyticks/1000
     nyt <- length(yticks)
-    graphics::matlines(rbind(xticks,xticks),matrix(rep(ylim,nxt),ncol=nxt),
-                       lty=3,col='black')
-    graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
-                       rbind(yticks,yticks),lty=3,col='black')
-    graphics::axis(side=3,at=xticks,labels=dxticks)
-    graphics::mtext(expression(delta*"'"),side=3,line=2)
+    if (multipanel){
+        graphics::matlines(rbind(xticks,xticks),
+                           matrix(rep(ylim,nxt),ncol=nxt),
+                           lty=3,col='black')
+        graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
+                           rbind(yticks,yticks),lty=3,col='black')
+        graphics::axis(side=3,at=xticks,labels=dxticks)
+        graphics::mtext(expression(delta*"'"),side=3,line=2)
+        graphics::lines(rep(x,2),ylim,lty=2,col='red')
+        graphics::text(x,ylim[1],labels=dat$calibration$prefix,
+                       pos=4,srt=90,offset=0)
+        graphics::lines(xlim,rep(y,2),lty=2,col='red')
+        graphics::text(xlim[1],y,pos=4,offset=0,
+                       labels=dat$calibration$prefix)
+    } else {
+        graphics::matlines(matrix(rep(xlim,nyt),ncol=nyt),
+                           rbind(yticks,yticks),lty=3,col='black')
+    }
     graphics::axis(side=4,at=yticks,labels=dyticks)
     graphics::mtext(expression(delta*"'"),side=4,line=2)
-    graphics::lines(rep(xs,2),ylim,lty=2,col='red')
-    graphics::text(xs,ylim[1],labels=dat$standard$prefix,pos=4,srt=90,offset=0)
-    graphics::lines(xlim,rep(ys,2),lty=2,col='red')
-    graphics::text(xlim[1],ys,labels=dat$standard$prefix,pos=4,offset=0)
 }
 
-caldplot_geochronology <- function(dat,option=1,...){
-    cal <- dat$calibration
-    num <- cal$num
-    den <- cal$den
-    snames <- names(dat$samples)
-    yd <- beta2york(lr=dat,t=seconds(cal$t),snames=snames,num=num,den=den)
-    xlab <- paste0('log[',num[1],'/',den[1],']')
-    ylab <- paste0('log[',num[2],'/',den[2],']')
-    xlim <- rep(0,2)
-    xlim[1] <- min(yd[,'X']-3*yd[,'sX'])
-    xlim[2] <- max(yd[,'X']+3*yd[,'sX'])
-    ylim <- rep(0,2)
-    ylim[1] <- min(yd[,'Y']-3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[1])
-    ylim[2] <- max(yd[,'Y']+3*yd[,'sY'],cal$fit$a[1]+cal$fit$b[1]*xlim[2])
-    graphics::plot(xlim,ylim,xlab=xlab,ylab=ylab,xlim=xlim,ylim=ylim,type='n')
-    agegrid(dat,xlim,ylim)
-    if (option==1){
-        IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
+caldplot_geochronology <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
+    cal <- dat$calibration$cal
+    pairing <- dat$calibration$pairing
+    stand <- dat$calibration$stand
+    tab <- data2table.logratios(dat,t=dat$calibration$t)
+    nr <- nrow(pairing)
+    oldpar <- graphics::par(mfrow=c(1,nr),mar=rep(3,4),mgp=c(1.5,0.5,0))
+    for (i in 1:nr){
+        X <- paste0('ln[',pairing[i,'X'],']')
+        Y <- paste0('ln[',pairing[i,'Y'],']')
+        sX <- paste0('s(',X,')')
+        sY <- paste0('s(',Y,')')
+        rXY <- paste0('r(',X,',',Y,')')
+        if (!(rXY %in% colnames(tab))) rXY <- paste0('r(',Y,',',X,')')
+        xy <- tab[,c(X,sX,Y,sY,rXY)]
+        xlim <- c(min(xy[,1]-3*xy[,2]),max(xy[,1]+3*xy[,2]))
+        ylim <- c(min(xy[,3]-3*xy[,4]),max(xy[,3]+3*xy[,4]))
+        if (calfit){
+            yc <- cal[i,'a'] + cal[i,'b']*tab[,X]
+            ylim[1] <- min(ylim[1],min(yc))
+            ylim[2] <- max(ylim[2],max(yc))
+        }
+        fit <- cal2york(cal[i,])
+        plot(xlim,ylim,type='n',xlab=X,ylab=Y)
+        agegrid(fit=fit,pairing=pairing[i,],stand=stand)
+        IsoplotR::scatterplot(xy,fit=fit,add=TRUE,show.numbers=show.numbers)
+    }
+    graphics::par(oldpar)
+}
+
+agegrid <- function(fit,pairing,stand){
+    if (identical(pairing$Y,'Pb206/U238')){
+        lambda <- IsoplotR::settings('lambda','U238')[1]
+    } else if (identical(pairing$Y,'Pb208/Th232')){
+        lambda <- IsoplotR::settings('lambda','Th232')[1]
     } else {
-        X <- NULL
-        Y <- NULL
-        for (sname in snames){
-            sp <- spot(dat=dat,sname=sname)
-            Op <- betapars(spot=sp,ion=num[1])
-            Pp <- betapars(spot=sp,ion=den[1])
-            Dp <- betapars(spot=sp,ion=num[2])
-            Cp <- betapars(spot=sp,ion=num[3])
-            CD <- (Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg)
-            CDdc <- exp(Dp$g*(Dp$t-Cp$t))
-            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Pp$t-Op$t)
-            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Pp$t-Dp$t)
-            X <- cbind(X,newX)
-            Y <- cbind(Y,newY)
-        }
-        xlim[1] <- min(xlim[1],yd[snames,'X']-3*yd[snames,'sX'],X)
-        xlim[2] <- max(xlim[2],yd[snames,'X']+3*yd[snames,'sX'],X)
-        ylim[1] <- min(ylim[1],yd[snames,'Y']-3*yd[snames,'sY'],Y)
-        ylim[2] <- max(ylim[2],yd[snames,'Y']+3*yd[snames,'sY'],Y)
-        IsoplotR::scatterplot(yd,fit=cal$fit,add=TRUE,...)
-        graphics::matlines(X,Y,lty=1,col='darkgrey')
-        if (option>2){
-            graphics::points(X[1,],Y[1,],pch=21,bg='black')
-            graphics::points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
-        }
+        return(NA)
     }
-}
-
-agegrid <- function(dat,xlim,ylim){
-    ratio <- ifelse(datatype(dat)=='U-Pb','Pb206U238','Pb208Th232')
     usr <- graphics::par('usr')
-    cal <- dat$calibration
-    st <- do.call(dat$standard$fetchfun,args=list(dat=dat))
-    lrlim <- rep(0,2)
-    a <- cal$fit$a[1]
-    b <- cal$fit$b[1]
-    adj1 <- st$lr[ratio] - a - b*xlim[2]
-    adj2 <- st$lr[ratio] - a - b*xlim[1]
-    lrlim[1] <- ylim[1] + adj1
-    lrlim[2] <- ylim[2] + adj2
-    tlim <- IsoplotR::age(exp(lrlim),method=chronometer(dat))
+    xlim <- usr[1:2]
+    ylim <- usr[3:4]
+    a <- fit$a[1]
+    b <- fit$b[1]
+    yrange <- c(ylim[1] - b*diff(xlim),
+                ylim[2] + b*diff(xlim))
+    logDPstd <- stand$val[pairing$Y]
+    logDPlim <- logDPstd + yrange - a - b * xlim
+    tlim <- log(exp(logDPlim)+1)/lambda
     tticks <- pretty(tlim)
+    logDPticks <- log(exp(lambda*tticks)-1)
     nt <- length(tticks)
-    lrmin <- log(IsoplotR::age2ratio(tticks,ratio=ratio)[,1]) - adj2
-    lrmax <- lrmin + cal$fit$b[1]*diff(xlim)
-    xticks <- list(x=NULL,t=NULL)
-    yticks <- list(y=NULL,t=NULL)
-    for (i in 1:nt){
-        if (lrmax[i]>usr[4]){
-            xticks$x <- c(xticks$x,(usr[4]-lrmin[i])/b+xlim[1])
-            xticks$t <- c(xticks$t,tticks[i])
-        } else {
-            yticks$y <- c(yticks$y,lrmax[i])
-            yticks$t <- c(yticks$t,tticks[i])
-        }
-    }
-    graphics::axis(side=3,at=xticks$x,labels=xticks$t)
-    graphics::mtext(side=3,line=2,'t (Ma)')
-    graphics::axis(side=4,at=yticks$y,labels=yticks$t)
-    graphics::mtext(side=4,line=2,'t (Ma)')
-    graphics::matlines(matrix(rep(xlim,nt),nrow=2),
-                       rbind(lrmin,lrmax),lty=2,col='gray50')
+    xl <- rep(xlim[1],nt)
+    xu <- rep(xlim[2],nt)
+    yl <- logDPticks - logDPstd + a + b * xl
+    yu <- logDPticks - logDPstd + a + b * xu
+    matlines(rbind(xl,xu),rbind(yl,yu),lty=3,col='black')
+    top <- (yu>ylim[2])
+    axis(side=3,at=xlim[1]+(ylim[2]-yl[top])/b,labels=tticks[top])
+    axis(side=4,at=yu[!top],labels=tticks[!top])
+    mtext('age (Ma)',side=3,line=1.5)
+    mtext('age (Ma)',side=4,line=1.5)
 }

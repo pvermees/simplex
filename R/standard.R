@@ -9,7 +9,7 @@
 #' @param tst (optional) two-element vector with the age and standard
 #'     error of the (presumed concordant) age standard and its
 #'     analytical uncertainty.
-#' @param val (optional) true isotopic composition of
+#' @param val (optional) true isotopic composition (as logratios) of
 #'     \eqn{^{206}}Pb/\eqn{^{238}}U- and
 #'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
 #'     or the true \eqn{\delta}-values of the stable isotope reference
@@ -27,103 +27,143 @@
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' @export
-standard <- function(preset,prefix=preset,tst,val,
-                     cov=matrix(0,length(val),length(val)),common){
-    if (missing(preset)){
-        preset <- 'other'
-        out <- list()
-        if (missing(val)){
-            if (missing(tst)){
-                stop("Both the age and the isotopic composition ",
-                     "of the sample are missing.")
-            } else {
-                out$tst <- tst
-                out$fetchfun <- "age2lr"
-            }
+standard <- function(preset,tst,measured,del,ref){
+    if (!missing(preset)){
+        if (preset=='Plesovice'){
+            geochron <- TRUE
+            out <- age2stand(tst=c(337.13,0.18))
+        } else if (preset=='Qinghu'){
+            geochron <- TRUE
+            out <- age2stand(tst=c(159.5,0.1))
+        } else if (preset=='44069'){
+            geochron <- TRUE
+            out <- age2stand(tst=c(424.86,0.25))
+        } else if (preset=='Temora'){
+            geochron <- TRUE
+            out <- age2stand(tst=c(416.75,0.12))
+        } else if (preset=='NBS28'){
+            geochron <- FALSE
+            del <- delhelper(num=c('O17','O18'),
+                             den='O16',
+                             val=c(4.79,9.56),
+                             cov=diag(c(0.05,0.11))^2)
+            out <- del2stand(del,ref=VSMOW())
+        } else if (preset=='Sonora'){ # temporary value
+            geochron <- FALSE
+            del <- delhelper(num=c('S33','S34','S36'),
+                             den='S32',
+                             val=c(0.83,1.61,3.25),
+                             cov=diag(c(0.03,0.08,0.03))^2)
+            out <- del2stand(del,ref=troilite())
         } else {
-            out$val <- val
-            out$cov <- cov
-            if (!missing(common)) out$common <- common
-            out$fetchfun <- "lrstand"
+            stop("Invalid input to standard(...).")
         }
-        out$prefix <- prefix
-        class(out) <- 'standard'
-    } else if (preset=='Plesovice'){
-        out <- standard(tst=c('t'=337.13,'s[t]'=0.18),prefix=prefix)
-    } else if (preset=='Qinghu'){
-        out <- standard(tst=c('t'=159.5,'s[t]'=0.1),prefix=prefix)
-    } else if (preset=='44069'){
-        out <- standard(tst=c('t'=424.86,'s[t]'=0.25),prefix=prefix)
-    } else if (preset=='Temora'){
-        out <- standard(tst=c('t'=416.75,'s[t]'=0.12),prefix=prefix)
-    } else if (preset=='NBS28'){
-        out <- standard(val=c('d17O'=4.79,'d18O'=9.56),
-                        cov=diag(c(0.05,0.11))^2,
-                        prefix=prefix)
-    } else if (preset=='Sonora'){ # temporary value
-        out <- standard(val=c('d33S'=0.83,'d34S'=1.61,'d36S'=3.25),
-                        cov=diag(c(0.03,0.08,0.03))^2,
-                        prefix=prefix)
+        out$preset <- preset
+    } else if (!missing(tst)){
+        geochron <- TRUE
+        out <- age2stand(tst)
+    } else if (!missing(del) & !missing(ref)){
+        geochron <- FALSE
+        out <- del2stand(del,ref)
     } else {
-        stop("Invalid input to standard(...).")
+        stop('Illegal input to standard().')
     }
-    out$name <- preset
+    if (geochron){
+        if (missing(measured)) measured <- FALSE
+        out$measured <- measured
+        if (out$measured) {
+            out$val <- out$val[-c(1:2)]
+            out$cov <- out$cov[-c(1:2),-c(1:2)]
+            if (!missing(preset)){
+                if (preset=='Plesovice'){
+                    out$val['Pb206/U238'] <- log(0.053707)
+                    out$cov['Pb206/U238','Pb206/U238'] <- 0.02
+                    out$cov['Pb206/U238','Pb208/Th232'] <- 0
+                    out$cov['Pb208/Th232','Pb206/U238'] <- 0
+                }
+            }
+        }
+    } else {
+        out$measured <- TRUE
+    }
     out
 }
-lrstand <- function(dat){
-    val <- dat$stand$val
-    cov <- dat$stand$cov
-    type <- datatype(dat)
-    out <- list()
-    if (type=="U-Pb"){
-        labels <- c("Pb206U238","Pb208Th232")
-        out$common <- dat$stand$common
-        names(out$common) <- labels
-        out$lr <- log(val)
-        J <- diag(1/val)
-    } else if (type=="oxygen"){
-        if (length(val)==1){ # if d17O is missing
-            val <- c(val/2,val)
-            J <- matrix(c(0.5,1),2,1)
-            cov <- J %*% cov %*% t(J)
-        }
-        labels <- c("O17O16","O18O16")
-        out$ref <- VSMOW()$lr
-        out$lr <- log(1 + val/1000) + out$ref
-        J <- diag(1/(1000 + val))
-    } else if (type=="sulphur"){
-        if (length(val)==2){ # if d36S is missing
-            val <- c(val,val[2]*2)
-            J <- rbind(c(1,0),c(0,1),c(0,2))
-            cov <- J %*% cov %*% t(J)
-        }
-        labels <- c("S33S32","S34S32","S36S32")
-        out$ref <- troilite()$lr
-        out$lr <- log(1 + val/1000) + out$ref
-        J <- diag(1/(1000 + val))
-    } else {
-        stop('Invalid type argument supplied to lrstand')
-    }
-    out$cov <- J %*% cov %*% t(J)
-    names(out$lr) <- labels
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
+
+delhelper <- function(num,den,val,cov){
+    ratios <- paste0(num,'/',den)
+    out <- list(val=val,cov=cov)
+    names(out$val) <- ratios
+    rownames(out$cov) <- ratios
+    colnames(out$cov) <- ratios
     out
 }
-age2lr <- function(dat){
-    type <- datatype(dat)
-    tst <- dat$stand$tst
-    if (type%in%c('U-Pb','U-Th-Pb')){
-        r <- IsoplotR:::age_to_cottle_ratios(tt=tst[1],st=tst[2])
-    } else {
-        stop('Invalid type argument supplied to age2lr')
-    }
+
+age2stand <- function(tst){
+    num <- c('Pb204','Pb204','Pb206','Pb208')
+    den <- c('Pb206','Pb208','U238','Th232')
+    ratios <- paste0(num,'/',den)
+    common <- IsoplotR:::stacey.kramers(tst[1])
+    D <- IsoplotR::mclean(tt=tst[1])
+    val <- c(-log(common[,c('i64','i84')]),log(D$Pb206U238),log(D$Pb208Th232))
+    J <- rbind(0,0,D$dPb206U238dt/D$Pb206U238,D$dPb208Th232dt/D$Pb208Th232)
+    covmat <- J%*%(tst[2]^2)%*%t(J)
+    names(val) <- ratios
+    rownames(covmat) <- ratios
+    colnames(covmat) <- ratios
+    list(tst=tst,val=val,cov=covmat,measured=FALSE)
+}
+
+del2stand <- function(del,ref){
+    keep <- (names(ref$val) %in% names(del$val))
+    if (!any(keep)) stop('Standard isotopes must match reference.')
     out <- list()
-    out$lr <- log(r$x)
-    J <- diag(1/r$x)
-    rownames(J) <- names(r$x)
-    out$cov <- J %*% r$cov %*% t(J)
-    out$common <- IsoplotR:::stacey.kramers(tst[1])[,c('i64','i84')]
-    names(out$common) <- c('Pb206Pb204','Pb208Pb204')
+    out$del <- list(val=del$val,cov=del$cov)
+    out$ref <- list(preset=ref$preset,val=ref$val,cov=ref$cov)
+    out$val <- log(1 + del$val/1000) + ref$val[keep]
+    J <- diag(sum(keep))/(1000 + del$val)
+    out$cov <- J %*% data.matrix(del$cov) %*% t(J)
+    out
+}
+
+VSMOW <- function(){
+    O678 <- c(0.3799e-3,2.00520e-3)
+    relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
+    out <- delhelper(num = c('O17','O18'),den = 'O16',
+                     val=log(O678),cov=diag(relerr^2))
+    out$preset <- 'VSMOW'
+    out
+}
+
+troilite <- function(){
+    S2346 <- c(126.948,22.6436,6515)
+    relerr <- c(0.047,0.0020,20)/S2346
+    out <- delhelper(num=c('S33','S34','S36'),den='S32',
+                     val=-log(S2346),cov=diag(relerr^2))
+    out$preset <- 'troilite'
+    out
+}
+
+skeletonstand <- function(lr,measured=TRUE){
+    num <- lr$method$num
+    den <- lr$method$den
+    geochron <- ( all(c("Pb206","U238") %in% c(num,den)) |
+                  all(c("Pb208","Th232") %in% c(num,den)) )
+    num_is_element <- (element(num) %in% elements())
+    den_is_element <- (element(den) %in% elements())
+    ratios <- paste0(num,'/',den)
+    if (geochron & measured){
+        hasPb204 <- (num %in% "Pb204") | (den %in% "Pb204")
+        selection <- ratios[num_is_element & den_is_element & !hasPb204]
+    } else {
+        selection <- ratios[num_is_element & den_is_element]
+    }
+    n2r <- length(selection)
+    out <- list()
+    out$measured <- measured
+    out$val <- rep(0,n2r)
+    out$cov <- matrix(0,n2r,n2r)
+    names(out$val) <- selection
+    rownames(out$cov) <- selection
+    colnames(out$cov) <- selection
     out
 }

@@ -9,20 +9,33 @@ var glob = {
 	'calibration': null,
 	'calibrated': null
     },
-    'i': 0,
+    'i': null,
     'start': true,
     'names': null,
     'class': 'simplex',
-    'multi': false,
+    'multi': null,
     'selected': 0,
     'ratios': true,
     'log': true,
     'xy': false,
-    'sampleprefix': null,
+    'calibration': {
+	'caltype': null,
+	'standcomp': null,
+	'standtype': null,
+	'preset': null,
+	'tst': null,
+	'ref': null,
+	'del': {
+	    'ratios': null,
+	    'delval': null,
+	    'delcov': null,
+	    'refval': null,
+	    'refcov': null
+	}
+    },
+    'sampleprefix': '',
     'standards': [],
-    'fixedslope': false,
-    'slope': 1,
-    'datatype': null,
+    'samples': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
 }
 
@@ -73,28 +86,46 @@ function initpreset(){
 }
 
 function loadPresets(){
+    resetglob();
     const m = document.getElementById("methods").value;
     glob.simplex.method.method[0] = m;
-    shinylight.call('presets', { method: m }, null)
-	.then(
-	    result => result2simplex(result),
-	    err => alert(err)
-	)
-	.then(
-	    () => shinylight.call('getdatatype', { x: glob }, null).then(
-		result => {
-		    glob.datatype = result.data[0]
-		    showPresets();
-		    fileFormats();
-		},
-		error => alert(error)
-	    )
-	)
+    shinylight.call('presets', { method: m }, null).then(
+	result => {
+	    result2simplex(result)
+	    showPresets();
+	    fileFormats();
+	},
+	err => alert(err)
+    )
+}
+
+function resetglob(){
+    glob.i =  0;
+    glob.multi = false;
+    glob.sampleprefix = '';
+    glob.standards = [];
+    glob.samples = [];
+    glob.calibration = {
+	'caltype': null, // 'average' or 'regression'
+	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'd2stand'
+	'standtype': 'measured', // 'measured' or 'commonradio'
+	'preset': null, // 'Plesovice', 'NBS28', ...
+	'tst': [0,0], 
+	'ref': null, // 'VSMOW-O', 'troilite-S', ...
+	'del': {
+	    'ratios': null,
+	    'val': null,
+	    'cov': null,
+	    'refval': null,
+	    'refcov': null
+	}
+    }
 }
 
 function method(el){
-    glob.simplex.method[el.id] = el.value.split(',')
+    glob.simplex.method[el.id] = el.value.split(',');
     glob.class = ['simplex']; // reset calculations
+    checkmethod();
 }
 
 function renameIons(){
@@ -136,14 +167,6 @@ function hide(cls){
 	function(item){
 	    item.classList.add("hidden");
 	});
-}
-
-function stable(){
-    return(["oxygen","sulphur"].includes(glob.datatype))
-}
-
-function geochron(){
-    return(["U-Pb","Th-Pb"].includes(glob.datatype))
 }
 
 function fileFormats(){
@@ -190,7 +213,8 @@ async function readFiles(){
 async function upload(){
     readFiles().then(
 	f => {
-	    shinylight.call('upload', {f:f, x:glob}, null).then(
+	    m = glob.simplex.method;
+	    shinylight.call('upload', {f:f, m:m}, null).then(
 		result => {
 		    result2simplex(result);
 		    document.getElementById('ions').value =
@@ -199,12 +223,31 @@ async function upload(){
 			glob.simplex.method.num.toString();
 		    document.getElementById('den').value =
 			glob.simplex.method.den.toString();
+		    checkmethod();
 		},
 		error => alert(error)
 	    )
 	},
 	err => alert(err)
     )
+}
+function checkmethod(){
+    let m = glob.simplex.method;
+    let checker = (arr, target) => target.every(v => arr.includes(v));
+    let ok = checker(m.ions,m.num) & checker(m.ions,m.den)
+    togglemethodwarning(ok);
+}
+
+function togglemethodwarning(ok){
+    let witem = document.getElementById("methodmismatch");
+    let iitem = document.getElementById("ions");
+    if (ok){
+	witem.classList.add("hidden");
+	iitem.classList.remove("red");
+    } else {
+	witem.classList.remove("hidden");
+	iitem.classList.add("red");
+    }
 }
 
 function result2simplex(result){
@@ -275,8 +318,9 @@ function loadSamples(callback){
 
 function loadTable(dat,header,id,nr){
     let nc = header.length;
-    let tab = createDataEntryGrid(id,header,nr);
-    tab.putCells(0,nr+1,0,nc+1,dat);
+    let e = document.getElementById(id);
+    e.deg = createDataEntryGrid(id,header,nr);
+    e.deg.putCells(0,nr+1,0,nc+1,dat);
 }
 
 function initDrift(){
@@ -447,84 +491,317 @@ function calibration(){
     selectButton(3);
     loadPage("calibration.html").then(
 	() => {
-	    showOrHideStandards();
-	    document.getElementById('slope').value = glob.slope;
-	    if (typeof glob.simplex.standard != 'undefined'){
-		document.getElementById('standards').value =
-		    glob.simplex.standard.name[0];
-		document.getElementById('prefix').value =
-		    glob.simplex.standard.prefix;
+	    if (glob.simplex.hasOwnProperty('calibration')){
+		glob.calibration.standtype =
+		    glob.simplex.calibration.stand.measured[0] ?
+		    "measured" : "commonradio";
+		showCalibration();
 	    } else {
-		glob.simplex.standard = {
-		    'name': [''],
-		    'prefix': ''
-		}
+		createCalibration(showCalibration);
 	    }
-	    markStandardsByPrefix()
 	},
 	error => alert(error)
     );
 }
-
-function slopefixer(){
-    let checkbox = document.getElementById('fixedslope');
-    glob.simplex.fixedslope = checkbox.checked;
-    let textbox = document.getElementById('slopespan');
-    if (checkbox.checked) textbox.classList.remove('hidden')
-    else textbox.classList.add('hidden')
+function showCalibration(){
+    prepareCalibration();
+    // I
+    togglecaltype();
+    // II
+    setstandcomp();
+    // III
+    setstandsel();
+    // set and act upon glob.calibration
 }
-
-function showOrHideStandards(){
-    let disable = null;
-    switch(glob.datatype) {
-    case 'U-Pb':
-	disable = [5,6];
-        break; 
-    case 'Th-Pb':
-	disable = [1,2,5,6];
-	break;
-    case 'oxygen': 
-        disable = [1,2,3,4,6];
-        break;
-    case 'sulphur':
-	disable = [1,2,3,4,5];
-        break; 
-    default: //optional
-	//statements
+function prepareCalibration(){
+    let cal = glob.calibration;
+    if (cal.caltype==null){ // geochron
+	cal.caltype = glob.multi ? 'average' : 'regression';
     }
-    for (let i=0; i<disable.length; i++){
-	document.getElementById("standards").options[disable[i]].disabled = true;
+    document.getElementById('caltype').value = cal.caltype;
+    document.getElementById('standcomp').value = cal.standcomp;
+    document.getElementById('standtype').value = cal.standtype;
+    if (cal.preset!==null){
+	document.getElementById('presets').value = cal.preset;
     }
 }
+function createCalibration(callback){
+    shinylight.call('createcalibration', {x:glob}, null).then(
+	result => result2simplex(result),
+	error => alert(error)
+    ).then(
+	() => callback(),
+	error => alert(error)
+    );
+}
 
-function markStandardsByPrefix(){
-    let prefix = document.getElementById('prefix').value;
-    glob.simplex.standard.prefix = prefix;
+// I.
+
+function togglecaltype(){
+    let ct = glob.calibration.caltype;
+    ct = document.getElementById('caltype').value;
+    if (ct === 'average'){
+	show('.show4stable');
+	hide('.hide4stable');
+	if (glob.multi) hide('#caltype-warning');
+	else show('#caltype-warning');
+    } else { // regression
+	show('.show4geochron');
+	hide('.hide4geochron');
+	setpairing();
+	if (glob.multi) show('#caltype-warning');
+	else hide('#caltype-warning');
+    }
+}
+function setpairing(){
+    let haspairing = glob.simplex.calibration.hasOwnProperty('pairing');
+    if (haspairing){
+	showpairing();
+    } else {
+	createPairing(showpairing);
+    }
+}
+function showpairing(){
+    let cal = glob.simplex.calibration;
+    let nr = cal.pairing.length;
+    let header = Object.keys(cal.pairing[0]);
+    let val = [new Array(nr)];
+    for (let i=0; i<nr; i++){
+	val[i] = Object.values(cal.pairing[i]);
+    }
+    loadTable(val,header,'pairing',nr);
+}
+function createPairing(callback){
+    shinylight.call('createpairing', {x:glob}, null).then(
+	result => result2simplex(result),
+	error => alert(error)
+    ).then(
+	() => callback(),
+	error => alert(error)
+    );
+}
+function getpairing(){
+    let e = document.getElementById('pairing');
+    let pairing = glob.simplex.calibration.pairing;
+    let nr = pairing.length;
+    let header = Object.keys(pairing[0]);
+    let dat = e.deg.getCells();
+    for (let i=0; i<nr; i++){
+	for (let j=0; j<header.length; j++){
+	    pairing[i][header[j]] = dat[i][j];
+	}
+    }
+}
+
+// II.
+function setstandcomp(){
+    let stand = glob.simplex.calibration.stand;
+    let header = glob.names.calibration.stand.val;
+    let nr = header.length;
+    let val = [stand.val];
+    let cov = stand.cov;
+    loadTable(val,header,'standlr',1);
+    loadTable(cov,header,'standcov',nr);
+    togglemismatchwarning();
+}
+function togglemismatchwarning(){
+    let header = glob.names.calibration.stand.val;
+    let m = glob.simplex.method;
+    let warn = true;
+    for (let i=0; i<m.num.length; i++){
+	ratio = m.num[i] + '/' + m.den[i];
+	if (header.includes(ratio)) {
+	    warn = false;
+	    break;
+	}
+    }
+    if (warn) show("#mismatch-warning")
+    else hide("#mismatch-warning")
+}
+function togglestandcomp(){
+    let sc = glob.calibration.standcomp;
+    sc = document.getElementById('standcomp').value;
+    if (sc === 'preset2stand'){
+	showcalpreset();
+	show('.show4preset');
+    } else {
+	hide('.show4preset')
+    }
+    if (sc === 't2stand'){
+	showtst();
+	show('.show4t2stand');
+    } else {
+	hide('.show4t2stand');
+    }
+    if (sc === 'd2stand'){
+	showcaldel();
+	show('.show4d2stand');
+    } else {
+	hide('.show4d2stand');
+    }
+}
+function showcalpreset(){
+    let cal = glob.calibration;
+    if (glob.simplex.hasOwnProperty('calibration')){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.hasOwnProperty('preset')){
+	    cal.preset = stand.preset[0];
+	    document.getElementById('presets').value = cal.preset;
+	}
+    }
+}
+function showtst(){
+    let cal = glob.calibration;
+    if (glob.simplex.hasOwnProperty('calibration')){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.hasOwnProperty('tst')){
+	    cal.tst[0] = stand.tst[0];
+	    cal.tst[1] = stand.tst[1];
+	}
+    }
+    document.getElementById('t').value = cal.tst[0];
+    document.getElementById('st').value = cal.tst[1];
+}
+function showcaldel(){
+    let create = true;
+    let cal = glob.calibration;
+    if (glob.simplex.hasOwnProperty('calibration')){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.hasOwnProperty('del')){
+	    create = false;
+	    cal.del.ratios = glob.names.calibration.stand.del.val;
+	    cal.del.delval = stand.del.val;
+	    cal.del.delcov = stand.del.cov;
+	    cal.del.refval = stand.ref.val;
+	    cal.del.refcov = stand.ref.cov;
+	}
+	if (stand.hasOwnProperty('ref') & stand.ref.hasOwnProperty('preset')){
+	    switch(stand.ref.preset[0]){
+	    case 'VSMOW':
+		document.getElementById('deltaref').value = 'VSMOW-O';
+		break;
+	    case 'troilite':
+		document.getElementById('deltaref').value = 'troilite-S';
+		break;
+	    default:
+		// do nothing
+	    }
+	}
+    }
+    let elr = document.getElementById('standlr');
+    if (create){
+	let header = elr.deg.getColumnHeaders();
+	cal.del.ratios = header;
+	let edel = document.getElementById('deltab');
+	let ecov = document.getElementById('delcovtab');
+	let eref = document.getElementById('delreftab');
+	edel.deg = createDataEntryGrid('deltab',header,1);
+	ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
+	eref.deg = createDataEntryGrid('delreftab',header,1);
+    } else {
+	let header = cal.del.ratios;
+	loadTable([cal.del.delval],header,'deltab',1);
+	loadTable(cal.del.delcov,header,'delcovtab',header.length);
+	loadTable([cal.del.refval],header,'delreftab',1);
+    }
+}
+function togglestandtype(){
+    glob.calibration.standtype = document.getElementById('standtype').value;
+    createCalibration(showCalibration);
+}
+function preset2standard(){
+    glob.calibration.preset = document.getElementById('presets').value;
+    shinylight.call('preset2standard', {x:glob}, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
+function t2stand(){
+    let cal = glob.calibration;
+    cal.tst[0] = parseFloat(document.getElementById('t').value);
+    cal.tst[1] = parseFloat(document.getElementById('st').value);
+    shinylight.call('t2stand', {x:glob}, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
+function d2stand(){
+    let cal = glob.calibration;
+    let edel = document.getElementById('deltab');
+    let ecov = document.getElementById('delcovtab');
+    let eref = document.getElementById('delreftab');
+    cal.del.delval = edel.deg.getCells();
+    cal.del.delcov = ecov.deg.getColumns();
+    cal.del.refval = eref.deg.getCells();
+    shinylight.call('d2stand', {x:glob}, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
+function deltaref(){
+    let ref = document.getElementById('deltaref').value;
+    shinylight.call('deltaref', {ref:ref}, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
+
+// III.
+function setstandsel(){
+    let cal = glob.simplex.calibration;
+    let hasprefix = cal.hasOwnProperty('prefix');
+    if (!hasprefix) cal.prefix = '';
+    if (glob.standards.length<1){
+	prefix2standards();
+    }
+    document.getElementById('prefix').value = cal.prefix;
+    markStandards();
+}
+function prefix2standards(){
+    let keys = Object.keys(glob.simplex.samples);
+    let prefix = glob.simplex.calibration.prefix;
+    glob.standards = [];
+    for (let i=0; i<keys.length; i++){
+	if (keys[i].indexOf(prefix) !== -1){
+	    glob.standards.push(keys[i]);
+	}
+    }
+}
+function updateStandardPrefix(){
+    glob.simplex.calibration.prefix = document.getElementById('prefix').value;
+    prefix2standards();
+    markStandards();
+}
+function markStandards(){
     let keys = Object.keys(glob.simplex.samples);
     let nk = keys.length;
     let dat = new Array(nk);
-    glob.standards = new Array(nk);
     for (let i=0; i<nk; i++){
-	if (keys[i].indexOf(prefix) !== -1){
-	    glob.standards[i] = keys[i];
+	if (glob.standards.includes(keys[i])){
 	    dat[i] = [keys[i],'yes'];
 	} else {
 	    dat[i] = [keys[i],'no'];
 	}
     }
-    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
+    loadTable(dat,['aliquots','selected?'],'aliquots',nk);
 }
 
-function chooseStandard(){
-    let stand = document.getElementById("standards").value;
-    shinylight.call("getstandard", {preset:stand}, null).then(
-	result => glob.simplex.standard = result.data,
-	error => alert(error)
-    )
-}
-
+// IV.
 function calibrator(){
-    shinylight.call("calibrator", {x:glob},
+    registerStandards();
+    shinylight.call('calibrator', {x:glob},
 		    'calibration-plot', {'imgType': 'svg'}).then(
 	result => {
 	    result2simplex(result),
@@ -533,33 +810,61 @@ function calibrator(){
 	error => alert(error)
     )
 }
+function registerStandards(){
+    let e = document.getElementById('aliquots');
+    let dat = e.deg.getColumns();
+    glob.standards = [];
+    for (let i=0; i<dat.aliquots.length; i++){
+	if (dat['selected?'][i]==='yes') glob.standards.push(dat.aliquots[i]);
+    }
+}
 
 // 5. samples
 
 function samples(){
     selectButton(4);
     loadPage("samples.html").then(
-	() => markSamplesByPrefix(),
+	() => setsampsel(),
 	error => alert(error)
     );
 }
-
-function markSamplesByPrefix(){
+function setsampsel(){
+    if (glob.samples.length<1){
+	document.getElementById('prefix').value = glob.sampleprefix;
+	prefix2samples();	
+    }
+    markSamples();
+}
+function prefix2samples(){
+    let keys = Object.keys(glob.simplex.samples);
+    glob.samples = [];
+    for (let i=0; i<keys.length; i++){
+	if (keys[i].indexOf(glob.sampleprefix) !== -1){
+	    glob.samples.push(keys[i]);
+	}
+    }
+}
+function updateSamplePrefix(){
     glob.sampleprefix = document.getElementById('prefix').value;
+    prefix2samples();
+    markSamples();
+}
+function markSamples(){
     let keys = Object.keys(glob.simplex.samples);
     let nk = keys.length;
     let dat = new Array(nk);
     for (let i=0; i<nk; i++){
-	if (keys[i].indexOf(glob.sampleprefix) !== -1){
+	if (glob.samples.includes(keys[i])){
 	    dat[i] = [keys[i],'yes'];
 	} else {
 	    dat[i] = [keys[i],'no'];
 	}
     }
-    loadTable(dat,['aliquots','selected?'],'aliquots',keys.length);
+    loadTable(dat,['aliquots','selected?'],'aliquots',nk);
 }
 
 function calibrate(){
+    registerSamples();
     shinylight.call("calibrateSamples",
 		    {x:glob},
 		    'sample-calibration-plot',
@@ -568,9 +873,16 @@ function calibrate(){
 	error => alert(error)
     )
 }
+function registerSamples(){
+    let e = document.getElementById('aliquots');
+    let dat = e.deg.getColumns();
+    glob.samples = [];
+    for (let i=0; i<dat.aliquots.length; i++){
+	if (dat['selected?'][i]==='yes') glob.samples.push(dat.aliquots[i]);
+    }
+}
 
 // 6. finish
-
 function finish(){
     selectButton(5);
     loadPage("finish.html").then(
@@ -578,7 +890,6 @@ function finish(){
 	    if (stable()) hide('.hide4stable')
 	    else show('.hide4stable')
 	    document.getElementById('prefix').value = glob.sampleprefix;
-	    markSamplesByPrefix();
 	}, error => alert(error)
     );
 }

@@ -1,0 +1,353 @@
+1640359696228	geckodriver	INFO	Listening on 127.0.0.1:50633
+1640359696740	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "44699" "-no-remote" "-profile" "/tmp/rust_mozprofilenFdZ1V"
+1640359697819	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofilenFdZ1V/search.json.mozlz4", (void 0)))
+console.error: Region.jsm: "Error fetching region" (new TypeError("NetworkError when attempting to fetch resource.", ""))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 419))
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+DevTools listening on ws://localhost:44699/devtools/browser/770e8ddb-c417-43ae-9b41-96f955384c9c
+1640359699135	Marionette	INFO	Listening on port 46589
+1640359699161	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1640360087851	addons.xpi	ERROR	System addon update list error Error: Failed downloading XML, status: 0, reason: error
+console.error: Region.jsm: "Error fetching region" (new TypeError("NetworkError when attempting to fetch resource.", ""))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 419))
+1640360497713	geckodriver	INFO	Listening on 127.0.0.1:60151
+1640360498223	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "54503" "-no-remote" "-profile" "/tmp/rust_mozprofilevZEEz3"
+1640360498967	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofilevZEEz3/search.json.mozlz4", (void 0)))
+console.error: Region.jsm: "Error fetching region" (new TypeError("NetworkError when attempting to fetch resource.", ""))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 419))
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+DevTools listening on ws://localhost:54503/devtools/browser/2b925dc9-4f85-4c23-a4b9-47da6f30d62d
+1640360500104	Marionette	INFO	Listening on port 44373
+1640360500158	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1640360505815	Marionette	INFO	Stopped listening on port 46589
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+1640360888982	addons.xpi	ERROR	System addon update list error Error: Failed downloading XML, status: 0, reason: error
+console.error: Region.jsm: "Error fetching region" (new TypeError("NetworkError when attempting to fetch resource.", ""))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 419))
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: resource://gre/modules/Prompter.jsm, line 1057: AbortError: Actor 'Prompt' destroyed before query 'Prompt:Open' was resolved
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/Prompter.jsm, line 1057: AbortError: Actor 'Prompt' destroyed before query 'Prompt:Open' was resolved
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: chrome://remote/content/marionette/event.js, line 1118: debuggee 'http://127.0.0.1:8000/:0' would run
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/simplex.js:158' would run
+JavaScript error: resource://gre/modules/Prompter.jsm, line 1057: AbortError: Actor 'Prompt' destroyed before query 'Prompt:Open' was resolved
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: chrome://remote/content/marionette/event.js, line 1118: debuggee 'http://127.0.0.1:8000/:0' would run
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: chrome://remote/content/marionette/event.js, line 1118: debuggee 'http://127.0.0.1:8000/:0' would run
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/simplex.js:158' would run
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript warning: https://accounts.google.com/ServiceLogin?service=mail&passive=1209600&osid=1&continue=https://mail.google.com/mail/u/0/&followup=https://mail.google.com/mail/u/0/&emr=1 line 1 > eval line 1680 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/simplex.js:158' would run
+JavaScript warning: chrome://remote/content/marionette/event.js, line 1118: debuggee 'http://127.0.0.1:8000/:0' would run
+1640447272901	Marionette	INFO	Stopped listening on port 44373
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+
+###!!! [Parent][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+1640510592433	geckodriver	INFO	Listening on 127.0.0.1:42581
+1640510592436	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "55177" "-no-remote" "-profile" "/tmp/rust_mozprofilejkqlb1"
+1640510593168	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofilejkqlb1/search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:55177/devtools/browser/b66ff010-d994-4d20-8e4e-a84b38fce8b1
+1640510594160	Marionette	INFO	Listening on port 42231
+1640510594264	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource://gre/modules/Prompter.jsm, line 1057: AbortError: Actor 'Prompt' destroyed before query 'Prompt:Open' was resolved
+JavaScript error: , line 0: uncaught exception: Object
+console.log: WebExtensions: reset-default-search: starting.
+console.log: WebExtensions: reset-default-search: No addons in our list are installed.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/Prompter.jsm, line 1057: AbortError: Actor 'Prompt' destroyed before query 'Prompt:Open' was resolved
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+1640514197366	Marionette	WARN	TimedPromise timed out after 500 ms: stacktrace:
+TimedPromise/<@chrome://remote/content/marionette/sync.js:238:19
+TimedPromise@chrome://remote/content/marionette/sync.js:223:10
+interaction.flushEventLoop@chrome://remote/content/marionette/interaction.js:431:10
+webdriverClickElement@chrome://remote/content/marionette/interaction.js:179:31
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+1640514304540	Marionette	WARN	TimedPromise timed out after 500 ms: stacktrace:
+TimedPromise/<@chrome://remote/content/marionette/sync.js:238:19
+TimedPromise@chrome://remote/content/marionette/sync.js:223:10
+interaction.flushEventLoop@chrome://remote/content/marionette/interaction.js:431:10
+webdriverClickElement@chrome://remote/content/marionette/interaction.js:179:31
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+1640514349655	Marionette	WARN	TimedPromise timed out after 500 ms: stacktrace:
+TimedPromise/<@chrome://remote/content/marionette/sync.js:238:19
+TimedPromise@chrome://remote/content/marionette/sync.js:223:10
+interaction.flushEventLoop@chrome://remote/content/marionette/interaction.js:431:10
+webdriverClickElement@chrome://remote/content/marionette/interaction.js:179:31
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+1640514690235	Marionette	WARN	TimedPromise timed out after 500 ms: stacktrace:
+TimedPromise/<@chrome://remote/content/marionette/sync.js:238:19
+TimedPromise@chrome://remote/content/marionette/sync.js:223:10
+interaction.flushEventLoop@chrome://remote/content/marionette/interaction.js:431:10
+webdriverClickElement@chrome://remote/content/marionette/interaction.js:179:31
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 191: TypeError: document.getElementById(...) is null
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: standtype is not a function
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: standtype is not a function
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: standtype is not a function
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: standtype is not a function
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 471: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 471: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 522: TypeError: cal.pairing is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 535: TypeError: cal.pairing is undefined
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/Prompter.jsm, line 1057: AbortError: Actor 'Prompt' destroyed before query 'Prompt:Open' was resolved
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+1641120724351	geckodriver	INFO	Listening on 127.0.0.1:60625
+1641120724858	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "59483" "-no-remote" "-profile" "/tmp/rust_mozprofileE2EgS6"
+1641120731717	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofileE2EgS6/search.json.mozlz4", (void 0)))
+console.error: Region.jsm: "Error fetching region" (new AbortError("The operation was aborted. ", (void 0), 770))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 419))
+DevTools listening on ws://localhost:59483/devtools/browser/4a42d120-3ef4-4a9f-aa84-6fea338e6e9f
+1641120741618	Marionette	INFO	Listening on port 46239
+1641120742078	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.log: WebExtensions: reset-default-search: starting.
+console.log: WebExtensions: reset-default-search: No addons in our list are installed.
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'http://127.0.0.1:8000/js/rrpc.min.js:1' would run
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a function
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a function
+JavaScript error: http://127.0.0.1:8000/, line 1: TypeError: deltaref is not a function
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 602: TypeError: eref is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 602: TypeError: eref is null
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 599: TypeError: glob.names.calibration.del is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 599: TypeError: glob.names.calibration.del is undefined
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+console.error: (new Error("CodeMirror instance does not exist. You must wait for it to be appended to the DOM.", "resource://devtools/client/shared/sourceeditor/editor.js", 276))
+1641293921950	addons.xpi	ERROR	System addon update list error Error: Failed downloading XML, status: 0, reason: error
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 661: TypeError: stand.del.ref is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 661: TypeError: stand.del.ref is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 675: ReferenceError: cal is not defined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 649: ReferenceError: cal is not defined
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 647: TypeError: document.getElementById(...) is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: http://127.0.0.1:8000/, line 1: ReferenceError: del2stand is not defined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Current thread has paused or resumed
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'self-hosted:695' would run
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+1641312840827	geckodriver	INFO	Listening on 127.0.0.1:60179
+1641312841332	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "51967" "-no-remote" "-profile" "/tmp/rust_mozprofilemNxOq6"
+1641312843465	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofilemNxOq6/search.json.mozlz4", (void 0)))
+console.error: Region.jsm: "Error fetching region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 772))
+console.error: Region.jsm: "Failed to fetch region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 419))
+DevTools listening on ws://localhost:51967/devtools/browser/16f4d1fc-5963-4791-903a-9b3e18679a55
+1641312854139	Marionette	INFO	Listening on port 43933
+1641312856156	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.log: WebExtensions: reset-default-search: starting.
+console.log: WebExtensions: reset-default-search: No addons in our list are installed.
+1641313483035	geckodriver	INFO	Listening on 127.0.0.1:33255
+1641313483546	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "41189" "-no-remote" "-profile" "/tmp/rust_mozprofile4COFsd"
+1641313489508	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofile4COFsd/search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:41189/devtools/browser/451e25da-c768-4e74-b14b-5a86c5dfc820
+1641313495653	Marionette	INFO	Listening on port 39133
+console.error: Region.jsm: "Error fetching region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 772))
+console.error: Region.jsm: "Failed to fetch region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 419))
+1641313496500	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1641313499553	Marionette	INFO	Stopped listening on port 43933
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+JavaScript error: resource://gre/modules/CrashMonitor.jsm, line 201: AbortError: IOUtils: Shutting down and refusing additional I/O tasks
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+console.log: WebExtensions: reset-default-search: starting.
+console.log: WebExtensions: reset-default-search: No addons in our list are installed.
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 679: TypeError: stand.ref.preset is undefined
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.

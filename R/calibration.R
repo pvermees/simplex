@@ -13,73 +13,134 @@
 #' @examples
 #' \dontrun{
 #' data('SHRIMP',package='simplex')
-#' st <- standard(preset='Temora',prefix=TEM)
+#' st <- standard(preset='Temora',prefix='TEM')
 #' dc <- drift(x=SHRIMP)
 #' lr <- logratios(x=dc)
 #' cal <- calibration(lr=lr,stand=st)
 #' plot(cal,option=3)
 #' }
 #' @export
-calibration <- function(lr,stand,snames=NULL,i=NULL,
-                        invert=FALSE,t=NULL,slope=NULL){
+calibration <- function(lr,stand,pairing=NULL,prefix=NULL,
+                        snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
-    out$standard <- stand
-    dat <- subset(x=out,prefix=stand$prefix,snames=snames,i=i,invert=invert)
-    if (stable(lr)) out$calibration <- stable_calibration(lr=dat)
-    else out$calibration <- geochron_calibration(lr=dat,t=t,slope=slope)
+    cal <- list()
+    cal$stand <- stand
+    cal$prefix <- prefix
+    cal$snames <- subset2snames(dat=lr,prefix=prefix,snames=snames,i=i)
+    dat <- subset(x=out,snames=cal$snames)
+    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
+    cal$t <- t
+    tavg <- time_average(dat,t=t)
+    if (is.null(pairing)){
+        cal$cal <- average_calibration(tavg=tavg,stand=stand)
+    } else {
+        cal$pairing <- pairing
+        cal$cal <- regression_calibration(tavg=tavg,pairing=pairing,stand=stand)
+    }
+    out$calibration <- cal
     class(out) <- unique(append('calibration',class(out)))
     out
 }
 
-stable_calibration <- function(lr){
-    LL <- function(par,lr){
-        out <- 0
-        np <- length(par)
-        snames <- names(lr$samples)
-        for (sname in snames){
-            X <- lr$samples[[sname]]$lr$b0g[1:np]
-            E <- lr$samples[[sname]]$lr$cov[1:np,1:np]
-            LL <- stats::mahalanobis(x=X,center=par,cov=E)
-            out <- out + LL
-        }
-        out
-    }
-    ni <- length(lr$method$num)
-    init <- lr$samples[[1]]$lr$b0g[1:ni]
-    wtdmean <- stats::optim(init,fn=LL,gr=NULL,method='BFGS',hessian=TRUE,lr=lr)
+time_average <- function(lr,t=NULL){
+    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
+    tt <- hours(t)
+    snames <- names(lr$samples)
+    rnames <- paste0(lr$method$num,'/',lr$method$den)
     out <- list()
-    out$snames <- names(lr$samples)
-    out$lr <- wtdmean$par
-    out$cov <- solve(wtdmean$hessian)
+    nlr <- length(lr$samples[[1]]$lr$b0g)/2
+    J <- cbind(diag(nlr),tt*diag(nlr))
+    rownames(J) <- rnames
+    ib0 <- 1:nlr
+    ig <- (nlr+1):(2*nlr)
+    for (sname in snames){
+        LR <- lr$samples[[sname]]$lr
+        out[[sname]] <- list()
+        out[[sname]]$val <- as.vector(c(1,tt) %*% rbind(LR$b0g[ib0],LR$b0g[ig]))
+        names(out[[sname]]$val) <- rnames
+        out[[sname]]$cov <- J %*% LR$cov %*% t(J)
+    }
     out
 }
 
-geochron_calibration <- function(lr,t=NULL,slope=NULL,...){
-    out <- list()
-    common <- do.call(lr$standard$fetchfun,args=list(dat=lr))$common
-    type <- datatype(lr)
-    Pb0 <- ifelse(type=="U-Pb",common['Pb206Pb204'],common['Pb208Pb204'])
-    geocal(lr,oxide=lr$method$oxide,slope=slope,t=t,type=type,common=Pb0)
+average_calibration <- function(tavg,stand){
+    LL <- function(par,tavg,ratios){
+        out <- 0
+        for (tav in tavg){
+            out <- out +
+                stats::mahalanobis(x=tav$val[ratios],center=par,
+                                   cov=tav$cov[ratios,ratios])
+        }
+        out
+    }
+    ratios <- intersect(names(tavg[[1]]$val),names(stand$val))
+    wtdmean <- stats::optim(tavg[[1]]$val[ratios],fn=LL,gr=NULL,
+                            method='BFGS',hessian=TRUE,
+                            tavg=tavg,ratios=ratios)
+    list(val=wtdmean$par,cov=solve(wtdmean$hessian))
 }
 
-geocal <- function(lr,oxide,slope=NULL,t=NULL,type,common){
-    if (type=='U-Pb'){
-        num <- c(oxide,'Pb206','Pb204')
-        den <- c('U238','U238','Pb206')
-    } else if (type=='Th-Pb'){
-        num <- c(oxide,'Pb208','Pb204')
-        den <- c('Th232','Th232','Pb208')
-    } else {
-        stop("Invalid data type.")
+regression_calibration <- function(tavg,pairing,stand){
+    nr <- nrow(pairing)
+    cnames <- c('a','s[a]','b','s[b]','cov.ab','mswd','df','p.value')
+    nc <- length(cnames)
+    out <- as.data.frame(matrix(NA,nrow=nr,ncol=nc))
+    colnames(out) <- cnames
+    for (i in 1:nr){
+        yd <- beta2york_regression(tavg=tavg,pairing=pairing[i,],stand=stand)
+        slope <- pairing[i,'slope']
+        if (identical(slope,'auto')) fit <- IsoplotR::york(yd)
+        else fit <- yorkfix(yd,b=as.numeric(slope))
+        out[i,] <- c(fit$a,fit$b,fit$cov.ab,fit$mswd,fit$df,fit$p.value)
     }
-    if (is.null(t)) t <- stats::median(lr$samples[[1]]$time)
-    out <- list(num=num,den=den,oxide=oxide,t=hours(t))
-    out$common <- common
-    out$snames <- names(lr$samples)
-    yd <- beta2york(lr=lr,t=t,snames=out$snames,
-                    num=num,den=den,common=common)
-    if (is.null(slope)) out$fit <- IsoplotR::york(yd)
-    else out$fit <- yorkfix(yd,b=slope)
+    out
+}
+
+beta2york_average <- function(tavg,xratio,yratio){
+    snames <- names(tavg)
+    out <- matrix(0,nrow=length(snames),ncol=5)
+    colnames(out) <- c('X','sX','Y','sY','rXY')
+    rownames(out) <- snames
+    for (sname in snames){
+        samp <- tavg[[sname]]
+        out[sname,'X'] <- samp$val[xratio]
+        out[sname,'Y'] <- samp$val[yratio]
+        vX <- samp$cov[xratio,xratio]
+        vY <- samp$cov[yratio,yratio]
+        sXY <- samp$cov[xratio,yratio]
+        out[sname,'sX'] <- sqrt(vX)
+        out[sname,'sY'] <- sqrt(vY)
+        out[sname,'rXY'] <- sXY/sqrt(vX*vY)
+    }
+    out
+}
+
+beta2york_regression <- function(tavg,pairing,stand){
+    snames <- names(tavg)
+    out <- matrix(0,nrow=length(snames),ncol=5)
+    colnames(out) <- c('X','sX','Y','sY','rXY')
+    rownames(out) <- snames
+    J <- matrix(0,nrow=2,ncol=length(tavg[[1]]$val))
+    colnames(J) <- names(tavg[[1]]$val)
+    rownames(J) <- c('X','Y')
+    J['X',pairing$X] <- 1
+    J['Y',pairing$Y] <- 1
+    for (sname in snames){
+        val <- tavg[[sname]]$val
+        if (stand$measured){
+            CD <- 0
+        } else {
+            CD <- log(1-exp(val[pairing$C]-stand$val[pairing$C]))
+            J['Y',pairing$C] <-
+                -exp(val[pairing$C])/(1-exp(val[pairing$C]-stand$val[pairing$C]))
+        }
+        out[sname,'X'] <- val[pairing$X]
+        out[sname,'Y'] <- val[pairing$Y] - CD
+        E <- J %*% tavg[[sname]]$cov %*% t(J)
+        out[sname,'sX'] <- sqrt(E['X','X'])
+        out[sname,'sY'] <- sqrt(E['Y','Y'])
+        out[sname,'rXY'] <- E['X','Y']/sqrt(E['X','X']*E['Y','Y'])
+    }
     out
 }
 
@@ -111,51 +172,6 @@ yorkfix <- function(xy,b,alpha=0.05){
     out
 }
 
-beta2york <- function(lr,t=0,snames,num=c('UO2','Pb206','Pb204'),
-                      den=c('U238','U238','Pb206'),common=0){
-    if (missing(snames)) snames <- names(lr$samples)
-    out <- matrix(0,nrow=length(snames),ncol=5)
-    colnames(out) <- c('X','sX','Y','sY','rXY')
-    rownames(out) <- snames
-    for (sname in snames){
-        LR <- lr$samples[[sname]]$lr
-        b0g <- LR$b0g
-        b0gnames <- names(b0g)
-        nb0g <- length(b0gnames)
-        OP <- paste0(num[1],'/',den[1])
-        DP <- paste0(num[2],'/',den[2])
-        ib0OP <- which(b0gnames %in% paste0('b0[',OP,']'))
-        ib0DP <- which(b0gnames %in% paste0('b0[',DP,']'))
-        igOP <- which(b0gnames %in% paste0('g[',OP,']'))
-        igDP <- which(b0gnames %in% paste0('g[',DP,']'))
-        bOP <- b0g[ib0OP] + b0g[igOP]*hours(t)
-        bDP <- b0g[ib0DP] + b0g[igDP]*hours(t)
-        X <- bOP
-        Y <- bDP
-        J <- matrix(0,2,length(LR$b0g))
-        J[1,ib0OP] <- 1
-        J[1,igOP] <- hours(t)
-        J[2,ib0DP] <- 1
-        J[2,igDP] <- hours(t)
-        if (length(num)>2){ # for U-Pb and Th-Pb
-            CD <- paste0(num[3],'/',den[3])
-            ib0CD <- which(b0gnames %in% paste0('b0[',CD,']'))
-            igCD <- which(b0gnames %in% paste0('g[',CD,']'))
-            bCD <- b0g[ib0CD] + b0g[igCD]*hours(t)
-            Y <- Y + log(1-exp(bCD)*common)
-            J[2,ib0CD] <- -exp(bCD)*common/(1-exp(bCD)*common)
-            J[2,igCD] <- -exp(bCD)*common*hours(t)/(1-exp(bCD)*common)
-        }
-        E <- J %*% LR$cov %*% t(J)
-        out[sname,'X'] <- X
-        out[sname,'Y'] <- Y
-        out[sname,'sX'] <- sqrt(E[1,1])
-        out[sname,'sY'] <- sqrt(E[2,2])
-        out[sname,'rXY'] <- E[1,2]/(out[sname,'sX']*out[sname,'sY'])
-    }
-    out
-}
-
 #' @title plot calibration data
 #' @description shows the calibration data on a logratio plot.
 #' @param x an object of class \code{logratios}
@@ -176,105 +192,119 @@ beta2york <- function(lr,t=0,snames,num=c('UO2','Pb206','Pb204'),
 #' }
 #' @method plot calibration
 #'@export
-plot.calibration <- function(x,option=1,...){
-    if (stable(x)) {
-        out <- calplot_stable(dat=x,...)
+plot.calibration <- function(dat,show.numbers=TRUE,...){
+    if (is.null(dat$calibration$pairing)){
+        out <- calplot_stable(dat=dat,show.numbers=show.numbers,...)
     } else {
-        out <- calplot_geochronology(dat=x,option=option,...)
+        out <- calplot_geochronology(dat=dat,show.numbers=show.numbers,...)
     }
     invisible(out)
 }
 
-calplot_stable <- function(dat,...){
-    cal <- dat$calibration
-    num <- dat$method$num
-    den <- dat$method$den
-    nn <- length(num)
-    np <- nn*(nn-1)/2       # number of plot panels
-    nc <- ceiling(sqrt(np)) # number of rows
-    nr <- ceiling(np/nc)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc))
-    ii <- 1
-    snames <- cal$snames
-    for (i in 1:(nn-1)){
-        for (j in (i+1):nn){
-            xlab <- paste0(num[i],'/',den[i])
-            ylab <- paste0(num[j],'/',den[j])
-            B <- beta2york(lr=dat,snames=snames,
-                           num=num[c(i,j)],den=den[c(i,j)])
-            IsoplotR::scatterplot(B,...)
-            graphics::mtext(side=1,text=xlab,line=2)
-            graphics::mtext(side=2,text=ylab,line=2)
-            ell <- IsoplotR::ellipse(cal$lr[i],cal$lr[j],
-                                     cal$cov[c(i,j),c(i,j)])
-            graphics::polygon(ell,col='white')
-            ii <- ii + 1
-            if (ii>np) break
+calplot_stable <- function(dat,show.numbers=TRUE,...){
+    cal <- dat$calibration$cal
+    ratios <- names(cal$val)
+    nrat <- length(ratios)
+    caldat <- subset(x=dat,snames=dat$calibration$snames)
+    tavg <- time_average(caldat,t=dat$calibration$t)
+    if (nrat>1){
+        np <- nrat*(nrat-1)/2   # number of panels
+        nc <- ceiling(sqrt(np)) # number of rows
+        nr <- ceiling(np/nc)    # number of columns
+        oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,1,1))
+        for (i in 1:(nrat-1)){
+            for (j in (i+1):nrat){
+                B <- beta2york_average(tavg,ratios[i],ratios[j])
+                IsoplotR::scatterplot(B,...)
+                if (show.numbers){
+                    istd <- which(names(dat$samples) %in% dat$calibration$snames)
+                    text(x=B[,'X'],y=B[,'Y'],labels=istd,pos=3,offset=0.1)
+                }
+                graphics::mtext(side=1,text=paste0('ln[',ratios[i],']'),line=2)
+                graphics::mtext(side=2,text=paste0('ln[',ratios[j],']'),line=2)
+                ell <- IsoplotR::ellipse(cal$val[i],cal$val[j],
+                                         cal$cov[c(i,j),c(i,j)])
+                graphics::polygon(ell,col='white')
+            }
         }
+        graphics::par(oldpar)
+    } else {
+        snames <- dat$calibration$snames
+        ns <- length(snames)
+        tab <- matrix(0,nrow=3,ncol=ns)
+        rownames(tab) <- c('x','ll','ul')
+        colnames(tab) <- snames
+        tfact <- qnorm(0.975)
+        for (sname in snames){
+            tab['x',sname] <- tavg[[sname]]$val
+            dx <- tfact*sqrt(tavg[[sname]]$cov)
+            tab['ll',sname] <- tab['x',sname] - dx
+            tab['ul',sname] <- tab['x',sname] + dx
+        }
+        matplot(rbind(1:ns,1:ns),tab[c('ll','ul'),],
+                type='l',lty=1,col='black',bty='n',
+                xlab='standard #',ylab='')
+        points(1:ns,tab['x',],pch=16)
+        lines(c(1,ns),rep(cal$val,2),lty=2)
+        lines(c(1,ns),rep(cal$val-tfact*sqrt(cal$cov),2),lty=3)
+        lines(c(1,ns),rep(cal$val+tfact*sqrt(cal$cov),2),lty=3)
+    }
+}
+
+calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
+    cal <- dat$calibration$cal
+    pair <- dat$calibration$pairing
+    nr <- nrow(pair)
+    cnames <- c('a','s[a]','b','s[b]','cov.ab')
+    nc <- length(cnames)
+    out <- as.data.frame(matrix(NA,nrow=nr,ncol=nc))
+    oldpar <- graphics::par(mfrow=c(1,nr),mar=c(3.5,3.5,3.5,1),mgp=c(2,0.5,0))
+    snames <- dat$calibration$snames
+    tavg <- time_average(subset(x=dat,snames=snames),t=dat$calibration$t)
+    for (i in 1:nr){
+        yd <- beta2york_regression(tavg=tavg,
+                                   pairing=pair[i,],
+                                   stand=dat$calibration$stand)
+        fit <- cal2york(cal[i,])
+        IsoplotR::scatterplot(yd,fit=fit,
+                              xlab=paste0('ln[',pair[i,'X'],']'),
+                              ylab=paste0('ln[',pair[i,'Y'],']'))
+        if (show.numbers){
+            istd <- which(names(dat$samples) %in% snames)
+            text(x=yd[,'X'],y=yd[,'Y'],labels=istd,pos=3,offset=0.1)
+        }
+        caltitle(fit,...)
     }
     graphics::par(oldpar)
 }
 
-calplot_geochronology <- function(dat,option=1,title=TRUE,...){
-    cal <- dat$calibration
-    num <- cal$num
-    den <- cal$den
-    yd <- beta2york(lr=dat,t=seconds(cal$t),snames=cal$snames,
-                    num=num,den=den,common=cal$common)
-    xlab <- paste0('log[',num[1],'/',den[1],']')
-    ylab <- paste0('log[',num[2],'/',den[2],']')
-    if (option==1){
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,ylab=ylab,...)
-    } else {
-        X <- NULL
-        Y <- NULL
-        for (sname in cal$snames){
-            sp <- spot(dat=dat,sname=sname)
-            Op <- betapars(spot=sp,ion=num[1])
-            Pp <- betapars(spot=sp,ion=den[1])
-            Dp <- betapars(spot=sp,ion=num[2])
-            Cp <- betapars(spot=sp,ion=num[3])
-            CD <- (Cp$sig-Cp$bkg)/(Dp$sig-Dp$bkg)
-            CDdc <- exp(Dp$g*(Dp$t-Cp$t))
-            newX <- log(Op$sig-Op$bkg) - log(Pp$sig-Pp$bkg) + Op$g*(Pp$t-Op$t)
-            newY <- log(Dp$sig-Dp$bkg) - log(Pp$sig-Pp$bkg) + Dp$g*(Pp$t-Dp$t) +
-                log(1 - cal$common*CD*CDdc)
-            X <- cbind(X,newX)
-            Y <- cbind(Y,newY)
-        }
-        xlim <- c(0,2)
-        xlim[1] <- min(yd[cal$snames,'X']-3*yd[cal$snames,'sX'],X)
-        xlim[2] <- max(yd[cal$snames,'X']+3*yd[cal$snames,'sX'],X)
-        ylim <- c(0,2)
-        ylim[1] <- min(yd[cal$snames,'Y']-3*yd[cal$snames,'sY'],Y)
-        ylim[2] <- max(yd[cal$snames,'Y']+3*yd[cal$snames,'sY'],Y)
-        IsoplotR::scatterplot(yd,fit=cal$fit,xlab=xlab,
-                              ylab=ylab,xlim=xlim,ylim=ylim,...)
-        graphics::matlines(X,Y,lty=1,col='darkgrey')
-        if (option>2){
-            graphics::points(X[1,],Y[1,],pch=21,bg='black')
-            graphics::points(X[nrow(X),],Y[nrow(Y),],pch=21,bg='white')
-        }
-    }
-    if (title) graphics::title(caltitle(fit=cal$fit))
+cal2york <- function(cal){
+    out <- list()
+    out$a <- as.numeric(cal[c('a','s[a]')])
+    out$b <- as.numeric(cal[c('b','s[b]')])
+    out$cov.ab <- as.numeric(cal['cov.ab'])
+    out$df <- as.numeric(cal['df'])
+    out$mswd <- as.numeric(cal['mswd'])
+    out$p.value <- as.numeric(cal['p.value'])
+    out$type <- 'york'
+    out$alpha <- 0.05
+    out
 }
 
-caltitle <- function(fit,sigdig=2,type=NA,...){
+caltitle <- function(fit,sigdig=2,...){
     args1 <- quote(a%+-%b~'(n='*n*')')
     args2 <- quote(a%+-%b)
-    if (is.na(type)){
-        intercept <- IsoplotR:::roundit(fit$a[1],fit$a[2],sigdig=sigdig)
-        slope <- IsoplotR:::roundit(fit$b[1],fit$b[2],sigdig=sigdig)
-        expr1 <- 'slope ='
-        expr2 <- 'intercept ='
-        list1 <- list(a=slope[1],
-                      b=slope[2],
-                      u='',
-                      n=fit$df+2)
-        list2 <- list(a=intercept[1],
-                      b=intercept[2],
-                      u='')
-    }
+    intercept <- IsoplotR:::roundit(fit$a[1],fit$a[2],sigdig=sigdig)
+    slope <- IsoplotR:::roundit(fit$b[1],fit$b[2],sigdig=sigdig)
+    expr1 <- 'slope ='
+    expr2 <- 'intercept ='
+    list1 <- list(a=slope[1],
+                  b=slope[2],
+                  u='',
+                  n=fit$df+2)
+    list2 <- list(a=intercept[1],
+                  b=intercept[2],
+                  u='')
     call1 <- substitute(e~a,list(e=expr1,a=args1))
     call2 <- substitute(e~a,list(e=expr2,a=args2))
     line1 <- do.call(substitute,list(eval(call1),list1))

@@ -104,22 +104,87 @@ logratioTable <- function(x){
     as.data.frame(tab)
 }
 
-getstandard <- function(preset){
-    standard(preset)
+preset2standard <- function(x){
+    preset <- x$calibration$preset
+    measured <- identical(x$calibration$standtype,'measured')
+    out <- as.simplex(x)
+    out$calibration$stand <- standard(preset=preset,measured=measured)
+    result2json(out)
+}
+
+t2stand <- function(x){
+    tst <- x$calibration$tst
+    measured <- identical(x$calibration$standtype,'measured')
+    out <- as.simplex(x)
+    out$calibration$stand <- standard(tst=tst,measured=measured)
+    result2json(out)
+}
+d2stand <- function(x){
+    d <- x$calibration$del
+    delval <- as.numeric(d$delval[1,])
+    refval <- as.numeric(d$refval[1,])
+    nr <- length(delval)
+    delcov <- matrix(0,nr,nr)
+    refcov <- matrix(0,nr,nr)
+    for (r in 1:nr){
+        delcov[r,] <- as.numeric(d$delcov[[r]])
+        refcov[r,] <- as.numeric(d$refcov[[r]])
+    }
+    names(delval) <- d$ratios
+    rownames(delcov) <- d$ratios
+    colnames(delcov) <- d$ratios
+    names(refval) <- d$ratios
+    rownames(refcov) <- d$ratios
+    colnames(refcov) <- d$ratios
+    del <- list(val=delval,cov=delcov)
+    ref <- list(val=refval,cov=refcov)
+    out <- as.simplex(x)
+    out$calibration$stand <- standard(del=del,ref=ref)
+    result2json(out)
+}
+
+createcalibration <- function(x){
+    measured <- (x$calibration$standtype=='measured')
+    dat <- as.simplex(x)
+    s <- skeletonstand(dat,measured=measured)
+    p <- pairing(dat,s)
+    out <- dat
+    out$calibration <- list(stand=s,pairing=p)
+    result2json(out)
+}
+createpairing <- function(x){
+    dat <- as.simplex(x)
+    s <- dat$calibration$stand
+    p <- pairing(dat,s)
+    out <- dat
+    out$calibration <- list(stand=s,pairing=p)
+    result2json(out)
 }
 
 calibrator <- function(x,...){
     dat <- as.simplex(x)
-    if (x$fixedslope) slope <- x$slope
-    else slope <- NULL
-    out <- calibration(dat,stand=x$simplex$standard,slope=slope)
+    stnd <- dat$calibration$stand
+    if (identical(x$calibration$caltype,"average")) prng <- NULL
+    else prng <- dat$calibration$pairing
+    prfx <- dat$calibration$prefix
+    if (length(x$standards)>0){
+        snms <- x$standards
+    } else {
+        snms <- NULL
+    }
+    out <- calibration(dat,stand=stnd,pairing=prng,prefix=prfx,snames=snms)
     plot.calibration(out,...)
     result2json(out)
 }
 
 calibrate_it <- function(x){
     dat <- as.simplex(x)
-    selection <- subset(dat,prefix=x$sampleprefix)
+    if (length(x$samples)>0){
+        snms <- x$samples
+    } else {
+        snms <- NULL
+    }
+    selection <- subset(dat,prefix=x$sampleprefix,snames=snms)
     out <- calibrate(selection)
 }
 
@@ -166,20 +231,21 @@ export2isoplotr <- function(x){
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
-upload <- function(f,x){
+upload <- function(f,m){
     ntcs <- length(f$tcs)
     tcs <- list()
     for (i in 1:ntcs){
         tcs[[f$fns[[i]]]] <- textConnection(f$tcs[[i]])
     }
-    result2json(read_data(f=tcs,m=as.simplex(x)$method))
+    out <- read_data(f=tcs,m=m)
+    result2json(out)
 }
 
-freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
+freeformServer <- function(port=NULL,host='127.0.0.1',
+                           test=FALSE,daemonize=!is.null(port)) {
     if (test) appDir <- R.utils::getAbsolutePath("inst/www")
     else appDir <- system.file("www",package="simplex")
-    shinylight::slServer(host=host,port=port,appDir=appDir,
-                         daemonize=!is.null(port),
+    shinylight::slServer(host=host,port=port,appDir=appDir,daemonize=daemonize,
         interface=list(
             presets=presets,
             upload=upload,
@@ -189,7 +255,11 @@ freeformServer <- function(port=NULL,host='127.0.0.1',test=FALSE) {
             getlogratios=getlogratios,
             logratioPlot=logratioPlot,
             logratioTable=logratioTable,
-            getstandard=getstandard,
+            preset2standard=preset2standard,
+            createcalibration=createcalibration,
+            createpairing=createpairing,
+            t2stand=t2stand,
+            d2stand=d2stand,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,

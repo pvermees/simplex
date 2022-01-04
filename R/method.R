@@ -47,19 +47,12 @@ method <- function(m='IGG-UPb',instrument,ions,num,
 
 fixmethod <- function(x){
     out <- x
+    m <- x$method
     ions <- colnames(x$samples[[1]]$signal)
-    if (length(x$method$ions)!=length(ions)) out$method$ions <- ions
-    matches <- (x$method$num %in% out$method$ions) &
-               (x$method$den %in% out$method$ions)
-    if (any(matches)){
-        out$method$num <- x$method$num[matches]
-        out$method$den <- x$method$den[matches]
-    } else {
-        out$method$num <- ''
-        out$method$den <- ''
-        warning("method$num and method$den not found among method$ions")
-    }
-    out
+    if (length(m$ions)!=length(ions)) out$method$ions <- ions
+    matches <- all((m$num %in% m$ions) & (m$den %in% m$ions))
+    if (!matches) warning("method$num and method$den not found among method$ions")
+    invisible(out)
 }
 
 defaultmethod <- function(m){

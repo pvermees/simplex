@@ -60,8 +60,60 @@ data2table.default <- function(x,...){
 }
 #' @rdname data2table
 #' @export
-data2table.calibrated <- function(x,...){
-    data2table_helper(x=x,option='calibrated',...)
+data2table.calibrated <- function(x,snames=NULL,i=NULL,
+                                  ratios=NULL,j=NULL,
+                                  cov=FALSE,log=TRUE,...){
+    cal <- x$calibrated
+    if (!is.null(snames)){
+        i <- which(cal$snames %in% snames)
+    } else if (is.null(i)){
+        i <- 1:length(cal$snames)
+    }
+    if (!is.null(ratios)){
+        j <- which(cal$ratios %in% ratios)
+    } else if (is.null(j)){
+        j <- 1:length(cal$ratios)
+    }
+    ns <- length(i)
+    nr <- length(j)
+    ii <- rep((i-1)*nr,each=nr) + rep(j,ns)
+    if (log){
+        val <- cal$val[ii]
+        E <- cal$cov[ii,ii]
+    } else {
+        val <- exp(cal$val[ii])
+        E <- diag(val) %*% cal$cov[ii,ii] %*% diag(val)
+    }
+    if (cov){
+        out <- cbind(val,E)
+        colnames(out) <- c('ratios',rep(cal$ratios[j],ns))
+        rownames(out) <- rep(cal$snames[i],each=nr)
+    } else {
+        nc <- 2*nr+nr*(nr-1)/2
+        out <- matrix(0,nrow=ns,ncol=nc)
+        rownames(out) <- cal$snames[i]
+        cnames <- rep(NA,nc)
+        out[,2*(1:nr)-1] <- matrix(val,nrow=ns,ncol=nr,byrow=TRUE)
+        out[,2*(1:nr)] <- matrix(sqrt(diag(E)),nrow=ns,ncol=nr,byrow=TRUE)
+        cnames[2*(1:nr)-1] <- cal$ratios[j]
+        cnames[2*(1:nr)] <- paste0('s[',cal$ratios[j],']')
+        ci <- 2*nr
+        cormat <- cov2cor(E)
+        if (nr>1){
+            for (r1 in 1:(nr-1)){
+                i1 <- (0:(ns-1))*nr + r1
+                for (r2 in (r1+1):nr){
+                    ci <- ci + 1
+                    i2 <- (0:(ns-1))*nr + r2
+                    out[,ci] <- diag(cormat[i1,i2])
+                    cnames[ci] <- paste0('r[',cal$ratios[j][r1],
+                                         ',',cal$ratios[j][r2],']')
+                }
+            }
+        }
+        colnames(out) <- cnames
+    }
+    out
 }
 #' @rdname data2table
 #' @export
@@ -74,157 +126,50 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
     if (addxy & identical(x$method$instrument,'SHRIMP')){
         stop('SHRIMP data do not contain x-y stage coordinates.')
     }
-    num <- x$method$num
-    den <- x$method$den
-    samps <- x$samples
-    nr <- length(samps)
-    nn <- length(num)
-    nrho <- nn*(nn-1)/2
-    nc <- 2*nn + nrho
+    tavg <- time_average(x,t=t)
+    ns <- length(tavg) # number of aliquots
+    nr <- length(tavg[[1]]$val) # number of ratios
+    si <- ifelse(addxy,2,0) # start index
+    nc <- si + 2*nr + nr*(nr-1)/2 # number of columns
+    out <- matrix(NA,nrow=ns,nc=nc)
     cnames <- rep(NA,nc)
-    ii <- 1
-    for (i in 1:nn){
-        ratio1 <- paste0(num[i],'/',den[i])
-        r1 <- ifelse(log,paste0('ln[',ratio1,']'),ratio1)
-        cnames[2*i-1] <- r1
-        cnames[2*i] <- paste0('s(',r1,')')
-        for (j in i:nn){
-            if (i!=j){
-                ratio2 <- paste0(num[j],'/',den[j])
-                r2 <- ifelse(log,paste0('ln[',ratio2,']'),ratio2)
-                cnames[2*nn+ii] <- paste0('r(',r1,',',r2,')')
-                ii <- ii + 1
-            }
-        }
-    }
-    if (addxy) {
-        i0 <- 2
-        cnames <- c('x','y',cnames)
+    ratios <- paste0(x$method$num,'/',x$method$den)
+    comb <- utils::combn(ratios,m=2)
+    if (log){
+        cnames[si+2*(1:nr)-1] <- paste0('ln[',ratios,']')
+        cnames[si+2*(1:nr)] <- paste0('s(ln[',ratios,'])')
+        if (nr>1) cnames[(si+2*nr+1):nc] <-
+                      paste0('r(ln[',comb[1,],'],ln[',comb[2,],'])')
     } else {
-        i0 <- 0
+        cnames[si+2*(1:nr)-1] <- ratios
+        cnames[si+2*(1:nr)] <- paste0('s(',ratios,')')
+        if (nr>1) cnames[(si+2*nr+1):nc] <-
+                      paste0('r(',comb[1,],',',comb[2,],')')
     }
-    out <- matrix(NA,nrow=nr,ncol=nc+i0)
-    rownames(out) <- names(samps)
+    if (addxy) cnames[1:2] <- c('x','y')
     colnames(out) <- cnames
-    if (is.null(t)) t <- stats::median(samps[[1]]$time)
-    J <- cbind(diag(nn),diag(nn)*hours(t))
-    for (i in 1:nr){
-        lr <- samps[[i]]$lr
-        b0 <- lr$b0g[1:nn]
-        g <- lr$b0g[(nn+1):(2*nn)]
-        lrt <- b0 + g * hours(t)
-        covlrt <- J %*% lr$cov %*% t(J)
-        if (addxy){
-            out[i,1] <- samps[[i]]$x
-            out[i,2] <- samps[[i]]$y
-        }
-        if (log) {
-            out[i,i0+2*(1:nn)-1] <- lrt
-            out[i,i0+2*(1:nn)] <- sqrt(diag(covlrt))
-            cormat <- cov2cor(covlrt)
-        } else {
-            out[i,i0+2*(1:nn)-1] <- exp(lrt)
-            Jexp <- diag(nn)*exp(lrt)
-            covmat <- Jexp %*% covlrt %*% t(Jexp)
-            out[i,i0+2*(1:nn)] <- sqrt(diag(covmat))
-            cormat <- cov2cor(covmat)
-            
-        }
-        if (nc>(2*nn)) out[i,(i0+2*nn+1):(i0+nc)] <- cormat[upper.tri(cormat)]
-    }
-    out
-}
-data2table_helper <- function(x,option,...){
-    p <- data2table_pars(x=x,option=option)
-    nin <- ncol(p$J)
-    nout <- nrow(p$J)
-    ns <- length(p$lr)/nin
-    nc <- 2*nout+nout*(nout-1)/2
-    cnames <- rep('',nc)
-    if (option=='delta'){
-        DP <- paste0('d(',p$num,')')
-    } else {
-        DP <- paste0(p$num,'/',p$den)
-    }
-    cnames[2*(1:nout)-1] <- DP
-    cnames[2*(1:nout)] <- paste0('s[',DP,']')
-    ii <- 2*nout
-    for (i in 1:nout){
-        for (j in i:nout){
-            if (i!=j){
-                ii <- ii + 1
-                cnames[ii] <- paste0('r[',DP[i],',',DP[j],']')
-            }
-        }
-    }
-    out <- matrix(0,ns,nc)
-    colnames(out) <- cnames
-    for (i in 1:ns){
-        ii <- (i-1)*nin+(1:nin)
-        lr <- as.vector(p$J %*% p$lr[ii])
-        covmat <- p$J %*% p$cov[ii,ii] %*% t(p$J)
-        if (option=='delta'){
-            out[i,2*(1:nout)-1] <- lr
-            E <- covmat
-        } else {
-            out[i,2*(1:nout)-1] <- exp(lr)
-            J <- diag(exp(lr),nrow=nout,ncol=nout)
-            E <- J %*% covmat %*% t(J)
-        }
-        out[i,2*(1:nout)] <- sqrt(diag(E))
-        cormat <- stats::cov2cor(E)
-        out[i,(2*nout+1):nc] <- cormat[upper.tri(cormat)]
-    }
     rownames(out) <- names(x$samples)
+    for (i in 1:ns){
+        if (log){
+            val <- tavg[[i]]$val
+            E <- tavg[[i]]$cov
+        } else {
+            val <- exp(tavg[[i]]$val)
+            J <- diag(nr) * as.vector(val)
+            E <- J %*% tavg[[i]]$cov %*% t(J)
+        }
+        if (addxy){
+            out[i,1] <- x$samples[[i]]$x
+            out[i,2] <- x$samples[[i]]$y
+        }
+        out[i,si+2*(1:nr)-1] <- val
+        out[i,si+2*(1:nr)] <- sqrt(diag(E))
+        if (nr>1){
+            cormat <- cov2cor(E)
+            out[i,(si+2*nr+1):nc] <- cormat[upper.tri(cormat)]
+        }
+    }
     out
-}
-
-data2table_pars <- function(x,option){
-    type <- datatype(x)
-    if (type=='oxygen'){
-        num <- c('O17','O18')
-        den <- c('O16','O16')
-        J <- diag(2)
-    } else if (type=='sulphur'){
-        num <- c('S33','S34','S36')
-        den <- c('S32','S32','S32')
-        J <- diag(3)
-    } else if (type=='U-Pb'){
-        num <- c('U238','Pb207','Pb204')
-        den <- c('Pb206','Pb206','Pb206')
-        J <- matrix(0,3,3)
-        J[1,1] <- -1
-        J[2,3] <- 1
-        J[3,2] <- 1
-    } else if (type=='U-Th-Pb'){
-        num <- c('U238','Pb207','Pb204','Pb208','Th232','Th232','Pb204')
-        den <- c('Pb206','Pb206','Pb206','Pb206','U238','Pb208','Pb208')
-        J <- matrix(0,7,5)
-        J[1,1] <- -1
-        J[2,4] <- 1
-        J[3,3] <- 1
-        J[4,3] <- 1
-        J[4,5] <- -1
-        J[5,1] <- 1
-        J[5,2] <- -1
-        J[5,3] <- 1
-        J[5,5] <- -1
-        J[6,2] <- -1
-        J[7,5] <- 1
-    } else {
-        stop('invalid data type')
-    }
-    if (option == 'calibrated'){
-        lr <- x$calibrated$lr
-        covmat <- x$calibrated$cov
-    } else if (option == 'delta'){
-        lr <- x$delta$d
-        covmat <- x$delta$cov
-    } else {
-        lr <- x$lr
-        covmat <- x$cov
-    }
-    list(num=num,den=den,lr=lr,cov=covmat,J=J)
 }
 
 #' @title plot delta values

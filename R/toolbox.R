@@ -61,31 +61,6 @@ elements <- function(){
       'No','Lr','Rf','Db','Sg','Bh','Hs','Mt')
 }
 
-VSMOW <- function(){
-    out <- list()
-    out$lr <- log(c(0.3799e-3,2.00520e-3))
-    relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
-    out$cov <- diag(relerr^2)
-    labels <- c("O17O16","O18O16")
-    names(out$lr) <- labels
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
-    out
-}
-
-troilite <- function(){
-    out <- list()
-    S2346 <- c(126.948,22.6436,6515)
-    out$lr <- -log(S2346)
-    relerr <- c(0.047,0.0020,20)/S2346
-    out$cov <- diag(relerr^2)
-    labels <- c("S33S32","S34S32","S36S32")
-    names(out$lr) <- labels
-    rownames(out$cov) <- labels
-    colnames(out$cov) <- labels
-    out    
-}
-
 multicollector <- function(x,...){ UseMethod("multicollector",x) }
 multicollector.default <- function(x,...){
     detectors <- x$detector

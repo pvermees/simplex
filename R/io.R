@@ -24,8 +24,6 @@ read_data <- function(f,m='IGG-UPb'){
     } else {
         out$samples <- read_samples_fn(fn=f,m=out$method)
     }
-    snames <- names(out$samples)
-    ns <- length(snames)
     class(out) <- 'simplex'
     fixmethod(out)
 }
@@ -70,7 +68,7 @@ read_file <- function(f,m,ext=NA){
         out <- read_Cameca_asc(f=f,mions=m$ions)
     } else if (m$instrument=='SHRIMP') {
         if (identical(ext,'op')){
-            out <- read_SHRIMP_op(f=f,m=m)
+            out <- read_SHRIMP_op(f=f,mions=m$ions)
         } else if (identical(ext,'pd')) {
             out <- read_SHRIMP_pd(f=f,mions=m$ions)
         } else {
@@ -138,7 +136,7 @@ read_Cameca_asc <- function(f,mions=NULL){
     out
 }
 
-read_SHRIMP_op <- function(f,m){
+read_SHRIMP_op <- function(f,mions=NULL){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
@@ -153,22 +151,24 @@ read_SHRIMP_op <- function(f,m){
             nions <- read_numbers(f)
             spot$deadtime <- 0
             spot$dwelltime <- read_numbers(f)
-            names(spot$dwelltime) <- m$ions
-            spot$dtype <- rep('Em',length(m$ions))
-            names(spot$dtype) <- m$ions
+            if (nions==length(mions)) ions <- mions
+            else ions <- paste0('m',1:nions)
+            names(spot$dwelltime) <- ions
+            spot$dtype <- rep('Em',length(ions))
+            names(spot$dtype) <- ions
             spot$time <- matrix(0,nscans,nions)
-            colnames(spot$time) <- m$ions
+            colnames(spot$time) <- ions
             for (i in 1:nions){
                 spot$time[,i] <- read_numbers(f)
             }
             spot$signal <- matrix(0,nscans,nions)
-            colnames(spot$signal) <- m$ions
+            colnames(spot$signal) <- ions
             for (i in 1:nions){
                 spot$signal[,i] <- read_numbers(f)
             }
             spot$sbmbkg <- read_numbers(f)
             spot$sbm <- matrix(0,nscans,nions)
-            colnames(spot$sbm) <- m$ions
+            colnames(spot$sbm) <- ions
             for (i in 1:nions){
                 spot$sbm[,i] <- read_numbers(f)
             }
@@ -199,6 +199,7 @@ read_SHRIMP_pd <- function(f,mions=NULL){
             block <- utils::read.table(text=readLines(f,n=nions,warn=FALSE))
             ions <- block[,1]
             if (length(ions)==length(mions)) ions <- mions
+            else ions <- paste0('m',1:nions)
             spot$dwelltime <- block[,4]
             names(spot$dwelltime) <- ions
             spot$detector <- block[,11]

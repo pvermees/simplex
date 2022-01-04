@@ -1,44 +1,95 @@
 <left>
-  
-  <div>Choose a standard:
-    <select id="standards" onchange="chooseStandard()">
-      <option disabled selected value> -- select an option -- </option>
-      <option class="hide4stable" value="Plesovice">Plesovice zircon</option>
-      <option class="hide4stable" value="Qinghu">Qinghu zircon</option>
-      <option class="hide4stable" value="Temora">Temora zircon</option>
-      <option value="44069">44069 monazite</option>
-      <option value="NBS28">NBS28 quartz</option>
-      <option value="Sonora">Sonora pyrite</option>
-      <option value="other">other</option>
-    </select>
-    <div class="hidden show4newstandard">Define a new standard by specifying its 
-      <select id="standoption" onchange="standardType()">
-	<option id="specify-standard-age">age</option>
-	<option id="specify-standard-composition">composition</option>
+
+  <ol type="I">
+    <li>
+      Calibration type: &nbsp;
+      <select id="caltype" onchange="togglecaltype();">
+	<option value="average">isotopic fractionation (averaging)</option>
+	<option value="regression">elemental fractionation (regression)</option>
       </select>
-      <table id="tval"></table>
-      <span>&plusmn;<table id="stval"></table></span>
-      <span>Covariance matrix:<table id="cov-tval"></table></span>
-    </div> 
-  </div>
-  
-  <div>Prefix:<input type="text" id="prefix"
-		     onchange="markStandardsByPrefix()">
-    <button class="mainbutton" onclick="calibrator()">Calibrate</button>
-  </div>
-
-  <div>
-    <input type="checkbox" id="fixedslope" onchange="slopefixer()">
-    Fixed slope? 
-    <span class='hidden' id="slopespan">
-      Slope: <input type="text" id="slope">
-    </span>
-  </div>
-
-  <div>Analyses to use for the calibration:
-    <table id="aliquots" class="normalfont"></table>
-  </div>
-  
+      <span id="caltype-warning" class="hidden red">Are you sure?</span>
+      <p></p>
+    </li>
+    <li>
+      Standard composition:
+      <p></p>
+      <select id="standcomp" onchange="togglestandcomp();">
+	<option value="manualstand">specify manually</option>
+	<option value="preset2stand">load presets</option>
+	<option value="t2stand" class="hide4stable show4geochron">
+	  convert from age</option>
+	<option value="d2stand" class="show4stable hide4geochron">
+	  Convert from &delta;-values</option>
+      </select>
+      <span class="hide4stable show4geochron">as
+	<select id="standtype" onchange="togglestandtype();">
+	  <option value="measured">measured</option>
+	  <option value="commonradio" selected>common + radiogenic</option>
+	</select>
+      </span>
+      <p></p>
+      <span class="hidden show4preset">Choose a standard:
+	<select id="presets" onchange="preset2standard()">
+	  <option disabled selected value="select"> -- select an option -- </option>
+	  <option class="hide4stable show4geochron" value="Plesovice">Plesovice zircon</option>
+	  <option class="hide4stable show4geochron" value="Qinghu">Qinghu zircon</option>
+	  <option class="hide4stable show4geochron" value="Temora">Temora zircon</option>
+	  <option class="hide4stable show4geochron" value="44069">44069 monazite</option>
+	  <optgroup class="show4stable hide4geochron" label="oxygen">
+	    <option class="show4stable hide4geochron" value="NBS28">NBS28 quartz</option>
+	  </optgroup>
+	  <optgroup class="show4stable hide4geochron" label="sulphur">
+	    <option class="show4stable hide4geochron" value="Sonora">Sonora pyrite</option>
+	  </optgroup>
+	  <option class="show4stable hide4geochron" value="other">other</option>
+	</select>
+	<p></p>
+      </span>
+      <span class="hidden show4t2stand">
+	t=<input type="text" id="t" class="narrowtext">,
+	s[t]=<input type="text" id="st" class="narrowtext">Ma
+	<button class="mainbutton" id="convert-t2stand" onclick="t2stand()">Convert</button>
+	<p></p>
+      </span>
+      <span class="hidden show4d2stand">
+	&delta;-values: <table id="deltab" class="normalfont"></table><br>
+	Covariance matrix: <table id="delcovtab" class="normalfont"></table><br>
+	Reference material:
+	<select id="deltaref" onchange="deltaref()">
+	  <option disabled selected value="select"> -- select an option -- </option>
+	  <option value="VSMOW-O">VSMOW (O)</option>
+	  <option value="troilite-S">troilite (S)</option>
+	  <option value="other">other</option>
+	</select>
+	<p></p>
+	<table id="delreftab" class="normalfont"></table>
+	<p></p>
+	<button class="mainbutton" id="convert-d2stand" onclick="d2stand()">Convert</button>
+	<p></p>
+      </span>
+      <span id="mismatch-warning" class="hidden red">
+	Standard ratios do not match measured ratios!<p></p>
+      </span>
+      Logratios: <table id="standlr" class="normalfont"></table><br>
+      Covariance matrix: <table id="standcov" class="normalfont"></table><br>
+      <span class="show4geochron hide4stable">
+	Pair standard ratios with measurements:<br>
+	<table id="pairing" class="normalfont"></table>
+	<p></p>
+      </span>
+    </li>
+    <li>
+      Select standard aliquots:
+      <p></p>
+      Prefix: <input type="text" id="prefix" onchange="updateStandardPrefix()">
+      <p></p>
+      <table id="aliquots" class="normalfont"></table>
+      <p></p>
+    </li>
+    <li>
+      <button class="mainbutton" id="calibrate" onclick="calibrator()">Calibrate</button>
+    </li>
+  </ol>
 </left>
 
 <right>

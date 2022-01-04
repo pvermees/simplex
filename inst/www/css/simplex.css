@@ -18,13 +18,13 @@ left {
     left:0;
     right:50%;
     top:50px; 
-    bottom:50px; 
+    bottom:0px; 
     padding:0;
     z-index:2;
 }
 
 right {
-    overflow:auto;
+    overflow:scroll;
     position:fixed;
     left:50%;
     width:50%;
@@ -134,4 +134,12 @@ input[type="file"] {
     padding: 4px 8px;
     cursor: pointer;
     background-color: #ffdddd;
+}
+
+.red {
+    color: red;
+}
+
+.narrowtext {
+    width: 10ch
 }
