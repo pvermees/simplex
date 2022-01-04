@@ -18,7 +18,7 @@
 	<option value="preset2stand">load presets</option>
 	<option value="t2stand" class="hide4stable show4geochron">
 	  convert from age</option>
-	<option value="del2stand" class="show4stable hide4geochron">
+	<option value="d2stand" class="show4stable hide4geochron">
 	  Convert from &delta;-values</option>
       </select>
       <span class="hide4stable show4geochron">as
@@ -51,7 +51,7 @@
 	<button class="mainbutton" id="convert-t2stand" onclick="t2stand()">Convert</button>
 	<p></p>
       </span>
-      <span class="hidden show4del2stand">
+      <span class="hidden show4d2stand">
 	&delta;-values: <table id="deltab" class="normalfont"></table><br>
 	Covariance matrix: <table id="delcovtab" class="normalfont"></table><br>
 	Reference material:
@@ -64,7 +64,7 @@
 	<p></p>
 	<table id="delreftab" class="normalfont"></table>
 	<p></p>
-	<button class="mainbutton" id="convert-del2stand" onclick="del2stand()">Convert</button>
+	<button class="mainbutton" id="convert-d2stand" onclick="d2stand()">Convert</button>
 	<p></p>
       </span>
       <span id="mismatch-warning" class="hidden red">

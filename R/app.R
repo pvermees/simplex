@@ -119,6 +119,12 @@ t2stand <- function(x){
     out$calibration$stand <- standard(tst=tst,measured=measured)
     result2json(out)
 }
+d2stand <- function(x){
+    del <- x$calibration$del
+    out <- as.simplex(x)
+    out$calibration$stand <- standard(del=del,ref=del$ref)
+    result2json(out)
+}
 
 createcalibration <- function(x){
     measured <- (x$calibration$standtype=='measured')
@@ -236,6 +242,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             createcalibration=createcalibration,
             createpairing=createpairing,
             t2stand=t2stand,
+            del2stand=del2stand,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,

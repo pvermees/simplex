@@ -271,3 +271,25 @@ JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't fin
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 JavaScript error: resource://gre/actors/SelectChild.jsm, line 104: TypeError: this.element is null
 JavaScript error: http://127.0.0.1:8000/, line 1: ReferenceError: del2stand is not defined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Current thread has paused or resumed
+JavaScript warning: resource://devtools/server/actors/utils/event-loop.js, line 83: debuggee 'self-hosted:695' would run
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+console.error: "Error in enumIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumNonIndexedProperties" (new Error("Can not send request 'enumProperties' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymbols' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: resource://devtools/client/debugger/src/utils/context.js, line 36: Error: Page has navigated
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 734: TypeError: edel.deg is undefined
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined

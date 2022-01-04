@@ -106,7 +106,7 @@ function resetglob(){
     glob.samples = [];
     glob.calibration = {
 	'caltype': null, // 'average' or 'regression'
-	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'del2stand'
+	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'd2stand'
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
 	'tst': [0,0], 
@@ -631,11 +631,11 @@ function togglestandcomp(){
     } else {
 	hide('.show4t2stand');
     }
-    if (sc === 'del2stand'){
+    if (sc === 'd2stand'){
 	showcaldel();
-	show('.show4del2stand');
+	show('.show4d2stand');
     } else {
-	hide('.show4del2stand');
+	hide('.show4d2stand');
     }
 }
 function showcalpreset(){
@@ -687,17 +687,17 @@ function showcaldel(){
     }
     let elr = document.getElementById('standlr');
     let header = elr.deg.getColumnHeaders();
-    let edel = document.getElementById('deltab');
-    let ecov = document.getElementById('deltab');
-    let eref = document.getElementById('delreftab');
     if (create){
+	let edel = document.getElementById('deltab');
+	let ecov = document.getElementById('delcovtab');
+	let eref = document.getElementById('delreftab');
 	edel.deg = createDataEntryGrid('deltab',header,1);
 	ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
 	eref.deg = createDataEntryGrid('delreftab',header,1);
     } else {
-	edel.deg = loadTable([cal.del.val],header,'deltab',1);
-	ecov.deg = loadTable(cal.del.cov,header,'delcovtab',header.length);
-	eref.deg = loadTable([cal.del.refval],header,'delreftab',1);
+	loadTable([cal.del.val],header,'deltab',1);
+	loadTable(cal.del.cov,header,'delcovtab',header.length);
+	loadTable([cal.del.refval],header,'delreftab',1);
     }
 }
 function togglestandtype(){
@@ -719,6 +719,22 @@ function t2stand(){
     cal.tst[0] = parseFloat(document.getElementById('t').value);
     cal.tst[1] = parseFloat(document.getElementById('st').value);
     shinylight.call('t2stand', {x:glob}, null).then(
+	result => {
+	    result2simplex(result);
+	    setstandcomp();
+	},
+	error => alert(error)
+    )
+}
+function d2stand(){
+    let cal = glob.calibration;
+    let edel = document.getElementById('deltab');
+    let ecov = document.getElementById('delcovtab');
+    let eref = document.getElementById('delreftab');
+    cal.del.val = edel.deg.getCells();
+    cal.del.cov = ecov.deg.getColumns();
+    cal.del.refval = eref.deg.getCells();
+    shinylight.call('d2stand', {x:glob}, null).then(
 	result => {
 	    result2simplex(result);
 	    setstandcomp();
