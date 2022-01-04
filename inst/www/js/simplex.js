@@ -26,8 +26,6 @@ var glob = {
 	'tst': null,
 	'ref': null,
 	'del': {
-	    'val': null,
-	    'cov': null,
 	    'ratios': null,
 	    'delval': null,
 	    'delcov': null,
@@ -35,7 +33,7 @@ var glob = {
 	    'refcov': null
 	}
     },
-    'sampleprefix': null,
+    'sampleprefix': '',
     'standards': [],
     'samples': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
@@ -104,7 +102,7 @@ function loadPresets(){
 function resetglob(){
     glob.i =  0;
     glob.multi = false;
-    glob.sampleprefix = null;
+    glob.sampleprefix = '';
     glob.standards = [];
     glob.samples = [];
     glob.calibration = {
@@ -677,8 +675,8 @@ function showcaldel(){
 	    cal.del.refval = stand.ref.val;
 	    cal.del.refcov = stand.ref.cov;
 	}
-	if (stand.hasOwnProperty('ref') & stand.ref.hasOwnProperty('ref')){
-	    switch(stand.ref.ref[0]){
+	if (stand.hasOwnProperty('ref') & stand.ref.hasOwnProperty('preset')){
+	    switch(stand.ref.preset[0]){
 	    case 'VSMOW':
 		document.getElementById('deltaref').value = 'VSMOW-O';
 		break;
@@ -822,12 +820,12 @@ function registerStandards(){
 }
 
 // 5. samples
+
 function samples(){
     selectButton(4);
     loadPage("samples.html").then(
-	() => {
-	    setsampsel();
-	}, error => alert(error)
+	() => setsampsel(),
+	error => alert(error)
     );
 }
 function setsampsel(){

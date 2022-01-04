@@ -118,7 +118,7 @@ del2stand <- function(del,ref){
     if (!any(keep)) stop('Standard isotopes must match reference.')
     out <- list()
     out$del <- list(val=del$val,cov=del$cov)
-    out$ref <- list(ref=ref$ref,val=ref$val,cov=ref$cov)
+    out$ref <- list(preset=ref$preset,val=ref$val,cov=ref$cov)
     out$val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
     out$cov <- J %*% data.matrix(del$cov) %*% t(J)
@@ -130,7 +130,7 @@ VSMOW <- function(){
     relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
     out <- delhelper(num = c('O17','O18'),den = 'O16',
                      val=log(O678),cov=diag(relerr^2))
-    out$ref <- 'VSMOW'
+    out$preset <- 'VSMOW'
     out
 }
 
@@ -139,7 +139,7 @@ troilite <- function(){
     relerr <- c(0.047,0.0020,20)/S2346
     out <- delhelper(num=c('S33','S34','S36'),den='S32',
                      val=-log(S2346),cov=diag(relerr^2))
-    out$ref <- 'troilite'
+    out$preset <- 'troilite'
     out
 }
 

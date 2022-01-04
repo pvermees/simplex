@@ -80,5 +80,5 @@ def oxygencalibrationtest():
     time.sleep(0.2)
     click("calibration")
     select("standcomp","d2stand")
-    #click("convert-d2stand")
+    click("convert-d2stand")
     
