@@ -56,6 +56,7 @@ standard <- function(preset,tst,measured,del,ref){
         } else {
             stop("Invalid input to standard(...).")
         }
+        out$preset <- preset
     } else if (!missing(tst)){
         geochron <- TRUE
         out <- age2stand(tst)

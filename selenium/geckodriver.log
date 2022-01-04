@@ -235,3 +235,12 @@ console.error: "Error in enumSymbols" (new Error("Can not send request 'enumSymb
 console.error: (new Error("Can not send request 'prototype' because front 'obj' is already destroyed.", "resource://devtools/shared/protocol/Front/FrontClassWithSpec.js", 28))
 JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
 JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: values is undefined
+console.error: (new Error("CodeMirror instance does not exist. You must wait for it to be appended to the DOM.", "resource://devtools/client/shared/sourceeditor/editor.js", 276))
+1641293921950	addons.xpi	ERROR	System addon update list error Error: Failed downloading XML, status: 0, reason: error
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 661: TypeError: stand.del.ref is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 661: TypeError: stand.del.ref is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 675: ReferenceError: cal is not defined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 649: ReferenceError: cal is not defined

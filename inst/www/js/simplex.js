@@ -23,8 +23,14 @@ var glob = {
 	'standcomp': null,
 	'standtype': null,
 	'preset': null,
-	'tst': [],
-	'delref': null
+	'tst': null,
+	'ref': null,
+	'del': {
+	    'val': null,
+	    'cov': null,
+	    'refval': null,
+	    'refcov': null
+	}
     },
     'sampleprefix': null,
     'standards': [],
@@ -103,7 +109,14 @@ function resetglob(){
 	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'del2stand'
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
-	'tst': [0,0]
+	'tst': [0,0], 
+	'ref': null, // 'VSMOW-O', 'troilite-S', ...
+	'del': {
+	    'val': null,
+	    'cov': null,
+	    'refval': null,
+	    'refcov': null
+	}
     }
 }
 
@@ -500,7 +513,7 @@ function showCalibration(){
 }
 function prepareCalibration(){
     let cal = glob.calibration;
-    if (cal.caltype==null){
+    if (cal.caltype==null){ // geochron
 	cal.caltype = glob.multi ? 'average' : 'regression';
     }
     document.getElementById('caltype').value = cal.caltype;
@@ -509,8 +522,6 @@ function prepareCalibration(){
     if (cal.preset!==null){
 	document.getElementById('presets').value = cal.preset;
     }
-    document.getElementById('t').value = cal.tst[0];
-    document.getElementById('st').value = cal.tst[1];
 }
 function createCalibration(callback){
     shinylight.call('createcalibration', {x:glob}, null).then(
@@ -591,29 +602,6 @@ function setstandcomp(){
     loadTable(cov,header,'standcov',nr);
     togglemismatchwarning();
 }
-function showdelcovref(){
-    let init = false;
-    if (glob.simplex.hasOwnProperty('calibration')){ // write something similar for tst
-	let stand = glob.simplex.calibration.stand;
-	if (stand.hasOwnProperty('del')){
-	    let header = glob.names.calibration.stand.del.val;
-	    let nr = header.length;
-	    loadTable([stand.del.val],header,'deltab',1);
-	    loadTable(stand.del.cov,header,'delcovtab',nr);
-	    loadTable([stand.ref.val],header,'delreftab',1);
-	}
-    }
-    if (init){
-	let elr = document.getElementById('standlr');
-	let header = elr.deg.getColumnHeaders();
-	let edel = document.getElementById('deltab');
-	let ecov = document.getElementById('deltab');
-	let eref = document.getElementById('delreftab');
-	edel.deg = createDataEntryGrid('deltab',header,1);
-	ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
-	eref.deg = createDataEntryGrid('delreftab',header,1);
-    }
-}
 function togglemismatchwarning(){
     let header = glob.names.calibration.stand.val;
     let m = glob.simplex.method;
@@ -637,15 +625,56 @@ function togglestandcomp(){
 	hide('.show4preset')
     }
     if (sc === 't2stand'){
+	showtst();
 	show('.show4t2stand');
     } else {
 	hide('.show4t2stand');
     }
     if (sc === 'del2stand'){
-	showdelcovref();
+	showcaldel();
 	show('.show4del2stand');
     } else {
 	hide('.show4del2stand');
+    }
+}
+function showtst(){
+    let cal = glob.calibration;
+    if (glob.simplex.hasOwnProperty('calibration')){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.hasOwnProperty('tst')){
+	    cal.tst[0] = stand.tst[0];
+	    cal.tst[1] = stand.tst[1];
+	}
+    }
+    document.getElementById('t').value = cal.tst[0];
+    document.getElementById('st').value = cal.tst[1];
+}
+function showcaldel(){
+    let create = true;
+    let cal = glob.calibration;
+    if (glob.simplex.hasOwnProperty('calibration')){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.hasOwnProperty('del')){
+	    create = false;
+	    cal.del.val = stand.del.val;
+	    cal.del.cov = stand.del.cov;
+	    cal.del.refval = stand.ref.val;
+	    cal.del.refcov = stand.ref.cov;
+	}
+    }
+    let elr = document.getElementById('standlr');
+    let header = elr.deg.getColumnHeaders();
+    let edel = document.getElementById('deltab');
+    let ecov = document.getElementById('deltab');
+    let eref = document.getElementById('delreftab');
+    if (create){
+	edel.deg = createDataEntryGrid('deltab',header,1);
+	ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
+	eref.deg = createDataEntryGrid('delreftab',header,1);
+    } else {
+	edel.deg = loadTable([cal.del.val],header,'deltab',1);
+	ecov.deg = loadTable(cal.del.cov,header,'delcovtab',header.length);
+	eref.deg = loadTable([cal.del.refval],header,'delreftab',1);
     }
 }
 function togglestandtype(){
