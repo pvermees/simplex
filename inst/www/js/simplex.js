@@ -28,6 +28,9 @@ var glob = {
 	'del': {
 	    'val': null,
 	    'cov': null,
+	    'ratios': null,
+	    'delval': null,
+	    'delcov': null,
 	    'refval': null,
 	    'refcov': null
 	}
@@ -112,6 +115,7 @@ function resetglob(){
 	'tst': [0,0], 
 	'ref': null, // 'VSMOW-O', 'troilite-S', ...
 	'del': {
+	    'ratios': null,
 	    'val': null,
 	    'cov': null,
 	    'refval': null,
@@ -667,8 +671,9 @@ function showcaldel(){
 	let stand = glob.simplex.calibration.stand;
 	if (stand.hasOwnProperty('del')){
 	    create = false;
-	    cal.del.val = stand.del.val;
-	    cal.del.cov = stand.del.cov;
+	    cal.del.ratios = glob.names.calibration.stand.del.val;
+	    cal.del.delval = stand.del.val;
+	    cal.del.delcov = stand.del.cov;
 	    cal.del.refval = stand.ref.val;
 	    cal.del.refcov = stand.ref.cov;
 	}
@@ -686,8 +691,9 @@ function showcaldel(){
 	}
     }
     let elr = document.getElementById('standlr');
-    let header = elr.deg.getColumnHeaders();
     if (create){
+	let header = elr.deg.getColumnHeaders();
+	cal.del.ratios = header;
 	let edel = document.getElementById('deltab');
 	let ecov = document.getElementById('delcovtab');
 	let eref = document.getElementById('delreftab');
@@ -695,8 +701,9 @@ function showcaldel(){
 	ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
 	eref.deg = createDataEntryGrid('delreftab',header,1);
     } else {
-	loadTable([cal.del.val],header,'deltab',1);
-	loadTable(cal.del.cov,header,'delcovtab',header.length);
+	let header = cal.del.ratios;
+	loadTable([cal.del.delval],header,'deltab',1);
+	loadTable(cal.del.delcov,header,'delcovtab',header.length);
 	loadTable([cal.del.refval],header,'delreftab',1);
     }
 }
@@ -731,8 +738,8 @@ function d2stand(){
     let edel = document.getElementById('deltab');
     let ecov = document.getElementById('delcovtab');
     let eref = document.getElementById('delreftab');
-    cal.del.val = edel.deg.getCells();
-    cal.del.cov = ecov.deg.getColumns();
+    cal.del.delval = edel.deg.getCells();
+    cal.del.delcov = ecov.deg.getColumns();
     cal.del.refval = eref.deg.getCells();
     shinylight.call('d2stand', {x:glob}, null).then(
 	result => {

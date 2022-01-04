@@ -120,9 +120,26 @@ t2stand <- function(x){
     result2json(out)
 }
 d2stand <- function(x){
-    del <- x$calibration$del
+    d <- x$calibration$del
+    delval <- as.numeric(d$delval[1,])
+    refval <- as.numeric(d$refval[1,])
+    nr <- length(delval)
+    delcov <- matrix(0,nr,nr)
+    refcov <- matrix(0,nr,nr)
+    for (r in 1:nr){
+        delcov[r,] <- as.numeric(d$delcov[[r]])
+        refcov[r,] <- as.numeric(d$refcov[[r]])
+    }
+    names(delval) <- d$ratios
+    rownames(delcov) <- d$ratios
+    colnames(delcov) <- d$ratios
+    names(refval) <- d$ratios
+    rownames(refcov) <- d$ratios
+    colnames(refcov) <- d$ratios
+    del <- list(val=delval,cov=delcov)
+    ref <- list(val=refval,cov=refcov)
     out <- as.simplex(x)
-    out$calibration$stand <- standard(del=del,ref=del$ref)
+    out$calibration$stand <- standard(del=del,ref=ref)
     result2json(out)
 }
 
@@ -242,7 +259,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             createcalibration=createcalibration,
             createpairing=createpairing,
             t2stand=t2stand,
-            del2stand=del2stand,
+            d2stand=d2stand,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             plotresults=plotresults,

@@ -67,7 +67,7 @@ def geochroncalibrationtest():
     st = d.find_element("id","st")
     st.clear()
     st.send_keys(10)
-    click("convert")
+    click("convert-t2stand")
 
 def oxygencalibrationtest():
     click("setup")
@@ -79,5 +79,6 @@ def oxygencalibrationtest():
     click("logratios")
     time.sleep(0.2)
     click("calibration")
-    select("standcomp","del2stand")
+    select("standcomp","d2stand")
+    #click("convert-d2stand")
     

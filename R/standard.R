@@ -43,15 +43,17 @@ standard <- function(preset,tst,measured,del,ref){
             out <- age2stand(tst=c(416.75,0.12))
         } else if (preset=='NBS28'){
             geochron <- FALSE
-            del <- list(num=c('O17','O18'),den='O16',
-                        val=c(4.79,9.56),
-                        cov=diag(c(0.05,0.11))^2)
+            del <- delhelper(num=c('O17','O18'),
+                             den='O16',
+                             val=c(4.79,9.56),
+                             cov=diag(c(0.05,0.11))^2)
             out <- del2stand(del,ref=VSMOW())
         } else if (preset=='Sonora'){ # temporary value
             geochron <- FALSE
-            del <- list(num=c('S33','S34','S36'),den='S32',
-                        val=c(0.83,1.61,3.25),
-                        cov=diag(c(0.03,0.08,0.03))^2)
+            del <- delhelper(num=c('S33','S34','S36'),
+                             den='S32',
+                             val=c(0.83,1.61,3.25),
+                             cov=diag(c(0.03,0.08,0.03))^2)
             out <- del2stand(del,ref=troilite())
         } else {
             stop("Invalid input to standard(...).")
@@ -87,6 +89,15 @@ standard <- function(preset,tst,measured,del,ref){
     out
 }
 
+delhelper <- function(num,den,val,cov){
+    ratios <- paste0(num,'/',den)
+    out <- list(val=val,cov=cov)
+    names(out$val) <- ratios
+    rownames(out$cov) <- ratios
+    colnames(out$cov) <- ratios
+    out
+}
+
 age2stand <- function(tst){
     num <- c('Pb204','Pb204','Pb206','Pb208')
     den <- c('Pb206','Pb208','U238','Th232')
@@ -103,41 +114,33 @@ age2stand <- function(tst){
 }
 
 del2stand <- function(del,ref){
-    keep <- (ref$num %in% del$num) & (ref$den %in% del$den)
+    keep <- (names(ref$val) %in% names(del$val))
     if (!any(keep)) stop('Standard isotopes must match reference.')
-    ratios <- paste0(del$num,'/',del$den)
     out <- list()
     out$del <- list(val=del$val,cov=del$cov)
     out$ref <- list(ref=ref$ref,val=ref$val,cov=ref$cov)
     out$val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
-    out$covmat <- J %*% data.matrix(del$cov) %*% t(J)
-    names(out$val) <- ratios
-    rownames(out$cov) <- ratios
-    colnames(out$cov) <- ratios
-    names(out$del$val) <- ratios
-    rownames(out$del$cov) <- ratios
-    colnames(out$del$cov) <- ratios
-    names(out$ref$val) <- ratios
-    rownames(out$ref$cov) <- ratios
-    colnames(out$ref$cov) <- ratios
+    out$cov <- J %*% data.matrix(del$cov) %*% t(J)
     out
 }
 
 VSMOW <- function(){
     O678 <- c(0.3799e-3,2.00520e-3)
     relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
-    list(ref='VSMOW',
-         num = c('O17','O18'),den = 'O16',
-         val=log(O678),cov=diag(relerr^2))
+    out <- delhelper(num = c('O17','O18'),den = 'O16',
+                     val=log(O678),cov=diag(relerr^2))
+    out$ref <- 'VSMOW'
+    out
 }
 
 troilite <- function(){
     S2346 <- c(126.948,22.6436,6515)
     relerr <- c(0.047,0.0020,20)/S2346
-    list(ref='troilite',
-         num=c('S33','S34','S36'),den='S32',
-         val=-log(S2346),cov=diag(relerr^2))
+    out <- delhelper(num=c('S33','S34','S36'),den='S32',
+                     val=-log(S2346),cov=diag(relerr^2))
+    out$ref <- 'troilite'
+    out
 }
 
 skeletonstand <- function(lr,measured=TRUE){
