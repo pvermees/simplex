@@ -173,7 +173,7 @@ calibrator <- function(x,...){
         snms <- NULL
     }
     out <- calibration(dat,stand=stnd,pairing=prng,prefix=prfx,snames=snms)
-    plot.calibration(out,...)
+    plot.calibration(out,show.numbers=x$shownum,...)
     result2json(out)
 }
 
@@ -190,7 +190,7 @@ calibrate_it <- function(x){
 
 calibrateSamples <- function(x){
     out <- calibrate_it(x)
-    plot.calibrated(out)
+    plot.calibrated(out,show.numbers=x$shownum)
     out
 }
 

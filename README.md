@@ -48,17 +48,20 @@ The `process` function groups all the main data reduction steps,
 including the drift correction, logratio calculation, and calibration:
 
 ```
-m <- method('GA-UPb')
-s <- standard(preset="Temora",prefix='TEM')
-cd <- process(f='SHRIMP.pd',m=m,stand=s)
-plot.calibration(cd)
+dat <- read_data(f='SHRIMP.pd',m=method('GA-UPb'))
+lr <- logratios(dat)
+stand <- standard('Temora')
+paired <- pairing(lr,stand=stand)
+cal <- calibration(lr,stand=stand,pairing=paired,prefix="TEM")
+result <- calibrate(cal,exterr=TRUE)
+plot(result)
 ```
 
 Extracting the results for 91500 zircon, saving the results as a
 `.csv` file and plotting in `IsoplotR`:
 
 ```
-samp <- subset(cd,prefix='915')
+samp <- subset(result,prefix='915')
 tab <- data2table(samp)
 write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
 UPb <- simplex2IsoplotR(samp)

@@ -18,6 +18,7 @@ var glob = {
     'ratios': true,
     'log': true,
     'xy': false,
+    'shownum': false,
     'calibration': {
 	'caltype': null,
 	'standcomp': null,
@@ -499,6 +500,7 @@ function calibration(){
 	    } else {
 		createCalibration(showCalibration);
 	    }
+	    document.getElementById("shownum").checked = glob.shownum;
 	},
 	error => alert(error)
     );
@@ -533,6 +535,9 @@ function createCalibration(callback){
 	() => callback(),
 	error => alert(error)
     );
+}
+function shownum(){
+    glob.shownum = document.getElementById("shownum").checked;
 }
 
 // I.
@@ -824,8 +829,10 @@ function registerStandards(){
 function samples(){
     selectButton(4);
     loadPage("samples.html").then(
-	() => setsampsel(),
-	error => alert(error)
+	() => {
+	    setsampsel();
+	    document.getElementById("shownum").checked = glob.shownum;
+	}, error => alert(error)
     );
 }
 function setsampsel(){

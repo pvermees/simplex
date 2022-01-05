@@ -45,7 +45,7 @@ logratios.spot <- function(x){
     fit <- stats::optim(par=init,f=fn,method='L-BFGS-B',
                         lower=init-2,upper=init+2,spot=x,
                         groups=groups,hessian=TRUE)
-    fit$cov <- MASS::ginv(fit$hessian)
+    fit$cov <- MASS::ginv(IsoplotR:::nearPD(fit$hessian))
     pred <- do.call(what=fn,
                     args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))
     out <- common2original(fit=fit,num=num,den=den,groups=groups)
