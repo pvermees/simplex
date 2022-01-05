@@ -134,7 +134,7 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
     out <- matrix(NA,nrow=ns,nc=nc)
     cnames <- rep(NA,nc)
     ratios <- paste0(x$method$num,'/',x$method$den)
-    comb <- utils::combn(ratios,m=2)
+    if (nr>1) comb <- utils::combn(ratios,m=2)
     if (log){
         cnames[si+2*(1:nr)-1] <- paste0('ln[',ratios,']')
         cnames[si+2*(1:nr)] <- paste0('s(ln[',ratios,'])')

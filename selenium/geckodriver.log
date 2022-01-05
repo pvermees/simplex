@@ -374,3 +374,7 @@ JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 898: TypeError: can'
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 898: TypeError: can't convert undefined to object
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
 JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 222: TypeError: document.getElementById(...) is null
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 222: TypeError: document.getElementById(...) is null
