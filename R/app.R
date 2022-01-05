@@ -196,7 +196,7 @@ calibrateSamples <- function(x){
 
 calibratedTable <- function(x){
     cal <- calibrate_it(x)
-    tab <- data2table(cal)
+    tab <- data2table.calibrated(cal)
     rownames(tab) <- NULL
     as.data.frame(tab)
 }
