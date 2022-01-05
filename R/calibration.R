@@ -244,6 +244,12 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
         matplot(rbind(1:ns,1:ns),tab[c('ll','ul'),],
                 type='l',lty=1,col='black',bty='n',
                 xlab='standard #',ylab='')
+        dsd <- IsoplotR:::roundit(cal$val,tfact*sqrt(cal$cov),sigdig=2)
+        del <- dsd[1]
+        err <- dsd[2]
+        rat <- names(cal$val)
+        tit <- substitute(paste(rat,'=',del %+-% err,' (95% CI)'))
+        mtext(text=tit)
         points(1:ns,tab['x',],pch=16)
         lines(c(1,ns),rep(cal$val,2),lty=2)
         lines(c(1,ns),rep(cal$val-tfact*sqrt(cal$cov),2),lty=3)

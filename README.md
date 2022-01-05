@@ -64,8 +64,6 @@ Extracting the results for 91500 zircon, saving the results as a
 samp <- subset(result,prefix='915')
 tab <- data2table(samp)
 write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
-UPb <- simplex2IsoplotR(samp)
-IsoplotR::concordia(UPb,type=2,show.age=1)
 ```
 
 Stable isotope analysis of a built-in oxygen dataset:
