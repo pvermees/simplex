@@ -2,8 +2,9 @@
 
   <div>Select samples by prefix:
     <input type="text" id="prefix" onchange="updateSamplePrefix()">
-    <button class="mainbutton" onclick="calibrate()">Calibrate</button>
+    <button class="mainbutton" onclick="calibrate(true)">Calibrate</button>
     <input type="checkbox" id="shownum" onchange="shownum()">Label aliquots
+    <button class="mainbutton" onclick="calibrate(false)">Tabulate</button>
   </div>
 
   <div>Aliquots to analyse:
@@ -14,6 +15,9 @@
 
 <right>
   <img class="plot" id="sample-calibration-plot">
+  <div class="table">
+    <table class="normalfont" id="sample-calibration-table"></table>
+  </div>
 </right>
 
 

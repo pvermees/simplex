@@ -194,6 +194,13 @@ calibrateSamples <- function(x){
     out
 }
 
+calibratedTable <- function(x){
+    cal <- calibrate_it(x)
+    tab <- data2table(cal)
+    rownames(tab) <- NULL
+    as.data.frame(tab)
+}
+
 plotresults <- function(x){
     cal <- calibrate_it(x)
     if (stable(cal)){
@@ -262,6 +269,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             d2stand=d2stand,
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
+            calibratedTable=calibratedTable,
             plotresults=plotresults,
             resultstable=resultstable,
             export2isoplotr=export2isoplotr
