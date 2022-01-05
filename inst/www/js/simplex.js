@@ -18,6 +18,7 @@ var glob = {
     'ratios': true,
     'log': true,
     'xy': false,
+    'shownum': false,
     'calibration': {
 	'caltype': null,
 	'standcomp': null,
@@ -499,6 +500,7 @@ function calibration(){
 	    } else {
 		createCalibration(showCalibration);
 	    }
+	    document.getElementById("shownum").checked = glob.shownum;
 	},
 	error => alert(error)
     );
@@ -533,6 +535,9 @@ function createCalibration(callback){
 	() => callback(),
 	error => alert(error)
     );
+}
+function shownum(){
+    glob.shownum = document.getElementById("shownum").checked;
 }
 
 // I.
@@ -824,8 +829,10 @@ function registerStandards(){
 function samples(){
     selectButton(4);
     loadPage("samples.html").then(
-	() => setsampsel(),
-	error => alert(error)
+	() => {
+	    setsampsel();
+	    document.getElementById("shownum").checked = glob.shownum;
+	}, error => alert(error)
     );
 }
 function setsampsel(){
@@ -862,16 +869,10 @@ function markSamples(){
     }
     loadTable(dat,['aliquots','selected?'],'aliquots',nk);
 }
-
-function calibrate(){
+function calibrate(plot){
     registerSamples();
-    shinylight.call("calibrateSamples",
-		    {x:glob},
-		    'sample-calibration-plot',
-		    {'imgType': 'svg'}).then(
-	result => shinylight.setElementPlot('sample-calibration-plot', result.plot),
-	error => alert(error)
-    )
+    if (plot) calibrate_plot()
+    else calibrate_table()
 }
 function registerSamples(){
     let e = document.getElementById('aliquots');
@@ -880,6 +881,28 @@ function registerSamples(){
     for (let i=0; i<dat.aliquots.length; i++){
 	if (dat['selected?'][i]==='yes') glob.samples.push(dat.aliquots[i]);
     }
+}
+function calibrate_plot(){
+    show('.plot');
+    hide('.table');
+    shinylight.call("calibrateSamples",{x:glob},'sample-calibration-plot',{'imgType': 'svg'})
+	.then(
+	    result => shinylight.setElementPlot('sample-calibration-plot', result.plot),
+	    error => alert(error)
+	)
+}
+function calibrate_table(){
+    show('.table');
+    hide('.plot');
+    shinylight.call("calibratedTable", {x:glob}, null).then(
+	result => {
+	    let nr = result.data.length;
+	    let header = Object.keys(result.data[0]);
+	    let tab = createDataEntryGrid('sample-calibration-table', header, nr);
+	    shinylight.setGridResult(tab, result);
+	},
+	error => alert(error)
+    );
 }
 
 // 6. finish

@@ -48,37 +48,39 @@ The `process` function groups all the main data reduction steps,
 including the drift correction, logratio calculation, and calibration:
 
 ```
-m <- method('GA-UPb')
-s <- standard(preset="Temora",prefix='TEM')
-cd <- process(f='SHRIMP.pd',m=m,stand=s)
-plot.calibration(cd)
+dat <- read_data(f='SHRIMP.pd',m=method('GA-UPb'))
+lr <- logratios(dat)
+stand <- standard('Temora')
+paired <- pairing(lr,stand=stand)
+cal <- calibration(lr,stand=stand,pairing=paired,prefix="TEM")
+result <- calibrate(cal,exterr=TRUE)
+plot(result)
 ```
 
 Extracting the results for 91500 zircon, saving the results as a
 `.csv` file and plotting in `IsoplotR`:
 
 ```
-samp <- subset(cd,prefix='915')
+samp <- subset(result,prefix='915')
 tab <- data2table(samp)
 write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
-UPb <- simplex2IsoplotR(samp)
-IsoplotR::concordia(UPb,type=2,show.age=1)
 ```
 
-Stable isotope analysis of a built-in oxygen dataset:
+Stable isotope analysis of oxygen data:
 
 ```
-m <- method('IGG-O')
-s <- standard(preset="NBS28")
-cd <- process(f='*.asc',m=m,stand=s)
-del <- delta(cd)
-tab <- data2table(del)
+dat <- read_data(f='*.asc',m=method('IGG-O'))
+lr <- logratios(dat)
+stand <- standard('NBS28')
+cal <- calibration(lr,stand=stand,prefix="NBS28")
+Cameca_oxygen <- calibrate(cal,exterr=TRUE)
+tab <- data2table(Cameca_oxygen)
 ```
 
 Built-in help can be obtained at the command prompt:
 
 ```
-?process
+?logratios
 ```
 
 To view a full list of functions:

@@ -121,6 +121,7 @@ del2stand <- function(del,ref){
     out$ref <- list(preset=ref$preset,val=ref$val,cov=ref$cov)
     out$val <- log(1 + del$val/1000) + ref$val[keep]
     J <- diag(sum(keep))/(1000 + del$val)
+    rownames(J) <- names(del$val)
     out$cov <- J %*% data.matrix(del$cov) %*% t(J)
     out
 }
