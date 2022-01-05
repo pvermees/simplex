@@ -66,20 +66,21 @@ tab <- data2table(samp)
 write.csv(tab,file='~/Desktop/91500.csv',row.names=FALSE)
 ```
 
-Stable isotope analysis of a built-in oxygen dataset:
+Stable isotope analysis of oxygen data:
 
 ```
-m <- method('IGG-O')
-s <- standard(preset="NBS28")
-cd <- process(f='*.asc',m=m,stand=s)
-del <- delta(cd)
-tab <- data2table(del)
+dat <- read_data(f='*.asc',m=method('IGG-O'))
+lr <- logratios(dat)
+stand <- standard('NBS28')
+cal <- calibration(lr,stand=stand,prefix="NBS28")
+Cameca_oxygen <- calibrate(cal,exterr=TRUE)
+tab <- data2table(Cameca_oxygen)
 ```
 
 Built-in help can be obtained at the command prompt:
 
 ```
-?process
+?logratios
 ```
 
 To view a full list of functions:
