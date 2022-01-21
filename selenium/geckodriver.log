@@ -378,3 +378,10 @@ JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.err
 JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 222: TypeError: document.getElementById(...) is null
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 222: TypeError: document.getElementById(...) is null
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+1641460652573	Marionette	INFO	Stopped listening on port 44159
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+
+###!!! [Parent][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+

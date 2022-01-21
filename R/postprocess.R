@@ -16,23 +16,19 @@
 delta <- function(cd,log=TRUE){
     out <- cd
     del <- list()
-    del$num <- cd$calibrated$num
-    del$den <- cd$calibrated$den
-    ref <- do.call(cd$standard$fetchfun,args=list(dat=cd))$ref
-    logd <- cd$calibrated$lr - rep(ref,length(cd$samples))
+    ref <- cd$calibration$stand$ref
+    logd <- cd$calibrated$val - rep(ref$val,length(cd$samples))
     nd <- length(logd)
     if (log){
-        del$d <- 1000*logd
+        del$val <- 1000*logd
         J <- 1000*diag(nd)
     } else {
-        del$d <- 1000*(exp(logd)-1)
+        del$val <- 1000*(exp(logd)-1)
         J <- 1000*exp(logd)*diag(nd)
     }
     del$cov <- J %*% cd$calibrated$cov %*% t(J)
-    nms <- rep(paste0('delta(',del$num,')'),length(cd$samples))
-    rownames(del$cov) <- nms
-    colnames(del$cov) <- nms
-    names(del$d) <- nms
+    nms <- rep(paste0('delta(',names(ref$val),')'),length(cd$samples))
+    rownames(del$cov) <- colnames(del$cov) <- names(del$val) <- nms
     out$delta <- del
     class(out) <- unique(append('delta',class(cd)))
     out
@@ -118,7 +114,32 @@ data2table.calibrated <- function(x,snames=NULL,i=NULL,
 #' @rdname data2table
 #' @export
 data2table.delta <- function(x,...){
-    data2table_helper(x=x,option='delta',...)
+    d <- x$delta
+    ratios <- x$calibrated$ratios
+    nr <- length(ratios)
+    ns <- length(d$val)/nr
+    nc <- nr*2+nr*(nr-1)/2
+    out <- matrix(0,nrow=ns,ncol=nc)
+    out[,2*(1:nr)-1] <- matrix(d$val,nrow=ns,ncol=nr,byrow=TRUE)
+    out[,2*(1:nr)] <- matrix(sqrt(diag(d$cov)),nrow=ns,ncol=nr,byrow=TRUE)
+    cnames <- rep(NA,nc)
+    cnames[2*(1:nr)-1] <- ratios
+    cnames[2*(1:nr)] <- paste0('s[',ratios,']')
+    ci <- 2*nr
+    cormat <- cov2cor(d$cov)
+    if (nr>1){
+        for (r1 in 1:(nr-1)){
+            i1 <- (0:(ns-1))*nr + r1
+            for (r2 in (r1+1):nr){
+                ci <- ci + 1
+                i2 <- (0:(ns-1))*nr + r2
+                out[,ci] <- diag(cormat[i1,i2])
+                cnames[ci] <- paste0('r[',ratios[r1],',',ratios[r2],']')
+            }
+        }
+    }
+    colnames(out) <- cnames
+    out
 }
 #' @rdname data2table
 #' @export
