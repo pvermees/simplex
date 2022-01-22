@@ -58,70 +58,16 @@ data2table.default <- function(x,...){
 #' @export
 data2table.calibrated <- function(x,cov=FALSE,log=TRUE,...){
     cal <- x$calibrated
-    val <- cal$val
-    E <- cal$cov
-    ns <- length(cal$snames)
-    nr <- length(cal$ratios)
-    if (cov){
-        out <- cbind(val,E)
-        colnames(out) <- c('ratios',rep(cal$ratios,ns))
-        rownames(out) <- rep(cal$snames,each=nr)
-    } else {
-        nc <- 2*nr+nr*(nr-1)/2
-        out <- matrix(0,nrow=ns,ncol=nc)
-        rownames(out) <- cal$snames
-        cnames <- rep(NA,nc)
-        out[,2*(1:nr)-1] <- matrix(val,nrow=ns,ncol=nr,byrow=TRUE)
-        out[,2*(1:nr)] <- matrix(sqrt(diag(E)),nrow=ns,ncol=nr,byrow=TRUE)
-        cnames[2*(1:nr)-1] <- cal$ratios
-        cnames[2*(1:nr)] <- paste0('s[',cal$ratios,']')
-        ci <- 2*nr
-        cormat <- cov2cor(E)
-        if (nr>1){
-            for (r1 in 1:(nr-1)){
-                i1 <- (0:(ns-1))*nr + r1
-                for (r2 in (r1+1):nr){
-                    ci <- ci + 1
-                    i2 <- (0:(ns-1))*nr + r2
-                    out[,ci] <- diag(cormat[i1,i2])
-                    cnames[ci] <- paste0('r[',cal$ratios[r1],
-                                         ',',cal$ratios[r2],']')
-                }
-            }
-        }
-        colnames(out) <- cnames
-    }
-    out
+    data2table_helper(val=cal$val,E=cal$cov,snames=cal$snames,
+                      ratios=cal$ratios,cov=cov)
 }
 #' @rdname data2table
 #' @export
-data2table.delta <- function(x,...){
-    d <- x$delta
-    ratios <- x$calibrated$ratios
-    nr <- length(ratios)
-    ns <- length(d$val)/nr
-    nc <- nr*2+nr*(nr-1)/2
-    out <- matrix(0,nrow=ns,ncol=nc)
-    out[,2*(1:nr)-1] <- matrix(d$val,nrow=ns,ncol=nr,byrow=TRUE)
-    out[,2*(1:nr)] <- matrix(sqrt(diag(d$cov)),nrow=ns,ncol=nr,byrow=TRUE)
-    cnames <- rep(NA,nc)
-    cnames[2*(1:nr)-1] <- ratios
-    cnames[2*(1:nr)] <- paste0('s[',ratios,']')
-    ci <- 2*nr
-    cormat <- cov2cor(d$cov)
-    if (nr>1){
-        for (r1 in 1:(nr-1)){
-            i1 <- (0:(ns-1))*nr + r1
-            for (r2 in (r1+1):nr){
-                ci <- ci + 1
-                i2 <- (0:(ns-1))*nr + r2
-                out[,ci] <- diag(cormat[i1,i2])
-                cnames[ci] <- paste0('r[',ratios[r1],',',ratios[r2],']')
-            }
-        }
-    }
-    colnames(out) <- cnames
-    out
+data2table.delta <- function(x,cov=FALSE,...){
+    del <- x$delta
+    cal <- x$calibrated
+    data2table_helper(val=del$val,E=del$cov,snames=cal$snames,
+                      ratios=cal$ratios,cov=cov)
 }
 #' @rdname data2table
 #' @export
@@ -171,6 +117,39 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
             cormat <- cov2cor(E)
             out[i,(si+2*nr+1):nc] <- cormat[upper.tri(cormat)]
         }
+    }
+    out
+}
+data2table_helper <- function(val,E,snames,ratios,cov=FALSE){
+    ns <- length(snames)
+    nr <- length(ratios)
+    if (cov){
+        out <- cbind(val,E)
+        colnames(out) <- c('ratios',rep(ratios,ns))
+        rownames(out) <- rep(snames,each=nr)
+    } else {
+        nc <- 2*nr+nr*(nr-1)/2
+        out <- matrix(0,nrow=ns,ncol=nc)
+        rownames(out) <- snames
+        out[,2*(1:nr)-1] <- matrix(val,nrow=ns,ncol=nr,byrow=TRUE)
+        out[,2*(1:nr)] <- matrix(sqrt(diag(E)),nrow=ns,ncol=nr,byrow=TRUE)
+        cnames <- rep(NA,nc)
+        cnames[2*(1:nr)-1] <- ratios
+        cnames[2*(1:nr)] <- paste0('s[',ratios,']')
+        ci <- 2*nr
+        cormat <- cov2cor(E)
+        if (nr>1){
+            for (r1 in 1:(nr-1)){
+                i1 <- (0:(ns-1))*nr + r1
+                for (r2 in (r1+1):nr){
+                    ci <- ci + 1
+                    i2 <- (0:(ns-1))*nr + r2
+                    out[,ci] <- diag(cormat[i1,i2])
+                    cnames[ci] <- paste0('r[',ratios[r1],',',ratios[r2],']')
+                }
+            }
+        }
+        colnames(out) <- cnames
     }
     out
 }
