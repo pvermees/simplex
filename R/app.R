@@ -203,7 +203,7 @@ calibratedTable <- function(x){
 
 convert2delta <- function(x){
     dat <- as.simplex(x)
-    del <- delta(dat)
+    del <- delta(dat,log=identical(x$deltatype,'delta-prime'))
     tab <- data2table.delta(del)
     rownames(tab) <- NULL
     as.data.frame(tab)

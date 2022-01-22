@@ -35,6 +35,8 @@ var glob = {
 	}
     },
     'sampleprefix': '',
+    'deltatype':'delta-prime',
+    'IsoplotRtype':'U-Pb',
     'standards': [],
     'samples': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
@@ -918,9 +920,11 @@ function finish(){
 	    if (cal.caltype=='average'){
 		show('.show4stable')
 		hide('.hide4stable')
+		document.getElementById('deltatype').value = glob.deltatype;
 	    } else {
 		show('.show4geochron')
 		hide('.hide4geochron')
+		document.getElementById('IsoplotRtype').value = glob.IsoplotRtype;
 	    }
 	    document.getElementById('prefix').value = glob.sampleprefix;
 	    setsampsel();
@@ -940,11 +944,28 @@ function convert(fn){
     );
 }
 
+function convert2IsoplotR(fn){
+    shinylight.call(fn, {x:glob}, null).then(
+	result => {
+	    let nr = result.data.length;
+	    let header = Object.keys(result.data[0]);
+	    let tab = createDataEntryGrid('final-table', header, nr);
+	    shinylight.setGridResult(tab, result);
+	},
+	error => alert(error)
+    );
+}
+
 function download4IsoplotR(){
     
 }
 
+function toggledeltatype(){
+    glob.deltatype = document.getElementById('deltatype').value;
+}
+
 function toggleIsoplotRtype(){
+    glob.IsoplotRtype = document.getElementById('IsoplotRtype').value;
 }
 
 function export2isoplotr(){
