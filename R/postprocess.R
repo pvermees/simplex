@@ -56,43 +56,25 @@ data2table.default <- function(x,...){
 }
 #' @rdname data2table
 #' @export
-data2table.calibrated <- function(x,snames=NULL,i=NULL,
-                                  ratios=NULL,j=NULL,
-                                  cov=FALSE,log=TRUE,...){
+data2table.calibrated <- function(x,cov=FALSE,log=TRUE,...){
     cal <- x$calibrated
-    if (!is.null(snames)){
-        i <- which(cal$snames %in% snames)
-    } else if (is.null(i)){
-        i <- 1:length(cal$snames)
-    }
-    if (!is.null(ratios)){
-        j <- which(cal$ratios %in% ratios)
-    } else if (is.null(j)){
-        j <- 1:length(cal$ratios)
-    }
-    ns <- length(i)
-    nr <- length(j)
-    ii <- rep((i-1)*nr,each=nr) + rep(j,ns)
-    if (log){
-        val <- cal$val[ii]
-        E <- cal$cov[ii,ii]
-    } else {
-        val <- exp(cal$val[ii])
-        E <- diag(val) %*% cal$cov[ii,ii] %*% diag(val)
-    }
+    val <- cal$val
+    E <- cal$cov
+    ns <- length(cal$snames)
+    nr <- length(cal$ratios)
     if (cov){
         out <- cbind(val,E)
-        colnames(out) <- c('ratios',rep(cal$ratios[j],ns))
-        rownames(out) <- rep(cal$snames[i],each=nr)
+        colnames(out) <- c('ratios',rep(cal$ratios,ns))
+        rownames(out) <- rep(cal$snames,each=nr)
     } else {
         nc <- 2*nr+nr*(nr-1)/2
         out <- matrix(0,nrow=ns,ncol=nc)
-        rownames(out) <- cal$snames[i]
+        rownames(out) <- cal$snames
         cnames <- rep(NA,nc)
         out[,2*(1:nr)-1] <- matrix(val,nrow=ns,ncol=nr,byrow=TRUE)
         out[,2*(1:nr)] <- matrix(sqrt(diag(E)),nrow=ns,ncol=nr,byrow=TRUE)
-        cnames[2*(1:nr)-1] <- cal$ratios[j]
-        cnames[2*(1:nr)] <- paste0('s[',cal$ratios[j],']')
+        cnames[2*(1:nr)-1] <- cal$ratios
+        cnames[2*(1:nr)] <- paste0('s[',cal$ratios,']')
         ci <- 2*nr
         cormat <- cov2cor(E)
         if (nr>1){
@@ -102,8 +84,8 @@ data2table.calibrated <- function(x,snames=NULL,i=NULL,
                     ci <- ci + 1
                     i2 <- (0:(ns-1))*nr + r2
                     out[,ci] <- diag(cormat[i1,i2])
-                    cnames[ci] <- paste0('r[',cal$ratios[j][r1],
-                                         ',',cal$ratios[j][r2],']')
+                    cnames[ci] <- paste0('r[',cal$ratios[r1],
+                                         ',',cal$ratios[r2],']')
                 }
             }
         }
@@ -250,27 +232,6 @@ delta2york <- function(d,i,j){
     out
 }
 
-# TEMPORARY SOLUTION FOR PAPER. NEEDS TIDYING UP AND GENERALING
-age <- function(cd){
-    l38 <- IsoplotR::settings('lambda','U238')[1]
-    num <- cd$calibrated$num
-    den <- cd$calibrated$den
-    ni <- length(num)
-    ns <- length(cd$samples)
-    iPbU <- which(num %in% 'Pb206' & den %in% 'U238')
-    i <- (1:ns)*ni-ni+iPbU
-    out <- list()
-    elr <- exp(cd$calibrated$lr[i])
-    out$t68 <- log(elr+1)/l38
-    J <- diag(elr/(elr+1))/l38
-    out$E68 <- J %*% cd$calibrated$cov[i,i] %*% t(J)
-    snames <- names(cd$samples)
-    names(out$t68) <- snames
-    rownames(out$E68) <- snames
-    colnames(out$E68) <- snames
-    out
-}
-
 #' @title convert to IsoplotR
 #' @description convert U-Pb or U-Th-Pb data to an IsoplotR object
 #' @param dat an object of class \code{calibrated}
@@ -291,9 +252,9 @@ age <- function(cd){
 #' }
 #' @export
 simplex2IsoplotR <- function(dat,method='U-Pb'){
-    tab <- data2table(dat)
-    dt <- datatype(dat)
+    tab <- data2table.calibrated(dat,log=FALSE)
     if (identical(method,'U-Pb')){
+        
         if (identical(dt,'U-Th-Pb')){
             cols <- c(1:6,15:16,21)
             tab <- tab[,cols,drop=FALSE]
