@@ -149,7 +149,7 @@ plot.calibrated <- function(x,show.numbers=TRUE,...){
 caldplot_stable <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
     sta <- dat$calibration$stand
     cal <- dat$calibrated
-    tab <- data2table.calibrated(dat)
+    tab <- data2table.calibrated(dat,log4lab=FALSE)
     nrat <- length(cal$ratios)
     if (nrat>1){
         np <- nrat*(nrat-1)/2   # number of plot panels

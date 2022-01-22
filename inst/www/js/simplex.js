@@ -911,34 +911,16 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => {
-	    if (stable()) hide('.hide4stable')
-	    else show('.hide4stable')
+	    if (glob.calibration.caltype=='average'){
+		show('.show4stable')
+		hide('.hide4stable')
+	    } else {
+		show('.show4geochron')
+		hide('.hide4geochron')
+	    }
 	    document.getElementById('prefix').value = glob.sampleprefix;
+	    setsampsel();
 	}, error => alert(error)
-    );
-}
-
-function plotresults(){
-    hide('.hide4plot');
-    show('.hide4table');
-    shinylight.call("plotresults", {x:glob}, 'final-plot',
-		    {'imgType': 'svg'}).then(
-	result => shinylight.setElementPlot('final-plot', result.plot),
-	error => alert(error)
-    );
-}
-
-function resultstable(){
-    hide('.hide4table');
-    show('.hide4plot');
-    shinylight.call("resultstable", {x:glob}, null).then(
-	result => {
-	    let nr = result.data.length;
-	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('final-table', header, nr);
-	    shinylight.setGridResult(tab, result);
-	},
-	error => alert(error)
     );
 }
 

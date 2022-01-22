@@ -100,3 +100,11 @@ def oxygencalibrationtest():
     click("calibration-plot")
     time.sleep(0.5)
     click("samples")
+
+def oxygencalibratetest():
+    click("setup")
+    select("methods","IGG-O")
+    time.sleep(0.5)
+    click("samples")
+    time.sleep(0.5)
+    click("calibrate")
