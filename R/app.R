@@ -201,40 +201,20 @@ calibratedTable <- function(x){
     as.data.frame(tab)
 }
 
-plotresults <- function(x){
-    cal <- calibrate_it(x)
-    if (stable(cal)){
-        d <- delta(cal)
-        plot.delta(d)
-    } else {
-        UPb <- simplex2IsoplotR(cal)
-        IsoplotR::concordia(UPb)
-    }
-}
-
-resultstable <- function(x){
-    cal <- calibrate_it(x)
-    if (stable(cal)){
-        d <- delta(cal)
-    } else {
-        d <- cal
-    }
-    tab <- data2table(d)
+convert2delta <- function(x){
+    dat <- as.simplex(x)
+    del <- delta(dat)
+    tab <- data2table.delta(del)
     rownames(tab) <- NULL
     as.data.frame(tab)
 }
 
-export2isoplotr <- function(x){
-    cal <- calibrate_it(x)
-    if (identical(x$IsoplotRformat,'U-Pb')){
-        method <- 'U-Pb'
-    } else if (identical(x$IsoplotRformat,'U-Th-Pb')){
-        method <- 'U-Th-Pb'
-    } else if (identical(x$IsoplotRformat,'Th-Pb')){
-        method <- 'Th-Pb'
-    }
-    out <- simplex2IsoplotR(cal,method=method)
-    as.list(as.data.frame(out$x))
+convert2IsoplotR <- function(){
+    
+}
+
+download4IsoplotR <- function(){
+    
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
@@ -270,9 +250,9 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             calibratedTable=calibratedTable,
-            plotresults=plotresults,
-            resultstable=resultstable,
-            export2isoplotr=export2isoplotr
+            convert2delta=convert2delta,
+            convert2IsoplotR=convert2IsoplotR,
+            download4IsoplotR=download4IsoplotR
         )
     )
 }

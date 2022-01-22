@@ -1,24 +1,26 @@
 <left>
 
-  <div>
-    <button class="mainbutton" id="convertbutton" onclick="postprocess()">
-      Convert 
-    </button>
-    to
-    <span class="show4stable hide4geochron">
-      &delta;-values
-    </span>
-    <span class="hide4stable show4geochron">
-      IsoplotR
-      <select id="IsoplotRtype" onchange="toggleIsoplotRtype();">
-	<option value="U-Pb">U-Pb</option>
-	<option value="Th-Pb">Th-Pb</option>
-	<option value="U-Th-Pb">U-Th-Pb</option>
-      </select>
-    </span>
-    <button class="mainbutton" id="convertbutton" onclick="postprocess()">
-      Download 
-    </button>
+  <div class="show4stable hide4geochron">
+    <button class="mainbutton" id="delta" onclick="convert('convert2delta')">
+      Convert
+    </button> to 
+    <select id="deltatype" onchange="toggledeltatype();">
+      <option value="delta">&delta;</option>
+      <option value="delta-prime">&delta;'</option>
+    </select>
+  </div>
+  <div class="hide4stable show4geochron">
+    <button class="mainbutton" id="IsoplotR" onclick="convert('convert2IsoplotR')">
+      Convert </button> 
+    <select id="IsoplotRtype" onchange="toggleIsoplotRtype();">
+      <option value="U-Pb">U-Pb</option>
+      <option value="Th-Pb">Th-Pb</option>
+      <option value="U-Th-Pb">U-Th-Pb</option>
+    </select>
+    to <tt>IsoplotR</tt>, 
+    <button class="mainbutton" id="download" onclick="download4IsoplotR()">
+      save
+    </button> as <tt>json</tt>
     <a id="fname" href="" download="simplex.json"></a>
   </div>
   <div>Select samples by prefix:

@@ -101,10 +101,8 @@ def oxygencalibrationtest():
     time.sleep(0.5)
     click("samples")
 
-def oxygencalibratetest():
+def oxygenfinishtest():
     click("setup")
     select("methods","IGG-O")
     time.sleep(0.5)
-    click("samples")
-    time.sleep(0.5)
-    click("calibrate")
+    click("finish")

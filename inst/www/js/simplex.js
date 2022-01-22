@@ -911,7 +911,11 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => {
-	    if (glob.calibration.caltype=='average'){
+	    let cal = glob.calibration;
+	    if (cal.caltype==null){
+		cal.caltype = glob.multi ? 'average' : 'regression';
+	    }
+	    if (cal.caltype=='average'){
 		show('.show4stable')
 		hide('.hide4stable')
 	    } else {
@@ -922,6 +926,25 @@ function finish(){
 	    setsampsel();
 	}, error => alert(error)
     );
+}
+
+function convert(fn){
+    shinylight.call(fn, {x:glob}, null).then(
+	result => {
+	    let nr = result.data.length;
+	    let header = Object.keys(result.data[0]);
+	    let tab = createDataEntryGrid('final-table', header, nr);
+	    shinylight.setGridResult(tab, result);
+	},
+	error => alert(error)
+    );
+}
+
+function download4IsoplotR(){
+    
+}
+
+function toggleIsoplotRtype(){
 }
 
 function export2isoplotr(){
