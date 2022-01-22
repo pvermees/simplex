@@ -3,7 +3,8 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
-# start test.R first
+# start test.R first, then start Python (Ctrl-p) and load script (Ctrl-l)
+# to start test.py: boot(), to refresh: d.refresh()
 def boot():
     global d
     d = webdriver.Firefox()

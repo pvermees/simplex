@@ -58,8 +58,17 @@ data2table.default <- function(x,...){
 #' @export
 data2table.calibrated <- function(x,cov=FALSE,log=TRUE,...){
     cal <- x$calibrated
-    data2table_helper(val=cal$val,E=cal$cov,snames=cal$snames,
-                      ratios=cal$ratios,cov=cov)
+    if (log){
+        val <- cal$val
+        E <- cal$cov
+        ratios <- paste0('ln(',cal$ratios,')')
+    } else {
+        val <- exp(cal$val)
+        E <- diag(val) %*% cal$cov %*% diag(val)
+        ratios <- cal$ratios
+    }
+    data2table_helper(val=val,E=E,snames=cal$snames,
+                      ratios=ratios,cov=cov)
 }
 #' @rdname data2table
 #' @export

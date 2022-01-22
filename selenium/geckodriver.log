@@ -385,3 +385,15 @@ JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_
 
 ###!!! [Parent][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
 
+1642852325251	geckodriver	INFO	Listening on 127.0.0.1:56793
+1642852325756	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "60575" "-no-remote" "-profile" "/tmp/rust_mozprofileRXR7Mp"
+1642852332571	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofileRXR7Mp/search.json.mozlz4", (void 0)))
+console.error: Region.jsm: "Error fetching region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 772))
+console.error: Region.jsm: "Failed to fetch region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 419))
+DevTools listening on ws://localhost:60575/devtools/browser/073f9a2e-c7a9-4999-9bef-762f0b62a137
+1642852342752	Marionette	INFO	Listening on port 43799
+1642852344320	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 835: TypeError: document.getElementById(...) is null
+console.error: Region.jsm: "Error fetching region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 772))
+console.error: Region.jsm: "Failed to fetch region" (new Error("TIMEOUT", "resource://gre/modules/Region.jsm", 419))

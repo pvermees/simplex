@@ -832,6 +832,7 @@ function samples(){
 	() => {
 	    setsampsel();
 	    document.getElementById("shownum").checked = glob.shownum;
+	    document.getElementById("logcheckbox").checked = glob.log;
 	}, error => alert(error)
     );
 }

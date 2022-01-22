@@ -3,10 +3,12 @@
   <div>Select samples by prefix:
     <input type="text" id="prefix" onchange="updateSamplePrefix()">
     <button class="mainbutton" onclick="calibrate(true)">Calibrate</button>
-    <input type="checkbox" id="shownum" onchange="shownum()">Label aliquots
-    <button class="mainbutton" onclick="calibrate(false)">Tabulate</button>
+    <input type="checkbox" id="shownum" onchange="shownum()">Label aliquots<br>
   </div>
-
+  <div>
+    <button class="mainbutton" onclick="calibrate(false)">Tabulate</button>
+    <input type="checkbox" id="logcheckbox" onchange="checklog()">log
+  </div>
   <div>Aliquots to analyse:
     <table id="aliquots" class="normalfont"></table>
   </div>
