@@ -240,24 +240,49 @@ delta2york <- function(d,i,j){
 #' }
 #' @export
 simplex2IsoplotR <- function(dat,method='U-Pb'){
-    tab <- data2table.calibrated(dat,log=FALSE)
     if (identical(method,'U-Pb')){
-        
-        if (identical(dt,'U-Th-Pb')){
-            cols <- c(1:6,15:16,21)
-            tab <- tab[,cols,drop=FALSE]
+        iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb206/U238')
+        oratios <- c('U238/Pb206','Pb207/Pb206','Pb204/Pb206')
+        j <- rbind(c(0,0,-1),
+                   c(0,1,0),
+                   c(1,0,0))
+    } else if (identical(method,'U-Th-Pb')){
+        iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb204/Pb208','Pb206/U238','Pb208/Th232')
+        oratios <- c('U238/Pb206','Pb207/Pb206','Pb208/Pb206','Th232/U238')
+        j <- rbind(c(0,0,0,-1,0),
+                   c(0,1,0,0,0),
+                   c(1,0,-1,0,0),
+                   c(1,0,-1,1,-1))
+        format <- 8
+    } else if (identical(method,'Th-Pb')){
+        iratios <- c('Pb204/Pb208','Pb208/Th232')
+        iratios <- c('Th232/Pb208','Pb204/Pb208')
+        j <- rbind(c(0,-1),
+                   c(-1,0))
+    }
+    if (all(iratios %in% dat$calibrated$ratios)){
+        cal <- dat$calibrated
+        snames <- cal$snames
+        ns <- length(snames)
+        ni <- length(iratios)
+        no <- length(oratios)
+        J <- matrix(0,no*ns,ni*ns)
+        for (i in 1:ns){
+            i1 <- (i-1)*no+(1:no)
+            i2 <- (i-1)*ni+(1:ni)
+            J[i1,i2] <- j
         }
+        val <- as.vector(exp(J %*% cal$val))
+        E <- diag(val) %*% J %*% cal$cov %*% t(J) %*% diag(val)
+        tab <- data2table_helper(val=val,E=E,snames=snames,ratios=oratios)
+    } else {
+        stop("Input ratios should include: ",iratios)
+    }
+    if (identical(method,'U-Pb')){
         out <- IsoplotR:::as.UPb(tab,format=5)
     } else if (identical(method,'U-Th-Pb')){
-        if (!identical(dt,'U-Th-Pb'))
-            stop('Invalid data type or U-Th-Pb dating.')
-        cols <- c(1:4,7:10,15,17:18,22:23,30)
-        tab <- tab[,cols,drop=FALSE]
         out <- IsoplotR:::as.UPb(tab,format=8)
     } else if (identical(method,'Th-Pb')){
-        if (!identical(dt,'U-Th-Pb'))
-            stop('Invalid data type or U-Th-Pb dating.')
-        cols <- c(11:14,33)
         out <- IsoplotR:::as.ThPb(tab,format=2)
     }
     out
