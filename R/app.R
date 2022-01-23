@@ -208,19 +208,24 @@ preset2deltaref <- function(ref){
 }
 
 convert2delta <- function(x){
+    # 1. re-calibrate
+    dat <- calibrate_it(x)
+    # 2. record reference
     val <- x$delta$val
     nv <- length(val)
     names(val) <- x$delta$ratios
     ref <- list(preset=x$delta$preset,val=val)
-    dat <- calibrate_it(x)
+    # 3. get delta values
     del <- delta(dat,ref=ref,log=identical(x$delta$type,'delta-prime'))
     tab <- data2table.delta(del)
     rownames(tab) <- NULL
     as.data.frame(tab)
 }
 
-convert2IsoplotR <- function(){
-    
+convert2IsoplotR <- function(x){
+    dat <- calibrate_it(x)
+    isodat <- simplex2IsoplotR(dat,method=x$IsoplotRtype)
+    as.data.frame(isodat$x)
 }
 
 download4IsoplotR <- function(){
