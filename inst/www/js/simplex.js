@@ -975,6 +975,10 @@ function preset2deltaref(){
 }
 
 function convert(fn){
+    if (glob.calibration.caltype=='average'){
+	let e = document.getElementById('delreftab');
+	glob.delta.val = e.deg.getCells()[0].map(Number);
+    }
     shinylight.call(fn, {x:glob}, null).then(
 	result => {
 	    let nr = result.data.length;

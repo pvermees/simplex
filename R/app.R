@@ -210,9 +210,8 @@ preset2deltaref <- function(ref){
 convert2delta <- function(x){
     val <- x$delta$val
     nv <- length(val)
-    covmat <- matrix(0,nv,nv)
-    names(val) <- rownames(covmat) <- colnames(covmat) <- x$delta$ratios
-    ref <- list(preset=x$delta$preset,val=val,cov=covmat)
+    names(val) <- x$delta$ratios
+    ref <- list(preset=x$delta$preset,val=val)
     dat <- calibrate_it(x)
     del <- delta(dat,ref=ref,log=identical(x$delta$type,'delta-prime'))
     tab <- data2table.delta(del)
