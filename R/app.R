@@ -191,7 +191,7 @@ calibrate_it <- function(x){
 calibrateSamples <- function(x){
     out <- calibrate_it(x)
     plot.calibrated(out,show.numbers=x$shownum)
-    out
+    result2json(out)
 }
 
 calibratedTable <- function(x){
@@ -208,8 +208,13 @@ preset2deltaref <- function(ref){
 }
 
 convert2delta <- function(x){
-    dat <- as.simplex(x)
-    del <- delta(dat,log=identical(x$deltatype,'delta-prime'))
+    val <- x$delta$val
+    nv <- length(val)
+    covmat <- matrix(0,nv,nv)
+    names(val) <- rownames(covmat) <- colnames(covmat) <- x$delta$ratios
+    ref <- list(preset=x$delta$preset,val=val,cov=covmat)
+    dat <- calibrate_it(x)
+    del <- delta(dat,ref=ref,log=identical(x$delta$type,'delta-prime'))
     tab <- data2table.delta(del)
     rownames(tab) <- NULL
     as.data.frame(tab)

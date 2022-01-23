@@ -38,10 +38,9 @@ var glob = {
 	'type':'delta-prime',
 	'preset': null,
 	'ratios': null,
-	'refval': null
+	'val': null
     },
     'IsoplotRtype':'U-Pb',
-    'conversionprefix': '',
     'standards': [],
     'samples': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
@@ -111,7 +110,6 @@ function resetglob(){
     glob.i =  0;
     glob.multi = false;
     glob.sampleprefix = '';
-    glob.conversionprefix = '';
     glob.standards = [];
     glob.samples = [];
     glob.calibration = {
@@ -131,7 +129,7 @@ function resetglob(){
 	    'type':'delta-prime',
 	    'preset': null, // 'VSMOW', 'troilite', ...
 	    'ratios': null,
-	    'refval': null
+	    'val': null
 	},
 	'IsoplotRtype':'U-Pb',
     }
@@ -915,10 +913,8 @@ function calibrate_table(){
 function finish(){
     selectButton(5);
     loadPage("finish.html").then(
-	() => {
-	    finishinit();
-	    setsampsel();
-	}, error => alert(error)
+	() => finishinit(),
+	error => alert(error)
     );
 }
 function finishinit(){
@@ -936,27 +932,23 @@ function finishinit(){
 	hide('.hide4geochron');
 	document.getElementById('IsoplotRtype').value = glob.IsoplotRtype;
     }
-    if (glob.conversionprefix==null){
-	glob.conversionprefix = glob.sampleprefix;
-    }
-    document.getElementById('prefix').value = glob.conversionprefix;
 }
 
 function showdeltasettings(){
     let del = glob.delta;
-    if (del.preset==null & del.ratios==null & del.refval==null){
+    if (del.preset==null & del.ratios==null & del.val==null){
 	let stand = glob.simplex.calibration.stand;
 	if (stand.ref.hasOwnProperty('preset')){
 	    del.preset = stand.ref.preset[0];
 	    document.getElementById('deltaref').value = del.preset;
 	}
 	del.ratios = glob.names.calibration.stand.ref.val.slice();
-	del.refval = stand.ref.val.slice();
+	del.val = stand.ref.val.slice();
     }
     if (['VSMOW','troilite'].includes(del.preset)){
 	document.getElementById('deltaref').value = del.preset;
     }
-    loadTable([del.refval],del.ratios,'delreftab',1);
+    loadTable([del.val],del.ratios,'delreftab',1);
 }
 function preset2deltaref(){
     glob.delta.preset = document.getElementById('deltaref').value;
@@ -976,22 +968,6 @@ function convert(fn){
 	},
 	error => alert(error)
     );
-}
-
-function convert2IsoplotR(fn){
-    shinylight.call(fn, {x:glob}, null).then(
-	result => {
-	    let nr = result.data.length;
-	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('final-table', header, nr);
-	    shinylight.setGridResult(tab, result);
-	},
-	error => alert(error)
-    );
-}
-
-function download4IsoplotR(){
-    
 }
 
 function toggledeltatype(){
