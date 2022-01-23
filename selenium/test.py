@@ -105,4 +105,6 @@ def oxygenfinishtest():
     click("setup")
     select("methods","IGG-O")
     time.sleep(0.5)
-    click("finish")
+    click("calibration")
+    time.sleep(0.5)
+    click("calibrate")

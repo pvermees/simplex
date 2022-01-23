@@ -24,6 +24,8 @@ calibration <- function(lr,stand,pairing=NULL,prefix=NULL,
                         snames=NULL,i=NULL,invert=FALSE,t=NULL){
     out <- lr
     cal <- list()
+    ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@6@"]]));##:ess-bp-end:##
     cal$stand <- stand
     cal$prefix <- prefix
     cal$snames <- subset2snames(dat=lr,prefix=prefix,snames=snames,i=i)

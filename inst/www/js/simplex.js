@@ -5,7 +5,6 @@ var glob = {
 	'method': { 'method': ['IGG-UPb'] },
 	'samples': null,
 	'outliers': null,
-	'standard': null,
 	'calibration': null,
 	'calibrated': null
     },
@@ -819,7 +818,24 @@ function calibrator(){
     )
 }
 function registerStandards(){
-    let e = document.getElementById('aliquots');
+    let stand = glob.simplex.calibration.stand;
+    let e = document.getElementById('standlr');
+    stand.val = e.deg.getCells()[0].map(Number);
+    e = document.getElementById('standcov');
+    let cov = e.deg.getCells();
+    for (let i=0; i<stand.val.length; i++){
+	stand.cov[i] = cov[i].map(Number);
+    }
+    if (glob.calibration.caltype=='regression'){
+	e = document.getElementById('pairing');
+	let pairing = glob.simplex.calibration.pairing;
+	let content = e.deg.getCells();
+	let header = e.deg.getColumnHeaders();
+	for (let i=0; i<header.length; i++){
+	    pairing[0][header[i]] = content[0][i];
+	}
+    }
+    e = document.getElementById('aliquots');
     let dat = e.deg.getColumns();
     glob.standards = [];
     for (let i=0; i<dat.aliquots.length; i++){
