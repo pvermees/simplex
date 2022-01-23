@@ -25,7 +25,6 @@ var glob = {
 	'standtype': null,
 	'preset': null,
 	'tst': null,
-	'ref': null,
 	'del': {
 	    'ratios': null,
 	    'delval': null,
@@ -35,8 +34,14 @@ var glob = {
 	}
     },
     'sampleprefix': '',
-    'deltatype':'delta-prime',
+    'delta': {
+	'type':'delta-prime',
+	'preset': null,
+	'ratios': null,
+	'refval': null
+    },
     'IsoplotRtype':'U-Pb',
+    'conversionprefix': '',
     'standards': [],
     'samples': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
@@ -106,6 +111,7 @@ function resetglob(){
     glob.i =  0;
     glob.multi = false;
     glob.sampleprefix = '';
+    glob.conversionprefix = '';
     glob.standards = [];
     glob.samples = [];
     glob.calibration = {
@@ -114,14 +120,20 @@ function resetglob(){
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
 	'tst': [0,0], 
-	'ref': null, // 'VSMOW-O', 'troilite-S', ...
 	'del': {
 	    'ratios': null,
 	    'val': null,
 	    'cov': null,
 	    'refval': null,
 	    'refcov': null
-	}
+	},
+	'delta': {
+	    'type':'delta-prime',
+	    'preset': null, // 'VSMOW', 'troilite', ...
+	    'ratios': null,
+	    'refval': null
+	},
+	'IsoplotRtype':'U-Pb',
     }
 }
 
@@ -683,16 +695,7 @@ function showcaldel(){
 	    cal.del.refcov = stand.ref.cov;
 	}
 	if (stand.hasOwnProperty('ref') & stand.ref.hasOwnProperty('preset')){
-	    switch(stand.ref.preset[0]){
-	    case 'VSMOW':
-		document.getElementById('deltaref').value = 'VSMOW-O';
-		break;
-	    case 'troilite':
-		document.getElementById('deltaref').value = 'troilite-S';
-		break;
-	    default:
-		// do nothing
-	    }
+	    document.getElementById('deltaref').value = stand.ref.preset[0];
 	}
     }
     let elr = document.getElementById('standlr');
@@ -913,23 +916,54 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => {
-	    let cal = glob.calibration;
-	    if (cal.caltype==null){
-		cal.caltype = glob.multi ? 'average' : 'regression';
-	    }
-	    if (cal.caltype=='average'){
-		show('.show4stable')
-		hide('.hide4stable')
-		document.getElementById('deltatype').value = glob.deltatype;
-	    } else {
-		show('.show4geochron')
-		hide('.hide4geochron')
-		document.getElementById('IsoplotRtype').value = glob.IsoplotRtype;
-	    }
-	    document.getElementById('prefix').value = glob.sampleprefix;
+	    finishinit();
 	    setsampsel();
 	}, error => alert(error)
     );
+}
+function finishinit(){
+    let cal = glob.calibration;
+    if (cal.caltype==null){
+	cal.caltype = glob.multi ? 'average' : 'regression';
+    }
+    if (cal.caltype=='average'){
+	show('.show4stable');
+	hide('.hide4stable');
+	document.getElementById('deltatype').value = glob.delta.type;
+	showdeltasettings();
+    } else {
+	show('.show4geochron');
+	hide('.hide4geochron');
+	document.getElementById('IsoplotRtype').value = glob.IsoplotRtype;
+    }
+    if (glob.conversionprefix==null){
+	glob.conversionprefix = glob.sampleprefix;
+    }
+    document.getElementById('prefix').value = glob.conversionprefix;
+}
+
+function showdeltasettings(){
+    let del = glob.delta;
+    if (del.preset==null & del.ratios==null & del.refval==null){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.ref.hasOwnProperty('preset')){
+	    del.preset = stand.ref.preset[0];
+	    document.getElementById('deltaref').value = del.preset;
+	}
+	del.ratios = glob.names.calibration.stand.ref.val.slice();
+	del.refval = stand.ref.val.slice();
+    }
+    if (['VSMOW','troilite'].includes(del.preset)){
+	document.getElementById('deltaref').value = del.preset;
+    }
+    loadTable([del.refval],del.ratios,'delreftab',1);
+}
+function preset2deltaref(){
+    glob.delta.preset = document.getElementById('deltaref').value;
+    shinylight.call('preset2deltaref', {ref:glob.delta.preset}, null).then(
+	result => loadTable([result.data.val],result.data.ratios,'delreftab',1),
+	error => alert(error)
+    )
 }
 
 function convert(fn){
@@ -961,7 +995,7 @@ function download4IsoplotR(){
 }
 
 function toggledeltatype(){
-    glob.deltatype = document.getElementById('deltatype').value;
+    glob.delta.type = document.getElementById('deltatype').value;
 }
 
 function toggleIsoplotRtype(){

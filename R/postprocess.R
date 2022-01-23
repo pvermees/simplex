@@ -13,10 +13,12 @@
 #' del <- delta(cd)
 #' tab <- data2table(del)
 #' @export
-delta <- function(cd,log=TRUE){
+delta <- function(cd,ref,log=TRUE){
     out <- cd
     del <- list()
-    ref <- cd$calibration$stand$ref
+    if (missing(ref)){
+        ref <- cd$calibration$stand$ref
+    }
     logd <- cd$calibrated$val - rep(ref$val,length(cd$samples))
     nd <- length(logd)
     if (log){

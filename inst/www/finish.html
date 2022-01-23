@@ -8,6 +8,16 @@
       <option value="delta">&delta;</option>
       <option value="delta-prime">&delta;'</option>
     </select>
+    <p></p>
+    Reference material:
+    <select id="deltaref" onchange="preset2deltaref()">
+      <option disabled selected value="select"> -- select an option -- </option>
+      <option value="VSMOW">VSMOW (O)</option>
+      <option value="troilite">troilite (S)</option>
+      <option value="other">other</option>
+    </select>
+    <p></p>
+    <table id="delreftab" class="normalfont"></table>
   </div>
   <div class="hide4stable show4geochron">
     <button class="mainbutton" id="IsoplotR" onclick="convert('convert2IsoplotR')">

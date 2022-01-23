@@ -201,6 +201,12 @@ calibratedTable <- function(x){
     as.data.frame(tab)
 }
 
+preset2deltaref <- function(ref){
+    out <- do.call(ref,list())
+    out$ratios <- names(out$val)
+    out
+}
+
 convert2delta <- function(x){
     dat <- as.simplex(x)
     del <- delta(dat,log=identical(x$deltatype,'delta-prime'))
@@ -250,6 +256,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             calibratedTable=calibratedTable,
+            preset2deltaref=preset2deltaref,
             convert2delta=convert2delta,
             convert2IsoplotR=convert2IsoplotR,
             download4IsoplotR=download4IsoplotR
