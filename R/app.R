@@ -191,50 +191,45 @@ calibrate_it <- function(x){
 calibrateSamples <- function(x){
     out <- calibrate_it(x)
     plot.calibrated(out,show.numbers=x$shownum)
-    out
+    result2json(out)
 }
 
 calibratedTable <- function(x){
     cal <- calibrate_it(x)
-    tab <- data2table.calibrated(cal)
+    tab <- data2table.calibrated(cal,log=x$log)
     rownames(tab) <- NULL
     as.data.frame(tab)
 }
 
-plotresults <- function(x){
-    cal <- calibrate_it(x)
-    if (stable(cal)){
-        d <- delta(cal)
-        plot.delta(d)
-    } else {
-        UPb <- simplex2IsoplotR(cal)
-        IsoplotR::concordia(UPb)
-    }
+preset2deltaref <- function(ref){
+    out <- do.call(ref,list())
+    out$ratios <- names(out$val)
+    out
 }
 
-resultstable <- function(x){
-    cal <- calibrate_it(x)
-    if (stable(cal)){
-        d <- delta(cal)
-    } else {
-        d <- cal
-    }
-    tab <- data2table(d)
+convert2delta <- function(x){
+    # 1. re-calibrate
+    dat <- calibrate_it(x)
+    # 2. record reference
+    val <- x$delta$val
+    nv <- length(val)
+    names(val) <- x$delta$ratios
+    ref <- list(preset=x$delta$preset,val=val)
+    # 3. get delta values
+    del <- delta(dat,ref=ref,log=identical(x$delta$type,'delta-prime'))
+    tab <- data2table.delta(del)
     rownames(tab) <- NULL
     as.data.frame(tab)
 }
 
-export2isoplotr <- function(x){
-    cal <- calibrate_it(x)
-    if (identical(x$IsoplotRformat,'U-Pb')){
-        method <- 'U-Pb'
-    } else if (identical(x$IsoplotRformat,'U-Th-Pb')){
-        method <- 'U-Th-Pb'
-    } else if (identical(x$IsoplotRformat,'Th-Pb')){
-        method <- 'Th-Pb'
-    }
-    out <- simplex2IsoplotR(cal,method=method)
-    as.list(as.data.frame(out$x))
+convert2IsoplotR <- function(x){
+    dat <- calibrate_it(x)
+    isodat <- simplex2IsoplotR(dat,method=x$IsoplotRtype)
+    as.data.frame(isodat$x)
+}
+
+download4IsoplotR <- function(){
+    
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
@@ -270,9 +265,10 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             calibrator=calibrator,
             calibrateSamples=calibrateSamples,
             calibratedTable=calibratedTable,
-            plotresults=plotresults,
-            resultstable=resultstable,
-            export2isoplotr=export2isoplotr
+            preset2deltaref=preset2deltaref,
+            convert2delta=convert2delta,
+            convert2IsoplotR=convert2IsoplotR,
+            download4IsoplotR=download4IsoplotR
         )
     )
 }

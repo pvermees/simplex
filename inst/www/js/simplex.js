@@ -5,7 +5,6 @@ var glob = {
 	'method': { 'method': ['IGG-UPb'] },
 	'samples': null,
 	'outliers': null,
-	'standard': null,
 	'calibration': null,
 	'calibrated': null
     },
@@ -25,7 +24,6 @@ var glob = {
 	'standtype': null,
 	'preset': null,
 	'tst': null,
-	'ref': null,
 	'del': {
 	    'ratios': null,
 	    'delval': null,
@@ -35,6 +33,13 @@ var glob = {
 	}
     },
     'sampleprefix': '',
+    'delta': {
+	'type':'delta-prime',
+	'preset': null,
+	'ratios': null,
+	'val': null
+    },
+    'IsoplotRtype':'U-Pb',
     'standards': [],
     'samples': [],
     'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
@@ -112,14 +117,20 @@ function resetglob(){
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
 	'tst': [0,0], 
-	'ref': null, // 'VSMOW-O', 'troilite-S', ...
 	'del': {
 	    'ratios': null,
 	    'val': null,
 	    'cov': null,
 	    'refval': null,
 	    'refcov': null
-	}
+	},
+	'delta': {
+	    'type':'delta-prime',
+	    'preset': null, // 'VSMOW', 'troilite', ...
+	    'ratios': null,
+	    'val': null
+	},
+	'IsoplotRtype':'U-Pb',
     }
 }
 
@@ -681,16 +692,7 @@ function showcaldel(){
 	    cal.del.refcov = stand.ref.cov;
 	}
 	if (stand.hasOwnProperty('ref') & stand.ref.hasOwnProperty('preset')){
-	    switch(stand.ref.preset[0]){
-	    case 'VSMOW':
-		document.getElementById('deltaref').value = 'VSMOW-O';
-		break;
-	    case 'troilite':
-		document.getElementById('deltaref').value = 'troilite-S';
-		break;
-	    default:
-		// do nothing
-	    }
+	    document.getElementById('deltaref').value = stand.ref.preset[0];
 	}
     }
     let elr = document.getElementById('standlr');
@@ -816,7 +818,24 @@ function calibrator(){
     )
 }
 function registerStandards(){
-    let e = document.getElementById('aliquots');
+    let stand = glob.simplex.calibration.stand;
+    let e = document.getElementById('standlr');
+    stand.val = e.deg.getCells()[0].map(Number);
+    e = document.getElementById('standcov');
+    let cov = e.deg.getCells();
+    for (let i=0; i<stand.val.length; i++){
+	stand.cov[i] = cov[i].map(Number);
+    }
+    if (glob.calibration.caltype=='regression'){
+	e = document.getElementById('pairing');
+	let pairing = glob.simplex.calibration.pairing;
+	let content = e.deg.getCells();
+	let header = e.deg.getColumnHeaders();
+	for (let i=0; i<header.length; i++){
+	    pairing[0][header[i]] = content[0][i];
+	}
+    }
+    e = document.getElementById('aliquots');
     let dat = e.deg.getColumns();
     glob.standards = [];
     for (let i=0; i<dat.aliquots.length; i++){
@@ -832,6 +851,7 @@ function samples(){
 	() => {
 	    setsampsel();
 	    document.getElementById("shownum").checked = glob.shownum;
+	    document.getElementById("logcheckbox").checked = glob.log;
 	}, error => alert(error)
     );
 }
@@ -909,28 +929,57 @@ function calibrate_table(){
 function finish(){
     selectButton(5);
     loadPage("finish.html").then(
-	() => {
-	    if (stable()) hide('.hide4stable')
-	    else show('.hide4stable')
-	    document.getElementById('prefix').value = glob.sampleprefix;
-	}, error => alert(error)
-    );
-}
-
-function plotresults(){
-    hide('.hide4plot');
-    show('.hide4table');
-    shinylight.call("plotresults", {x:glob}, 'final-plot',
-		    {'imgType': 'svg'}).then(
-	result => shinylight.setElementPlot('final-plot', result.plot),
+	() => finishinit(),
 	error => alert(error)
     );
 }
+function finishinit(){
+    let cal = glob.calibration;
+    if (cal.caltype==null){
+	cal.caltype = glob.multi ? 'average' : 'regression';
+    }
+    if (cal.caltype=='average'){
+	show('.show4stable');
+	hide('.hide4stable');
+	document.getElementById('deltatype').value = glob.delta.type;
+	showdeltasettings();
+    } else {
+	show('.show4geochron');
+	hide('.hide4geochron');
+	document.getElementById('IsoplotRtype').value = glob.IsoplotRtype;
+    }
+}
 
-function resultstable(){
-    hide('.hide4table');
-    show('.hide4plot');
-    shinylight.call("resultstable", {x:glob}, null).then(
+function showdeltasettings(){
+    let del = glob.delta;
+    if (del.preset==null & del.ratios==null & del.val==null){
+	let stand = glob.simplex.calibration.stand;
+	if (stand.ref.hasOwnProperty('preset')){
+	    del.preset = stand.ref.preset[0];
+	    document.getElementById('deltaref').value = del.preset;
+	}
+	del.ratios = glob.names.calibration.stand.ref.val.slice();
+	del.val = stand.ref.val.slice();
+    }
+    if (['VSMOW','troilite'].includes(del.preset)){
+	document.getElementById('deltaref').value = del.preset;
+    }
+    loadTable([del.val],del.ratios,'delreftab',1);
+}
+function preset2deltaref(){
+    glob.delta.preset = document.getElementById('deltaref').value;
+    shinylight.call('preset2deltaref', {ref:glob.delta.preset}, null).then(
+	result => loadTable([result.data.val],result.data.ratios,'delreftab',1),
+	error => alert(error)
+    )
+}
+
+function convert(fn){
+    if (glob.calibration.caltype=='average'){
+	let e = document.getElementById('delreftab');
+	glob.delta.val = e.deg.getCells()[0].map(Number);
+    }
+    shinylight.call(fn, {x:glob}, null).then(
 	result => {
 	    let nr = result.data.length;
 	    let header = Object.keys(result.data[0]);
@@ -939,6 +988,14 @@ function resultstable(){
 	},
 	error => alert(error)
     );
+}
+
+function toggledeltatype(){
+    glob.delta.type = document.getElementById('deltatype').value;
+}
+
+function toggleIsoplotRtype(){
+    glob.IsoplotRtype = document.getElementById('IsoplotRtype').value;
 }
 
 function export2isoplotr(){

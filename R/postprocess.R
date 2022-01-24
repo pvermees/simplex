@@ -13,26 +13,24 @@
 #' del <- delta(cd)
 #' tab <- data2table(del)
 #' @export
-delta <- function(cd,log=TRUE){
+delta <- function(cd,ref,log=TRUE){
     out <- cd
     del <- list()
-    del$num <- cd$calibrated$num
-    del$den <- cd$calibrated$den
-    ref <- do.call(cd$standard$fetchfun,args=list(dat=cd))$ref
-    logd <- cd$calibrated$lr - rep(ref,length(cd$samples))
+    if (missing(ref)){
+        ref <- cd$calibration$stand$ref
+    }
+    logd <- cd$calibrated$val - rep(ref$val,length(cd$samples))
     nd <- length(logd)
     if (log){
-        del$d <- 1000*logd
+        del$val <- 1000*logd
         J <- 1000*diag(nd)
     } else {
-        del$d <- 1000*(exp(logd)-1)
+        del$val <- 1000*(exp(logd)-1)
         J <- 1000*exp(logd)*diag(nd)
     }
     del$cov <- J %*% cd$calibrated$cov %*% t(J)
-    nms <- rep(paste0('delta(',del$num,')'),length(cd$samples))
-    rownames(del$cov) <- nms
-    colnames(del$cov) <- nms
-    names(del$d) <- nms
+    nms <- rep(paste0('delta(',names(ref$val),')'),length(cd$samples))
+    rownames(del$cov) <- colnames(del$cov) <- names(del$val) <- nms
     out$delta <- del
     class(out) <- unique(append('delta',class(cd)))
     out
@@ -60,65 +58,27 @@ data2table.default <- function(x,...){
 }
 #' @rdname data2table
 #' @export
-data2table.calibrated <- function(x,snames=NULL,i=NULL,
-                                  ratios=NULL,j=NULL,
-                                  cov=FALSE,log=TRUE,...){
+data2table.calibrated <- function(x,cov=FALSE,log=TRUE,log4lab=TRUE,...){
     cal <- x$calibrated
-    if (!is.null(snames)){
-        i <- which(cal$snames %in% snames)
-    } else if (is.null(i)){
-        i <- 1:length(cal$snames)
-    }
-    if (!is.null(ratios)){
-        j <- which(cal$ratios %in% ratios)
-    } else if (is.null(j)){
-        j <- 1:length(cal$ratios)
-    }
-    ns <- length(i)
-    nr <- length(j)
-    ii <- rep((i-1)*nr,each=nr) + rep(j,ns)
+    ratios <- cal$ratios
     if (log){
-        val <- cal$val[ii]
-        E <- cal$cov[ii,ii]
+        val <- cal$val
+        E <- cal$cov
+        if (log4lab) ratios <- paste0('ln(',ratios,')')
     } else {
-        val <- exp(cal$val[ii])
-        E <- diag(val) %*% cal$cov[ii,ii] %*% diag(val)
+        val <- exp(cal$val)
+        E <- diag(val) %*% cal$cov %*% diag(val)
     }
-    if (cov){
-        out <- cbind(val,E)
-        colnames(out) <- c('ratios',rep(cal$ratios[j],ns))
-        rownames(out) <- rep(cal$snames[i],each=nr)
-    } else {
-        nc <- 2*nr+nr*(nr-1)/2
-        out <- matrix(0,nrow=ns,ncol=nc)
-        rownames(out) <- cal$snames[i]
-        cnames <- rep(NA,nc)
-        out[,2*(1:nr)-1] <- matrix(val,nrow=ns,ncol=nr,byrow=TRUE)
-        out[,2*(1:nr)] <- matrix(sqrt(diag(E)),nrow=ns,ncol=nr,byrow=TRUE)
-        cnames[2*(1:nr)-1] <- cal$ratios[j]
-        cnames[2*(1:nr)] <- paste0('s[',cal$ratios[j],']')
-        ci <- 2*nr
-        cormat <- cov2cor(E)
-        if (nr>1){
-            for (r1 in 1:(nr-1)){
-                i1 <- (0:(ns-1))*nr + r1
-                for (r2 in (r1+1):nr){
-                    ci <- ci + 1
-                    i2 <- (0:(ns-1))*nr + r2
-                    out[,ci] <- diag(cormat[i1,i2])
-                    cnames[ci] <- paste0('r[',cal$ratios[j][r1],
-                                         ',',cal$ratios[j][r2],']')
-                }
-            }
-        }
-        colnames(out) <- cnames
-    }
-    out
+    data2table_helper(val=val,E=E,snames=cal$snames,
+                      ratios=ratios,cov=cov)
 }
 #' @rdname data2table
 #' @export
-data2table.delta <- function(x,...){
-    data2table_helper(x=x,option='delta',...)
+data2table.delta <- function(x,cov=FALSE,...){
+    del <- x$delta
+    cal <- x$calibrated
+    data2table_helper(val=del$val,E=del$cov,snames=cal$snames,
+                      ratios=cal$ratios,cov=cov)
 }
 #' @rdname data2table
 #' @export
@@ -168,6 +128,39 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
             cormat <- cov2cor(E)
             out[i,(si+2*nr+1):nc] <- cormat[upper.tri(cormat)]
         }
+    }
+    out
+}
+data2table_helper <- function(val,E,snames,ratios,cov=FALSE){
+    ns <- length(snames)
+    nr <- length(ratios)
+    if (cov){
+        out <- cbind(val,E)
+        colnames(out) <- c('ratios',rep(ratios,ns))
+        rownames(out) <- rep(snames,each=nr)
+    } else {
+        nc <- 2*nr+nr*(nr-1)/2
+        out <- matrix(0,nrow=ns,ncol=nc)
+        rownames(out) <- snames
+        out[,2*(1:nr)-1] <- matrix(val,nrow=ns,ncol=nr,byrow=TRUE)
+        out[,2*(1:nr)] <- matrix(sqrt(diag(E)),nrow=ns,ncol=nr,byrow=TRUE)
+        cnames <- rep(NA,nc)
+        cnames[2*(1:nr)-1] <- ratios
+        cnames[2*(1:nr)] <- paste0('s[',ratios,']')
+        ci <- 2*nr
+        cormat <- cov2cor(E)
+        if (nr>1){
+            for (r1 in 1:(nr-1)){
+                i1 <- (0:(ns-1))*nr + r1
+                for (r2 in (r1+1):nr){
+                    ci <- ci + 1
+                    i2 <- (0:(ns-1))*nr + r2
+                    out[,ci] <- diag(cormat[i1,i2])
+                    cnames[ci] <- paste0('r[',ratios[r1],',',ratios[r2],']')
+                }
+            }
+        }
+        colnames(out) <- cnames
     }
     out
 }
@@ -229,27 +222,6 @@ delta2york <- function(d,i,j){
     out
 }
 
-# TEMPORARY SOLUTION FOR PAPER. NEEDS TIDYING UP AND GENERALING
-age <- function(cd){
-    l38 <- IsoplotR::settings('lambda','U238')[1]
-    num <- cd$calibrated$num
-    den <- cd$calibrated$den
-    ni <- length(num)
-    ns <- length(cd$samples)
-    iPbU <- which(num %in% 'Pb206' & den %in% 'U238')
-    i <- (1:ns)*ni-ni+iPbU
-    out <- list()
-    elr <- exp(cd$calibrated$lr[i])
-    out$t68 <- log(elr+1)/l38
-    J <- diag(elr/(elr+1))/l38
-    out$E68 <- J %*% cd$calibrated$cov[i,i] %*% t(J)
-    snames <- names(cd$samples)
-    names(out$t68) <- snames
-    rownames(out$E68) <- snames
-    colnames(out$E68) <- snames
-    out
-}
-
 #' @title convert to IsoplotR
 #' @description convert U-Pb or U-Th-Pb data to an IsoplotR object
 #' @param dat an object of class \code{calibrated}
@@ -270,24 +242,59 @@ age <- function(cd){
 #' }
 #' @export
 simplex2IsoplotR <- function(dat,method='U-Pb'){
-    tab <- data2table(dat)
-    dt <- datatype(dat)
+    ratios <- dat$calibrated$ratios
     if (identical(method,'U-Pb')){
-        if (identical(dt,'U-Th-Pb')){
-            cols <- c(1:6,15:16,21)
-            tab <- tab[,cols,drop=FALSE]
-        }
+        iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb206/U238')
+        oratios <- c('U238/Pb206','Pb207/Pb206','Pb204/Pb206')
+    } else if (identical(method,'U-Th-Pb')){
+        iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb204/Pb208','Pb206/U238','Pb208/Th232')
+        oratios <- c('U238/Pb206','Pb207/Pb206','Pb208/Pb206','Th232/U238')
+    } else if (identical(method,'Th-Pb')){
+        iratios <- c('Pb204/Pb208','Pb208/Th232')
+        oratios <- c('Th232/Pb208','Pb204/Pb208')
+    }
+    if (!all(iratios %in% ratios)){
+        stop("Input ratios should include: ",iratios)
+    }
+    nr <- length(ratios)
+    no <- length(oratios)
+    j <- matrix(0,no,nr)
+    colnames(j) <- ratios
+    rownames(j) <- oratios
+    if (identical(method,'U-Pb')){
+        j['U238/Pb206','Pb206/U238'] <- -1
+        j['Pb207/Pb206','Pb207/Pb206'] <- 1
+        j['Pb204/Pb206','Pb204/Pb206'] <- 1
+    } else if (identical(method,'U-Th-Pb')){
+        j['U238/Pb206','Pb206/U238'] <- -1
+        j['Pb207/Pb206','Pb207/Pb206'] <- 1
+        j['Pb208/Pb206','Pb204/Pb206'] <- 1
+        j['Pb208/Pb206','Pb204/Pb208'] <- -1
+        j['Th232/U238','Pb204/Pb206'] <- 1
+        j['Th232/U238','Pb204/Pb208'] <- -1
+        j['Th232/U238','Pb206/U238'] <- 1
+        j['Th232/U238','Pb208/Th232'] <- -1
+    } else if (identical(method,'Th-Pb')){
+        j['Th232/Pb208','Pb208/Th232'] <- -1
+        j['Pb204/Pb208','Pb204/Pb208'] <- 1
+    }
+    cal <- dat$calibrated
+    snames <- cal$snames
+    ns <- length(snames)
+    J <- matrix(0,no*ns,nr*ns)
+    for (i in 1:ns){
+        i1 <- (i-1)*no+(1:no)
+        i2 <- (i-1)*nr+(1:nr)
+        J[i1,i2] <- j
+    }
+    val <- as.vector(exp(J %*% cal$val))
+    E <- diag(val) %*% J %*% cal$cov %*% t(J) %*% diag(val)
+    tab <- data2table_helper(val=val,E=E,snames=snames,ratios=oratios)
+    if (identical(method,'U-Pb')){
         out <- IsoplotR:::as.UPb(tab,format=5)
     } else if (identical(method,'U-Th-Pb')){
-        if (!identical(dt,'U-Th-Pb'))
-            stop('Invalid data type or U-Th-Pb dating.')
-        cols <- c(1:4,7:10,15,17:18,22:23,30)
-        tab <- tab[,cols,drop=FALSE]
         out <- IsoplotR:::as.UPb(tab,format=8)
     } else if (identical(method,'Th-Pb')){
-        if (!identical(dt,'U-Th-Pb'))
-            stop('Invalid data type or U-Th-Pb dating.')
-        cols <- c(11:14,33)
         out <- IsoplotR:::as.ThPb(tab,format=2)
     }
     out
