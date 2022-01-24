@@ -242,44 +242,54 @@ delta2york <- function(d,i,j){
 #' }
 #' @export
 simplex2IsoplotR <- function(dat,method='U-Pb'){
+    ratios <- dat$calibrated$ratios
     if (identical(method,'U-Pb')){
         iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb206/U238')
         oratios <- c('U238/Pb206','Pb207/Pb206','Pb204/Pb206')
-        j <- rbind(c(0,0,-1),
-                   c(0,1,0),
-                   c(1,0,0))
     } else if (identical(method,'U-Th-Pb')){
         iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb204/Pb208','Pb206/U238','Pb208/Th232')
         oratios <- c('U238/Pb206','Pb207/Pb206','Pb208/Pb206','Th232/U238')
-        j <- rbind(c(0,0,0,-1,0),
-                   c(0,1,0,0,0),
-                   c(1,0,-1,0,0),
-                   c(1,0,-1,1,-1))
-        format <- 8
     } else if (identical(method,'Th-Pb')){
         iratios <- c('Pb204/Pb208','Pb208/Th232')
-        iratios <- c('Th232/Pb208','Pb204/Pb208')
-        j <- rbind(c(0,-1),
-                   c(-1,0))
+        oratios <- c('Th232/Pb208','Pb204/Pb208')
     }
-    if (all(iratios %in% dat$calibrated$ratios)){
-        cal <- dat$calibrated
-        snames <- cal$snames
-        ns <- length(snames)
-        ni <- length(iratios)
-        no <- length(oratios)
-        J <- matrix(0,no*ns,ni*ns)
-        for (i in 1:ns){
-            i1 <- (i-1)*no+(1:no)
-            i2 <- (i-1)*ni+(1:ni)
-            J[i1,i2] <- j
-        }
-        val <- as.vector(exp(J %*% cal$val))
-        E <- diag(val) %*% J %*% cal$cov %*% t(J) %*% diag(val)
-        tab <- data2table_helper(val=val,E=E,snames=snames,ratios=oratios)
-    } else {
+    if (!all(iratios %in% ratios)){
         stop("Input ratios should include: ",iratios)
     }
+    nr <- length(ratios)
+    no <- length(oratios)
+    j <- matrix(0,no,nr)
+    colnames(j) <- ratios
+    rownames(j) <- oratios
+    if (identical(method,'U-Pb')){
+        j['U238/Pb206','Pb206/U238'] <- -1
+        j['Pb207/Pb206','Pb207/Pb206'] <- 1
+        j['Pb204/Pb206','Pb204/Pb206'] <- 1
+    } else if (identical(method,'U-Th-Pb')){
+        j['U238/Pb206','Pb206/U238'] <- -1
+        j['Pb207/Pb206','Pb207/Pb206'] <- 1
+        j['Pb208/Pb206','Pb204/Pb206'] <- 1
+        j['Pb208/Pb206','Pb204/Pb208'] <- -1
+        j['Th232/U238','Pb204/Pb206'] <- 1
+        j['Th232/U238','Pb204/Pb208'] <- -1
+        j['Th232/U238','Pb206/U238'] <- 1
+        j['Th232/U238','Pb208/Th232'] <- -1
+    } else if (identical(method,'Th-Pb')){
+        j['Th232/Pb208','Pb208/Th232'] <- -1
+        j['Pb204/Pb208','Pb204/Pb208'] <- 1
+    }
+    cal <- dat$calibrated
+    snames <- cal$snames
+    ns <- length(snames)
+    J <- matrix(0,no*ns,nr*ns)
+    for (i in 1:ns){
+        i1 <- (i-1)*no+(1:no)
+        i2 <- (i-1)*nr+(1:nr)
+        J[i1,i2] <- j
+    }
+    val <- as.vector(exp(J %*% cal$val))
+    E <- diag(val) %*% J %*% cal$cov %*% t(J) %*% diag(val)
+    tab <- data2table_helper(val=val,E=E,snames=snames,ratios=oratios)
     if (identical(method,'U-Pb')){
         out <- IsoplotR:::as.UPb(tab,format=5)
     } else if (identical(method,'U-Th-Pb')){

@@ -1814,3 +1814,236 @@ instantiate@resource://devtools/server/connectors/js-window-actor/DevToolsFrameC
 handleEvent@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:650:12
 
 JavaScript error: , line 0: NotFoundError: No such JSWindowActor 'DevToolsFrame'
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: Failed to persistently map PBO of size 1048576 bytes
+[2022-01-23T23:06:11Z ERROR webrender::device::gl] Failed to persistently map PBO of size 1048576 bytes
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+ExceptionHandler::GenerateDump cloned child 36932
+ExceptionHandler::SendContinueSignalToChild sent continue signal to child
+ExceptionHandler::WaitForContinueSignal waiting for continue signal...
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
