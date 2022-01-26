@@ -1,6 +1,9 @@
 #' @title logratio calculation
-#' @description extracts logratio averages from time resolved SIMS data
+#' @description extracts logratio averages from time resolved SIMS
+#'     data
 #' @param x an object of class \code{drift}
+#' @param i a vector of mass spectrometer cycles to retain for the
+#'     logratio calculation. If \code{NULL}, uses the entire signal.
 #' @return an object of class \code{logratios}
 #' @examples
 #' \dontrun{
@@ -294,18 +297,18 @@ groupbypairs <- function(B){
 #' @param sname the sample name to be shown
 #' @param i the sample number to be shown
 #' @param ratios logical. If \code{FALSE}, plots the raw signals
-#' versus time. If \code{TRUE}, plots the ratios against time.
-#' Both plots show the fitted values as a solid line. Note that, for
-#' single collector datasets, the numerator and denominator of the
-#' measured ratios correspond to different times.
+#'     versus time. If \code{TRUE}, plots the ratios against time.
+#'     Both plots show the fitted values as a solid line. Note that,
+#'     for single collector datasets, the numerator and denominator of
+#'     the measured ratios correspond to different times.
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
 #' \dontrun{
-#' data('SHRIMP',package='simplex')
-#' dc <- drift(x=SHRIMP)
+#' data('SHRIMP_UPb',package='simplex')
+#' dc <- drift(x=SHRIMP_UPb)
 #' lr <- logratios(dc)
-#' plot(lr,i=1,logratios=TRUE)
+#' plot(lr,i=1,ratios=TRUE)
 #' }
 #' @method plot logratios
 #' @export

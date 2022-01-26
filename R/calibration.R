@@ -2,22 +2,25 @@
 #' @description calibration of SIMS data using reference standards
 #' @param lr an object of class \code{logratios}
 #' @param stand an object of class \code{standard}
-#' @param snames a vector with the sample names of selected standard
-#'     analyses to be used for the calibration
-#' @param i a vector of indices of selected standard analyses to be
-#'     used for the calibration
+#' @param pairing (optional) an object of class \code{pairing}
+#' @param prefix (optional) prefix of the aliquots to be used as
+#'     calibration standards
+#' @param snames (option) vector of sample names to be used as
+#'     calibration standards
+#' @param i (optional) vector of indices of aliquots to be used as
+#'     calibration standards
 #' @param invert if \code{TRUE}, inverts the selection made by
 #'     \code{snames} or \code{i}
 #' @param t analysis time that the signal should be regressed to
 #' @return an object of class \code{calibration}
 #' @examples
 #' \dontrun{
-#' data('SHRIMP',package='simplex')
-#' st <- standard(preset='Temora',prefix='TEM')
-#' dc <- drift(x=SHRIMP)
+#' data('SHRIMP_UPb',package='simplex')
+#' st <- standard(preset='Temora')
+#' dc <- drift(x=SHRIMP_UPb)
 #' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=st)
-#' plot(cal,option=3)
+#' cal <- calibration(lr=lr,stand=st,prefix="TEM")
+#' plot(cal)
 #' }
 #' @export
 calibration <- function(lr,stand,pairing=NULL,prefix=NULL,
@@ -174,21 +177,19 @@ yorkfix <- function(xy,b,alpha=0.05){
 
 #' @title plot calibration data
 #' @description shows the calibration data on a logratio plot.
-#' @param x an object of class \code{logratios}
-#' @param option if \code{option=1}, plots the best fit line through
-#'     U-Pb and Th-Pb data. If \code{option=2}, adds the time-resolved
-#'     raw data to the plot. If \code{option=3}, marks the first and
-#'     last measurement by black and white circles, respectively.
+#' @param dat an object of class \code{logratios}
+#' @param show.numbers logical. If \code{TRUE}, labels the error
+#'     ellipses with the aliquot numbers.
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function.
 #' @examples
 #' \dontrun{
-#' data('SHRIMP',package='simplex')
-#' st <- standard(preset='Temora',prefix=TEM)
-#' dc <- drift(x=SHRIMP)
+#' data('SHRIMP_UPb',package='simplex')
+#' st <- standard(preset='Temora')
+#' dc <- drift(x=SHRIMP_UPb)
 #' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=st)
-#' plot(cal,option=3)
+#' cal <- calibration(lr=lr,stand=st,prefix='TEM')
+#' plot(cal)
 #' }
 #' @method plot calibration
 #'@export
