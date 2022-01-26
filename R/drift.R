@@ -1,6 +1,10 @@
 #' @title drift correction
-#' @description fits a generalised linear model to time resolved SIMS data
+#' @description fits a generalised linear model to time resolved SIMS
+#'     data
 #' @param x an object of class \code{simplex}
+#' @param i (optional) vector of mass spectrometer cycles to be used
+#'     for the drift correction. If \code{NULL}, uses the entire
+#'     signal.
 #' @return an object of class \code{drift}
 #' @examples
 #' data('SHRIMP_UPb',package='simplex')

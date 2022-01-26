@@ -122,17 +122,15 @@ calibrate_regression <- function(dat,exterr=FALSE){
 #' @title plot calibrated data
 #' @description shows the calibrated data on a logratio plot.
 #' @param x an object of class \code{calibrated}
-#' @param option for U-Pb or Th-Pb data. If \code{1}, plots the data
-#'     as error ellipses; if \code{2}, adds the raw data; if \code{3},
-#'     marks the first and last measurement with a black and white
-#'     circle, respectively.
+#' @param show.numbers logical. If \code{TRUE}, numbers the error
+#'     ellipses by aliquot.
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function
 #' @examples
 #' data('Cameca_UPb')
 #' dc <- drift(x=Cameca_UPb)
 #' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
+#' cal <- calibration(lr=lr,stand=standard(preset='Temora'))
 #' cd <- calibrate(cal)
 #' plot(cd)
 #' @method plot calibrated

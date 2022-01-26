@@ -8,14 +8,8 @@
 #'     masses that are visited during each sweep.
 #' @param num numerator ions of the logratios to be processed in
 #'     subsequent data reduction steps.
-#' @param detectors vector of detector labels
 #' @param den denominator ions of the logratios to be processed in
 #'     subsequent data reduction steps.
-#' @param oxide the ion label to be used as a uranium or thorium oxide
-#'     reference for U-Pb and U-Th-Pb calibration.
-#' @param multicollector logical flag indicating whether the
-#'     measurements were made in multicollection mode. If \code{TRUE},
-#'     removes the need to apply a drift correction.
 #' @param blank character string with either (1) the name of the
 #'     channel (e.g. \code{'bkg'}) of the background signal, or (2)
 #'     \code{'nominal'} a flag indicating that nominal detector
