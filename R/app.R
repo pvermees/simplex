@@ -228,8 +228,8 @@ convert2IsoplotR <- function(x){
     as.data.frame(isodat$x)
 }
 
-download4IsoplotR <- function(){
-    
+export2IsoplotR <- function(x){
+    as.list(convert2IsoplotR(x))
 }
 
 # f = list of two lists with blocks of text and corresponding filenames
@@ -268,7 +268,7 @@ freeformServer <- function(port=NULL,host='127.0.0.1',
             preset2deltaref=preset2deltaref,
             convert2delta=convert2delta,
             convert2IsoplotR=convert2IsoplotR,
-            download4IsoplotR=download4IsoplotR
+            export2IsoplotR=export2IsoplotR
         )
     )
 }
