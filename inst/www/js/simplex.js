@@ -998,8 +998,8 @@ function toggleIsoplotRtype(){
     glob.IsoplotRtype = document.getElementById('IsoplotRtype').value;
 }
 
-function export2isoplotr(){
-    glob.IsoplotRformat = document.getElementById("format").value;
+function export2IsoplotR(){
+    glob.IsoplotRformat = document.getElementById("IsoplotRtype").value;
     var json = null;
     fetch('js/IsoplotR.json')
 	.then(response => {
@@ -1013,16 +1013,22 @@ function export2isoplotr(){
 	    err => alert(err)
 	).then(
 	    async () => {
-		let result = await shinylight.call('export2isoplotr', { x:glob }, null);
+		let result = await shinylight.call('export2IsoplotR',
+						   { x:glob }, null);
 		let gc = null;
 		let pd = null;
 		let format = null;
-		switch (glob.datatype){
+		switch (glob.IsoplotRtype){
 		case 'U-Pb':
 		    gc = 'U-Pb';
 		    pd = 'concordia';
 		    format = 5;
 		    break;
+		case 'U-Th-Pb':
+		    gc = 'U-Pb';
+		    pd = 'concordia';
+		    format = 8;
+		    break;		    
 		case 'Th-Pb':
 		    gc = 'Th-Pb';
 		    pd = 'isochron';

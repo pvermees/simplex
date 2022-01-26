@@ -1,7 +1,8 @@
 <left>
-
+  
   <div class="show4stable hide4geochron">
-    <button class="mainbutton" id="delta" onclick="convert('convert2delta')">
+    <button class="mainbutton" id="delta"
+	    onclick="convert('convert2delta')">
       Convert
     </button> to 
     <select id="deltatype" onchange="toggledeltatype();">
@@ -11,7 +12,9 @@
     <p></p>
     Reference material:
     <select id="deltaref" onchange="preset2deltaref()">
-      <option disabled selected value="select"> -- select an option -- </option>
+      <option disabled selected value="select">
+	-- select an option --
+      </option>
       <option value="VSMOW">VSMOW (O)</option>
       <option value="troilite">troilite (S)</option>
       <option value="other">other</option>
@@ -20,7 +23,8 @@
     <table id="delreftab" class="normalfont"></table>
   </div>
   <div class="hide4stable show4geochron">
-    <button class="mainbutton" id="IsoplotR" onclick="convert('convert2IsoplotR')">
+    <button class="mainbutton" id="IsoplotR"
+	    onclick="convert('convert2IsoplotR')">
       Convert </button> 
     <select id="IsoplotRtype" onchange="toggleIsoplotRtype();">
       <option value="U-Pb">U-Pb</option>
@@ -30,9 +34,14 @@
     to <tt>IsoplotR</tt>
     <a id="fname" href="" download="simplex.json"></a>
   </div>
-  
+  <div>
+    <button class="mainbutton" id="export" onclick="export2IsoplotR()">
+      Export
+    </button> as <tt>json</tt>
+  </div>
+
 </left>
 
 <right>
-  <table class="normalfont" id="final-table"></table>
+    <table class="normalfont" id="final-table"></table>
 </right>
