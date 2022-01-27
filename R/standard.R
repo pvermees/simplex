@@ -29,31 +29,40 @@
 #' @export
 standard <- function(preset,tst,measured,del,ref){
     if (!missing(preset)){
-        if (preset=='Plesovice'){
+        tpresets <- rbind(
+            'Plesovice-t' = c(337.13,0.18),
+            'Qinghu-t' = c(159.5,0.1),
+            'Penglai-t' = c(4.4,0.05),
+            '44069-t' = c(424.86,0.25),
+            'Temora-t' = c(416.75,0.12)
+        )
+        colnames(tpresets) <- c('t','s[t]')        
+        Opresets <- rbind(
+            'NBS28-O' = c(4.79,0.05,9.56,0.11),
+            'Plesovice-O' = c(4.095,0.04,8.19,0.04),
+            'Qinghu-O' = c(2.7,0.1,5.4,0.1)
+        )
+        Spresets <- rbind(
+            'Sonora-S' = c(0.83,0.03,1.61,0.08,3.25,0.03)
+        )
+        if (preset %in% rownames(tpresets)){
             geochron <- TRUE
-            out <- age2stand(tst=c(337.13,0.18))
-        } else if (preset=='Qinghu'){
-            geochron <- TRUE
-            out <- age2stand(tst=c(159.5,0.1))
-        } else if (preset=='44069'){
-            geochron <- TRUE
-            out <- age2stand(tst=c(424.86,0.25))
-        } else if (preset=='Temora'){
-            geochron <- TRUE
-            out <- age2stand(tst=c(416.75,0.12))
-        } else if (preset=='NBS28'){
+            out <- age2stand(tst=tpresets[preset,])
+        } else if (preset %in% rownames(Opresets)){
             geochron <- FALSE
-            del <- delhelper(num=c('O17','O18'),
-                             den='O16',
-                             val=c(4.79,9.56),
-                             cov=diag(c(0.05,0.11))^2)
+            del <- list()
+            del$val <- Opresets[preset,c(1,3)]
+            del$cov <- diag(Opresets[preset,c(2,4)]^2)
+            names(del$val) <- rownames(del$cov) <-
+                colnames(del$cov) <- c('O17/O16','O18/O16')
             out <- del2stand(del,ref=VSMOW())
-        } else if (preset=='Sonora'){ # temporary value
+        } else if (preset %in% rownames(Spresets)){ # temporary value
             geochron <- FALSE
-            del <- delhelper(num=c('S33','S34','S36'),
-                             den='S32',
-                             val=c(0.83,1.61,3.25),
-                             cov=diag(c(0.03,0.08,0.03))^2)
+            del <- list()
+            del$val <- Spresets[preset,c(1,3,5)]
+            del$cov <- diag(Spresets[preset,c(2,4,6)]^2)
+            names(del$val) <- rownames(del$cov) <-
+                colnames(del$cov) <- c('S33/S32','S34/S32','S36/S32')
             out <- del2stand(del,ref=troilite())
         } else {
             stop("Invalid input to standard(...).")
@@ -89,15 +98,6 @@ standard <- function(preset,tst,measured,del,ref){
     out
 }
 
-delhelper <- function(num,den,val,cov){
-    ratios <- paste0(num,'/',den)
-    out <- list(val=val,cov=cov)
-    names(out$val) <- ratios
-    rownames(out$cov) <- ratios
-    colnames(out$cov) <- ratios
-    out
-}
-
 age2stand <- function(tst){
     num <- c('Pb204','Pb204','Pb206','Pb208')
     den <- c('Pb206','Pb208','U238','Th232')
@@ -127,20 +127,23 @@ del2stand <- function(del,ref){
 }
 
 VSMOW <- function(){
-    O678 <- c(0.3799e-3,2.00520e-3)
-    relerr <- c(1.6e-3,0.43e-3)/c(0.3799,2.00520)
-    out <- delhelper(num = c('O17','O18'),den = 'O16',
-                     val=log(O678),cov=diag(relerr^2))
-    out$preset <- 'VSMOW'
-    out
+    ref(val=c(0.3799e-3,2.00520e-3),
+        relerr=c(1.6e-3,0.43e-3)/c(0.3799,2.00520),
+        preset='VSMOW',
+        nms=c('O17/O16','O18/O16')
+        )
 }
 
 troilite <- function(){
     S2346 <- c(126.948,22.6436,6515)
-    relerr <- c(0.047,0.0020,20)/S2346
-    out <- delhelper(num=c('S33','S34','S36'),den='S32',
-                     val=-log(S2346),cov=diag(relerr^2))
-    out$preset <- 'troilite'
+    ref(val=S2346,relerr=c(0.047,0.0020,20)/S2346,
+        preset='troilite',
+        nms=c('S33/S32','S34/S32','S36/S32'))
+}
+
+ref <- function(val,relerr,preset,nms){
+    out <- list(val=val,cov=diag(relerr^2),preset=preset)
+    names(out$val) <- colnames(out$cov) <- rownames(out$cov) <- nms
     out
 }
 
