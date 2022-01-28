@@ -2279,3 +2279,9 @@ JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeErr
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 694: TypeError: stand.ref is undefined
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 694: TypeError: stand.ref is undefined
 JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 694: TypeError: stand.ref is undefined
+1643321093404	Marionette	INFO	Stopped listening on port 42907
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]

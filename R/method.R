@@ -73,8 +73,8 @@ defaultmethod <- function(m){
     } else if (m=='IGG-O'){
         out$instrument <- 'Cameca'
         out$ions <- c('O16','O17','O18')
-        out$num <- c('O17','O18')
-        out$den <- c('O16','O16')
+        out$num <- 'O18'
+        out$den <- 'O16'
         out$blank <- 'nominal'
         out$description <- "Multicollector oxygen isotope analyses at CAS-IGG (Beijing)."
     } else if (m=='IGG-S'){

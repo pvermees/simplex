@@ -40,7 +40,8 @@ standard <- function(preset,tst,measured,del,ref){
         Opresets <- rbind(
             'NBS28-O' = c(4.79,0.05,9.56,0.11),
             'Plesovice-O' = c(4.095,0.04,8.19,0.04),
-            'Qinghu-O' = c(2.7,0.1,5.4,0.1)
+            'Qinghu-O' = c(2.7,0.1,5.4,0.1),
+            'Penglai-O' = c(2.655,0.05,5.31,0.05)
         )
         Spresets <- rbind(
             'Sonora-S' = c(0.83,0.03,1.61,0.08,3.25,0.03)

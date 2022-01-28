@@ -19,7 +19,8 @@ delta <- function(cd,ref,log=TRUE){
     if (missing(ref)){
         ref <- cd$calibration$stand$ref
     }
-    logd <- cd$calibrated$val - rep(ref$val,length(cd$samples))
+    ratios <- cd$calibrated$ratios
+    logd <- cd$calibrated$val - rep(ref$val[ratios],length(cd$samples))
     nd <- length(logd)
     if (log){
         del$val <- 1000*logd
@@ -29,7 +30,7 @@ delta <- function(cd,ref,log=TRUE){
         J <- 1000*exp(logd)*diag(nd)
     }
     del$cov <- J %*% cd$calibrated$cov %*% t(J)
-    nms <- rep(paste0('delta(',names(ref$val),')'),length(cd$samples))
+    nms <- rep(paste0('delta(',names(ref$val[ratios]),')'),length(cd$samples))
     rownames(del$cov) <- colnames(del$cov) <- names(del$val) <- nms
     out$delta <- del
     class(out) <- unique(append('delta',class(cd)))
