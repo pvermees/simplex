@@ -2253,3 +2253,35 @@ module.exports/proto.destroy@resource://devtools/server/actors/targets/target-ac
 instantiate@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:242:26
 handleEvent@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:650:12
 
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NotFoundError: No such JSWindowActor 'DevToolsFrame'
+1643234351684	Marionette	INFO	Stopped listening on port 37663
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+
+###!!! [Parent][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+1643291879981	geckodriver	INFO	Listening on 127.0.0.1:50831
+1643291880487	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "56889" "-no-remote" "-profile" "/tmp/rust_mozprofileD0VAuo"
+1643291881160	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofileD0VAuo/search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:56889/devtools/browser/e832daec-6a29-44af-ad68-071fc9b8461a
+1643291882195	Marionette	INFO	Listening on port 42907
+1643291882302	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 957: TypeError: stand.ref is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 980: TypeError: e.deg is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 694: TypeError: stand.ref is undefined
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate
+JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+JavaScript error: http://127.0.0.1:8000/js/dataentrygrid.min.js, line 1: TypeError: getAnchor() is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 694: TypeError: stand.ref is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 694: TypeError: stand.ref is undefined
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 694: TypeError: stand.ref is undefined
+1643321093404	Marionette	INFO	Stopped listening on port 42907
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]

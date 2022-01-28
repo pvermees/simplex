@@ -25,13 +25,13 @@ def blank(val):
     blank = d.find_element("id","blank")
     blank.clear()
     blank.send_keys(val)
-    blank.send_keys(Keys.ENTER);
+    blank.send_keys(Keys.ENTER)
 
 def ions(val,identifier="ions"):
     ions = d.find_element("id",identifier)
     ions.clear()
     ions.send_keys(val)
-    ions.send_keys(Keys.ENTER);
+    ions.send_keys(Keys.ENTER)
     
 def upload(fname):
     upload = d.find_element("id","upload")
@@ -67,12 +67,16 @@ def Otest():
     d.implicitly_wait(10)
     upload(unames)
     ions("O16,17,O18")
+    time.sleep(0.5)
     ions("O18",identifier="num")
-    ions("O16",identifier="den")    
-    time.sleep(1)
+    time.sleep(0.5)
+    ions("O16",identifier="den")
+    time.sleep(0.5)
     click("drift")
-    time.sleep(5)
+    time.sleep(0.5)
     click("logratios")
+    time.sleep(0.5)
+    click("calibration")
     
 def geochroncalibrationtest():
     click("calibration")

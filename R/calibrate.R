@@ -30,14 +30,14 @@ calibrate_average <- function(dat,exterr=FALSE){
     tavg <- time_average(dat,t=dat$calibration$t)
     alliso <- names(tavg[[1]]$val)
     stdiso <- names(std$val)
-    caliso <- names(cal$val) # caliso is a subset of stdiso
+    caliso <- names(cal$val) # caliso is the intersection of alliso and stdiso
     nai <- length(alliso)
     nsi <- length(stdiso)
     nci <- length(caliso)
     E <- matrix(0,nrow=ns*nai+nsi+nci,ncol=ns*nai+nsi+nci)
     J <- matrix(0,nrow=ns*nai,ncol=ns*nai+nsi+nci)
-    ical <- which(alliso %in% caliso)
-    istd <- which(stdiso %in% caliso)
+    iallincal <- match(caliso,alliso)
+    istdincal <- match(caliso,stdiso)
     E[ns*nai+1:nsi,ns*nai+1:nsi] <- as.matrix(std$cov)
     E[ns*nai+nsi+1:nci,ns*nai+nsi+1:nci] <- as.matrix(cal$cov)
     val <- rep(0,ns*nai)
@@ -46,10 +46,10 @@ calibrate_average <- function(dat,exterr=FALSE){
         val[iall] <- tavg[[i]]$val
         E[iall,iall] <- tavg[[i]]$cov
         J[iall,iall] <- diag(nai)
-        val[iall[ical]] <- val[iall[ical]] + std$val[istd] - cal$val
+        val[iall[iallincal]] <- val[iall[iallincal]] + std$val[istdincal] - cal$val
         if (exterr){
-            J[iall[istd],ns*nai+1:nsi] <- diag(nsi)[istd,]
-            J[iall[ical],ns*nai+nsi+1:nci] <- -diag(nci)
+            J[iall[iallincal],ns*nai+1:nsi] <- diag(nsi)[istdincal,]
+            J[iall[iallincal],ns*nai+nsi+1:nci] <- -diag(nci)
         }
     }
     out$calibrated <- list(snames=names(dat$samples),ratios=alliso,
