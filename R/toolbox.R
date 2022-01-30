@@ -75,7 +75,7 @@ multicollector.simplex <- function(x){
     multicollector.default(x$samples[[1]])
 }
 multicollector.spot <- function(x){
-    multcollector.default(x)
+    multicollector.default(x)
 }
 
 datatype <- function(x){

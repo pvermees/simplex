@@ -4,18 +4,32 @@
 \alias{calibration}
 \title{standard calibration}
 \usage{
-calibration(lr, stand, snames = NULL, i = NULL, invert = FALSE, t = NULL)
+calibration(
+  lr,
+  stand,
+  pairing = NULL,
+  prefix = NULL,
+  snames = NULL,
+  i = NULL,
+  invert = FALSE,
+  t = NULL
+)
 }
 \arguments{
 \item{lr}{an object of class \code{logratios}}
 
 \item{stand}{an object of class \code{standard}}
 
-\item{snames}{a vector with the sample names of selected standard
-analyses to be used for the calibration}
+\item{pairing}{an object of class \code{pairing}}
 
-\item{i}{a vector of indices of selected standard analyses to be
-used for the calibration}
+\item{prefix}{(optional) prefix of the aliquots to be used as
+calibration standards}
+
+\item{snames}{(option) vector of sample names to be used as
+calibration standards}
+
+\item{i}{(optional) vector of indices of aliquots to be used as
+calibration standards}
 
 \item{invert}{if \code{TRUE}, inverts the selection made by
 \code{snames} or \code{i}}
@@ -30,11 +44,11 @@ calibration of SIMS data using reference standards
 }
 \examples{
 \dontrun{
-data('SHRIMP',package='simplex')
-st <- standard(preset='Temora',prefix=TEM)
-dc <- drift(x=SHRIMP)
+data('SHRIMP_UPb',package='simplex')
+st <- standard(preset='Temora')
+dc <- drift(x=SHRIMP_UPb)
 lr <- logratios(x=dc)
-cal <- calibration(lr=lr,stand=st)
-plot(cal,option=3)
+cal <- calibration(lr=lr,stand=st,prefix="TEM")
+plot(cal)
 }
 }

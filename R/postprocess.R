@@ -1,17 +1,22 @@
 #' @title calculate delta values
 #' @description convert stable isotope logratio data to delta notation
 #' @param cd an object of class \code{calibrated}
-#' @param log use traditional delta notaion (\code{log=FALSE}) or the
+#' @param ref the logratio composition of a reference material, i.e. a
+#'     list with items \code{val} (vector of logratios) and \code{cov}
+#'     (the covariance matrix of \code{val})
+#' @param log use traditional delta notation (\code{log=FALSE}) or the
 #'     logratio definition (\code{log=TRUE})?
 #' @return an object of class \code{delta}
 #' @examples
+#' \dontrun{
 #' data('Cameca_oxygen',package='simplex')
 #' dc <- drift(x=Cameca_oxygen)
 #' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
+#' cal <- calibration(lr=lr,stand=standard(preset='NBS28-O'))
 #' cd <- calibrate(cal)
 #' del <- delta(cd)
 #' tab <- data2table(del)
+#' }
 #' @export
 delta <- function(cd,ref,log=TRUE){
     out <- cd
@@ -43,12 +48,14 @@ delta <- function(cd,ref,log=TRUE){
 #' @param ... optional arguments
 #' @return a matrix
 #' @examples
+#' \dontrun{
 #' data('Cameca_UPb',package='simplex')
 #' dc <- drift(x=Cameca_UPb)
 #' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
+#' cal <- calibration(lr=lr,stand=standard(preset='Plesovice-t'))
 #' cd <- calibrate(cal)
 #' tab <- data2table(cd)
+#' }
 #' @rdname data2table
 #' @export
 data2table <- function(x,...){ UseMethod("data2table",x) }
@@ -57,6 +64,17 @@ data2table <- function(x,...){ UseMethod("data2table",x) }
 data2table.default <- function(x,...){
     stop('No default version of data2table.')
 }
+
+#' @param cov logical. If \code{TRUE}, produces an output table of
+#'     size \eqn{nm\times{(nm+1)}}, where \eqn{n} is the number of
+#'     aliquots and \eqn{m} is the number of logratios. The first
+#'     column then represents the concatenated vector of logratios for
+#'     all the samples, and the subsequent \eqn{nm} columns contain
+#'     its covariance matrix, including inter-sample error
+#'     correlations.
+#' @param log logical. If \code{TRUE}, returns logratios.
+#' @param log4lab logical. If \code{TRUE}, adds `ln[' to the column
+#'     labels if \code{log=TRUE}.
 #' @rdname data2table
 #' @export
 data2table.calibrated <- function(x,cov=FALSE,log=TRUE,log4lab=TRUE,...){
@@ -73,6 +91,9 @@ data2table.calibrated <- function(x,cov=FALSE,log=TRUE,log4lab=TRUE,...){
     data2table_helper(val=val,E=E,snames=cal$snames,
                       ratios=ratios,cov=cov)
 }
+#' @param cov logical. If \code{TRUE}, returns the logratios along
+#'     with the full covariance matrix including inter-sample error
+#'     correlations.
 #' @rdname data2table
 #' @export
 data2table.delta <- function(x,cov=FALSE,...){
@@ -81,18 +102,26 @@ data2table.delta <- function(x,cov=FALSE,...){
     data2table_helper(val=del$val,E=del$cov,snames=cal$snames,
                       ratios=cal$ratios,cov=cov)
 }
+
+#' @param t The time to which the logratio signal should be
+#'     interpolated.
+#' @param addxy logical. If \code{TRUE}, adds two columns to the
+#'     output table with the x- and y-positions of the different
+#'     aliquots. Only relevant to Cameca data, so ignored for SHRIMP
+#'     data.
 #' @rdname data2table
 #' @export
 data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
     if (addxy & identical(x$method$instrument,'SHRIMP')){
-        stop('SHRIMP data do not contain x-y stage coordinates.')
+        warning('SHRIMP data do not contain x-y stage coordinates.')
+        addxy <- FALSE
     }
     tavg <- time_average(x,t=t)
     ns <- length(tavg) # number of aliquots
     nr <- length(tavg[[1]]$val) # number of ratios
     si <- ifelse(addxy,2,0) # start index
     nc <- si + 2*nr + nr*(nr-1)/2 # number of columns
-    out <- matrix(NA,nrow=ns,nc=nc)
+    out <- matrix(NA,nrow=ns,ncol=nc)
     cnames <- rep(NA,nc)
     ratios <- paste0(x$method$num,'/',x$method$den)
     if (nr>1) comb <- utils::combn(ratios,m=2)
@@ -126,7 +155,7 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
         out[i,si+2*(1:nr)-1] <- val
         out[i,si+2*(1:nr)] <- sqrt(diag(E))
         if (nr>1){
-            cormat <- cov2cor(E)
+            cormat <- stats::cov2cor(E)
             out[i,(si+2*nr+1):nc] <- cormat[upper.tri(cormat)]
         }
     }
@@ -149,7 +178,7 @@ data2table_helper <- function(val,E,snames,ratios,cov=FALSE){
         cnames[2*(1:nr)-1] <- ratios
         cnames[2*(1:nr)] <- paste0('s[',ratios,']')
         ci <- 2*nr
-        cormat <- cov2cor(E)
+        cormat <- stats::cov2cor(E)
         if (nr>1){
             for (r1 in 1:(nr-1)){
                 i1 <- (0:(ns-1))*nr + r1
@@ -164,46 +193,6 @@ data2table_helper <- function(val,E,snames,ratios,cov=FALSE){
         colnames(out) <- cnames
     }
     out
-}
-
-#' @title plot delta values
-#' @description visualises stable isotope data as error ellipses in
-#'     delta notation
-#' @param x an object of class \code{delta}
-#' @param ... optional arguments to be passed on to the generic
-#'     \code{plot} function.
-#' @examples
-#' data('Cameca_oxygen',package='simplex')
-#' dc <- drift(x=Cameca_oxygen)
-#' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
-#' cd <- calibrate(cal)
-#' del <- delta(cd)
-#' plot(del)
-#' @method plot delta
-#' @export
-plot.delta <- function(x,...){
-    del <- x$delta
-    nn <- length(del$num)
-    np <- nn*(nn-1)/2       # number of plot panels
-    nc <- ceiling(sqrt(np)) # number of rows
-    nr <- ceiling(np/nc)    # number of columns
-    oldpar <- graphics::par(mfrow=c(nr,nc),mar=c(3.5,3.5,0.5,0.5))
-    for (i in 1:nr){
-        for (j in (i+1):max(nc,nr+1)){
-            y <- delta2york(d=x,i=i,j=j)
-            xlab <- substitute(delta^{a}*b,
-                               list(a=isotope(ion=del$num[i]),
-                                    b=element(ion=del$num[i])))
-            ylab <- substitute(delta^{a}*b,
-                               list(a=isotope(ion=del$num[j]),
-                                    b=element(ion=del$num[j])))
-            IsoplotR::scatterplot(y,...)
-            graphics::mtext(xlab,side=1,line=2)
-            graphics::mtext(ylab,side=2,line=2)
-        }
-    }
-    graphics::par(oldpar)
 }
 
 delta2york <- function(d,i,j){
@@ -248,8 +237,10 @@ simplex2IsoplotR <- function(dat,method='U-Pb'){
         iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb206/U238')
         oratios <- c('U238/Pb206','Pb207/Pb206','Pb204/Pb206')
     } else if (identical(method,'U-Th-Pb')){
-        iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb204/Pb208','Pb206/U238','Pb208/Th232')
-        oratios <- c('U238/Pb206','Pb207/Pb206','Pb208/Pb206','Th232/U238')
+        iratios <- c('Pb204/Pb206','Pb207/Pb206','Pb204/Pb208',
+                     'Pb206/U238','Pb208/Th232')
+        oratios <- c('U238/Pb206','Pb207/Pb206',
+                     'Pb208/Pb206','Th232/U238')
     } else if (identical(method,'Th-Pb')){
         iratios <- c('Pb204/Pb208','Pb208/Th232')
         oratios <- c('Th232/Pb208','Pb204/Pb208')

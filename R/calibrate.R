@@ -8,7 +8,7 @@
 #' data('Cameca_oxygen',package='simplex')
 #' dc <- drift(x=Cameca_oxygen)
 #' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
+#' cal <- calibration(lr=lr,stand=standard(preset='NBS28-O'))
 #' cd <- calibrate(cal)
 #' del <- delta(cd,log=FALSE)
 #' tab <- data2table(del)
@@ -127,12 +127,16 @@ calibrate_regression <- function(dat,exterr=FALSE){
 #' @param ... optional arguments to be passed on to the generic
 #'     \code{plot} function
 #' @examples
-#' data('Cameca_UPb')
+#' \dontrun{
+#' data('Cameca_UPb',package='simplex')
 #' dc <- drift(x=Cameca_UPb)
 #' lr <- logratios(x=dc)
-#' cal <- calibration(lr=lr,stand=standard(preset='Temora'))
+#' st <- standard(preset='Temora-t')
+#' p <- pairing(lr,stand=st)
+#' cal <- calibration(lr=lr,pairing=p,stand=st,prefix='Tem')
 #' cd <- calibrate(cal)
 #' plot(cd)
+#' }
 #' @method plot calibrated
 #' @export
 plot.calibrated <- function(x,show.numbers=TRUE,...){
@@ -188,7 +192,7 @@ caldplot_stable <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
         oldpar <- graphics::par(mar=c(3.5,3.5,1.5,3.5),mgp=c(2,0.75,0))
         ylab <- cal$ratios
         ns <- length(cal$snames)
-        tfact <- qnorm(0.975)
+        tfact <- stats::qnorm(0.975)
         lr <- tab[,1]
         ll <- lr - tfact*tab[,2]
         ul <- lr + tfact*tab[,2]
@@ -198,12 +202,12 @@ caldplot_stable <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
         ylim <- c(min(Ys-3*sYs,ll),max(Ys+3*sYs,ul))
         graphics::plot(xlim,ylim,type='n',xlab='sample #',ylab=ylab)
         deltagrid(dat)
-        matlines(rbind(1:ns,1:ns),rbind(ll,ul),lty=1,col='black')
-        points(1:ns,lr,pch=16)
+        graphics::matlines(rbind(1:ns,1:ns),rbind(ll,ul),lty=1,col='black')
+        graphics::points(1:ns,lr,pch=16)
         xlim <- graphics::par('usr')[1:2]
-        lines(xlim,rep(Ys,2),lty=1,col='red')
-        lines(xlim,rep(Ys-tfact*sYs,2),lty=2)
-        lines(xlim,rep(Ys+tfact*sYs,2),lty=2)
+        graphics::lines(xlim,rep(Ys,2),lty=1,col='red')
+        graphics::lines(xlim,rep(Ys-tfact*sYs,2),lty=2)
+        graphics::lines(xlim,rep(Ys+tfact*sYs,2),lty=2)
     }
     graphics::par(oldpar)
 }
@@ -281,7 +285,7 @@ caldplot_geochronology <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
             ylim[2] <- max(ylim[2],max(yc))
         }
         fit <- cal2york(cal[i,])
-        plot(xlim,ylim,type='n',xlab=X,ylab=Y)
+        graphics::plot(xlim,ylim,type='n',xlab=X,ylab=Y)
         agegrid(fit=fit,pairing=pairing[i,],stand=stand)
         IsoplotR::scatterplot(xy,fit=fit,add=TRUE,show.numbers=show.numbers)
     }
@@ -313,10 +317,10 @@ agegrid <- function(fit,pairing,stand){
     xu <- rep(xlim[2],nt)
     yl <- logDPticks - logDPstd + a + b * xl
     yu <- logDPticks - logDPstd + a + b * xu
-    matlines(rbind(xl,xu),rbind(yl,yu),lty=3,col='black')
+    graphics::matlines(rbind(xl,xu),rbind(yl,yu),lty=3,col='black')
     top <- (yu>ylim[2])
-    axis(side=3,at=xlim[1]+(ylim[2]-yl[top])/b,labels=tticks[top])
-    axis(side=4,at=yu[!top],labels=tticks[!top])
-    mtext('age (Ma)',side=3,line=1.5)
-    mtext('age (Ma)',side=4,line=1.5)
+    graphics::axis(side=3,at=xlim[1]+(ylim[2]-yl[top])/b,labels=tticks[top])
+    graphics::axis(side=4,at=yu[!top],labels=tticks[!top])
+    graphics::mtext('age (Ma)',side=3,line=1.5)
+    graphics::mtext('age (Ma)',side=4,line=1.5)
 }

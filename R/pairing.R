@@ -1,3 +1,32 @@
+#' @title Pair isotopic ratios for multi-element calibration
+#' @description Pairs oxide/element ratios with element/element ratios
+#'     for multi-element calibration, typically in the context of U-Pb
+#'     and Th-Pb geochronology
+#' @param lr an object of class \code{logratios}
+#' @param stand an object of class \code{stand}
+#' @return an object of class \code{pairing}, i.e. a data frame with
+#'     the following columns:
+#'
+#' \code{X}: the parent oxide/parent ratio (e.g., \code{'UO/U238'},
+#' \code{'ThO/Th'}),
+#'
+#' \code{Y}: the parent (e.g. \code{'U238'}, \code{'Th232'}),
+#'
+#' \code{C} (optional): the common Pb ratio
+#'     (e.g. \code{'Pb204/Pb206'}, \code{'Pb204/Pb208'})
+#'
+#' \code{slope}: either \code{'auto'} or a numerical value if the
+#' calibration is to use a fixed slope.
+#' @examples
+#' \dontrun{
+#' data('SHRIMP_UPb',package='simplex')
+#' st <- standard(preset='Temora')
+#' dc <- drift(x=SHRIMP_UPb)
+#' lr <- logratios(x=dc)
+#' cal <- calibration(lr=lr,stand=st,prefix="TEM")
+#' plot(cal)
+#' }
+#' @export
 pairing <- function(lr,stand){
     if (missing(stand)) stand <- skeletonstand(lr)
     num <- lr$method$num
@@ -46,5 +75,6 @@ pairing <- function(lr,stand){
     out <- data.frame(X=OP,Y=DP,stringsAsFactors=FALSE)
     if (!stand$measured) out$C <- CD
     out$slope <- rep('auto',nrow(out))
+    class(out) <- append(class(out),'pairing')
     out
 }

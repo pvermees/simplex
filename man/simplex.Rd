@@ -7,7 +7,12 @@
 \alias{simplex-package}
 \title{Graphical User Interface for simplex}
 \usage{
-simplex()
+simplex(port = NULL)
+}
+\arguments{
+\item{port}{The port on which to listen. If not provided, a random
+unused port will be chosen and a browser window opened on that
+port.}
 }
 \description{
 Shinylight app for simplex

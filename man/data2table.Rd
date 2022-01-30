@@ -5,20 +5,40 @@
 \alias{data2table.default}
 \alias{data2table.calibrated}
 \alias{data2table.delta}
+\alias{data2table.logratios}
 \title{export to table}
 \usage{
 data2table(x, ...)
 
 \method{data2table}{default}(x, ...)
 
-\method{data2table}{calibrated}(x, ...)
+\method{data2table}{calibrated}(x, cov = FALSE, log = TRUE, log4lab = TRUE, ...)
 
-\method{data2table}{delta}(x, ...)
+\method{data2table}{delta}(x, cov = FALSE, ...)
+
+\method{data2table}{logratios}(x, log = TRUE, t = NULL, addxy = FALSE, ...)
 }
 \arguments{
 \item{x}{an object of class \code{calibrated} or \code{delta}}
 
 \item{...}{optional arguments}
+
+\item{cov}{logical. If \code{TRUE}, returns the logratios along
+with the full covariance matrix including inter-sample error
+correlations.}
+
+\item{log}{logical. If \code{TRUE}, returns logratios.}
+
+\item{log4lab}{logical. If \code{TRUE}, adds `ln[' to the column
+labels if \code{log=TRUE}.}
+
+\item{t}{The time to which the logratio signal should be
+interpolated.}
+
+\item{addxy}{logical. If \code{TRUE}, adds two columns to the
+output table with the x- and y-positions of the different
+aliquots. Only relevant to Cameca data, so ignored for SHRIMP
+data.}
 }
 \value{
 a matrix
@@ -27,10 +47,12 @@ a matrix
 convert calibrated SIMS data objects to a flat table
 }
 \examples{
+\dontrun{
 data('Cameca_UPb',package='simplex')
 dc <- drift(x=Cameca_UPb)
 lr <- logratios(x=dc)
-cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
+cal <- calibration(lr=lr,stand=standard(preset='Plesovice-t'))
 cd <- calibrate(cal)
 tab <- data2table(cd)
+}
 }

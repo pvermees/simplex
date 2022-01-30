@@ -4,18 +4,7 @@
 \alias{method}
 \title{read or define SIMS acquisition details}
 \usage{
-method(
-  m = "IGG-UPb",
-  instrument,
-  ions,
-  detectors,
-  num,
-  den,
-  oxide,
-  multicollector,
-  nominalblank,
-  description
-)
+method(m = "IGG-UPb", instrument, ions, num, den, blank, description)
 }
 \arguments{
 \item{m}{the name of a data acquisition protocol. Pre-defined
@@ -27,24 +16,16 @@ values include \code{'IGG-UPb'}, \code{'GA-UPb'},
 \item{ions}{vector of labels to be attached to the different ionic
 masses that are visited during each sweep.}
 
-\item{detectors}{vector of detector labels}
-
 \item{num}{numerator ions of the logratios to be processed in
 subsequent data reduction steps.}
 
 \item{den}{denominator ions of the logratios to be processed in
 subsequent data reduction steps.}
 
-\item{oxide}{the ion label to be used as a uranium or thorium oxide
-reference for U-Pb and U-Th-Pb calibration.}
-
-\item{multicollector}{logical flag indicating whether the
-measurements were made in multicollection mode. If \code{TRUE},
-removes the need to apply a drift correction.}
-
-\item{nominalblank}{logical flag indicating whether the blank is
-measured during every sweep, or whether to use a nominal blank
-value for each detector.}
+\item{blank}{character string with either (1) the name of the
+channel (e.g. \code{'bkg'}) of the background signal, or (2)
+\code{'nominal'} a flag indicating that nominal detector
+backgrounds are to be used (only relevant to Cameca data).}
 
 \item{description}{text string with a description of the contents}
 }
@@ -56,6 +37,14 @@ get or set a list of data acquisition properties
 }
 \examples{
 fname <- system.file('SHRIMP.pd',package='simplex')
-shrimpdat <- read_data(fname,m='GA-UPb')
+m <- method(m="GA-UPb",
+            instrument="SHRIMP",
+            ions=c('Zr2O','Pb204','bkg','Pb206','Pb207',
+                   'Pb208','U238','ThO','UO','UO2'),
+            num=c('Pb204','Pb207','Pb206','UO'),
+            den=c('Pb206','Pb206','U238','U238'),
+            blank='bkg',
+            description="U-Pb dating at Geoscience Australia.")
+shrimpdat <- read_data(fname,m=m)
 plot(shrimpdat,i=1)
 }
