@@ -4,16 +4,21 @@
 \alias{drift}
 \title{drift correction}
 \usage{
-drift(x)
+drift(x, i = NULL)
 }
 \arguments{
 \item{x}{an object of class \code{simplex}}
+
+\item{i}{(optional) vector of mass spectrometer cycles to be used
+for the drift correction. If \code{NULL}, uses the entire
+signal.}
 }
 \value{
 an object of class \code{drift}
 }
 \description{
-fits a generalised linear model to time resolved SIMS data
+fits a generalised linear model to time resolved SIMS
+    data
 }
 \examples{
 data('SHRIMP_UPb',package='simplex')

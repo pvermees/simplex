@@ -4,15 +4,13 @@
 \alias{plot.calibrated}
 \title{plot calibrated data}
 \usage{
-\method{plot}{calibrated}(x, option = 1, ...)
+\method{plot}{calibrated}(x, show.numbers = TRUE, ...)
 }
 \arguments{
 \item{x}{an object of class \code{calibrated}}
 
-\item{option}{for U-Pb or U-Th-Pb data. If \code{1}, plots the data
-as error ellipses; if \code{2}, adds the raw data; if \code{3},
-marks the first and last measurement with a black and white
-circle, respectively.}
+\item{show.numbers}{logical. If \code{TRUE}, numbers the error
+ellipses by aliquot.}
 
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function}
@@ -21,10 +19,14 @@ circle, respectively.}
 shows the calibrated data on a logratio plot.
 }
 \examples{
-data('Cameca_UPb')
+\dontrun{
+data('Cameca_UPb',package='simplex')
 dc <- drift(x=Cameca_UPb)
 lr <- logratios(x=dc)
-cal <- calibration(lr=lr,stand=standard(preset='Plesovice'))
+st <- standard(preset='Temora-t')
+p <- pairing(lr,stand=st)
+cal <- calibration(lr=lr,pairing=p,stand=st,prefix='Tem')
 cd <- calibrate(cal)
 plot(cd)
+}
 }

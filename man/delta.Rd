@@ -4,12 +4,16 @@
 \alias{delta}
 \title{calculate delta values}
 \usage{
-delta(cd, log = TRUE)
+delta(cd, ref, log = TRUE)
 }
 \arguments{
 \item{cd}{an object of class \code{calibrated}}
 
-\item{log}{use traditional delta notaion (\code{log=FALSE}) or the
+\item{ref}{the logratio composition of a reference material, i.e. a
+list with items \code{val} (vector of logratios) and \code{cov}
+(the covariance matrix of \code{val})}
+
+\item{log}{use traditional delta notation (\code{log=FALSE}) or the
 logratio definition (\code{log=TRUE})?}
 }
 \value{
@@ -19,11 +23,13 @@ an object of class \code{delta}
 convert stable isotope logratio data to delta notation
 }
 \examples{
+\dontrun{
 data('Cameca_oxygen',package='simplex')
 dc <- drift(x=Cameca_oxygen)
 lr <- logratios(x=dc)
-cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
+cal <- calibration(lr=lr,stand=standard(preset='NBS28-O'))
 cd <- calibrate(cal)
 del <- delta(cd)
 tab <- data2table(del)
+}
 }

@@ -4,38 +4,36 @@
 \alias{standard}
 \title{define an isotopic reference standards}
 \usage{
-standard(
-  preset,
-  prefix = preset,
-  tst,
-  val,
-  cov = matrix(0, length(val), length(val)),
-  common
-)
+standard(preset, tst, measured, del, ref)
 }
 \arguments{
 \item{preset}{(optional) text string. One of either
-\code{'Plesovice'}, \code{'44069'}, \code{'Temora'}, or
-\code{'NBS28'}.}
 
-\item{prefix}{text string marking the first characters of the
-sample names that mark the standard analyses}
+U-Pb age standards: \code{'Plesovice-t'}, \code{Qinghu-t},
+\code{Penglai-t}, \code{'44069-t'}, \code{'Temora-t'},
 
-\item{tst}{(optional) two-element vector with the age and standard
-error of the (presumed concordant) age standard and its
-analytical uncertainty.}
+O-isotope standards: \code{'Plesovice-O'}, \code{'NBS28-O'},
+\code{'Qinghu-O'}, \code{'Penglai-O'},
 
-\item{val}{(optional) true isotopic composition of
-\eqn{^{206}}Pb/\eqn{^{238}}U- and
-\eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
-or the true \eqn{\delta}-values of the stable isotope reference
-material.}
+or S-isotope standards: \code{'Sonora-S'}.}
 
-\item{cov}{(optional) the covariance matrix of \code{val}}
+\item{tst}{two element with the standard's age and its standard
+error.}
 
-\item{common}{(optional) the common-Pb composition
-(\eqn{^{206}}Pb/\eqn{^{204}}Pb and
-\eqn{^{208}}Pb/\eqn{^{204}}Pb).}
+\item{measured}{logical. Only relevant for geochronological data.
+If \code{TRUE}, stores the composition of the standard as a
+measured isotopic composition. If \code{FALSE}, stores the
+composition as a mixture of common Pb and radiogenic Pb.}
+
+\item{del}{Stable isotope composition of a standard in conventional
+delta notation, specified as a two-item list containing a
+vector \code{val} of \eqn{\delta}-values and its covariance
+matrix \code{cov}.}
+
+\item{ref}{Logratio composition of a reference standard such as
+Vienna Standard Mean Ocean Water (VSMOW) or troilite. A
+two-item list containing a vector \code{val} of logratio-values
+and its covariance matrix \code{cov}.}
 }
 \value{
 an object of class \code{standard}
@@ -46,9 +44,7 @@ specify the isotopic composition of a reference
 }
 \examples{
 data(Cameca_UPb,package="simplex")
-dc <- drift(x=Cameca_UPb)
-lr <- logratios(x=dc)
-st <- standard(preset="Plesovice")
-cal <- calibration(lr=lr,stand=st)
-plot(cal,option=3)
+st <- standard(preset="Plesovice-t")
+cal <- calibration(lr=Cameca_UPb,stand=st)
+plot(cal)
 }

@@ -2,30 +2,34 @@
 #' @description specify the isotopic composition of a reference
 #'     material for SIMS data calibration.
 #' @param preset (optional) text string. One of either
-#'     \code{'Plesovice'}, \code{'44069'}, \code{'Temora'}, or
-#'     \code{'NBS28'}.
-#' @param prefix text string marking the first characters of the
-#'     sample names that mark the standard analyses
-#' @param tst (optional) two-element vector with the age and standard
-#'     error of the (presumed concordant) age standard and its
-#'     analytical uncertainty.
-#' @param val (optional) true isotopic composition (as logratios) of
-#'     \eqn{^{206}}Pb/\eqn{^{238}}U- and
-#'     \eqn{^{208}}Pb/\eqn{^{232}}Th-ratios of the U-Pb age standard,
-#'     or the true \eqn{\delta}-values of the stable isotope reference
-#'     material.
-#' @param cov (optional) the covariance matrix of \code{val}
-#' @param common (optional) the common-Pb composition
-#'     (\eqn{^{206}}Pb/\eqn{^{204}}Pb and
-#'     \eqn{^{208}}Pb/\eqn{^{204}}Pb).
+#' 
+#' U-Pb age standards: \code{'Plesovice-t'}, \code{Qinghu-t},
+#' \code{Penglai-t}, \code{'44069-t'}, \code{'Temora-t'},
+#'
+#' O-isotope standards: \code{'Plesovice-O'}, \code{'NBS28-O'},
+#' \code{'Qinghu-O'}, \code{'Penglai-O'},
+#'
+#' or S-isotope standards: \code{'Sonora-S'}.
+#' @param tst two element with the standard's age and its standard
+#'     error.
+#' @param measured logical. Only relevant for geochronological data.
+#'     If \code{TRUE}, stores the composition of the standard as a
+#'     measured isotopic composition. If \code{FALSE}, stores the
+#'     composition as a mixture of common Pb and radiogenic Pb.
+#' @param del Stable isotope composition of a standard in conventional
+#'     delta notation, specified as a two-item list containing a
+#'     vector \code{val} of \eqn{\delta}-values and its covariance
+#'     matrix \code{cov}.
+#' @param ref Logratio composition of a reference standard such as
+#'     Vienna Standard Mean Ocean Water (VSMOW) or troilite. A
+#'     two-item list containing a vector \code{val} of logratio-values
+#'     and its covariance matrix \code{cov}.
 #' @return an object of class \code{standard}
 #' @examples
 #' data(Cameca_UPb,package="simplex")
-#' dc <- drift(x=Cameca_UPb)
-#' lr <- logratios(x=dc)
-#' st <- standard(preset="Plesovice")
-#' cal <- calibration(lr=lr,stand=st)
-#' plot(cal,option=3)
+#' st <- standard(preset="Plesovice-t")
+#' cal <- calibration(lr=Cameca_UPb,stand=st)
+#' plot(cal)
 #' @export
 standard <- function(preset,tst,measured,del,ref){
     if (!missing(preset)){
@@ -127,6 +131,21 @@ del2stand <- function(del,ref){
     out
 }
 
+#' @title Vienna Standard Mean Ocean Water
+#' @description returns the oxygen isotope composition of the
+#'     eponymous stable isotope reference material
+#' @return a two-item list containing a vector \code{val} of
+#'     logratio-values and its covariance matrix \code{cov}.
+#' @examples
+#' data(Cameca_oxygen,package="simplex")
+#' del <- list()
+#' del$val <- 5.4
+#' del$cov <- matrix(0.04,1,1)
+#' names(del$val) <- colnames(del$cov) <- rownames(del$cov) <- 'O18/O16'
+#' st <- standard(del=del,ref=VSMOW())
+#' cal <- calibration(lr=Cameca_oxygen,stand=st)
+#' plot(cal)
+#' @export
 VSMOW <- function(){
     ref(val=c(0.3799e-3,2.00520e-3),
         relerr=c(1.6e-3,0.43e-3)/c(0.3799,2.00520),
@@ -135,6 +154,22 @@ VSMOW <- function(){
         )
 }
 
+#' @title troilite composition
+#' @description returns the sulphur isotope composition of meteoritic
+#'     troilite
+#' @return a two-item list containing a vector \code{val} of
+#'     logratio-values and its covariance matrix \code{cov}.
+#' @examples
+#' data(Cameca_sulphur,package="simplex")
+#' del <- list()
+#' del$val <- c(0.83,1.61,3.25)
+#' del$cov <- diag(c(0.03,0.08,0.03)^2)
+#' names(del$val) <- rownames(del$cov) <-
+#' colnames(del$cov) <- c('S33/S32','S34/S32','S36/S32')
+#' st <- standard(del=del,ref=troilite())
+#' cal <- calibration(lr=Cameca_sulphur,stand=st)
+#' plot(cal)
+#' @export
 troilite <- function(){
     S2346 <- c(126.948,22.6436,6515)
     ref(val=S2346,relerr=c(0.047,0.0020,20)/S2346,

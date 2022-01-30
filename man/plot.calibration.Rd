@@ -4,15 +4,13 @@
 \alias{plot.calibration}
 \title{plot calibration data}
 \usage{
-\method{plot}{calibration}(x, option = 1, ...)
+\method{plot}{calibration}(x, show.numbers = TRUE, ...)
 }
 \arguments{
-\item{x}{an object of class \code{logratios}}
+\item{x}{an object of class \code{calibration}}
 
-\item{option}{if \code{option=1}, plots the best fit line through
-U-Pb and Th-Pb data. If \code{option=2}, adds the time-resolved
-raw data to the plot. If \code{option=3}, marks the first and
-last measurement by black and white circles, respectively.}
+\item{show.numbers}{logical. If \code{TRUE}, labels the error
+ellipses with the aliquot numbers.}
 
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function.}
@@ -22,11 +20,11 @@ shows the calibration data on a logratio plot.
 }
 \examples{
 \dontrun{
-data('SHRIMP',package='simplex')
-st <- standard(preset='Temora',prefix=TEM)
-dc <- drift(x=SHRIMP)
+data('SHRIMP_UPb',package='simplex')
+st <- standard(preset='Temora')
+dc <- drift(x=SHRIMP_UPb)
 lr <- logratios(x=dc)
-cal <- calibration(lr=lr,stand=st)
-plot(cal,option=3)
+cal <- calibration(lr=lr,stand=st,prefix='TEM')
+plot(cal)
 }
 }

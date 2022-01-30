@@ -4,16 +4,20 @@
 \alias{logratios}
 \title{logratio calculation}
 \usage{
-logratios(x)
+logratios(x, i = NULL)
 }
 \arguments{
 \item{x}{an object of class \code{drift}}
+
+\item{i}{a vector of mass spectrometer cycles to retain for the
+logratio calculation. If \code{NULL}, uses the entire signal.}
 }
 \value{
 an object of class \code{logratios}
 }
 \description{
-extracts logratio averages from time resolved SIMS data
+extracts logratio averages from time resolved SIMS
+    data
 }
 \examples{
 \dontrun{

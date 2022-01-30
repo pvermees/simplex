@@ -18,7 +18,15 @@
 #' @return an object of class \code{method}
 #' @examples
 #' fname <- system.file('SHRIMP.pd',package='simplex')
-#' shrimpdat <- read_data(fname,m='GA-UPb')
+#' m <- method(m="GA-UPb",
+#'             instrument="SHRIMP",
+#'             ions=c('Zr2O','Pb204','bkg','Pb206','Pb207',
+#'                    'Pb208','U238','ThO','UO','UO2'),
+#'             num=c('Pb204','Pb207','Pb206','UO'),
+#'             den=c('Pb206','Pb206','U238','U238'),
+#'             blank='bkg',
+#'             description="U-Pb dating at Geoscience Australia.")
+#' shrimpdat <- read_data(fname,m=m)
 #' plot(shrimpdat,i=1)
 #' @export
 method <- function(m='IGG-UPb',instrument,ions,num,

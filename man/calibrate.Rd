@@ -22,7 +22,7 @@ convert signal logratios to atomic logratios
 data('Cameca_oxygen',package='simplex')
 dc <- drift(x=Cameca_oxygen)
 lr <- logratios(x=dc)
-cal <- calibration(lr=lr,stand=standard(preset='NBS28'))
+cal <- calibration(lr=lr,stand=standard(preset='NBS28-O'))
 cd <- calibrate(cal)
 del <- delta(cd,log=FALSE)
 tab <- data2table(del)

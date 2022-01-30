@@ -15,9 +15,9 @@
 
 \item{ratios}{logical. If \code{FALSE}, plots the raw signals
 versus time. If \code{TRUE}, plots the ratios against time.
-Both plots show the fitted values as a solid line. Note that, for
-single collector datasets, the numerator and denominator of the
-measured ratios correspond to different times.}
+Both plots show the fitted values as a solid line. Note that,
+for single collector datasets, the numerator and denominator of
+the measured ratios correspond to different times.}
 
 \item{...}{optional arguments to be passed on to the generic
 \code{plot} function.}
@@ -27,9 +27,9 @@ plot time resolved logratio data
 }
 \examples{
 \dontrun{
-data('SHRIMP',package='simplex')
-dc <- drift(x=SHRIMP)
+data('SHRIMP_UPb',package='simplex')
+dc <- drift(x=SHRIMP_UPb)
 lr <- logratios(dc)
-plot(lr,i=1,logratios=TRUE)
+plot(lr,i=1,ratios=TRUE)
 }
 }

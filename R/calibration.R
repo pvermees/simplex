@@ -2,7 +2,7 @@
 #' @description calibration of SIMS data using reference standards
 #' @param lr an object of class \code{logratios}
 #' @param stand an object of class \code{standard}
-#' @param pairing (optional) an object of class \code{pairing}
+#' @param pairing an object of class \code{pairing} 
 #' @param prefix (optional) prefix of the aliquots to be used as
 #'     calibration standards
 #' @param snames (option) vector of sample names to be used as
@@ -158,7 +158,7 @@ yorkfix <- function(xy,b,alpha=0.05){
         SS <- (dX/sX)^2 + (dY/sY)^2 - 2*rXY*dX*dY/(sX*sY)
         sum(SS)
     }
-    init <- lm(Y - b*X ~ 1, data=as.data.frame(xy))$coefficients
+    init <- stats::lm(Y - b*X ~ 1, data=as.data.frame(xy))$coefficients
     fit <- stats::optim(init,SS,method='BFGS',b=b,xy=xy,hessian=TRUE)
     out <- list(type='york')
     a <- fit$par
@@ -177,7 +177,7 @@ yorkfix <- function(xy,b,alpha=0.05){
 
 #' @title plot calibration data
 #' @description shows the calibration data on a logratio plot.
-#' @param dat an object of class \code{logratios}
+#' @param x an object of class \code{calibration}
 #' @param show.numbers logical. If \code{TRUE}, labels the error
 #'     ellipses with the aliquot numbers.
 #' @param ... optional arguments to be passed on to the generic
@@ -193,11 +193,11 @@ yorkfix <- function(xy,b,alpha=0.05){
 #' }
 #' @method plot calibration
 #'@export
-plot.calibration <- function(dat,show.numbers=TRUE,...){
-    if (is.null(dat$calibration$pairing)){
-        out <- calplot_stable(dat=dat,show.numbers=show.numbers,...)
+plot.calibration <- function(x,show.numbers=TRUE,...){
+    if (is.null(x$calibration$pairing)){
+        out <- calplot_stable(dat=x,show.numbers=show.numbers,...)
     } else {
-        out <- calplot_geochronology(dat=dat,show.numbers=show.numbers,...)
+        out <- calplot_geochronology(dat=x,show.numbers=show.numbers,...)
     }
     invisible(out)
 }
@@ -219,7 +219,8 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
                 IsoplotR::scatterplot(B,...)
                 if (show.numbers){
                     istd <- which(names(dat$samples) %in% dat$calibration$snames)
-                    text(x=B[,'X'],y=B[,'Y'],labels=istd,pos=3,offset=0.1)
+                    graphics::text(x=B[,'X'],y=B[,'Y'],
+                                   labels=istd,pos=3,offset=0.1)
                 }
                 graphics::mtext(side=1,text=paste0('ln[',ratios[i],']'),line=2)
                 graphics::mtext(side=2,text=paste0('ln[',ratios[j],']'),line=2)
@@ -235,26 +236,26 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
         tab <- matrix(0,nrow=3,ncol=ns)
         rownames(tab) <- c('x','ll','ul')
         colnames(tab) <- snames
-        tfact <- qnorm(0.975)
+        tfact <- stats::qnorm(0.975)
         for (sname in snames){
             tab['x',sname] <- tavg[[sname]]$val
             dx <- tfact*sqrt(tavg[[sname]]$cov)
             tab['ll',sname] <- tab['x',sname] - dx
             tab['ul',sname] <- tab['x',sname] + dx
         }
-        matplot(rbind(1:ns,1:ns),tab[c('ll','ul'),],
-                type='l',lty=1,col='black',bty='n',
-                xlab='standard #',ylab='')
+        graphics::matplot(rbind(1:ns,1:ns),tab[c('ll','ul'),],
+                          type='l',lty=1,col='black',bty='n',
+                          xlab='standard #',ylab='')
         dsd <- IsoplotR:::roundit(cal$val,tfact*sqrt(cal$cov),sigdig=2)
         del <- dsd[1]
         err <- dsd[2]
         rat <- names(cal$val)
         tit <- substitute(paste(rat,'=',del %+-% err,' (95% CI)'))
-        mtext(text=tit)
-        points(1:ns,tab['x',],pch=16)
-        lines(c(1,ns),rep(cal$val,2),lty=2)
-        lines(c(1,ns),rep(cal$val-tfact*sqrt(cal$cov),2),lty=3)
-        lines(c(1,ns),rep(cal$val+tfact*sqrt(cal$cov),2),lty=3)
+        graphics::mtext(text=tit)
+        graphics::points(1:ns,tab['x',],pch=16)
+        graphics::lines(c(1,ns),rep(cal$val,2),lty=2)
+        graphics::lines(c(1,ns),rep(cal$val-tfact*sqrt(cal$cov),2),lty=3)
+        graphics::lines(c(1,ns),rep(cal$val+tfact*sqrt(cal$cov),2),lty=3)
     }
 }
 
@@ -278,7 +279,7 @@ calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
                               ylab=paste0('ln[',pair[i,'Y'],']'))
         if (show.numbers){
             istd <- which(names(dat$samples) %in% snames)
-            text(x=yd[,'X'],y=yd[,'Y'],labels=istd,pos=3,offset=0.1)
+            graphics::text(x=yd[,'X'],y=yd[,'Y'],labels=istd,pos=3,offset=0.1)
         }
         caltitle(fit,...)
     }
