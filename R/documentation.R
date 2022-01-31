@@ -1,19 +1,15 @@
-#' test data
+#' @title test data
 #'
-#' Various Cameca and SHRIMP datasets
+#' @description Various Cameca and SHRIMP datasets
 #' @name test-data
 #' @keywords datasets
 "Cameca_UPb"
-
 #' @rdname test-data
 "Cameca_UThPb"
-
 #' @rdname test-data
 "Cameca_oxygen"
-
 #' @rdname test-data
 "Cameca_sulphur"
-
 #' @rdname test-data
 "SHRIMP_UPb"
 
