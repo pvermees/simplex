@@ -33,23 +33,14 @@
 #' @export
 standard <- function(preset,tst,measured,del,ref){
     if (!missing(preset)){
-        tpresets <- rbind(
-            'Plesovice-t' = c(337.13,0.18),
-            'Qinghu-t' = c(159.5,0.1),
-            'Penglai-t' = c(4.4,0.05),
-            '44069-t' = c(424.86,0.25),
-            'Temora-t' = c(416.75,0.12)
-        )
-        colnames(tpresets) <- c('t','s[t]')        
-        Opresets <- rbind(
-            'NBS28-O' = c(4.79,0.05,9.56,0.11),
-            'Plesovice-O' = c(4.095,0.04,8.19,0.04),
-            'Qinghu-O' = c(2.7,0.1,5.4,0.1),
-            'Penglai-O' = c(2.655,0.05,5.31,0.05)
-        )
-        Spresets <- rbind(
-            'Sonora-S' = c(0.83,0.03,1.61,0.08,3.25,0.03)
-        )
+        files <- system.file(c('tstand.csv','Ostand.csv','Sstand.csv'),
+                             package='simplex')
+        tpresets <- data.matrix(utils::read.csv(files[1],header=TRUE,
+                                row.names='standard',check.names=FALSE))
+        Opresets <- data.matrix(utils::read.csv(files[2],header=TRUE,
+                                row.names='standard',check.names=FALSE))
+        Spresets <- data.matrix(utils::read.csv(files[3],header=TRUE,
+                                row.names='standard',check.names=FALSE))
         if (preset %in% rownames(tpresets)){
             geochron <- TRUE
             out <- age2stand(tst=tpresets[preset,])
@@ -58,16 +49,14 @@ standard <- function(preset,tst,measured,del,ref){
             del <- list()
             del$val <- Opresets[preset,c(1,3)]
             del$cov <- diag(Opresets[preset,c(2,4)]^2)
-            names(del$val) <- rownames(del$cov) <-
-                colnames(del$cov) <- c('O17/O16','O18/O16')
+            rownames(del$cov) <- colnames(del$cov) <- names(del$val)
             out <- del2stand(del,ref=VSMOW())
         } else if (preset %in% rownames(Spresets)){ # temporary value
             geochron <- FALSE
             del <- list()
             del$val <- Spresets[preset,c(1,3,5)]
             del$cov <- diag(Spresets[preset,c(2,4,6)]^2)
-            names(del$val) <- rownames(del$cov) <-
-                colnames(del$cov) <- c('S33/S32','S34/S32','S36/S32')
+            rownames(del$cov) <- colnames(del$cov) <- names(del$val)
             out <- del2stand(del,ref=troilite())
         } else {
             stop("Invalid input to standard(...).")
