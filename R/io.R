@@ -8,7 +8,7 @@
 #'     create new methods, see \code{method}.
 #' @return an object of class \code{simplex}
 #' @examples
-#' fname <- system.file('SHRIMP.pd',package='simplex')
+#' fname <- system.file('SHRIMP.op',package='simplex')
 #' shrimpdat <- read_data(fname,m='GA-UPb')
 #' plot(shrimpdat,i=1)
 #' @export

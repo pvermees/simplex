@@ -36,7 +36,7 @@ an object of class \code{method}
 get or set a list of data acquisition properties
 }
 \examples{
-fname <- system.file('SHRIMP.pd',package='simplex')
+fname <- system.file('SHRIMP.op',package='simplex')
 m <- method(m="GA-UPb",
             instrument="SHRIMP",
             ions=c('Zr2O','Pb204','bkg','Pb206','Pb207',

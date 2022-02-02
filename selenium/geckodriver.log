@@ -2640,3 +2640,4 @@ handleEvent@resource://devtools/server/connectors/js-window-actor/DevToolsFrameC
 
 JavaScript error: , line 0: NotFoundError: No such JSWindowActor 'DevToolsFrame'
 JavaScript error: http://127.0.0.1:8000/js/rrpc.min.js, line 1: TypeError: a.error is undefined
+[GFX1-]: GFX: RenderThread detected a device reset in PostUpdate

@@ -17,7 +17,7 @@
 #' @param description text string with a description of the contents
 #' @return an object of class \code{method}
 #' @examples
-#' fname <- system.file('SHRIMP.pd',package='simplex')
+#' fname <- system.file('SHRIMP.op',package='simplex')
 #' m <- method(m="GA-UPb",
 #'             instrument="SHRIMP",
 #'             ions=c('Zr2O','Pb204','bkg','Pb206','Pb207',
