@@ -1,54 +1,57 @@
 // 1. Startup
 
 var glob = {
-    'simplex': {
-	'method': { 'method': ['IGG-UPb'] },
-	'samples': null,
-	'outliers': null,
-	'calibration': null,
-	'calibrated': null
+    "simplex": {
+	"method": { "method": ["IGG-UPb"] },
+	"samples": null,
+	"outliers": null,
+	"calibration": null,
+	"calibrated": null
     },
-    'i': null,
-    'start': true,
-    'names': null,
-    'class': 'simplex',
-    'multi': null,
-    'selected': 0,
-    'ratios': true,
-    'log': true,
-    'xy': false,
-    'shownum': false,
-    'calibration': {
-	'caltype': null,
-	'standcomp': null,
-	'standtype': null,
-	'preset': null,
-	'tst': null,
-	'del': {
-	    'ratios': null,
-	    'delval': null,
-	    'delcov': null,
-	    'refval': null,
-	    'refcov': null
+    "i": null,
+    "start": true,
+    "names": null,
+    "class": "simplex",
+    "multi": null,
+    "selected": 0,
+    "ratios": true,
+    "log": true,
+    "xy": false,
+    "shownum": false,
+    "calibration": {
+	"caltype": null,
+	"standcomp": null,
+	"standtype": null,
+	"preset": null,
+	"tst": null,
+	"del": {
+	    "ratios": null,
+	    "delval": null,
+	    "delcov": null,
+	    "refval": null,
+	    "refcov": null
 	}
     },
-    'sampleprefix': '',
-    'delta': {
-	'type':'delta-prime',
-	'preset': null,
-	'ratios': null,
-	'val': null
+    "sampleprefix": '',
+    "delta": {
+	"type":"delta-prime",
+	"preset": null,
+	"ratios": null,
+	"val": null
     },
-    'IsoplotRtype':'U-Pb',
-    'standards': [],
-    'samples': [],
-    'buttonIDs': ['setup','drift','logratios','calibration','samples','finish']
+    "IsoplotRtype":"U-Pb",
+    "standards": [],
+    "samples": [],
+    "buttonIDs": ["setup","drift","logratios","calibration","samples","finish"]
 }
 
 function start() {
     // This will be moved into shinylight.initialize()
     new Promise((resolve, reject) => {
-        rrpc.initialize(() => resolve(), error => reject(error));
+        rrpc.initialize(
+	    () => resolve(),
+	    error => reject(error)
+	);
     }).then(() =>
         setup()
     );
@@ -267,6 +270,23 @@ function result2simplex(result){
     glob.names = result.data.names;
     glob.class = result.data.class;
     glob.multi = result.data.multi[0];
+}
+
+function savejson(){
+    let a = document.getElementById('save');
+    a.setAttribute("href","data:text/plain," + JSON.stringify(glob));
+    a.setAttribute("download","simplex.json");
+    a.click();
+}
+
+function openjson(){
+    let f = document.getElementById("open").files[0];
+    let reader = new FileReader();
+    reader.onload = function(){
+        glob = JSON.parse(reader.result);
+	showPresets();
+    };
+    reader.readAsText(f);
 }
 
 // 3. Drift
@@ -968,7 +988,7 @@ function showdeltasettings(){
 }
 function preset2deltaref(){
     glob.delta.preset = document.getElementById('deltaref').value;
-    shinylight.call('preset2deltaref', {ref:glob.delta.preset}, null).then(
+    shinylight.call('preset2deltaref', {x:glob}, null).then(
 	result => loadTable([result.data.val],result.data.ratios,'delreftab',1),
 	error => alert(error)
     )
@@ -1044,7 +1064,7 @@ function export2IsoplotR(){
 	)
 	.then(
 	    () => {
-		let fname = prompt("Please enter a file name", "simplex.json");
+		let fname = prompt("Please enter a file name", "IsoplotR.json");
 		if (fname != null){
 		    document.getElementById('fname').setAttribute(
 			"href","data:text/plain," + JSON.stringify(json)

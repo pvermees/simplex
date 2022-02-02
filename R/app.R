@@ -196,8 +196,14 @@ calibratedTable <- function(x){
     as.data.frame(tab)
 }
 
-preset2deltaref <- function(ref){
-    out <- do.call(ref,list())
+preset2deltaref <- function(x){
+    ref <- x$delta$preset
+    if (identical(ref,'other')){
+        dat <- as.simplex(x)
+        out <- dat$calibration$stand$ref
+    } else {
+        out <- do.call(ref,list())
+    }
     out$ratios <- names(out$val)
     out
 }
