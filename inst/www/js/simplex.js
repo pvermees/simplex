@@ -1059,6 +1059,10 @@ function export2IsoplotR(){
 		json.settings.plotdevice = pd;
 		json.settings[gc].format = format;
 		json.data[gc] = result;
+		let nr = result.data[Object.keys(result.data)[0]].length;
+		json.data[gc].data['(C)'] = Array.from(' '.repeat(nr));
+		json.data[gc].data['(omit)'] = Array.from(' '.repeat(nr));
+		json.data[gc].ierr = 1;
 	    },
 	    err => alert(err)
 	)
