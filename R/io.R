@@ -199,7 +199,6 @@ read_SHRIMP_pd <- function(f,mions=NULL){
             block <- utils::read.table(text=readLines(f,n=nions,warn=FALSE))
             ions <- block[,1]
             if (length(ions)==length(mions)) ions <- mions
-            else ions <- paste0('m',1:nions)
             spot$dwelltime <- block[,4]
             names(spot$dwelltime) <- ions
             spot$detector <- block[,11]

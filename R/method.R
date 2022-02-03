@@ -41,7 +41,7 @@ method <- function(m='IGG-UPb',instrument,ions,num,
     if (!missing(ions)) out$ions <- ions
     if (!missing(num)) out$num <- num
     if (!missing(den)) out$den <- den
-    if (!missing(blank)) out$blank <- blank
+    if (!missing(blank)) out$bkg <- blank
     if (!missing(description)) out$description <- description
     class(out) <- "method"
     invisible(out)
@@ -67,7 +67,7 @@ defaultmethod <- function(m){
                       'U238','ThO2','UO2')
         out$num <- c('Pb204','Pb207','Pb206','UO2')
         out$den <- c('Pb206','Pb206','U238','U238')
-        out$blank <- 'nominal'
+        out$bkg <- 'nominal'
         out$description <- "Single collector U-Pb dating at CAS-IGG (Beijing)."
     } else if (m=='IGG-UThPb'){
         out$instrument <- 'Cameca'
@@ -76,21 +76,21 @@ defaultmethod <- function(m){
                    'ThO2','UO2')
         out$num <- c('Pb204','Pb207','Pb204','Pb206','UO2','Pb208','ThO2')
         out$den <- c('Pb206','Pb206','Pb208','U238','U238','Th232','Th232')
-        out$blank <- 'nominal'
+        out$bkg <- 'nominal'
         out$description <- "Single collector U-Th-Pb dating at CAS-IGG (Beijing)."
     } else if (m=='IGG-O'){
         out$instrument <- 'Cameca'
         out$ions <- c('O16','O17','O18')
         out$num <- 'O18'
         out$den <- 'O16'
-        out$blank <- 'nominal'
+        out$bkg <- 'nominal'
         out$description <- "Multicollector oxygen isotope analyses at CAS-IGG (Beijing)."
     } else if (m=='IGG-S'){
         out$instrument='Cameca'
         out$ions <- c('S32','S33','33.96','S34','S36')
         out$num <- c('S33','S34','S36')
         out$den <- c('S32','S32','S32')
-        out$blank <- 'nominal'
+        out$bkg <- 'nominal'
         out$description <- "Multicollector sulphur isotope analyses at CAS-IGG (Beijing)."
     } else if (m=='GA-UPb'){
         out$instrument <- 'SHRIMP'
@@ -98,7 +98,7 @@ defaultmethod <- function(m){
                       'Pb208','U238','ThO','UO','UO2')
         out$num <- c('Pb204','Pb207','Pb206','UO')
         out$den <- c('Pb206','Pb206','U238','U238')
-        out$blank <- 'bkg'
+        out$bkg <- 'bkg'
         out$description <- "Single collector U-Pb dating at Geoscience Australia."
     } else {
         stop("Invalid method.")
