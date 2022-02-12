@@ -75,9 +75,17 @@ async function loadPage(url){
     document.getElementById("contents").innerHTML = text;
 }
 
-async function loadHelp(url){
+function togglehelp(on,plot=true){
+    document.getElementById('help').style.display = on ? 'inline' : 'none';
+    if (plot){
+	document.getElementById('output').style.display = on ? 'none' : 'inline';
+    }
+}
+
+async function loadHelp(url,plot=true){
     let response = await fetch(url);
     let text = await response.text();
+    togglehelp(true,plot=plot);
     document.getElementById("help").innerHTML = text;
 }
 
@@ -98,7 +106,7 @@ function setup(){
 	},
         error => alert(error)
     ).then(
-	() => loadHelp("help/setup.html"),
+	() => loadHelp("help/setup.html",false),
 	error => alert(error)
     );
 }
@@ -400,6 +408,7 @@ function backnforth(di,callback){
 }
 
 function driftPlot(){
+    togglehelp(false);
     let keys = Object.keys(glob.simplex.samples);
     let ostring = document.getElementById('outliers').value;
     if (ostring===''){
@@ -460,7 +469,10 @@ async function logratios(){
 	    }
 	},
 	error => alert(error)
-    )
+    ).then(
+	() => loadHelp("help/logratios.html"),
+	error => alert(error)
+    );
 }
 
 function initLogratios(){
@@ -500,6 +512,7 @@ function logratioAliquot(){
 }
 
 function logratioPlot(){
+    togglehelp(false);
     show('.plot');
     hide('.table');
     let ostring = document.getElementById('outliers').value;
@@ -520,6 +533,7 @@ function logratioPlot(){
 }
 
 function logratioTable(){
+    togglehelp(false);
     show('.table');
     hide('.plot');
     shinylight.call("logratioTable", {x:glob}, null).then(
@@ -549,6 +563,9 @@ function calibration(){
 	    }
 	    document.getElementById("shownum").checked = glob.shownum;
 	},
+	error => alert(error)
+    ).then(
+	() => loadHelp("help/calibration.html"),
 	error => alert(error)
     );
 }
@@ -843,6 +860,7 @@ function markStandards(){
 
 // IV.
 function calibrator(){
+    togglehelp(false);
     registerStandards();
     shinylight.call('calibrator', {x:glob},
 		    'calibration-plot', {'imgType': 'svg'}).then(
@@ -889,7 +907,10 @@ function samples(){
 	    document.getElementById("shownum").checked = glob.shownum;
 	    document.getElementById("logcheckbox").checked = glob.log;
 	}, error => alert(error)
-    );
+    ).then(
+	() => loadHelp("help/samples.html"),
+	error => alert(error)
+    );;
 }
 function setsampsel(){
     if (glob.samples.length<1){
@@ -926,6 +947,7 @@ function markSamples(){
     loadTable(dat,['aliquots','selected?'],'aliquots',nk);
 }
 function calibrate(plot){
+    togglehelp(false);
     registerSamples();
     if (plot) calibrate_plot()
     else calibrate_table()
@@ -966,6 +988,9 @@ function finish(){
     selectButton(5);
     loadPage("finish.html").then(
 	() => finishinit(),
+	error => alert(error)
+    ).then(
+	() => loadHelp("help/finish.html"),
 	error => alert(error)
     );
 }
@@ -1011,6 +1036,7 @@ function preset2deltaref(){
 }
 
 function convert(fn){
+    togglehelp(false);
     if (glob.calibration.caltype=='average'){
 	let e = document.getElementById('delreftab');
 	glob.delta.val = e.deg.getCells()[0].map(Number);
