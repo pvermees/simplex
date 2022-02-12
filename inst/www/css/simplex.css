@@ -167,3 +167,13 @@ input[type="file"] {
 .narrowtext {
     width: 10ch
 }
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+pre {
+    border:1px solid black;
+    background-color: seashell;
+}
