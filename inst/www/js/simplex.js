@@ -53,7 +53,7 @@ function start() {
 	    error => reject(error)
 	);
     }).then(() =>
-        setup()
+        welcome()
     );
 }
 
@@ -69,10 +69,20 @@ function selectButton(i){
     selectedButton().classList.add('on')
 }
 
-async function loadPage(url) {
+async function loadPage(url){
     let response = await fetch(url);
     let text = await response.text();
     document.getElementById("contents").innerHTML = text;
+}
+
+async function loadHelp(url){
+    let response = await fetch(url);
+    let text = await response.text();
+    document.getElementById("help").innerHTML = text;
+}
+
+function welcome(){
+    loadPage("welcome.html");
 }
 
 // 2. Setup
@@ -87,6 +97,9 @@ function setup(){
 	    glob.start = false;
 	},
         error => alert(error)
+    ).then(
+	() => loadHelp("help/setup.html"),
+	error => alert(error)
     );
 }
 
@@ -311,6 +324,9 @@ async function drift(){
 		)
 	    }
 	},
+	error => alert(error)
+    ).then(
+	() => loadHelp("help/drift.html"),
 	error => alert(error)
     )
 }

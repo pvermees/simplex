@@ -259,7 +259,7 @@ calplot_stable <- function(dat,show.numbers=TRUE,...){
     }
 }
 
-calplot_geochronology <- function(dat=dat,option=option,show.numbers=TRUE,...){
+calplot_geochronology <- function(dat=dat,show.numbers=TRUE,...){
     cal <- dat$calibration$cal
     pair <- dat$calibration$pairing
     nr <- nrow(pair)

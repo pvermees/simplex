@@ -180,7 +180,7 @@ plot.drift <- function(x,sname=NULL,i=1,...){
         predsig <- exp(a0+g*hours(tlim))
         sbm <- sb*exp(g*hours(tm-tt))
         sbM <- sb*exp(g*hours(tM-tt))
-        ylim <- c(sbm[1],sbM[nr])
+        ylim <- range(sbm,sbM)
         bg <- rep('black',length(tt))
         if (!is.null(spot$outliers)) bg[spot$outliers] <- 'white'
         graphics::matplot(rbind(tm,tM),rbind(sbm,sbM),type='l',

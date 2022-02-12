@@ -1,0 +1,61 @@
+<div style="width: 800px; align:center">
+  <tt>simplex</tt> is a free and open data reduction program for
+  Secondary Ion Mass Spectrometery (SIMS) that offers the following
+  features:
+
+  <ol>
+    <li><tt>simplex</tt> processes mass spectrometer in logratio space
+      (a.k.a. 'the simplex'), ensuring strictly positive isotopic ratios
+      with appropriate (asymmetric) uncertainty estimates.</li>
+    <li>Secondary Electron Multiplier (SEM) data are modelled with
+      Poissonian statistics, ensuring adequate handling of zero count
+      data.</li>
+    <li>Error propagation is done in matrix form, and accounts for all
+      source of systematic uncertainty, including inter-sample error
+      correlations.</li>
+  </ol>
+
+  <img style="width:800px" src="help/ternaryUPb.svg"/>
+
+  <p></p>
+
+  <tt>simplex</tt> handles data from both Cameca and SHRIMP instruments,
+  using both single collector and (for Cameca) multicollector
+  configurations, for either U-Pb, Th-Pb or U-Th-Pb geochronology, or
+  stable isotope geochemistry. The program can be used in three ways:
+
+  <ol>
+    <li><b>Online</b>: This website allows installation-free access to
+      the Graphical User Interface (GUI). It includes a number of
+      built-in datasets that allow novice users to familiarise
+      themselves with the software. The online GUI is less well suited
+      for routine processing of large datasets.
+    </li>
+    <li><b>Offline</b>: For a more responsive user
+      experience, <tt>simplex</tt> can also be installed on any computer
+      (running Windows, Mac-OS or Linux), within the <tt>R</tt>
+      statistical programming environment. To this end,
+      install <tt>R</tt> on your system
+      (see <a href="https://r-project.org/">https://r-project.org/</a> for
+      details), and then enter the following commands at
+      the <tt>R</tt> console:
+      <pre>
+	install.packages('remotes')
+	remotes::install_github('pvermees/simplex')
+      </pre>
+      Once installed, the offline GUI can be started as follows:
+      <pre>
+	simplex::simplex()
+      </pre>
+    </li>
+    <li><b>Command line</b>: Advanced users can write automation scripts
+      or extend the functionality of the <tt>simplex</tt> package by
+      calling it from the command line, using the <tt>R</tt> programming
+      language. A detailed Application Profile Interface (API) is
+      accessible from the console. To get started, type:
+      <pre>
+	help(package="simplex")
+      </pre>
+    </li>
+  </ol>
+</div>

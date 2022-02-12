@@ -11,6 +11,18 @@ header {
     z-index:4;
 }
 
+tit {
+    cursor: pointer;
+    position: absolute;
+    float: right;
+    top:0;
+    right: 10px;
+    color:black;
+    font-family: Courier, monospace;
+    font-weight: bold;
+    font-size: 24px;
+}
+
 left {
     overflow-x:auto;
     overflow-y:auto;
@@ -77,7 +89,7 @@ div {
     overflow: hidden;
 }
 .preset {
-    width: calc(100vw - 450px);
+    width: calc(50vw - 155px);
 }
 .center-me {
     position: relative;
