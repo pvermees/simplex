@@ -1,1 +1,72 @@
-Setup
+<div>
+  Access example datasets, specify global settings, import raw SIMS
+  data, save intermediate results, or open previously analysed
+  datasets.
+  <dl>
+    <dt>Examples:</dt>
+    <dd>
+      A pull-down menu with five pre-processed example datasets,
+      including four Cameca 1280HR datasets from the Institute of
+      Geology and Geophysics (IGG) at the Chinese Academy of Sciences
+      (CAS) in Beijing, and one SHRIMP-II dataset from Geoscience
+      Australia. Two of the datasets contain stable isotope data (for O
+      and S) and the remaining three contain U-Pb and U-Th-Pb data.
+      Choose the most appropriate dataset before uploading your own
+      data.
+    </dd>
+    <dt>Description:</dt>
+    <dd>
+      A one sentence summary of the origin and purpose of the data.
+    </dd>
+    <dt>Instrument:</dt>
+    <dd>
+      Either '<tt>Cameca</tt>' or '<tt>SHRIMP</tt>'.
+    </dd>
+    <dt>Ions:</dt>
+    <dd>
+      A comma-separated list of names for the different mass channels
+      analysed. Atomic ion channels must be named as a chemical symbol
+      followed by an isotope number (e.g., '<tt>O16</tt>',
+      '<tt>U238</tt>'). <i>If the column headers in your data file do
+      not follow this format, then you can rename them here</i>.
+    </dd>
+    <dt>Numerators:</dt>
+    <dd>
+      A comma-separated list of names for the numerators of the
+      isotopic ratios that are to be processed. The names must occur
+      in the list of <tt>Ions</tt> shown above.
+    </dd>
+    <dt>Denominators:</dt>
+    <dd>
+      A comma-separated list of names for the denominators of the
+      isotopic ratios that are to be processed. The list must contain
+      the same number of items as the <tt>Numerators</tt> field, and
+      may only contain names that occur in the list of <tt>Ions</tt>
+      shown above.
+    </dd>
+    <dt>Blank:</dt>
+    <dd>
+      Either '<tt>nominal</tt>' (for Cameca data) or the name of a
+      channel in the <tt>Ions</tt> field (for both Cameca and SHRIMP).
+    </dd>
+    <dt>Load raw SIMS data:</dt>
+    <dd>
+      Here you can upload your own raw SIMS data. For Cameca data, select
+      multiple <tt>.asc</tt> files. For SHRIMP data, select a single
+      <tt>.op</tt> or <tt>.pd</tt> file. Support for <tt>.xml</tt>
+      files will be added later.
+    </dd>
+    <dt><tt>Save</tt>:</dt>
+    <dd>
+      Save the data, settings and processing steps in a <tt>.json</tt>
+      file for future reprocessing. This function can be used to store
+      your own <tt>simplex</tt> 'template'.
+    </dd>
+    <dt><tt>Open</tt>:</dt>
+    <dd>
+      Open a <tt>.json</tt> file with previously analysed data and
+      settings. This function can be used to open your
+      own <tt>simplex</tt> 'template'.
+    </dd>
+  </dl>
+</div>
