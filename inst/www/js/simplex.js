@@ -581,6 +581,17 @@ function calibration(){
 	).then(
 	    () => loadHelp("help/calibration.html"),
 	    error => alert(error)
+	).then(
+	    () => {
+		if (glob.calibration.caltype==='regression'){
+		    show(".show4geochron");
+		    hide(".hide4geochron");
+		} else {
+		    show(".show4stable");
+		    hide(".hide4stable");
+		}
+	    },
+	    error => alert(error)
 	)
     }
 }
