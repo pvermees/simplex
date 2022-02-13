@@ -137,7 +137,7 @@ function resetglob(){
     glob.samples = [];
     glob.calibration = {
 	'caltype': null, // 'average' or 'regression'
-	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'd2stand'
+	'standcomp': 'manualstand', // 'manualstand', 'preset2stand', 't2stand' or 'd2stand'
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
 	'tst': [0,0], 
@@ -1026,6 +1026,17 @@ function finish(){
 	    error => alert(error)
 	).then(
 	    () => loadHelp("help/finish.html"),
+	    error => alert(error)
+	).then(
+	    () => {
+		if (glob.calibration.caltype==='regression'){
+		    show(".show4geochron");
+		    hide(".hide4geochron");
+		} else {
+		    show(".show4stable");
+		    hide(".hide4stable");
+		}
+	    },
 	    error => alert(error)
 	)
     }
