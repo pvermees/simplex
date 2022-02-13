@@ -6,7 +6,7 @@
 </div>
 <div class="hide4loading">
   <left>
-    <div>Aliquots:<select id="aliquots" onchange="driftAliquot()"></select>
+    <div>Aliquots: <select id="aliquots" onchange="driftAliquot()"></select>
       &nbsp;<button class="mainbutton" onclick="backnforth(-1,driftAliquot)">
 	<
 	  </button>
@@ -16,10 +16,13 @@
       </button>
     </div>
     <div>
-      Omit: <input type="text" id="outliers"> (comma separated list of row numbers)
+      Omit: <input type="text" id="outliers">
     </div>
     <div>Signal: <table id="signal-table" class="normalfont"></table></div>
     <div>Time: <table id="time-table" class="normalfont"></table></div>
   </left>
-  <right><img class="plot" id="drift-plot"></right>
+  <right>
+    <div id="help"></div>
+    <span id="output"><img class="plot" id="drift-plot"></span>
+  </right>
 </div>

@@ -53,7 +53,7 @@ function start() {
 	    error => reject(error)
 	);
     }).then(() =>
-        setup()
+        welcome()
     );
 }
 
@@ -69,15 +69,33 @@ function selectButton(i){
     selectedButton().classList.add('on')
 }
 
-async function loadPage(url) {
+async function loadPage(url){
     let response = await fetch(url);
     let text = await response.text();
     document.getElementById("contents").innerHTML = text;
 }
 
+function togglehelp(on,plot=true){
+    document.getElementById('help').style.display = on ? 'inline' : 'none';
+    if (plot){
+	document.getElementById('output').style.display = on ? 'none' : 'inline';
+    }
+}
+
+async function loadHelp(url,plot=true){
+    let response = await fetch(url);
+    let text = await response.text();
+    togglehelp(true,plot=plot);
+    document.getElementById("help").innerHTML = text;
+}
+
+function welcome(){
+    loadPage("welcome.html");
+}
+
 // 2. Setup
 
-function setup(){
+async function setup(){
     selectButton(0);
     loadPage("setup.html").then(
         () => {
@@ -87,6 +105,9 @@ function setup(){
 	    glob.start = false;
 	},
         error => alert(error)
+    ).then(
+	() => loadHelp("help/setup.html",false),
+	error => alert(error)
     );
 }
 
@@ -116,7 +137,7 @@ function resetglob(){
     glob.samples = [];
     glob.calibration = {
 	'caltype': null, // 'average' or 'regression'
-	'standcomp': 'manualstand', // 'manualstand', 'prefix2stand', 't2stand' or 'd2stand'
+	'standcomp': 'manualstand', // 'manualstand', 'preset2stand', 't2stand' or 'd2stand'
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
 	'tst': [0,0], 
@@ -292,27 +313,35 @@ function openjson(){
 // 3. Drift
 
 async function drift(){
-    selectButton(1);
-    loadPage("drift.html").then(
-	() => {
-	    if (glob.class.includes('drift')){ // already drift corrected
-		loadSamples( () => initDrift() )
-	    } else { // not yet drift corrected
-		loader();
-		shinylight.call("getdrift", {x:glob}, null, extra()).then(
-		    result => result2simplex(result),
-		    error => alert(error)
-		).then(
-		    () => loadSamples( () => initDrift() ),
-		    error => alert(error)
-		).then(
-		    () => shower(),
-		    error => alert(error)
-		)
-	    }
-	},
-	error => alert(error)
-    )
+    if (glob.start){
+	alert("You must run setup first");
+	setup();
+    } else {
+	selectButton(1);
+	loadPage("drift.html").then(
+	    () => {
+		if (glob.class.includes('drift')){ // already drift corrected
+		    loadSamples( () => initDrift() )
+		} else { // not yet drift corrected
+		    loader();
+		    shinylight.call("getdrift", {x:glob}, null, extra()).then(
+			result => result2simplex(result),
+			error => alert(error)
+		    ).then(
+			() => loadSamples( () => initDrift() ),
+			error => alert(error)
+		    ).then(
+			() => shower(),
+			error => alert(error)
+		    )
+		}
+	    },
+	    error => alert(error)
+	).then(
+	    () => loadHelp("help/drift.html"),
+	    error => alert(error)
+	)
+    }
 }
 
 function checkratios(){
@@ -384,6 +413,7 @@ function backnforth(di,callback){
 }
 
 function driftPlot(){
+    togglehelp(false);
     let keys = Object.keys(glob.simplex.samples);
     let ostring = document.getElementById('outliers').value;
     if (ostring===''){
@@ -410,41 +440,49 @@ function getOutliers(i){
 // 3. Logratios
 
 async function logratios(){
-    selectButton(2);
-    loadPage("logratios.html").then(
-	() => {
-	    if (glob.class.includes('logratios')){ // already has logratios
-		loadSamples( () => initLogratios() );
-		document.getElementById("ratiocheckbox").checked = glob.ratios;
-		document.getElementById("logcheckbox").checked = glob.log;
-		if (glob.simplex.method.instrument=='Cameca'){
-		    show('.show4cameca');
-		    document.getElementById("xycheckbox").checked = glob.xy;
-		} else {
-		    hide('.show4cameca');
-		    glob.xy = false;
-		}
-	    } else { // does not yet have logratios
-		loader();
-		shinylight.call("getlogratios", {x:glob}, null, extra()).then(
-		    result => result2simplex(result),
-		    error => alert(error)
-		).then(
-		    () => {
-			loadSamples( () => initLogratios() );
-			document.getElementById("ratiocheckbox").checked = glob.ratios;
-			document.getElementById("logcheckbox").checked = glob.log;
+    if (glob.start){
+	alert("You must run setup first");
+	setup();
+    } else {
+	selectButton(2);
+	loadPage("logratios.html").then(
+	    () => {
+		if (glob.class.includes('logratios')){ // already has logratios
+		    loadSamples( () => initLogratios() );
+		    document.getElementById("ratiocheckbox").checked = glob.ratios;
+		    document.getElementById("logcheckbox").checked = glob.log;
+		    if (glob.simplex.method.instrument=='Cameca'){
+			show('.show4cameca');
 			document.getElementById("xycheckbox").checked = glob.xy;
-		    },
-		    error => alert(error)
-		).then(
-		    () => shower(),
-		    error => alert(error)
-		)
-	    }
-	},
-	error => alert(error)
-    )
+		    } else {
+			hide('.show4cameca');
+			glob.xy = false;
+		    }
+		} else { // does not yet have logratios
+		    loader();
+		    shinylight.call("getlogratios", {x:glob}, null, extra()).then(
+			result => result2simplex(result),
+			error => alert(error)
+		    ).then(
+			() => {
+			    loadSamples( () => initLogratios() );
+			    document.getElementById("ratiocheckbox").checked = glob.ratios;
+			    document.getElementById("logcheckbox").checked = glob.log;
+			    document.getElementById("xycheckbox").checked = glob.xy;
+			},
+			error => alert(error)
+		    ).then(
+			() => shower(),
+			error => alert(error)
+		    )
+		}
+	    },
+	    error => alert(error)
+	).then(
+	    () => loadHelp("help/logratios.html"),
+	    error => alert(error)
+	)
+    }
 }
 
 function initLogratios(){
@@ -484,6 +522,7 @@ function logratioAliquot(){
 }
 
 function logratioPlot(){
+    togglehelp(false);
     show('.plot');
     hide('.table');
     let ostring = document.getElementById('outliers').value;
@@ -504,6 +543,7 @@ function logratioPlot(){
 }
 
 function logratioTable(){
+    togglehelp(false);
     show('.table');
     hide('.plot');
     shinylight.call("logratioTable", {x:glob}, null).then(
@@ -520,21 +560,40 @@ function logratioTable(){
 // 4. Calibration
 
 function calibration(){
-    selectButton(3);
-    loadPage("calibration.html").then(
-	() => {
-	    if (glob.simplex.hasOwnProperty('calibration')){
-		glob.calibration.standtype =
-		    glob.simplex.calibration.stand.measured[0] ?
-		    "measured" : "commonradio";
-		showCalibration();
-	    } else {
-		createCalibration(showCalibration);
-	    }
-	    document.getElementById("shownum").checked = glob.shownum;
-	},
-	error => alert(error)
-    );
+    if (glob.start){
+	alert("You must run setup first");
+	setup();
+    } else {
+	selectButton(3);
+	loadPage("calibration.html").then(
+	    () => {
+		if (glob.simplex.hasOwnProperty('calibration')){
+		    glob.calibration.standtype =
+			glob.simplex.calibration.stand.measured[0] ?
+			"measured" : "commonradio";
+		    showCalibration();
+		} else {
+		    createCalibration(showCalibration);
+		}
+		document.getElementById("shownum").checked = glob.shownum;
+	    },
+	    error => alert(error)
+	).then(
+	    () => loadHelp("help/calibration.html"),
+	    error => alert(error)
+	).then(
+	    () => {
+		if (glob.calibration.caltype==='regression'){
+		    show(".show4geochron");
+		    hide(".hide4geochron");
+		} else {
+		    show(".show4stable");
+		    hide(".hide4stable");
+		}
+	    },
+	    error => alert(error)
+	)
+    }
 }
 function showCalibration(){
     prepareCalibration();
@@ -827,6 +886,7 @@ function markStandards(){
 
 // IV.
 function calibrator(){
+    togglehelp(false);
     registerStandards();
     shinylight.call('calibrator', {x:glob},
 		    'calibration-plot', {'imgType': 'svg'}).then(
@@ -866,14 +926,22 @@ function registerStandards(){
 // 5. samples
 
 function samples(){
-    selectButton(4);
-    loadPage("samples.html").then(
-	() => {
-	    setsampsel();
-	    document.getElementById("shownum").checked = glob.shownum;
-	    document.getElementById("logcheckbox").checked = glob.log;
-	}, error => alert(error)
-    );
+    if (glob.start){
+	alert("You must run setup first");
+	setup();
+    } else {
+	selectButton(4);
+	loadPage("samples.html").then(
+	    () => {
+		setsampsel();
+		document.getElementById("shownum").checked = glob.shownum;
+		document.getElementById("logcheckbox").checked = glob.log;
+	    }, error => alert(error)
+	).then(
+	    () => loadHelp("help/samples.html"),
+	    error => alert(error)
+	)
+    }
 }
 function setsampsel(){
     if (glob.samples.length<1){
@@ -910,6 +978,7 @@ function markSamples(){
     loadTable(dat,['aliquots','selected?'],'aliquots',nk);
 }
 function calibrate(plot){
+    togglehelp(false);
     registerSamples();
     if (plot) calibrate_plot()
     else calibrate_table()
@@ -947,11 +1016,30 @@ function calibrate_table(){
 
 // 6. finish
 function finish(){
-    selectButton(5);
-    loadPage("finish.html").then(
-	() => finishinit(),
-	error => alert(error)
-    );
+    if (glob.start){
+	alert("You must run setup first");
+	setup();
+    } else {
+	selectButton(5);
+	loadPage("finish.html").then(
+	    () => finishinit(),
+	    error => alert(error)
+	).then(
+	    () => loadHelp("help/finish.html"),
+	    error => alert(error)
+	).then(
+	    () => {
+		if (glob.calibration.caltype==='regression'){
+		    show(".show4geochron");
+		    hide(".hide4geochron");
+		} else {
+		    show(".show4stable");
+		    hide(".hide4stable");
+		}
+	    },
+	    error => alert(error)
+	)
+    }
 }
 function finishinit(){
     let cal = glob.calibration;
@@ -995,6 +1083,7 @@ function preset2deltaref(){
 }
 
 function convert(fn){
+    togglehelp(false);
     if (glob.calibration.caltype=='average'){
 	let e = document.getElementById('delreftab');
 	glob.delta.val = e.deg.getCells()[0].map(Number);

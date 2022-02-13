@@ -1,67 +1,72 @@
-<div id="presets">
-  <div id="preset-menu">
-    Examples: <select id="methods" onchange="loadPresets()">
-      <option>IGG-UPb</option>
-      <option>IGG-UThPb</option>
-      <option>IGG-O</option>
-      <option>IGG-S</option>
-      <option>GA-UPb</option>
-    </select>
+<left>
+  <div id="presets">
+    <div id="preset-menu">
+      Examples: <select id="methods" onchange="loadPresets()">
+	<option>IGG-UPb</option>
+	<option>IGG-UThPb</option>
+	<option>IGG-O</option>
+	<option>IGG-S</option>
+	<option>GA-UPb</option>
+      </select>
+    </div>
+    <div id="preset-details">
+      <table>
+	<tr>
+	  <td>Description:</td>
+	  <td><input class="preset" type="text"
+		     id="description" onchange="method(this)"></td></tr>
+	<tr>
+	  <td>Instrument:</td>
+	  <td><input class="preset" type="text"
+		     id="instrument" onchange="method(this)"></td></tr>
+	<tr>
+	  <td>Ions:</td>
+	  <td><input class="preset" type="text" 
+		     id="ions" onchange="method(this); renameIons();"></td></tr>
+	<tr>
+	  <td>Numerators:</td>
+	  <td><input class="preset" type="text"
+		     id="num" onchange="method(this)"></td></tr>
+	<tr>
+	  <td>Denominators:</td>
+	  <td><input class="preset" type="text"
+		     id="den" onchange="method(this)"></td></tr>
+	<tr>
+	  <td>Blank:</td>
+	  <td><input class="preset" type="text"
+		     id="blank" onchange="method(this)"></td></tr>
+      </table>
+    </div>
   </div>
-  <div id="preset-details">
-    <table>
-      <tr>
-	<td>Description:</td>
-	<td><input class="preset" type="text"
-		   id="description" onchange="method(this)"></td></tr>
-      <tr>
-	<td>Instrument:</td>
-	<td><input class="preset" type="text"
-		   id="instrument" onchange="method(this)"></td></tr>
-      <tr>
-	<td>Ions:</td>
-	<td><input class="preset" type="text" 
-		   id="ions" onchange="method(this); renameIons();"></td></tr>
-      <tr>
-	<td>Numerators:</td>
-	<td><input class="preset" type="text"
-		   id="num" onchange="method(this)"></td></tr>
-      <tr>
-	<td>Denominators:</td>
-	<td><input class="preset" type="text"
-		   id="den" onchange="method(this)"></td></tr>
-      <tr>
-	<td>Blank:</td>
-	<td><input class="preset" type="text"
-		   id="blank" onchange="method(this)"></td></tr>
-    </table>
-  </div>
-</div>
 
-<div>
-  Load raw SIMS data:
-  <label class="custom-file-upload">
-    <input type="file" id="upload" onchange="upload()" multiple>
-    Browse...
+  <div>
+    Load raw SIMS data:
+    <label class="custom-file-upload">
+      <input type="file" id="upload" onchange="upload()" multiple>
+      Browse...
   </input>
-  </label>
-  <label id="upload-status"></label>
-</div>
-<div>
-  <button class="mainbutton" onclick="savejson()">
-    Save
-  </button>
-  or 
-  <label class="custom-file-upload">
-    <input type="file" id="open" onchange="openjson()">
-    Open
+    </label>
+    <label id="upload-status"></label>
+  </div>
+  <div>
+    <button class="mainbutton" onclick="savejson()">
+      Save
+    </button>
+    or 
+    <label class="custom-file-upload">
+      <input type="file" id="open" onchange="openjson()">
+      Open
     </input>
-  </label>
-  <tt>simplex</tt> settings
-  <a id="save"></a>
-</div>
+    </label>
+    <tt>simplex</tt> settings
+    <a id="save"></a>
+  </div>
 
-<div class="hidden red" id="methodmismatch">
-  The numerator and denominator labels do not match the ion labels.<br>
-  Please rename the ion labels to match the numerator and denominator labels.<br>
-</div>
+  <div class="hidden red" id="methodmismatch">
+    The numerator and denominator labels do not match the ion labels.<br>
+    Please rename the ion labels to match the numerator and denominator labels.<br>
+  </div>
+</left>
+<right>
+  <div id="help"></div>
+</right>

@@ -285,7 +285,7 @@ caldplot_geochronology <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
             ylim[2] <- max(ylim[2],max(yc))
         }
         fit <- cal2york(cal[i,])
-        graphics::plot(xlim,ylim,type='n',xlab=X,ylab=Y)
+        graphics::plot(xlim,ylim,type='n',xlab=X,ylab=Y,...)
         agegrid(fit=fit,pairing=pairing[i,],stand=stand)
         IsoplotR::scatterplot(xy,fit=fit,add=TRUE,show.numbers=show.numbers)
     }

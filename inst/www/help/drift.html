@@ -1,0 +1,39 @@
+<div>
+  Applies a blank correction and (for single collector data) drift
+  correction to the SIMS data.
+  <dl>
+    <dt>Aliquots:</dt>
+    <dd>Select an aliquot from the pull-down menu or cycle through
+      them by pressing the &lt; and &gt; buttons.
+    </dd>
+    <dt>Plot:</dt>
+    <dd>
+      Click this button to view the time resolved mass
+      spectrometer signals shown in the <tt>Signal</tt>
+      and <tt>Time</tt> tables below.
+    </dd>
+    <dt>Omit:</dt>
+    <dd>
+      A comma-separated list of 'outliers' to omit from the datasets,
+      corresponding to the row numbers of the <tt>Signal</tt>
+      and <tt>Time</tt> tables below.
+    </dd>
+    <dt>Signal:</dt>
+    <dd>The time-resolved mass spectrometer signals for all the mass
+      channels in the <tt>Ions</tt> field of the <tt>settings</tt>
+      page.
+    </dd>
+    <dt>Time:</dt>
+    <dd>The time stamps of the time-resolved mass spectrometer
+      signals.</dd>
+  </dl>
+
+  The graphical output shows the drift correction (for single
+  collector datasets) of blank-corrected SIMS data. Solid lines mark
+  the durations of each mass spectrometer sweep. Black dots mark the
+  starting point of each individual mass station within the
+  sweeps. Dotted lines are exponential functions whose slopes are used
+  for the drift correction but for no other purpose. Vertical axes
+  have units of counts per second.
+
+</div>

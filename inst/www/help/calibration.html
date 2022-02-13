@@ -1,0 +1,152 @@
+<div>
+  Four-step calibration of SIMS data.
+  <dl>
+    <dt>I. Calibration type - Choose one of two options:</dt>
+    <dd>
+      <dl>
+	<dt>1. isotopic fractionation:</dt>
+	<dd> The default setting for
+	  multi-collector stable isotope data. Accounts for the mass
+	  bias of isochemical isotope ratios such
+	  as <sup>18</sup>O/<sup>16</sup>O. Uses the logratio mean of
+	  a reference standard to correct the sample.
+	</dd>
+	<dt>2. elemental fractionation:</dt>
+	<dd>The default setting for
+	  single isotope geochronology data.  Accounts for the
+	  chemical fractionation of multi-element isotopic ratios such
+	  as <sup>206</sup>Pb/<sup>238</sup>U. Uses a calibration
+	  curve of the form Pb/U vs. UO/U.
+	</dd>
+      </dl>
+      It is usually not necessary to change the default option.
+    </dd>
+    <dt>II. Standard composition - Choose one of three options:</dt>
+    <dd>
+      <span class="show4geochron hide4stable">
+	<dl>
+	  <dt>1. specify manually:</dt>
+	  <dd>
+	    Manually enter the logratio composition of the reference
+	    material, as well as its covariance matrix and a table of
+	    text labels that pair the standard to the
+	    measurements. The latter table contains the following
+	    headers:
+	    <table>
+	      <tr><td>X:</td>
+		<td>The logratio to be used as the independent
+		  variable (x-axis) of the calibration curve.</td></tr>
+	      <tr><td>Y:</td>
+		<td>The logratio to be used as the dependent variable
+		  (y-axis) of the calibration curve.</td></tr>
+	      <tr><td>C:</td>
+		<td>The logratio to be used as a proxy for common Pb.
+		  Only relevant if the <tt>common+radiogenic</tt> option
+		  is selected (see below for details).</td></tr>
+	      <tr><td>slope:</td>
+		<td>Either 'auto' or a numerical value, which fixes
+		  the slope of the Pb/U-UO/U calibration
+		  curve.</td></tr>
+	    </table>
+	  </dd>
+	  <dt>2. load presets:</dt>
+	  <dd>
+	    Selecting this item of the pull-down menu adds a new
+	    pull-down menu to the user interface, containing a
+	    selection of commonly used reference materials with
+	    preloaded values. Selecting one of these options populates
+	    the three tables with those values.
+	  </dd>
+	  <dt>3. convert from age:</dt>
+	  <dd>
+	    Selecting this item of the pull-down menu adds two text
+	    boxes to the user interface, specifying the age of the
+	    reference material and its standard error. These values
+	    can be converted to a set of equivalent logratio
+	    compositions.
+	  </dd>
+	</dl>
+	For each of these options, the standard composition can either
+	by specified as:
+	<dl>
+	  <dt>1. common+radiogenic:</dt>
+	  <dd>The U-Pb composition of discordant reference materials
+	    can be specified as a mixing line between purely
+	    radiogenic and purely non-radiogenic end members.</dd>
+	  <dt>2. measured:</dt>
+	  <dd>Alternatively, the composition of reference materials
+	    can also be specified as the measured U-Pb composition of
+	    the standard. This requires that the isotopic composition
+	    of the standard tightly clusters around a specific set of
+	    values. Any spread of the reference data along a discordia
+	    line cannot be adequately captured by a single
+	    composition.
+	  </dd>
+	</dl>
+      </span>
+      <span class="hide4geochron show4stable">
+	<dl>
+	  <dt>1. specify manually:</dt>
+	  <dd>
+	    Manually enter the logratio composition of the reference
+	    material, as well as its covariance matrix.
+	  </dd>
+	  <dt>2. load presets:</dt>
+	  <dd>
+	    Selecting this item of the pull-down menu adds a new
+	    pull-down menu to the user interface, containing a
+	    selection of commonly used reference materials with
+	    preloaded values. Selecting one of these options populates
+	    the two tables with those values.
+	  </dd>
+	  <dt>3. convert from &delta;-values:</dt>
+	  <dd>
+	    Selecting this item of the pull-down menu adds three
+	    new items to the user interface:
+	    <table>
+	      <tr>
+		<td>&delta;-values:</td>
+		<td>A table with the isotopic composition of the
+		  reference material, specified inconventional stable
+		  isotope notation. (&delta; =
+		  (R<sub>smp</sub>/R<sub>std</sub> - 1) &permil;,
+		  where R<sub>smp</sub> and R<sub>std</sub> are
+		  isotopic ratios measured in the sample and reference
+		  standard, respectively)
+		</td>
+	      </tr>
+	      <tr>
+		<td>Covariance matrix:</td>
+		<td>The covariance matrix of the &delta;-values.</td>
+	      </tr>
+	      <tr>
+		<td>Reference material:</td>
+		<td>
+		  The isotopic ratios of the reference standard
+		  (i.e. R<sub>std</sub> above). A pull-down menu of
+		  commonly used reference standards is provided to
+		  populate this table.
+		</td>
+	      </tr>
+	    </table>
+	  </dd>
+	</dl>
+      </span>
+    </dd>
+    <dt>III. Select standard aliquots:</dt>
+    <dd>Enter the prefix of the standard in the text box to select the
+      aliquots to be used in the calibration curve.  Alternatively (or
+      additionally), individual aliquots can also be added or removed
+      by entering 'yes' or 'no' in the appropriate cells of the table.
+    </dd>
+    <dt>IV. Calibrate:</dt>
+    <dd>
+      Click the button to construct a calibration curve, which is
+      needed for subsequent steps in the data reduction chain. The row
+      numbers of the table of aliquots can be added as labels to the
+      calibration curve. This facilitates the identification of
+      outliers, which can be removed by revisiting step III of the
+      calibration procedure.
+    </dd>
+  </dl>
+</div>

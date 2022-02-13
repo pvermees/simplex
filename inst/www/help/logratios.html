@@ -1,0 +1,52 @@
+<div>
+  Fit a log-linear model to the drift-corrected logratio data, using a
+  Poisson error model for SEM data.
+  <dl>
+    <dt>Aliquot:</dt>
+    <dd>
+      Select an aliquot from the pull-down menu or cycle through them
+      by pressing the &lt; and &gt; buttons.</dd>
+    <dt>Plot:</dt>
+    <dd>
+      Plot the time-resolved blank corrected signals logratios for the
+      selected aliquot. Produces a multi-panel plot of time resolved
+      signals or ratios, with a black line that shows the best fit
+      log-linear fit to the data (where log[x/y] = b0 + g x t).
+    </dd>
+    <dt>ratios:</dt>
+    <dd>
+      If unticked, <tt>Plot</tt> produces one plot for each ion in
+      the <tt>Numerators</tt> and <tt>Denominators</tt> fields of
+      the <tt>Setup</tt> page.  If ticked, <tt>Plot</tt> produces one
+      plot for each ratio in the <tt>Numerators</tt>
+      and <tt>Denominators</tt> fields of the <tt>Setup</tt> page.
+    </dd>
+    <dt>Tabulate:</dt>
+    <dd>
+      Tabulates the estimated (log)ratios for the entire dataset.
+      Produces a table of estimates and uncertainties that includes
+      all the within-spot error correlations.
+    </dd>
+    <dt>log:</dt>
+    <dd>If ticked, the output table reports the compositions as
+    logratios.</dd>
+    <dt>+x/y:</dt>
+    <dd>If ticked, adds the x-y stage coordinates of the aliquots to
+    the table. Only available for Cameca data.</dd>
+    <dt>Omit:</dt>
+    <dd>
+      A comma-separated list of 'outliers' to omit from the datasets,
+      corresponding to the row numbers of the <tt>Signal</tt>
+      and <tt>Time</tt> tables below.
+    </dd>
+    <dt>b0:</dt>
+    <dd>
+      The intercepts of the log-linear ratio drift model
+    </dd>
+    <dt>g:</dt>
+    <dd>
+      The slopes of thelog-linear ratio drift model. g=0 for
+      isochemical ratios.
+    </dd>
+  </dl>
+</div>

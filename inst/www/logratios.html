@@ -6,7 +6,7 @@
 </div>
 <div class="hide4loading">
   <left>
-    <div>Aliquot:<select id="aliquots" onchange="logratioAliquot()"></select>
+    <div>Aliquot: <select id="aliquots" onchange="logratioAliquot()"></select>
       &nbsp;<button class="mainbutton" onclick="backnforth(-1,logratioAliquot)">
 	<
 	  </button>
@@ -28,9 +28,13 @@
     <div>with b0: <table id="b0" class="normalfont"></table></div>
     <div>and g: <table id="g" class="normalfont"></table></div>
   </left>
-  <right><img class="plot" id="logratio-plot">
-    <div class="table">
-      <table class="normalfont" id="logratio-table"></table>
-    </div>
+  <right>
+    <div id="help"></div>
+    <span id="output">
+      <img class="plot" id="logratio-plot">
+      <div class="table">
+	<table class="normalfont" id="logratio-table"></table>
+      </div>
+    </span>
   </right>
 </div>

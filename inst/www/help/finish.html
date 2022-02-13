@@ -1,0 +1,72 @@
+<div>
+  Prepare the calibrated results for postprocessing in other software.
+  <dl class="show4geochron hide4stable">
+    <dt>Convert to <tt>IsoplotR</tt>:</dt>
+    <dd>
+      Recasts the data in a format that can be read by
+      <a href="http://ucl.ac.uk/~ucfbpve/isoplotr/"><tt>IsoplotR</tt></a>.
+      Depending on the isotopes analysed, the following formats are
+      possible:
+      <table>
+	<tr>
+	  <td>U-Pb:</td>
+	  <td>
+	    Corresponds to <tt>IsoplotR</tt> U-Pb format 5
+	    (<tt>X=38/06, err[38/06], Y=07/06, err[Y], Z=04/06,
+	    err[Z], rho[X,Y], rho[X,Z], rho[Y,Z]</tt>).
+	  </td>
+	</tr>
+	<tr>
+	  <td>Th-Pb:</td>
+	  <td>
+	    Corresponds to <tt>IsoplotR</tt> Th-Pb format 2
+	    (<tt>X=32/08, err[X], Y=04/08, err[Y], rho</tt>).
+	  </td>
+	</tr>
+	<tr>
+	  <td>U-Th-Pb:</td>
+	  <td>Corresponds to <tt>IsoplotR</tt> U-Pb format 8
+	    (<tt>W=38/06, err[W], X=07/06, err[X], Y=08/06, err[Y],
+	    Z=32/38, err[Z], rhoWX, rhoWY, rhoWZ, rhoXY, rhoXZ,
+	    rhoYZ</tt>).
+	  </td>
+	</tr>
+      </table>
+    </dd>
+    <dt>Export:</dt>
+    <dd>Saves the output in a <tt>.json</tt> format that can be opened
+      in the online version
+      of <a href="http://isoplotr.es.ucl.ac.uk/">
+	<tt>IsoplotR</tt></a>.</dd>
+  </dl>
+  <dl class="hide4geochron show4stable">
+    <dt>Convert:</dt>
+    <dd>
+      Convert the logratio data into &delta;-values, using one of the
+      following two conventions:
+      <table>
+	<tr>
+	  <td>&delta;:</td>
+	  <td>The conventional definition, i.e. &delta; =
+	    (R<sub>smp</sub>/R<sub>std</sub> - 1) &permil;, where
+	    R<sub>smp</sub> and R<sub>std</sub> are isotopic ratios
+	    measured in the sample and reference standard, respectively.
+	  </td>
+	</tr>
+	<tr>
+	  <td>&delta;':</td>
+	  <td>The logratio definition of Hulston and Thode
+	    (1965, <i>JGR</i>, 70.14, 3475-3484), i.e.  &delta;' =
+	    (ln[R<sub>smp</sub>]-ln[R<std>smp</std>])&permil;.
+	  </td>
+	</tr>
+      </table>
+    </dd>
+    <dt>Reference material:</dt>
+    <dd>
+      The isotopic ratios of the reference standard (R<sub>std</sub>)
+      that is used for &delta;-notation (see above). A pull-down menu
+      of commonly used reference standards is provided to populate the
+      table with default values.</dd>
+  </dl>
+</div>
