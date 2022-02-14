@@ -771,7 +771,7 @@ function showcaldel(){
 	    cal.del.refval = stand.ref.val;
 	    cal.del.refcov = stand.ref.cov;
 	}
-	if (stand.hasOwnProperty('ref') & stand.ref.hasOwnProperty('preset')){
+	if (stand.hasOwnProperty('ref') && stand.ref.hasOwnProperty('preset')){
 	    document.getElementById('deltaref').value = stand.ref.preset[0];
 	}
     }
