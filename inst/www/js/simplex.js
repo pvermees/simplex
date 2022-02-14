@@ -11,7 +11,7 @@ var glob = {
     "i": null,
     "start": true,
     "names": null,
-    "class": "simplex",
+    "class": ["simplex"],
     "multi": null,
     "selected": 0,
     "ratios": true,
@@ -131,7 +131,7 @@ function loadPresets(){
 
 function resetglob(){
     glob.i =  0;
-    glob.multi = false;
+    glob.multi = false; // multi-element
     glob.sampleprefix = '';
     glob.standards = [];
     glob.samples = [];
@@ -567,10 +567,7 @@ function calibration(){
 	selectButton(3);
 	loadPage("calibration.html").then(
 	    () => {
-		if (glob.simplex.hasOwnProperty('calibration')){
-		    glob.calibration.standtype =
-			glob.simplex.calibration.stand.measured[0] ?
-			"measured" : "commonradio";
+		if (glob.class.includes('calibration')){
 		    showCalibration();
 		} else {
 		    createCalibration(showCalibration);
@@ -608,14 +605,18 @@ function showCalibration(){
 function prepareCalibration(){
     let cal = glob.calibration;
     if (cal.caltype==null){ // geochron
-	cal.caltype = glob.multi ? 'average' : 'regression';
+	cal.caltype = glob.multi ? 'regression' : 'average';
     }
+    cal.standtype =
+	glob.simplex.calibration.stand.measured[0] ?
+	"measured" : "commonradio";
     document.getElementById('caltype').value = cal.caltype;
     document.getElementById('standcomp').value = cal.standcomp;
     document.getElementById('standtype').value = cal.standtype;
     if (cal.preset!==null){
 	document.getElementById('presets').value = cal.preset;
     }
+
 }
 function createCalibration(callback){
     shinylight.call('createcalibration', {x:glob}, null).then(
@@ -638,14 +639,14 @@ function togglecaltype(){
     if (ct === 'average'){
 	show('.show4stable');
 	hide('.hide4stable');
-	if (glob.multi) hide('#caltype-warning');
-	else show('#caltype-warning');
+	if (glob.multi) show('#caltype-warning');
+	else hide('#caltype-warning');
     } else { // regression
 	show('.show4geochron');
 	hide('.hide4geochron');
 	setpairing();
-	if (glob.multi) show('#caltype-warning');
-	else hide('#caltype-warning');
+	if (glob.multi) hide('#caltype-warning');
+	else show('#caltype-warning');
     }
 }
 function setpairing(){
@@ -1043,9 +1044,6 @@ function finish(){
 }
 function finishinit(){
     let cal = glob.calibration;
-    if (cal.caltype==null){
-	cal.caltype = glob.multi ? 'average' : 'regression';
-    }
     if (cal.caltype=='average'){
 	show('.show4stable');
 	hide('.hide4stable');

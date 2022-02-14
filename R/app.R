@@ -67,8 +67,14 @@ result2json <- function(x){
     out$simplex <- x
     out$names <- rcnames(x)
     out$class <- class(x)
-    out$multi <- multicollector(x)
+    out$multi <- multi(x)
     out
+}
+
+multi <- function(x){
+    numden <- c(x$method$num,x$method$den)
+    el <- element(numden)
+    length(unique(el))>1
 }
 
 getdatatype <- function(x){
