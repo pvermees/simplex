@@ -3035,3 +3035,26 @@ IPDL protocol error: Handler returned error code!
 
 ###!!! [Parent][DispatchAsyncMessage] Error: PClientManager::Msg_ForgetFutureClientSource Processing error: message was deserialized, but the handler returned false (indicating failure)
 
+JavaScript error: , line 0: NotFoundError: No such JSWindowActor 'DevToolsFrame'
+1644852620031	Marionette	INFO	Stopped listening on port 46013
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+
+###!!! [Parent][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+1644852719125	geckodriver::marionette	ERROR	Failed to close browser connection: Transport endpoint is not connected (os error 107)
+1644852729285	geckodriver	INFO	Listening on 127.0.0.1:36711
+1644852729788	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "42475" "-no-remote" "-profile" "/tmp/rust_mozprofile2dDFf0"
+1644852730296	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofile2dDFf0/search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:42475/devtools/browser/789e7661-5a3c-4651-b64f-d9625925304a
+1644852731104	Marionette	INFO	Listening on port 45921
+1644852731222	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+IPDL protocol error: Handler returned error code!
+
+###!!! [Parent][DispatchAsyncMessage] Error: PClientManager::Msg_ExpectFutureClientSource Processing error: message was deserialized, but the handler returned false (indicating failure)
+
+IPDL protocol error: Handler returned error code!
+
+###!!! [Parent][DispatchAsyncMessage] Error: PClientManager::Msg_ForgetFutureClientSource Processing error: message was deserialized, but the handler returned false (indicating failure)
+

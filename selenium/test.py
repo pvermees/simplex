@@ -112,6 +112,10 @@ def oxygenfinishtest():
     click("calibration")
     time.sleep(0.5)
     click("calibrate")
+    time.sleep(0.5)
+    click("samples")
+    time.sleep(0.5)
+    click("calibrate")
 
 def PbPbtest():
     click("setup")
