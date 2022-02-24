@@ -112,3 +112,21 @@ def oxygenfinishtest():
     click("calibration")
     time.sleep(0.5)
     click("calibrate")
+    time.sleep(0.5)
+    click("samples")
+    time.sleep(0.5)
+    click("calibrate")
+
+def PbPbtest():
+    click("setup")
+    ions("Pb204,Pb207,Pb208",identifier="num")
+    time.sleep(0.5)
+    ions("Pb206,Pb206,Pb206",identifier="den")
+    time.sleep(0.5)
+    click("drift")
+    time.sleep(3)
+    click("logratios")
+    time.sleep(2)
+    click("calibration")
+    
+    

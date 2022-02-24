@@ -180,7 +180,7 @@ caldplot_stable <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
                     ylim[2] <- max(ylim[2],max(Ys+3*sYs))
                 }
                 graphics::plot(xlim,ylim,type='n',ann=FALSE)
-                deltagrid(dat,xratio,yratio)
+                if (!is.null(sta$ref)) deltagrid(dat,xratio,yratio)
                 IsoplotR::scatterplot(cbind(Xc,sXc,Yc,sYc,rXYc),
                                       xlim=xlim,ylim=ylim,add=TRUE,
                                       show.numbers=show.numbers,...)
@@ -201,7 +201,7 @@ caldplot_stable <- function(dat,calfit=FALSE,show.numbers=TRUE,...){
         xlim <- c(1,ns)
         ylim <- c(min(Ys-3*sYs,ll),max(Ys+3*sYs,ul))
         graphics::plot(xlim,ylim,type='n',xlab='sample #',ylab=ylab)
-        deltagrid(dat)
+        if (!is.null(sta$ref)) deltagrid(dat)
         graphics::matlines(rbind(1:ns,1:ns),rbind(ll,ul),lty=1,col='black')
         graphics::points(1:ns,lr,pch=16)
         xlim <- graphics::par('usr')[1:2]
