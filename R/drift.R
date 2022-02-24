@@ -133,14 +133,13 @@ alphapars <- function(spot,ion){
             out$edt <- dwelltime-deadtime*counts*1e-9
             out$sig <- counts/out$edt
             out$counts <- round(counts)
-            out$bkgcounts <- round(out$bkg*dwelltime)
         } else {
             dwelltime <- spot$dwelltime[ion]
             out$counts <- spot$signal[,ion]
             out$edt <- dwelltime-spot$deadtime*out$counts*1e-9
             out$sig <- out$counts/out$edt
-            out$bkgcounts <- spot$signal[,'bkg']
         }
+        out$bkgcounts <- round(out$bkg*dwelltime)
     }
     out
 }
