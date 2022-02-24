@@ -10,10 +10,13 @@
 #'     subsequent data reduction steps.
 #' @param den denominator ions of the logratios to be processed in
 #'     subsequent data reduction steps.
-#' @param blank character string with either (1) the name of the
-#'     channel (e.g. \code{'bkg'}) of the background signal, or (2)
+#' @param blank either (1) a character string with the name of the
+#'     channel (e.g. \code{'bkg'}) of the background signal, (2)
 #'     \code{'nominal'} a flag indicating that nominal detector
-#'     backgrounds are to be used (only relevant to Cameca data).
+#'     backgrounds recorded in the input file are to be used (only
+#'     relevant to Cameca data), or (3) a numerical value representing
+#'     a nominal number of background counts (for SHRIMP) or counts
+#'     per second (for Cameca).
 #' @param description text string with a description of the contents
 #' @return an object of class \code{method}
 #' @examples
