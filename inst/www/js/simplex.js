@@ -185,7 +185,7 @@ function showPresets(){
     assign('ions');
     assign('num');
     assign('den');
-    assign('blank');
+    assign('bkg');
 }
 
 function show(cls){

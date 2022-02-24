@@ -36,13 +36,14 @@ seconds <- function(tt){
 background <- function(spot,ions){
     detector <- spot$detector[ions]
     blk <- spot$method$bkg
+    numeric <- suppressWarnings(!is.na(as.numeric(blk)))
     if (identical(blk,'nominal')){
         out <- spot$background[detector]
-    } else if (is.numeric(blk)){
+    } else if (numeric){
         if (spot$m$instrument=='Cameca'){
-            out <- blk
+            out <- as.numeric(blk)
         } else if (spot$m$instrument=='SHRIMP'){
-            out <- blk/spot$dwelltime[ions]
+            out <- as.numeric(blk)/spot$dwelltime[ions]
         } else {
             stop('Illegal background option')
         }
