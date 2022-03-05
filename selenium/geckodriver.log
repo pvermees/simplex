@@ -3058,3 +3058,12 @@ IPDL protocol error: Handler returned error code!
 
 ###!!! [Parent][DispatchAsyncMessage] Error: PClientManager::Msg_ForgetFutureClientSource Processing error: message was deserialized, but the handler returned false (indicating failure)
 
+1646502196356	geckodriver	INFO	Listening on 127.0.0.1:56465
+1646502196758	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "50257" "-no-remote" "-profile" "/tmp/rust_mozprofilehIdHxC"
+1646502204153	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofilehIdHxC/search.json.mozlz4", (void 0)))
+console.error: Region.jsm: "Error fetching region" (new AbortError("The operation was aborted. ", (void 0), 770))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 419))
+DevTools listening on ws://localhost:50257/devtools/browser/69b24fbf-a914-4383-a171-fa376ffbeb9a
+1646502214720	Marionette	INFO	Listening on port 45647
+1646502214946	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
