@@ -16,6 +16,8 @@ var glob = {
     "selected": 0,
     "ratios": true,
     "log": true,
+    "cov": false,
+    "exterr": false,
     "xy": false,
     "shownum": false,
     "calibration": {
@@ -349,6 +351,12 @@ function checkratios(){
 }
 function checklog(){
     glob.log = document.getElementById("logcheckbox").checked;
+}
+function checkcov(){
+    glob.cov = document.getElementById("covcheckbox").checked;
+}
+function checkexterr(){
+    glob.exterr = document.getElementById("exterrcheckbox").checked;
 }
 function checkxy(){
     glob.xy = document.getElementById("xycheckbox").checked;
@@ -937,6 +945,8 @@ function samples(){
 		setsampsel();
 		document.getElementById("shownum").checked = glob.shownum;
 		document.getElementById("logcheckbox").checked = glob.log;
+		document.getElementById("covcheckbox").checked = glob.cov;
+		document.getElementById("exterrcheckbox").checked = glob.exterr;
 	    }, error => alert(error)
 	).then(
 	    () => loadHelp("help/samples.html"),

@@ -4,7 +4,9 @@
     <button class="mainbutton" id="calibrate" onclick="calibrate(true)">Calibrate</button>
     <input type="checkbox" id="shownum" onchange="shownum()">Label aliquots
     <button class="mainbutton" onclick="calibrate(false)">Tabulate</button>
-    <input type="checkbox" id="logcheckbox" onchange="checklog()">log
+    <input type="checkbox" id="logcheckbox" onchange="checklog()">log 
+    <input type="checkbox" id="covcheckbox" onchange="checkcov()">cov
+    <input type="checkbox" id="exterrcheckbox" onchange="checkexterr()">exterr
   </div>
   <div>Select samples by prefix:
     <input type="text" id="prefix" onchange="updateSamplePrefix()">

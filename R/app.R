@@ -196,7 +196,7 @@ calibrate_it <- function(x){
         snms <- NULL
     }
     selection <- subset(dat,prefix=x$sampleprefix,snames=snms)
-    out <- calibrate(selection)
+    out <- calibrate(selection,exterr=x$exterr)
 }
 
 calibrateSamples <- function(x){
@@ -207,7 +207,7 @@ calibrateSamples <- function(x){
 
 calibratedTable <- function(x){
     cal <- calibrate_it(x)
-    tab <- data2table.calibrated(cal,log=x$log)
+    tab <- data2table.calibrated(cal,log=x$log,cov=x$cov)
     rownames(tab) <- NULL
     as.data.frame(tab)
 }
