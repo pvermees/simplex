@@ -139,7 +139,7 @@ function resetglob(){
     glob.samples = [];
     glob.calibration = {
 	'caltype': null, // 'average' or 'regression'
-	'standcomp': 'manualstand', // 'manualstand', 'preset2stand', 't2stand' or 'd2stand'
+	'standcomp': 'preset2stand', // 'manualstand', 'preset2stand', 't2stand' or 'd2stand'
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
 	'tst': [0,0], 
@@ -704,6 +704,7 @@ function setstandcomp(){
     let nr = header.length;
     let val = [stand.val];
     let cov = stand.cov;
+    togglestandcomp();
     loadTable(val,header,'standlr',1);
     loadTable(cov,header,'standcov',nr);
     togglemismatchwarning();
