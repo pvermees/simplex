@@ -166,7 +166,7 @@ data2table_helper <- function(val,E,snames,ratios,cov=FALSE){
     nr <- length(ratios)
     if (cov){
         out <- cbind(val,E)
-        colnames(out) <- c('ratios',rep(ratios,ns))
+        colnames(out) <- c('logratios',rep(ratios,ns))
         rownames(out) <- rep(snames,each=nr)
     } else {
         nc <- 2*nr+nr*(nr-1)/2

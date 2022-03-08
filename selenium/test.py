@@ -15,7 +15,7 @@ def click(id):
 
 def select(parent,daughter):
     Select(d.find_element("id",parent)).select_by_value(daughter)
-    
+
 def instrument(inst):
     instrument = d.find_element("id","instrument")
     instrument.clear()
