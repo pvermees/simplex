@@ -196,7 +196,7 @@ calibrate_it <- function(x){
         snms <- NULL
     }
     selection <- subset(dat,prefix=x$sampleprefix,snames=snms)
-    out <- calibrate(selection)
+    out <- calibrate(selection,exterr=x$exterr)
 }
 
 calibrateSamples <- function(x){

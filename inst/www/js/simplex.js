@@ -17,6 +17,7 @@ var glob = {
     "ratios": true,
     "log": true,
     "cov": false,
+    "exterr": false,
     "xy": false,
     "shownum": false,
     "calibration": {
@@ -138,7 +139,7 @@ function resetglob(){
     glob.samples = [];
     glob.calibration = {
 	'caltype': null, // 'average' or 'regression'
-	'standcomp': 'manualstand', // 'manualstand', 'preset2stand', 't2stand' or 'd2stand'
+	'standcomp': 'preset2stand', // 'manualstand', 'preset2stand', 't2stand' or 'd2stand'
 	'standtype': 'measured', // 'measured' or 'commonradio'
 	'preset': null, // 'Plesovice', 'NBS28', ...
 	'tst': [0,0], 
@@ -353,6 +354,9 @@ function checklog(){
 }
 function checkcov(){
     glob.cov = document.getElementById("covcheckbox").checked;
+}
+function checkexterr(){
+    glob.exterr = document.getElementById("exterrcheckbox").checked;
 }
 function checkxy(){
     glob.xy = document.getElementById("xycheckbox").checked;
@@ -700,6 +704,7 @@ function setstandcomp(){
     let nr = header.length;
     let val = [stand.val];
     let cov = stand.cov;
+    togglestandcomp();
     loadTable(val,header,'standlr',1);
     loadTable(cov,header,'standcov',nr);
     togglemismatchwarning();
@@ -942,6 +947,7 @@ function samples(){
 		document.getElementById("shownum").checked = glob.shownum;
 		document.getElementById("logcheckbox").checked = glob.log;
 		document.getElementById("covcheckbox").checked = glob.cov;
+		document.getElementById("exterrcheckbox").checked = glob.exterr;
 	    }, error => alert(error)
 	).then(
 	    () => loadHelp("help/samples.html"),
