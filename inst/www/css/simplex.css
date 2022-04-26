@@ -181,3 +181,7 @@ pre {
 td {
     vertical-align: top;
 }
+
+.blink_me {
+    animation: blinker 1s linear infinite;
+}

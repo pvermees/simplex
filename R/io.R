@@ -164,10 +164,10 @@ read_SHRIMP_op <- function(f,mions=NULL){
             for (i in 1:nions){
                 spot$sbm[,i] <- read_numbers(f)
             }
-            out[[sname]] <- spot
             names(spot$dwelltime) <- names(spot$dtype) <-
                 names(spot$detector) <- colnames(spot$time) <-
                 colnames(spot$signal) <- colnames(spot$sbm) <- ions
+            out[[sname]] <- spot
             junk <- readLines(f,n=1,warn=FALSE)
         }
     }
@@ -191,7 +191,8 @@ read_SHRIMP_pd <- function(f,mions=NULL){
             nions <- split_mixed(header[[2]],3,1)
             spot$sbmbkg <- split_mixed(header[[2]],5,3)
             spot$deadtime <- split_mixed(header[[2]],4,1)
-            block <- utils::read.table(text=readLines(f,n=nions,warn=FALSE))
+            block <- utils::read.table(text=readLines(f,n=nions,warn=FALSE),
+                                       fill=TRUE)
             ions <- block[,1]
             if (length(ions)==length(mions)) ions <- mions
             spot$dwelltime <- block[,4]
