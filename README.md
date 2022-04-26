@@ -50,7 +50,7 @@ including the drift correction, logratio calculation, and calibration:
 ```
 dat <- read_data(f='SHRIMP.pd',m=method('GA-UPb'))
 lr <- logratios(dat)
-stand <- standard('Temora')
+stand <- standard('Temora-t')
 paired <- pairing(lr,stand=stand)
 cal <- calibration(lr,stand=stand,pairing=paired,prefix="TEM")
 result <- calibrate(cal,exterr=TRUE)
