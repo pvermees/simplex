@@ -233,24 +233,21 @@ function readFile(file) {
 
 // read all files for conversion to textConnection
 async function readFiles(){
-    let status = document.getElementById('upload-status');
     let f = document.getElementById('upload').files;
     let fns = {};
     let tcs = {};
     for (let i=0; i<f.length; i++){
-	status.innerHTML = " Loading file " + (i+1) + " of " + f.length;
 	fns[i] = f[i].name;
 	tcs[i] = await readFile(f[i]);
-	status.innerHTML = (i==f.length-1) ? "" :
-	    " Loaded file " + (i+1) + " of " + f.length;
-
     }
     return({fns:fns, tcs:tcs})
 }
 
 async function upload(){
+    let status = document.getElementById('upload-status');
     readFiles().then(
 	f => {
+	    status.innerHTML = "<span class='blink_me'>Reading...</span>";
 	    m = glob.simplex.method;
 	    shinylight.call('upload', {f:f, m:m}, null).then(
 		result => {
@@ -262,6 +259,7 @@ async function upload(){
 		    document.getElementById('den').value =
 			glob.simplex.method.den.toString();
 		    checkmethod();
+		    status.innerHTML = "";
 		},
 		error => alert(error)
 	    )
