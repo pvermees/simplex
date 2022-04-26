@@ -247,7 +247,7 @@ async function upload(){
     let status = document.getElementById('upload-status');
     readFiles().then(
 	f => {
-	    status.innerHTML = "<span class='blink_me'>Reading...</span>";
+	    status.innerHTML = "<span class='blink'>Reading...</span>";
 	    m = glob.simplex.method;
 	    shinylight.call('upload', {f:f, m:m}, null).then(
 		result => {
