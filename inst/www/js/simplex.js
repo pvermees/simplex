@@ -967,6 +967,7 @@ function prefix2samples(){
 	for (let j=0; j<glob.sampleprefix.length; j++){
 	    if (keys[i].indexOf(glob.sampleprefix[j]) !== -1){
 		glob.samples.push(keys[i]);
+		break;
 	    }
 	}
     }
