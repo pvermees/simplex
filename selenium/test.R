@@ -1,4 +1,4 @@
-setwd('~/Documents/Programming/R/simplex/')
+setwd('..')
 source('R/calibrate.R')
 source('R/calibration.R')
 source('R/drift.R')

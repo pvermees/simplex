@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 
-# start test.R first, then start Python (Ctrl-p) and load script (Ctrl-l)
+# start test.R first, then start Python (Ctrl-c, Ctrl-p) and load script (Ctrl-l)
 # to start test.py: boot(), to refresh: d.refresh()
 def boot():
     global d
@@ -128,5 +128,3 @@ def PbPbtest():
     click("logratios")
     time.sleep(2)
     click("calibration")
-    
-    
