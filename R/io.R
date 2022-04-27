@@ -276,9 +276,8 @@ subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
 }
 subset2snames <- function(dat,prefix=NULL,snames=NULL,i=NULL,...){
     if (is.null(snames)){
-        if (is.null(prefix)){
-            snames <- names(dat$samples)
-        } else {
+        snames <- names(dat$samples)
+        if (!is.null(prefix)){
             selected <- unlist(lapply(prefix,'grep',snames,...))
             snames <- snames[selected]
         }
