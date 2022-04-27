@@ -3190,3 +3190,110 @@ DevTools listening on ws://localhost:35573/devtools/browser/f0edeb5f-6ee0-439f-9
 1651059299413	Marionette	INFO	Listening on port 34967
 Read port: 34967
 1651059299518	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 307: SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data at line 1 column 5 of the JSON data
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.error: (new InvalidStateError("JSWindowActorChild.sendAsyncMessage: JSWindowActorChild cannot send at the moment", (void 0), 402))
+InvalidStateError: JSWindowActorChild.sendAsyncMessage: JSWindowActorChild cannot send at the moment: sendPacket@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:402:10
+send@resource://devtools/shared/transport/js-window-actor-transport.js:53:25
+send@resource://devtools/server/devtools-server-connection.js:99:20
+_sendEvent@resource://devtools/shared/protocol/Actor.js:72:15
+initialize/<@resource://devtools/shared/protocol/Actor.js:46:16
+_emit@resource://devtools/shared/event-emitter.js:242:32
+emit@resource://devtools/shared/event-emitter.js:186:18
+emit@resource://devtools/shared/event-emitter.js:330:18
+doResume@resource://devtools/server/actors/thread.js:1341:10
+destroy@resource://devtools/server/actors/thread.js:347:12
+_destroyThreadActor@resource://devtools/server/actors/targets/window-global.js:1113:24
+destroy@resource://devtools/server/actors/targets/window-global.js:692:10
+module.exports/proto.destroy@resource://devtools/server/actors/targets/target-actor-mixin.js:253:30
+instantiate@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:160:26
+handleEvent@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:583:12
+enter@resource://devtools/server/actors/utils/event-loop.js:83:18
+_pauseAndRespond@resource://devtools/server/actors/thread.js:963:29
+hit@resource://devtools/server/actors/breakpoint.js:204:29
+showPresets@http://127.0.0.1:8000/js/simplex.js:190:5
+loadPresets/<@http://127.0.0.1:8000/js/simplex.js:127:6
+promise callback*loadPresets@http://127.0.0.1:8000/js/simplex.js:124:53
+onchange@http://127.0.0.1:8000/:1:1
+receiveMessage@resource://gre/actors/SelectChild.jsm:272:21
+receiveMessage@resource://gre/actors/SelectChild.jsm:475:21
+
+console.error: (new InvalidStateError("JSWindowActorChild.sendAsyncMessage: JSWindowActorChild cannot send at the moment", (void 0), 402))
+InvalidStateError: JSWindowActorChild.sendAsyncMessage: JSWindowActorChild cannot send at the moment: sendPacket@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:402:10
+send@resource://devtools/shared/transport/js-window-actor-transport.js:53:25
+send@resource://devtools/server/devtools-server-connection.js:99:20
+_sendEvent@resource://devtools/shared/protocol/Actor.js:72:15
+initialize/<@resource://devtools/shared/protocol/Actor.js:46:16
+_emit@resource://devtools/shared/event-emitter.js:242:32
+emit@resource://devtools/shared/event-emitter.js:186:18
+emit@resource://devtools/shared/event-emitter.js:330:18
+_emitResourcesForm@resource://devtools/server/actors/targets/target-actor-mixin.js:222:12
+notifyResourceAvailable@resource://devtools/server/actors/targets/target-actor-mixin.js:179:12
+onResumed@resource://devtools/server/actors/resources/thread-states.js:127:10
+_emit@resource://devtools/shared/event-emitter.js:242:32
+emit@resource://devtools/shared/event-emitter.js:186:18
+emit@resource://devtools/shared/event-emitter.js:330:18
+doResume@resource://devtools/server/actors/thread.js:1341:10
+destroy@resource://devtools/server/actors/thread.js:347:12
+_destroyThreadActor@resource://devtools/server/actors/targets/window-global.js:1113:24
+destroy@resource://devtools/server/actors/targets/window-global.js:692:10
+module.exports/proto.destroy@resource://devtools/server/actors/targets/target-actor-mixin.js:253:30
+instantiate@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:160:26
+handleEvent@resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm:583:12
+enter@resource://devtools/server/actors/utils/event-loop.js:83:18
+_pauseAndRespond@resource://devtools/server/actors/thread.js:963:29
+hit@resource://devtools/server/actors/breakpoint.js:204:29
+showPresets@http://127.0.0.1:8000/js/simplex.js:190:5
+loadPresets/<@http://127.0.0.1:8000/js/simplex.js:127:6
+promise callback*loadPresets@http://127.0.0.1:8000/js/simplex.js:124:53
+onchange@http://127.0.0.1:8000/:1:1
+receiveMessage@resource://gre/actors/SelectChild.jsm:272:21
+receiveMessage@resource://gre/actors/SelectChild.jsm:475:21
+
+JavaScript error: http://127.0.0.1:8000/js/shinylight-framework.js, line 631: TypeError: result is undefined
+JavaScript error: http://127.0.0.1:8000/js/shinylight-framework.js, line 631: TypeError: result is undefined
+1651069232147	geckodriver	INFO	Listening on 127.0.0.1:45181
+1651069232655	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "48505" "-no-remote" "-profile" "/tmp/rust_mozprofileLfH3XI"
+1651069233168	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofileLfH3XI/search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:48505/devtools/browser/523158e9-c36e-43fd-a498-29b4984a25ab
+1651069233989	Marionette	INFO	Listening on port 39963
+Read port: 39963
+1651069234065	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: http://127.0.0.1:8000/js/shinylight-framework.js, line 631: TypeError: result is undefined
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NotFoundError: No such JSWindowActor 'DevToolsFrame'
+1651069235469	Marionette	INFO	Stopped listening on port 34967
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+
+###!!! [Parent][PImageBridgeParent] Error: RunMessage(msgname=PImageBridge::Msg_WillClose) Channel closing: too late to send/recv, messages will be lost
+
+1651069237682	Marionette	INFO	Stopped listening on port 39963
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+
+###!!! [Parent][PImageBridgeParent] Error: RunMessage(msgname=PImageBridge::Msg_WillClose) Channel closing: too late to send/recv, messages will be lost
+
+1651069263432	geckodriver::marionette	ERROR	Failed to close browser connection: Transport endpoint is not connected (os error 107)
+1651069265567	geckodriver	INFO	Listening on 127.0.0.1:50367
+1651069266076	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "42393" "-no-remote" "-profile" "/tmp/rust_mozprofileJzqcZt"
+1651069266565	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofileJzqcZt/search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:42393/devtools/browser/f940763d-ce51-4655-a917-37d2687ec49b
+1651069267327	Marionette	INFO	Listening on port 44217
+Read port: 44217
+1651069267394	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+1651070269464	Marionette	INFO	Stopped listening on port 44217
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
+JavaScript error: chrome://remote/content/marionette/cert.js, line 55: NS_ERROR_NOT_AVAILABLE: Component returned failure code: 0x80040111 (NS_ERROR_NOT_AVAILABLE) [nsICertOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData]
+1651070299594	geckodriver	INFO	Listening on 127.0.0.1:58689
+1651070300102	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "--remote-debugging-port" "43629" "-no-remote" "-profile" "/tmp/rust_mozprofileh16Ckn"
+1651070300646	Marionette	INFO	Marionette enabled
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofileh16Ckn/search.json.mozlz4", (void 0)))
+DevTools listening on ws://localhost:43629/devtools/browser/387e3ad5-0e53-401b-9220-72baeeb1960b
+1651070301416	Marionette	INFO	Listening on port 44119
+Read port: 44119
+1651070301527	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: http://127.0.0.1:8000/js/simplex.js, line 256: TypeError: glob.simplex.method.ions is undefined
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
