@@ -16,4 +16,4 @@
 **/*.pdf
 
 # logs
-*.log
+**/*.log

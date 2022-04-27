@@ -34,7 +34,7 @@ var glob = {
 	    "refcov": null
 	}
     },
-    "sampleprefix": '',
+    "sampleprefix": [''],
     "delta": {
 	"type":"delta-prime",
 	"preset": null,
@@ -134,7 +134,7 @@ function loadPresets(){
 function resetglob(){
     glob.i =  0;
     glob.multi = false; // multi-element
-    glob.sampleprefix = '';
+    glob.sampleprefix = [''];
     glob.standards = [];
     glob.samples = [];
     glob.calibration = {
@@ -954,8 +954,8 @@ function samples(){
     }
 }
 function setsampsel(){
+    document.getElementById('prefix').value = glob.sampleprefix.join(',');
     if (glob.samples.length<1){
-	document.getElementById('prefix').value = glob.sampleprefix;
 	prefix2samples();	
     }
     markSamples();
@@ -964,13 +964,16 @@ function prefix2samples(){
     let keys = Object.keys(glob.simplex.samples);
     glob.samples = [];
     for (let i=0; i<keys.length; i++){
-	if (keys[i].indexOf(glob.sampleprefix) !== -1){
-	    glob.samples.push(keys[i]);
+	for (let j=0; j<glob.sampleprefix.length; j++){
+	    if (keys[i].indexOf(glob.sampleprefix[j]) !== -1){
+		glob.samples.push(keys[i]);
+	    }
 	}
     }
 }
 function updateSamplePrefix(){
-    glob.sampleprefix = document.getElementById('prefix').value;
+    let prefixes = document.getElementById('prefix').value;
+    glob.sampleprefix = prefixes.split(',');
     prefix2samples();
     markSamples();
 }
