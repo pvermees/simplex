@@ -1,4 +1,5 @@
-setwd('~/Documents/Programming/R/simplex/')
+# move one folder up from the current file, e.g.:
+# setwd('/home/pvermees/Documents/Programming/R/simplex/')
 source('R/calibrate.R')
 source('R/calibration.R')
 source('R/drift.R')
