@@ -34,10 +34,11 @@ read_samples_tc <- function(tc,m){
     for (i in 1:ntc){
         if (m$instrument == 'Cameca') {
             sname <- tools::file_path_sans_ext(fn[i])
+            shinylight::sendInfoText(paste("Reading ",sname,""))
             out[[sname]] <- read_file(tc[[i]],m=m)
         } else if (m$instrument== 'SHRIMP') {
             ext <- tools::file_ext(fn[i])
-            out <- c(out,read_file(tc[[i]],m=m,ext=ext))
+            out <- c(out,read_file(tc[[i]],m=m,ext=ext,gui=TRUE))
         } else {
             stop('Unsupported instrument')
         }
@@ -51,6 +52,7 @@ read_samples_fn <- function(fn,m){
         open(f);
         if (m$instrument == 'Cameca') {
             sname <- tools::file_path_sans_ext(fname)
+            print(sname)
             out[[sname]] <- read_file(f,m=m)
         } else if (m$instrument== 'SHRIMP') {
             ext <- tools::file_ext(fname)
@@ -63,14 +65,14 @@ read_samples_fn <- function(fn,m){
     out
 }
 
-read_file <- function(f,m,ext=NA){
+read_file <- function(f,m,ext=NA,gui=FALSE){
     if (m$instrument=='Cameca'){
         out <- read_Cameca_asc(f=f,mions=m$ions)
     } else if (m$instrument=='SHRIMP') {
         if (identical(ext,'op')){
-            out <- read_SHRIMP_op(f=f,mions=m$ions)
+            out <- read_SHRIMP_op(f=f,mions=m$ions,gui=gui)
         } else if (identical(ext,'pd')) {
-            out <- read_SHRIMP_pd(f=f,mions=m$ions)
+            out <- read_SHRIMP_pd(f=f,mions=m$ions,gui=gui)
         } else {
             stop('Invalid file extension')
         }
@@ -132,7 +134,7 @@ read_Cameca_asc <- function(f,mions=NULL){
     out
 }
 
-read_SHRIMP_op <- function(f,mions=NULL){
+read_SHRIMP_op <- function(f,mions=NULL,gui=FALSE){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
@@ -141,6 +143,8 @@ read_SHRIMP_op <- function(f,mions=NULL){
         } else if (nchar(line)>0){
             spot <- list()
             sname <- line
+            if (gui) shinylight::sendInfoText(paste("Reading ",sname,""))
+            else print(sname)
             spot$date <- readLines(f,n=1,warn=FALSE)
             spot$set <- read_numbers(f)
             nscans <- read_numbers(f)
@@ -174,7 +178,7 @@ read_SHRIMP_op <- function(f,mions=NULL){
     out
 }
 
-read_SHRIMP_pd <- function(f,mions=NULL){
+read_SHRIMP_pd <- function(f,mions=NULL,gui=FALSE){
     out <- list()
     while (TRUE) {
         line <- readLines(f,n=1,warn=FALSE)
@@ -185,6 +189,8 @@ read_SHRIMP_pd <- function(f,mions=NULL){
             spot <- list()
             namedate <- strsplit(header[[1]],split=', ')[[1]]
             sname <- namedate[1]
+            if (gui) shinylight::sendInfoText(paste("Reading ",sname,""))
+            else print(sname)
             spot$date <- paste(namedate[2:3],collapse=' ')
             spot$set <- split_mixed(header[[2]],1,2)
             nscans <- split_mixed(header[[2]],2,1)

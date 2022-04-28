@@ -244,12 +244,11 @@ async function readFiles(){
 }
 
 async function upload(){
-    let status = document.getElementById('upload-status');
     readFiles().then(
 	f => {
-	    status.innerHTML = "<span class='blink'>Reading...</span>";
+	    loader();
 	    m = glob.simplex.method;
-	    shinylight.call('upload', {f:f, m:m}, null).then(
+	    shinylight.call('upload', {f:f, m:m}, null, status()).then(
 		result => {
 		    result2simplex(result);
 		    document.getElementById('ions').value =
@@ -259,7 +258,7 @@ async function upload(){
 		    document.getElementById('den').value =
 			glob.simplex.method.den.toString();
 		    checkmethod();
-		    status.innerHTML = "";
+		    shower();
 		},
 		error => alert(error)
 	    )
@@ -324,7 +323,7 @@ async function drift(){
 		    loadSamples( () => initDrift() )
 		} else { // not yet drift corrected
 		    loader();
-		    shinylight.call("getdrift", {x:glob}, null, extra()).then(
+		    shinylight.call("getdrift", {x:glob}, null, progress()).then(
 			result => result2simplex(result),
 			error => alert(error)
 		    ).then(
@@ -466,7 +465,7 @@ async function logratios(){
 		    }
 		} else { // does not yet have logratios
 		    loader();
-		    shinylight.call("getlogratios", {x:glob}, null, extra()).then(
+		    shinylight.call("getlogratios", {x:glob}, null, progress()).then(
 			result => result2simplex(result),
 			error => alert(error)
 		    ).then(
@@ -496,7 +495,16 @@ function initLogratios(){
     logratioAliquot();
 }
 
-function extra(){
+function status(){
+    var extra = {
+        'info': function(text) {
+            shinylight.setElementText('status', text);
+        },
+	'imgType': 'svg'
+    }
+    return(extra)
+}
+function progress(){
     var extra = {
         'info': function(text) {
             shinylight.setElementText('status', text);
