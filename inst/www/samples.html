@@ -1,5 +1,4 @@
 <left>
-
   <div>
     <button class="mainbutton" id="calibrate" onclick="calibrate(true)">Calibrate</button>
     <input type="checkbox" id="shownum" onchange="shownum()">Label aliquots
@@ -14,12 +13,14 @@
   <div>Aliquots to analyse:
     <table id="aliquots" class="normalfont"></table>
   </div>
-  
 </left>
 
 <right>
-  <div id="help"></div>
-  <span id="output">
+  <div class="hidden show4loading center-me">
+    <span class='blink'>Processing...</span>
+  </div>
+  <div class="hide4loading" id="help"></div>
+  <span class="hide4loading" id="output">
     <img class="plot" id="sample-calibration-plot">
     <div class="table">
       <table class="normalfont" id="sample-calibration-table"></table>

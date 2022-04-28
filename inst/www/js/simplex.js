@@ -1025,12 +1025,14 @@ function calibrate_plot(){
 function calibrate_table(){
     show('.table');
     hide('.plot');
+    loader();
     shinylight.call("calibratedTable", {x:glob}, null).then(
 	result => {
 	    let nr = result.data.length;
 	    let header = Object.keys(result.data[0]);
 	    let tab = createDataEntryGrid('sample-calibration-table', header, nr);
 	    shinylight.setGridResult(tab, result);
+	    shower();
 	},
 	error => alert(error)
     );
