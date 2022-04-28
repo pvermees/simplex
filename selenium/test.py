@@ -117,3 +117,16 @@ def PbPbtest():
     click("logratios")
     time.sleep(2)
     click("calibration")
+
+def outliertest():
+    click("setup")
+    time.sleep(1)
+    click("drift")
+    time.sleep(1)
+    enter("outliers","4")
+    time.sleep(1)
+    click("plot")
+    time.sleep(1)
+    click("logratios")
+    time.sleep(1)
+    click("plot")

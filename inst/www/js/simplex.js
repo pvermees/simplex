@@ -123,7 +123,7 @@ function loadPresets(){
     glob.simplex.method.method[0] = m;
     shinylight.call('presets', { method: m }, null).then(
 	result => {
-	    result2simplex(result)
+	    result2simplex(result);
 	    showPresets();
 	    fileFormats();
 	},
@@ -430,7 +430,7 @@ function driftPlot(){
 		    'drift-plot', {'imgType': 'svg'}).then(
 			result => {
 			    result2simplex(result);
-			    shinylight.setElementPlot('drift-plot', result.plot);
+			    shinylight.setElementPlot('drift-plot', result.plot)
 			},
 			error => alert(error)
 		    );
@@ -545,7 +545,11 @@ function logratioPlot(){
 		    'logratio-plot',
 		    {'imgType': 'svg'})
 	.then(
-	    result => shinylight.setElementPlot('logratio-plot', result.plot),
+	    result => {
+		result2simplex(result);
+		logratioAliquot();
+		shinylight.setElementPlot('logratio-plot', result.plot)
+	    },
 	    error => alert(error)
 	);
 }
