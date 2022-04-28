@@ -436,12 +436,6 @@ function driftPlot(){
 		    );
 }
 
-function getOutliers(i){
-    let e = document.getElementById('drift-plot');
-    let omit = e.deg.getColumn(0);
-    return(omit);
-}
-
 // 3. Logratios
 
 async function logratios(){
