@@ -91,18 +91,23 @@ async function loadHelp(url,plot=true){
     document.getElementById("help").innerHTML = text;
 }
 
-function downloadCSV(table,filename){
+function downloadCSV(id,filename){
     function download(filename,data){
 	const downloader = document.createElement('a');
 	downloader.setAttribute("download", filename);
 	downloader.setAttribute("href", data);
 	downloader.click();
     }
-    var h = table.getColumnHeaders();
-    var rows = table.getCells();
-    var rs = [h.join(',')];
-    rows.forEach(r => rs.push(r.join(',')));
-    download(filename, 'data:text/csv;base64,' + btoa(rs.join('\n')));
+    let fname = prompt("Please enter a file name",filename);
+    if (fname!=null){
+	let e = document.getElementById(id);
+	let table = e.dataEntryGrid;
+	var h = table.getColumnHeaders();
+	var rows = table.getCells();
+	var rs = [h.join(',')];
+	rows.forEach(r => rs.push(r.join(',')));
+	download(fname, 'data:text/csv;base64,' + btoa(rs.join('\n')));
+    }
 }
 
 function welcome(){
@@ -577,14 +582,10 @@ function logratioTable(){
 	    let header = Object.keys(result.data[0]);
 	    let tab = createDataEntryGrid('logratio-table', header, nr);
 	    shinylight.setGridResult(tab, result);
+	    show('.csv');
 	},
 	error => alert(error)
     );
-}
-
-function downloadLogratios(){
-    let e = document.getElementById('logratio-table');
-    downloadCSV(e.dataEntryGrid,'logratios.csv');
 }
 
 // 4. Calibration
