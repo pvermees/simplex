@@ -25,7 +25,7 @@ logratios_helper <- function(x,i=NULL,gui=FALSE){
     for (j in ii){
         sname <- snames[j]
         if (gui){
-            shinylight::sendInfoText(paste(" (processing",sname,")"))
+            shinylight::sendInfoText(paste0(" (processing ",sname,")"))
             shinylight::sendProgress(j,ns)
         } else {
             print(sname)

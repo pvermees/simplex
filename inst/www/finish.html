@@ -1,15 +1,34 @@
 <left>
-  
+
+  <div>
+    <span class="show4stable hide4geochron">
+      <button class="mainbutton" id="delta"
+	      onclick="convert('convert2delta')">
+	Convert
+      </button> to 
+      <select id="deltatype" onchange="toggledeltatype();">
+	<option value="delta">&delta;</option>
+	<option value="delta-prime">&delta;'</option>
+      </select>
+    </span>
+    <span class="hide4stable show4geochron">
+      <button class="mainbutton" id="IsoplotR"
+	      onclick="convert('convert2IsoplotR')">
+	Convert </button> 
+      <select id="IsoplotRtype" onchange="toggleIsoplotRtype();">
+	<option value="U-Pb">U-Pb</option>
+	<option value="Th-Pb">Th-Pb</option>
+	<option value="U-Th-Pb">U-Th-Pb</option>
+      </select>
+      to <tt>IsoplotR</tt>
+    </span>
+    <span>
+      <button class="mainbutton hidden csv"
+	      onclick="downloadCSV('final-table','results.csv')"
+	      id="plot">CSV</button>
+    </span>
+  </div>
   <div class="show4stable hide4geochron">
-    <button class="mainbutton" id="delta"
-	    onclick="convert('convert2delta')">
-      Convert
-    </button> to 
-    <select id="deltatype" onchange="toggledeltatype();">
-      <option value="delta">&delta;</option>
-      <option value="delta-prime">&delta;'</option>
-    </select>
-    <p></p>
     Reference material:
     <select id="deltaref" onchange="preset2deltaref()">
       <option disabled selected value="select">
@@ -23,18 +42,7 @@
     <table id="delreftab" class="normalfont"></table>
   </div>
   <div class="hide4stable show4geochron">
-    <button class="mainbutton" id="IsoplotR"
-	    onclick="convert('convert2IsoplotR')">
-      Convert </button> 
-    <select id="IsoplotRtype" onchange="toggleIsoplotRtype();">
-      <option value="U-Pb">U-Pb</option>
-      <option value="Th-Pb">Th-Pb</option>
-      <option value="U-Th-Pb">U-Th-Pb</option>
-    </select>
-    to <tt>IsoplotR</tt>
     <a id="fname" href="" download="simplex.json"></a>
-  </div>
-  <div class="hide4stable show4geochron">
     <button class="mainbutton" id="export" onclick="export2IsoplotR()">
       Export
     </button> as <tt>json</tt>
@@ -43,8 +51,8 @@
 </left>
 
 <right>
-    <div id="help"></div>
-    <span id="output">
-      <table class="normalfont" id="final-table"></table>
-    </span>
+  <div id="help"></div>
+  <span id="output">
+    <table class="normalfont" id="final-table"></table>
+  </span>
 </right>
