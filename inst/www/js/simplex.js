@@ -91,6 +91,20 @@ async function loadHelp(url,plot=true){
     document.getElementById("help").innerHTML = text;
 }
 
+function downloadCSV(table,filename){
+    function download(filename,data){
+	const downloader = document.createElement('a');
+	downloader.setAttribute("download", filename);
+	downloader.setAttribute("href", data);
+	downloader.click();
+    }
+    var h = table.getColumnHeaders();
+    var rows = table.getCells();
+    var rs = [h.join(',')];
+    rows.forEach(r => rs.push(r.join(',')));
+    download(filename, 'data:text/csv;base64,' + btoa(rs.join('\n')));
+}
+
 function welcome(){
     loadPage("welcome.html");
 }
@@ -384,9 +398,8 @@ function loadSamples(callback){
 
 function loadTable(dat,header,id,nr){
     let nc = header.length;
-    let e = document.getElementById(id);
-    e.deg = createDataEntryGrid(id,header,nr);
-    e.deg.putCells(0,nr+1,0,nc+1,dat);
+    let deg = createDataEntryGrid(id,header,nr);
+    deg.putCells(0,nr+1,0,nc+1,dat);
 }
 
 function initDrift(){
@@ -569,6 +582,11 @@ function logratioTable(){
     );
 }
 
+function downloadLogratios(){
+    let e = document.getElementById('logratio-table');
+    downloadCSV(e.dataEntryGrid,'logratios.csv');
+}
+
 // 4. Calibration
 
 function calibration(){
@@ -693,7 +711,7 @@ function getpairing(){
     let pairing = glob.simplex.calibration.pairing;
     let nr = pairing.length;
     let header = Object.keys(pairing[0]);
-    let dat = e.deg.getCells();
+    let dat = e.dataEntryGrid.getCells();
     for (let i=0; i<nr; i++){
 	for (let j=0; j<header.length; j++){
 	    pairing[i][header[j]] = dat[i][j];
@@ -790,14 +808,11 @@ function showcaldel(){
     }
     let elr = document.getElementById('standlr');
     if (create){
-	let header = elr.deg.getColumnHeaders();
+	let header = elr.dataEntryGrid.getColumnHeaders();
 	cal.del.ratios = header;
-	let edel = document.getElementById('deltab');
-	let ecov = document.getElementById('delcovtab');
-	let eref = document.getElementById('delreftab');
-	edel.deg = createDataEntryGrid('deltab',header,1);
-	ecov.deg = createDataEntryGrid('delcovtab',header,header.length);
-	eref.deg = createDataEntryGrid('delreftab',header,1);
+	let edel = createDataEntryGrid('deltab',header,1);
+	let ecov = createDataEntryGrid('delcovtab',header,header.length);
+	let eref = createDataEntryGrid('delreftab',header,1);
     } else {
 	let header = cal.del.ratios;
 	loadTable([cal.del.delval],header,'deltab',1);
@@ -836,9 +851,9 @@ function d2stand(){
     let edel = document.getElementById('deltab');
     let ecov = document.getElementById('delcovtab');
     let eref = document.getElementById('delreftab');
-    cal.del.delval = edel.deg.getCells();
-    cal.del.delcov = ecov.deg.getColumns();
-    cal.del.refval = eref.deg.getCells();
+    cal.del.delval = edel.dataEntryGrid.getCells();
+    cal.del.delcov = ecov.dataEntryGrid.getColumns();
+    cal.del.refval = eref.dataEntryGrid.getCells();
     shinylight.call('d2stand', {x:glob}, null).then(
 	result => {
 	    result2simplex(result);
@@ -914,23 +929,23 @@ function calibrator(){
 function registerStandards(){
     let stand = glob.simplex.calibration.stand;
     let e = document.getElementById('standlr');
-    stand.val = e.deg.getCells()[0].map(Number);
+    stand.val = e.dataEntryGrid.getCells()[0].map(Number);
     e = document.getElementById('standcov');
-    let cov = e.deg.getCells();
+    let cov = e.dataEntryGrid.getCells();
     for (let i=0; i<stand.val.length; i++){
 	stand.cov[i] = cov[i].map(Number);
     }
     if (glob.calibration.caltype=='regression'){
 	e = document.getElementById('pairing');
 	let pairing = glob.simplex.calibration.pairing;
-	let content = e.deg.getCells();
-	let header = e.deg.getColumnHeaders();
+	let content = e.dataEntryGrid.getCells();
+	let header = e.dataEntryGrid.getColumnHeaders();
 	for (let i=0; i<header.length; i++){
 	    pairing[0][header[i]] = content[0][i];
 	}
     }
     e = document.getElementById('aliquots');
-    let dat = e.deg.getColumns();
+    let dat = e.dataEntryGrid.getColumns();
     glob.standards = [];
     for (let i=0; i<dat.aliquots.length; i++){
 	if (dat['selected?'][i]==='yes') glob.standards.push(dat.aliquots[i]);
@@ -1005,7 +1020,7 @@ function calibrate(plot){
 }
 function registerSamples(){
     let e = document.getElementById('aliquots');
-    let dat = e.deg.getColumns();
+    let dat = e.dataEntryGrid.getColumns();
     glob.samples = [];
     for (let i=0; i<dat.aliquots.length; i++){
 	if (dat['selected?'][i]==='yes') glob.samples.push(dat.aliquots[i]);
@@ -1105,7 +1120,7 @@ function convert(fn){
     togglehelp(false);
     if (glob.calibration.caltype=='average'){
 	let e = document.getElementById('delreftab');
-	glob.delta.val = e.deg.getCells()[0].map(Number);
+	glob.delta.val = e.dataEntryGrid.getCells()[0].map(Number);
     }
     shinylight.call(fn, {x:glob}, null).then(
 	result => {
