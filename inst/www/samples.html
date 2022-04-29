@@ -6,6 +6,9 @@
     <input type="checkbox" id="logcheckbox" onchange="checklog()">log 
     <input type="checkbox" id="covcheckbox" onchange="checkcov()">cov
     <input type="checkbox" id="exterrcheckbox" onchange="checkexterr()">exterr
+    <button class="mainbutton hidden csv"
+	    onclick="downloadCSV('sample-calibration-table','samples.csv')"
+	    id="plot">CSV</button>
   </div>
   <div>Select samples by prefix:
     <input type="text" id="prefix" onchange="updateSamplePrefix()">

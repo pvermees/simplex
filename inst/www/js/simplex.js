@@ -1047,6 +1047,7 @@ function calibrate_table(){
 	    let tab = createDataEntryGrid('sample-calibration-table', header, nr);
 	    shinylight.setGridResult(tab, result);
 	    shower();
+	    show('.csv');
 	},
 	error => alert(error)
     );
@@ -1129,6 +1130,7 @@ function convert(fn){
 	    let header = Object.keys(result.data[0]);
 	    let tab = createDataEntryGrid('final-table', header, nr);
 	    shinylight.setGridResult(tab, result);
+	    show('.csv');
 	},
 	error => alert(error)
     );
