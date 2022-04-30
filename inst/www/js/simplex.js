@@ -444,11 +444,13 @@ function driftPlot(){
     } else {
 	glob.simplex.samples[keys[glob.i]].outliers = ostring.split(',',10).map(Number);
     }
+    show('.show4processing');
     shinylight.call('driftPlot', {x:glob},
 		    'drift-plot', {'imgType': 'svg'}).then(
 			result => {
 			    result2simplex(result);
-			    shinylight.setElementPlot('drift-plot', result.plot)
+			    shinylight.setElementPlot('drift-plot', result.plot);
+			    hide('.show4processing');
 			},
 			error => alert(error)
 		    );
@@ -558,6 +560,7 @@ function logratioPlot(){
     } else {
 	glob.simplex.samples[key].outliers = ostring.split(',',10).map(Number);
     }
+    show(".show4processing");
     shinylight.call('logratioPlot',
 		    {x:glob, ratios:glob.ratios},
 		    'logratio-plot',
@@ -566,7 +569,8 @@ function logratioPlot(){
 	    result => {
 		result2simplex(result);
 		logratioAliquot();
-		shinylight.setElementPlot('logratio-plot', result.plot)
+		shinylight.setElementPlot('logratio-plot', result.plot);
+		hide(".show4processing");
 	    },
 	    error => alert(error)
 	);
@@ -576,12 +580,14 @@ function logratioTable(){
     togglehelp(false);
     show('.table');
     hide('.plot');
+    show('.show4processing');
     shinylight.call("logratioTable", {x:glob}, null).then(
 	result => {
 	    let nr = result.data.length;
 	    let header = Object.keys(result.data[0]);
 	    let tab = createDataEntryGrid('logratio-table', header, nr);
 	    shinylight.setGridResult(tab, result);
+	    hide('.show4processing');
 	    show('.csv');
 	},
 	error => alert(error)
@@ -918,14 +924,17 @@ function markStandards(){
 function calibrator(){
     togglehelp(false);
     registerStandards();
-    shinylight.call('calibrator', {x:glob},
-		    'calibration-plot', {'imgType': 'svg'}).then(
-	result => {
-	    result2simplex(result),
-	    shinylight.setElementPlot('calibration-plot', result.plot)
-	},
-	error => alert(error)
-    )
+    show('.show4processing');
+    shinylight.call(
+	'calibrator', {x:glob},
+	'calibration-plot', {'imgType': 'svg'}).then(
+	    result => {
+		hide('.show4processing');
+		result2simplex(result);
+		shinylight.setElementPlot('calibration-plot', result.plot);
+	    },
+	    error => alert(error)
+	)
 }
 function registerStandards(){
     let stand = glob.simplex.calibration.stand;
@@ -1030,23 +1039,27 @@ function registerSamples(){
 function calibrate_plot(){
     show('.plot');
     hide('.table');
+    show('.show4processing');
     shinylight.call("calibrateSamples",{x:glob},'sample-calibration-plot',{'imgType': 'svg'})
 	.then(
-	    result => shinylight.setElementPlot('sample-calibration-plot', result.plot),
+	    result => {
+		hide('.show4processing')
+		shinylight.setElementPlot('sample-calibration-plot', result.plot)
+	    },
 	    error => alert(error)
 	)
 }
 function calibrate_table(){
     show('.table');
     hide('.plot');
-    loader();
+    show('.show4processing');
     shinylight.call("calibratedTable", {x:glob}, null).then(
 	result => {
+	    hide('.show4processing')
 	    let nr = result.data.length;
 	    let header = Object.keys(result.data[0]);
 	    let tab = createDataEntryGrid('sample-calibration-table', header, nr);
 	    shinylight.setGridResult(tab, result);
-	    shower();
 	    show('.csv');
 	},
 	error => alert(error)
@@ -1124,8 +1137,10 @@ function convert(fn){
 	let e = document.getElementById('delreftab');
 	glob.delta.val = e.dataEntryGrid.getCells()[0].map(Number);
     }
+    show('.show4processing');
     shinylight.call(fn, {x:glob}, null).then(
 	result => {
+	    hide('.show4processing');
 	    let nr = result.data.length;
 	    let header = Object.keys(result.data[0]);
 	    let tab = createDataEntryGrid('final-table', header, nr);
@@ -1147,6 +1162,7 @@ function toggleIsoplotRtype(){
 function export2IsoplotR(){
     glob.IsoplotRformat = document.getElementById("IsoplotRtype").value;
     var json = null;
+    show('.show4processing');
     fetch('js/IsoplotR.json')
 	.then(response => {
 	    if (!response.ok) {
@@ -1194,6 +1210,7 @@ function export2IsoplotR(){
 	)
 	.then(
 	    () => {
+		hide('.show4processing');
 		let fname = prompt("Please enter a file name", "IsoplotR.json");
 		if (fname != null){
 		    document.getElementById('fname').setAttribute(
