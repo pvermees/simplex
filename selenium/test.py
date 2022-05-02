@@ -45,12 +45,18 @@ def SHRIMPtest():
 
 def UPbtest():
     click("setup")
-    mupload("/home/pvermees/Documents/SIMS/20210528 Tanz U-Th-Pb/*.asc")
-    enter("ions","90Zr2O,92Zr2O,200.5,94Zr2O,Pb204,Pb206,Pb207,Pb208,HfO2,Th232,U238,ThO,UO,UO2")
+    #mupload("/home/pvermees/Documents/SIMS/20210528 Tanz U-Th-Pb/*.asc")
+    #enter("ions","90Zr2O,92Zr2O,200.5,94Zr2O,Pb204,Pb206,Pb207,Pb208,HfO2,Th232,U238,ThO,UO,UO2")
+    mupload("/home/pvermees/Dropbox/SIMS/Cameca/zircon/*.asc")
+    time.sleep(1)
+    enter("ions","Zr90,Zr92,200.5,Zr94,Pb204,Pb206,Pb207,Pb208,U238,ThO2,UO2")
     time.sleep(1)
     click("drift")
     time.sleep(5)
     click("logratios")
+    time.sleep(10)
+    click("logratiotable")
+    
 
 def Otest():
     click("setup")

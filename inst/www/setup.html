@@ -1,13 +1,7 @@
 <left>
   <div id="presets">
     <div id="preset-menu">
-      Examples: <select id="methods" onchange="loadPresets()">
-	<option value="IGG-UPb">IGG-UPb</option>
-	<option value="IGG-UThPb">IGG-UThPb</option>
-	<option value="IGG-O">IGG-O</option>
-	<option value="IGG-S">IGG-S</option>
-	<option value="GA-UPb">GA-UPb</option>
-      </select>
+      Examples: <select id="methods" onchange="loadPresets()"></select>
     </div>
     <div id="preset-details">
       <table>
@@ -17,8 +11,8 @@
 		     id="description" onchange="method(this)"></td></tr>
 	<tr>
 	  <td>Instrument:</td>
-	  <td><input class="preset" type="text"
-		     id="instrument" onchange="method(this)"></td></tr>
+	  <td><input class="preset" type="text" id="instrument"
+		     onchange="method(this); fileFormats();"></td></tr>
 	<tr>
 	  <td>Ions:</td>
 	  <td><input class="preset" type="text" 
