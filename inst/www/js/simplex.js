@@ -227,13 +227,13 @@ function hide(cls){
 }
 
 function fileFormats(){
-    let accept = ['.asc','.op','.pd'];
+    var accept;
     if (glob.simplex.method.instrument=='Cameca'){
 	accept = '.asc';
     } else if (glob.simplex.method.instrument=='SHRIMP'){
 	accept = ['.op','.pd'];
     } else {
-	alert('Unrecognised instrument.')
+	accept = ['.asc','.op','.pd'];
     }
     document.getElementById('upload').accept = accept;
 }
