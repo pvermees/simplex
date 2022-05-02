@@ -8,6 +8,7 @@ var glob = {
 	"calibration": null,
 	"calibrated": null
     },
+    "methods": null,
     "i": null,
     "start": true,
     "names": null,
@@ -45,6 +46,10 @@ var glob = {
     "standards": [],
     "samples": [],
     "buttonIDs": ["setup","drift","logratios","calibration","samples","finish"]
+}
+
+function builtin(){
+    return(["IGG-UPb","IGG-UThPb","IGG-O","IGG-S","GA-UPb"])
 }
 
 function start() {
@@ -121,8 +126,8 @@ async function setup(){
     loadPage("setup.html").then(
         () => {
 	    initpreset();
-	    if (glob.start) loadPresets()
-	    else showPresets()
+	    if (glob.start) loadPresets();
+	    else showPresets();
 	    glob.start = false;
 	},
         error => alert(error)
@@ -133,7 +138,13 @@ async function setup(){
 }
 
 function initpreset(){
-    document.getElementById("methods").value = glob.simplex.method.method[0];
+    if (glob.start) glob.methods = builtin();
+    let m = document.getElementById("methods");
+    let gm = glob.methods;
+    for (let i=0; i<gm.length; i++){
+	m[i] = new Option(gm[i],gm[i]);
+    }
+    m.value = glob.simplex.method.method[0];
 }
 
 function loadPresets(){
@@ -152,6 +163,7 @@ function loadPresets(){
 
 function resetglob(){
     glob.i =  0;
+    glob.methods = builtin();
     glob.multi = false; // multi-element
     glob.sampleprefix = [''];
     glob.standards = [];
@@ -313,6 +325,9 @@ function result2simplex(result){
 
 function savejson(){
     let fname = prompt("Please enter a file name","simplex.json");
+    let newmethod = fname.split('.')[0];
+    glob.methods[builtin().length] = newmethod;
+    glob.simplex.method.method[0] = newmethod;
     let a = document.getElementById('save');
     a.setAttribute("href","data:text/plain," + JSON.stringify(glob));
     a.setAttribute("download",fname);
@@ -322,8 +337,11 @@ function savejson(){
 function openjson(){
     let f = document.getElementById("open").files[0];
     let reader = new FileReader();
+    let m = document.getElementById("methods");
+    let b = builtin().length;
     reader.onload = function(){
         glob = JSON.parse(reader.result);
+	initpreset();
 	showPresets();
     };
     reader.readAsText(f);
