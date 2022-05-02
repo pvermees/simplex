@@ -312,9 +312,10 @@ function result2simplex(result){
 }
 
 function savejson(){
+    let fname = prompt("Please enter a file name","simplex.json");
     let a = document.getElementById('save');
     a.setAttribute("href","data:text/plain," + JSON.stringify(glob));
-    a.setAttribute("download","simplex.json");
+    a.setAttribute("download",fname);
     a.click();
 }
 
