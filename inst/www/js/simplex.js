@@ -1074,11 +1074,9 @@ function calibrate_table(){
     show('.show4processing');
     shinylight.call("calibratedTable", {x:glob}, null).then(
 	result => {
-	    hide('.show4processing')
-	    let nr = result.data.length;
-	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('sample-calibration-table', header, nr);
-	    shinylight.setGridResult(tab, result);
+	    hide('.show4processing');
+	    let tab = createDataEntryGrid('sample-calibration-table', 1, 1);
+	    shinylight.setGridResultWithNamedRows(tab, result);
 	    show('.csv');
 	},
 	error => alert(error)
