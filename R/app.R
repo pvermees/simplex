@@ -195,7 +195,7 @@ calibrate_it <- function(x){
         snms <- NULL
     }
     selection <- subset(dat,prefix=x$sampleprefix,snames=snms)
-    out <- calibrate(selection,exterr=x$exterr)
+    calibrate(selection,exterr=x$exterr)
 }
 
 calibrateSamples <- function(x){
@@ -207,7 +207,6 @@ calibrateSamples <- function(x){
 calibratedTable <- function(x){
     cal <- calibrate_it(x)
     tab <- data2table.calibrated(cal,log=x$log,cov=x$cov)
-    rownames(tab) <- NULL
     as.data.frame(tab)
 }
 
@@ -234,14 +233,15 @@ convert2delta <- function(x){
     # 3. get delta values
     del <- delta(dat,ref=ref,log=identical(x$delta$type,'delta-prime'))
     tab <- data2table.delta(del)
-    rownames(tab) <- NULL
     as.data.frame(tab)
 }
 
 convert2IsoplotR <- function(x){
     dat <- calibrate_it(x)
     isodat <- simplex2IsoplotR(dat,method=x$IsoplotRtype)
-    as.data.frame(isodat$x)
+    out <- as.data.frame(isodat$x)
+    rownames(out) <- x$samples 
+    out
 }
 
 export2IsoplotR <- function(x){

@@ -754,7 +754,8 @@ function setstandcomp(){
     let cov = stand.cov;
     togglestandcomp();
     loadTable(val,header,'standlr',1);
-    loadTable(cov,header,'standcov',nr);
+    let deg = createDataEntryGrid('standcov',header,header);
+    deg.putCells(0,nr+1,0,nr+1,cov);
     togglemismatchwarning();
 }
 function togglemismatchwarning(){
@@ -1075,10 +1076,8 @@ function calibrate_table(){
     shinylight.call("calibratedTable", {x:glob}, null).then(
 	result => {
 	    hide('.show4processing')
-	    let nr = result.data.length;
-	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('sample-calibration-table', header, nr);
-	    shinylight.setGridResult(tab, result);
+	    let tab = createDataEntryGrid('sample-calibration-table', 1, 1);
+	    shinylight.setGridResultWithNamedRows(tab, result);
 	    show('.csv');
 	},
 	error => alert(error)
@@ -1162,8 +1161,8 @@ function convert(fn){
 	    hide('.show4processing');
 	    let nr = result.data.length;
 	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('final-table', header, nr);
-	    shinylight.setGridResult(tab, result);
+	    let tab = createDataEntryGrid('final-table', 1, 1);
+	    shinylight.setGridResultWithNamedRows(tab, result);
 	    show('.csv');
 	},
 	error => alert(error)
