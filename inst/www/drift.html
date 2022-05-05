@@ -14,11 +14,10 @@
       <button class="mainbutton" onclick="backnforth(1,driftAliquot)">
 	>
       </button>
+      <input type="checkbox" id="autocheckbox" onchange="auto()">auto
       <span class="hidden blink show4processing">Processing...</span>
     </div>
-    <div>
-      Omit: <input type="text" id="outliers">
-    </div>
+    <div>Omit: <input type="text" id="outliers"></div>
     <div>Signal: <table id="signal-table" class="normalfont"></table></div>
     <div>Time: <table id="time-table" class="normalfont"></table></div>
   </left>

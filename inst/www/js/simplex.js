@@ -8,6 +8,7 @@ var glob = {
 	"calibration": null,
 	"calibrated": null
     },
+    "auto": false,
     "methods": null,
     "i": null,
     "start": true,
@@ -381,6 +382,9 @@ async function drift(){
     }
 }
 
+function auto(){
+    glob.auto = !glob.auto;
+}
 function checkratios(){
     glob.ratios = document.getElementById("ratiocheckbox").checked;
 }
@@ -428,6 +432,7 @@ function loadTable(dat,header,id,nr){
 
 function initDrift(){
     document.getElementById("aliquots").value = glob.i;
+    document.getElementById("autocheckbox").checked = glob.auto;
     driftAliquot();
 }
 
@@ -435,7 +440,7 @@ function deepcopy(object){
     return(JSON.parse(JSON.stringify(object)))
 }
 
-function driftAliquot(){
+function driftAliquot(plot=false){
     glob.i = parseFloat(document.getElementById("aliquots").value);
     let keys = Object.keys(glob.simplex.samples);
     let header = glob.simplex.method.ions;
@@ -444,6 +449,7 @@ function driftAliquot(){
     loadTable(dat.signal,header,'signal-table',dat.signal.length);
     document.getElementById('outliers').value =
 	(dat.outliers===undefined) ? '' : dat.outliers;
+    if (plot) driftPlot();
 }
 
 function backnforth(di,callback){
@@ -451,7 +457,7 @@ function backnforth(di,callback){
     let ns = keys.length;
     glob.i = ((glob.i + di % ns) + ns) % ns; // modulo operation
     document.getElementById("aliquots").value = glob.i;
-    callback();
+    callback(glob.auto);
 }
 
 function driftPlot(){
@@ -487,8 +493,6 @@ async function logratios(){
 	    () => {
 		if (glob.class.includes('logratios')){ // already has logratios
 		    loadSamples( () => initLogratios() );
-		    document.getElementById("ratiocheckbox").checked = glob.ratios;
-		    document.getElementById("logcheckbox").checked = glob.log;
 		    if (glob.simplex.method.instrument=='Cameca'){
 			show('.show4cameca');
 			document.getElementById("xycheckbox").checked = glob.xy;
@@ -504,8 +508,6 @@ async function logratios(){
 		    ).then(
 			() => {
 			    loadSamples( () => initLogratios() );
-			    document.getElementById("ratiocheckbox").checked = glob.ratios;
-			    document.getElementById("logcheckbox").checked = glob.log;
 			    document.getElementById("xycheckbox").checked = glob.xy;
 			},
 			error => alert(error)
@@ -525,6 +527,9 @@ async function logratios(){
 
 function initLogratios(){
     document.getElementById("aliquots").value = glob.i;
+    document.getElementById("autocheckbox").checked = glob.auto;
+    document.getElementById("ratiocheckbox").checked = glob.ratios;
+    document.getElementById("logcheckbox").checked = glob.log;
     logratioAliquot();
 }
 
@@ -555,7 +560,7 @@ function progress(){
     return(extra)
 }
 
-function logratioAliquot(){
+function logratioAliquot(plot=false){
     glob.i = parseFloat(document.getElementById("aliquots").value);
     let key = Object.keys(glob.simplex.samples)[glob.i];
     let header = glob.names.samples[key].lr.b0g;
@@ -566,9 +571,10 @@ function logratioAliquot(){
     loadTable([b0g.slice(ns,2*ns)],header.slice(ns,2*ns),'g',1);
     document.getElementById('outliers').value =
 	(dat.outliers===undefined) ? '' : dat.outliers;
+    if (plot) logratioPlot(true);
 }
 
-function logratioPlot(){
+function logratioPlot(calledByLogratioAliquot=false){
     togglehelp(false);
     show('.plot');
     hide('.table');
@@ -602,10 +608,9 @@ function logratioTable(){
     show('.show4processing');
     shinylight.call("logratioTable", {x:glob}, null).then(
 	result => {
-	    let nr = result.data.length;
-	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('logratio-table', header, nr);
-	    shinylight.setGridResult(tab, result);
+	    let d = result.data;
+	    let deg = createDataEntryGrid('logratio-table',d.cnames,d.rnames);
+	    deg.putCells(0,d.rnames.length+1,0,d.cnames.length+1,d.tab);
 	    hide('.show4processing');
 	    show('.csv');
 	},
@@ -754,7 +759,8 @@ function setstandcomp(){
     let cov = stand.cov;
     togglestandcomp();
     loadTable(val,header,'standlr',1);
-    loadTable(cov,header,'standcov',nr);
+    let deg = createDataEntryGrid('standcov',header,header);
+    deg.putCells(0,nr+1,0,nr+1,cov);
     togglemismatchwarning();
 }
 function togglemismatchwarning(){
@@ -1075,10 +1081,9 @@ function calibrate_table(){
     shinylight.call("calibratedTable", {x:glob}, null).then(
 	result => {
 	    hide('.show4processing')
-	    let nr = result.data.length;
-	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('sample-calibration-table', header, nr);
-	    shinylight.setGridResult(tab, result);
+	    let d = result.data;
+	    let deg = createDataEntryGrid('sample-calibration-table',d.cnames,d.rnames);
+	    deg.putCells(0,d.rnames.length+1,0,d.cnames.length+1,d.tab);
 	    show('.csv');
 	},
 	error => alert(error)
@@ -1100,12 +1105,12 @@ function finish(){
 	    error => alert(error)
 	).then(
 	    () => {
-		if (glob.calibration.caltype==='regression'){
-		    show(".show4geochron");
-		    hide(".hide4geochron");
-		} else {
+		if (glob.calibration.caltype==='average'){
 		    show(".show4stable");
 		    hide(".hide4stable");
+		} else {
+		    show(".show4geochron");
+		    hide(".hide4geochron");
 		}
 	    },
 	    error => alert(error)
@@ -1162,8 +1167,8 @@ function convert(fn){
 	    hide('.show4processing');
 	    let nr = result.data.length;
 	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('final-table', header, nr);
-	    shinylight.setGridResult(tab, result);
+	    let tab = createDataEntryGrid('final-table', 1, 1);
+	    shinylight.setGridResultWithNamedRows(tab, result);
 	    show('.csv');
 	},
 	error => alert(error)
