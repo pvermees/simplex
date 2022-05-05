@@ -602,10 +602,9 @@ function logratioTable(){
     show('.show4processing');
     shinylight.call("logratioTable", {x:glob}, null).then(
 	result => {
-	    let nr = result.data.length;
-	    let header = Object.keys(result.data[0]);
-	    let tab = createDataEntryGrid('logratio-table', header, nr);
-	    shinylight.setGridResult(tab, result);
+	    let d = result.data;
+	    let deg = createDataEntryGrid('logratio-table',d.cnames,d.rnames);
+	    deg.putCells(0,d.rnames.length+1,0,d.cnames.length+1,d.tab);
 	    hide('.show4processing');
 	    show('.csv');
 	},
@@ -1077,10 +1076,8 @@ function calibrate_table(){
 	result => {
 	    hide('.show4processing')
 	    let d = result.data;
-	    let deg = createDataEntryGrid('sample-calibration-table',
-					  d.cnames,d.rnames);
-	    deg.putCells(0,d.rnames.length+1,
-			 0,d.cnames.length+1,d.tab);
+	    let deg = createDataEntryGrid('sample-calibration-table',d.cnames,d.rnames);
+	    deg.putCells(0,d.rnames.length+1,0,d.cnames.length+1,d.tab);
 	    show('.csv');
 	},
 	error => alert(error)

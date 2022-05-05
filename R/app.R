@@ -110,8 +110,7 @@ logratioPlot <- function(x,ratios){
 
 logratioTable <- function(x){
     tab <- data2table.logratios(as.simplex(x),log=x$log,addxy=x$xy)
-    rownames(tab) <- NULL
-    as.data.frame(tab)
+    list(tab=tab,rnames=rownames(tab),cnames=colnames(tab))
 }
 
 preset2standard <- function(x){
