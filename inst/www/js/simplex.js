@@ -1102,12 +1102,12 @@ function finish(){
 	    error => alert(error)
 	).then(
 	    () => {
-		if (glob.calibration.caltype==='regression'){
-		    show(".show4geochron");
-		    hide(".hide4geochron");
-		} else {
+		if (glob.calibration.caltype==='average'){
 		    show(".show4stable");
 		    hide(".hide4stable");
+		} else {
+		    show(".show4geochron");
+		    hide(".hide4geochron");
 		}
 	    },
 	    error => alert(error)
