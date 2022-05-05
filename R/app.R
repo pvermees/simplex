@@ -207,7 +207,7 @@ calibrateSamples <- function(x){
 calibratedTable <- function(x){
     cal <- calibrate_it(x)
     tab <- data2table.calibrated(cal,log=x$log,cov=x$cov)
-    as.data.frame(tab)
+    list(tab=tab,rnames=rownames(tab),cnames=colnames(tab))
 }
 
 preset2deltaref <- function(x){
