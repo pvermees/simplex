@@ -8,6 +8,7 @@ var glob = {
 	"calibration": null,
 	"calibrated": null
     },
+    "auto": false,
     "methods": null,
     "i": null,
     "start": true,
@@ -381,6 +382,9 @@ async function drift(){
     }
 }
 
+function auto(){
+    glob.auto = !glob.auto;
+}
 function checkratios(){
     glob.ratios = document.getElementById("ratiocheckbox").checked;
 }
@@ -428,6 +432,7 @@ function loadTable(dat,header,id,nr){
 
 function initDrift(){
     document.getElementById("aliquots").value = glob.i;
+    document.getElementById("autocheckbox").checked = glob.auto;
     driftAliquot();
 }
 
@@ -435,7 +440,7 @@ function deepcopy(object){
     return(JSON.parse(JSON.stringify(object)))
 }
 
-function driftAliquot(){
+function driftAliquot(plot=false){
     glob.i = parseFloat(document.getElementById("aliquots").value);
     let keys = Object.keys(glob.simplex.samples);
     let header = glob.simplex.method.ions;
@@ -444,6 +449,7 @@ function driftAliquot(){
     loadTable(dat.signal,header,'signal-table',dat.signal.length);
     document.getElementById('outliers').value =
 	(dat.outliers===undefined) ? '' : dat.outliers;
+    if (plot) driftPlot();
 }
 
 function backnforth(di,callback){
@@ -451,7 +457,7 @@ function backnforth(di,callback){
     let ns = keys.length;
     glob.i = ((glob.i + di % ns) + ns) % ns; // modulo operation
     document.getElementById("aliquots").value = glob.i;
-    callback();
+    callback(glob.auto);
 }
 
 function driftPlot(){
@@ -487,8 +493,6 @@ async function logratios(){
 	    () => {
 		if (glob.class.includes('logratios')){ // already has logratios
 		    loadSamples( () => initLogratios() );
-		    document.getElementById("ratiocheckbox").checked = glob.ratios;
-		    document.getElementById("logcheckbox").checked = glob.log;
 		    if (glob.simplex.method.instrument=='Cameca'){
 			show('.show4cameca');
 			document.getElementById("xycheckbox").checked = glob.xy;
@@ -504,8 +508,6 @@ async function logratios(){
 		    ).then(
 			() => {
 			    loadSamples( () => initLogratios() );
-			    document.getElementById("ratiocheckbox").checked = glob.ratios;
-			    document.getElementById("logcheckbox").checked = glob.log;
 			    document.getElementById("xycheckbox").checked = glob.xy;
 			},
 			error => alert(error)
@@ -525,6 +527,9 @@ async function logratios(){
 
 function initLogratios(){
     document.getElementById("aliquots").value = glob.i;
+    document.getElementById("autocheckbox").checked = glob.auto;
+    document.getElementById("ratiocheckbox").checked = glob.ratios;
+    document.getElementById("logcheckbox").checked = glob.log;
     logratioAliquot();
 }
 
@@ -555,7 +560,7 @@ function progress(){
     return(extra)
 }
 
-function logratioAliquot(){
+function logratioAliquot(plot=false){
     glob.i = parseFloat(document.getElementById("aliquots").value);
     let key = Object.keys(glob.simplex.samples)[glob.i];
     let header = glob.names.samples[key].lr.b0g;
@@ -566,9 +571,10 @@ function logratioAliquot(){
     loadTable([b0g.slice(ns,2*ns)],header.slice(ns,2*ns),'g',1);
     document.getElementById('outliers').value =
 	(dat.outliers===undefined) ? '' : dat.outliers;
+    if (plot) logratioPlot(true);
 }
 
-function logratioPlot(){
+function logratioPlot(calledByLogratioAliquot=false){
     togglehelp(false);
     show('.plot');
     hide('.table');
