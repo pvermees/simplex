@@ -5,9 +5,18 @@
   that only the relative abundances of the isotopes carry the useful
   information.
 
+**simplex** can be used online, offline and from the command line. The
+easiest way to use the program is by visiting
+[http://isoplotr.es.ucl.ac.uk/simplex/](http://isoplotr.es.ucl.ac.uk/simplex/).
+If you would like to install your own online mirror of **simplex**,
+the please follow the instructions provided [HERE](git.md). The
+remainder of this README page provide instructions for offline use,
+either using the browser-based Graphical User Interface, or the **R**
+command line.
+
 ## Prerequisites
 
-You must have R installed on your system (see
+You must have **R** installed on your system (see
 [http://r-project.org](http://r-project.org)).  Additionally, to
 install simplex from Github, you also need the **devtools** package.
 This can be installed by typing the following code at the R command
