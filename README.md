@@ -10,7 +10,7 @@ easiest way to use the program is by visiting
 [http://isoplotr.es.ucl.ac.uk/simplex/](http://isoplotr.es.ucl.ac.uk/simplex/).
 If you would like to install your own online mirror of **simplex**,
 the please follow the instructions provided [HERE](git.md). The
-remainder of this README page provide instructions for offline use,
+remainder of this README page provides instructions for offline use,
 either using the browser-based Graphical User Interface, or the **R**
 command line.
 

@@ -1,4 +1,4 @@
-## Setting up your own online **simplex** server with *git*
+## Setting up your own online *simplex* server with *git*
 
 Here is a way to set up a mirror on a Linux machine using the
 following ingredients:
@@ -168,7 +168,7 @@ Process | command for accessing logs
 -----|-----
 cron (including the update script) | `journalctl -eu cron`
 systemD | `journalctl -e _PID=1`
-simplex | `journalctl -eu isoplotr`
+simplex | `journalctl -eu simplex`
 nginx | `journalctl -eu nginx`
 nginx detail | logs are written into the `/var/log/nginx` directory
 
@@ -182,5 +182,5 @@ If you need to set a custom timeout (say, to 6.5 seconds in this
 example), change the `ExecStart` line in `isoplotr.service` like this:
 
 ```sh
-ExecStart=/usr/bin/Rscript -e simplex::daemon(3839, timeout=6.5)
+ExecStart=/usr/bin/Rscript -e simplex::daemon(2829, timeout=6.5)
 ```
