@@ -159,10 +159,144 @@ You can force an update yourself by running the script as the `root` user:
 sudo /usr/local/sbin/updateSimplex.sh
 ```
 
+### Horizontally Scale Simplex
+
+Some reasonable inputs for **simplex** can take around one minute
+to process. As R is single-threaded, this means that any other users
+will have to wait for that calculation to finish before they can
+access the server. The way around this is to run many instances of
+**simplex** and have the requests sent to whichever one of them
+has the most capacity to process them. Luckily, nginx can do this for
+us.
+
+#### systemd
+
+It is easiest if first you disable the existing service:
+
+```sh
+suso systemctl disable simplex
+suso systemctl stop simplex
+```
+
+As this simple formulation will not work after you have done the
+changes below.
+
+Edit the file `/etc/systemd/system/simplex.service` that we made
+above, changing the port number to `%i`, so the `ExecStart` line
+becomes:
+
+```
+ExecStart=/usr/bin/Rscript -e simplex::daemon(%i)
+```
+
+Change the files name to `simplex@.service` and reload the modules:
+
+```sh
+sudo mv /etc/systemd/system/simplex.service /etc/systemd/system/simplex@.service
+sudo systemctl daemon-reload
+```
+
+Now you can (and indeed must) specify the port number when you
+want to control **simplex**, for example
+`sudo systemctl enable simplex@3901`.
+
+#### Make a simple controller script
+
+Put the following contents into a file called
+`/usr/local/sbin/simplexctl` (this script interacts with eight
+processes listening on ports numbered 3901 to 3908, you can change
+these values as you please):
+
+```sh
+cmd=$1
+shift
+for p in $(seq 3901 3908)
+do systemctl --no-pager ${cmd} simplex@${p} $@
+done
+```
+
+Now make it executable and try it out:
+
+```sh
+sudo chmod a+x /usr/local/sbin/simplexctl
+sudo simplexctl enable
+sudo simplexctl start
+sudo simplexctl status
+```
+
+#### Update script
+
+Now update your update script to use `simplexctl`. In the file we
+made above called `/usr/local/sbin/updateSimplex.sh`, update the
+second line so that the script looks like this:
+
+```sh
+sudo -Hu wwwrunner Rscript -e \
+     "remotes::install_github(repo=c('pvermees/IsoplotR','pvermees/simplex','tim-band/shinylight'),lib='~/R')"
+simplexctl restart
+```
+
+#### nginx
+
+The file `/etc/nginx/sites-enabled/default` needs to be heavily
+edited to end up with the following contents (again we are
+using port numbers 3901-3908 -- you must use whatever
+matches what you put in the `simplexctl` file):
+
+```
+upstream simplex {
+	least_conn;
+	server 127.0.0.1:3901;
+	server 127.0.0.1:3902;
+	server 127.0.0.1:3903;
+	server 127.0.0.1:3904;
+	server 127.0.0.1:3905;
+	server 127.0.0.1:3906;
+	server 127.0.0.1:3907;
+	server 127.0.0.1:3908;
+}
+
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+
+    index index.html;
+
+    server_name _;
+
+    location /simplex/ {
+        proxy_pass http://simplex/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+Again, make sure that the `proxy_pass` line ends with `/;`.
+
+Restart nginx with:
+
+```sh
+sudo systemctl restart nginx
+```
+
+And you should have your horizontally scaled simplex running!
+
 ### Maintenance
 
-You can view the logs from the various processes mentioned here
-as follows:
+You can view the logs from the various processes mentioned here.
+It will help if you don't need to use `sudo` the whole time, so please try:
+
+```sh
+sudo usermod -aG systemd-journal $USER
+```
+
+log out, and log in again.
+
+Now you can use the following commands to access the logs:
 
 Process | command for accessing logs
 -----|-----
