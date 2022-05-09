@@ -58,7 +58,7 @@ After=network.target
 [Service]
 Type=simple
 User=wwwrunner
-ExecStart=/usr/bin/Rscript -e simplex::daemon(2829)
+ExecStart=/usr/bin/Rscript -e simplex::daemon(3901)
 Restart=always
 
 [Install]
@@ -66,7 +66,7 @@ WantedBy=multi-user.target
 ```
 
 Note we are setting `User=wwwrunner` to use our new user and we are
-running it on port 2829.
+running it on port 3901.
 
 Then to make **simplex** start on system boot type:
 
@@ -99,7 +99,7 @@ server {
     server_name _;
 
     location /simplex/ {
-        proxy_pass http://127.0.0.1:2829/;
+        proxy_pass http://127.0.0.1:3901/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -174,8 +174,8 @@ us.
 It is easiest if first you disable the existing service:
 
 ```sh
-suso systemctl disable simplex
-suso systemctl stop simplex
+sudo systemctl disable simplex
+sudo systemctl stop simplex
 ```
 
 As this simple formulation will not work after you have done the
@@ -189,7 +189,7 @@ becomes:
 ExecStart=/usr/bin/Rscript -e simplex::daemon(%i)
 ```
 
-Change the files name to `simplex@.service` and reload the modules:
+Change the file's name to `simplex@.service` and reload the modules:
 
 ```sh
 sudo mv /etc/systemd/system/simplex.service /etc/systemd/system/simplex@.service
@@ -313,8 +313,8 @@ we have been using scrolls to the end of the log so that you are
 looking at the most recent entries immediately.
 
 If you need to set a custom timeout (say, to 6.5 seconds in this
-example), change the `ExecStart` line in `isoplotr.service` like this:
+example), change the `ExecStart` line in `simplex.service` like this:
 
 ```sh
-ExecStart=/usr/bin/Rscript -e simplex::daemon(2829, timeout=6.5)
+ExecStart=/usr/bin/Rscript -e simplex::daemon(3901, timeout=6.5)
 ```
