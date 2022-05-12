@@ -58,7 +58,7 @@ After=network.target
 [Service]
 Type=simple
 User=wwwrunner
-ExecStart=/usr/bin/Rscript -e simplex::daemon(2829)
+ExecStart=/usr/bin/Rscript -e "simplex::simplex(2829)"
 Restart=always
 
 [Install]
@@ -98,7 +98,7 @@ server {
 
     server_name _;
 
-    location /simplex/ {
+    location / {
         proxy_pass http://127.0.0.1:2829/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -186,7 +186,7 @@ above, changing the port number to `%i`, so the `ExecStart` line
 becomes:
 
 ```
-ExecStart=/usr/bin/Rscript -e simplex::daemon(%i)
+ExecStart=/usr/bin/Rscript -e "simplex::simplex(%i)"
 ```
 
 Change the files name to `simplex@.service` and reload the modules:
@@ -266,7 +266,7 @@ server {
 
     server_name _;
 
-    location /simplex/ {
+    location / {
         proxy_pass http://simplex/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -316,5 +316,5 @@ If you need to set a custom timeout (say, to 6.5 seconds in this
 example), change the `ExecStart` line in `isoplotr.service` like this:
 
 ```sh
-ExecStart=/usr/bin/Rscript -e simplex::daemon(2829, timeout=6.5)
+ExecStart=/usr/bin/Rscript -e "simplex::simplex(2829, timeout=6.5)"
 ```
