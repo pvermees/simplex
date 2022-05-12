@@ -17,3 +17,6 @@
 
 # logs
 **/*.log
+
+# files vagrant produces
+.vagrant
