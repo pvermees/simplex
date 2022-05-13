@@ -1,5 +1,6 @@
-\selenium
-\.vscode
-\.git
-\.vagrant
-Vagrantfile
+^selenium
+^\.vscode
+^\.git
+^\.vagrant
+^Vagrantfile$
+^simplex_
