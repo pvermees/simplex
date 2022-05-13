@@ -186,7 +186,7 @@ above, changing the port number to `%i`, so the `ExecStart` line
 becomes:
 
 ```
-ExecStart=/usr/bin/Rscript -e simplex::daemon(%i)
+ExecStart=/usr/bin/Rscript -e "simplex::simplex(%i)"
 ```
 
 Change the file's name to `simplex@.service` and reload the modules:
@@ -266,7 +266,7 @@ server {
 
     server_name _;
 
-    location /simplex/ {
+    location / {
         proxy_pass http://simplex/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
