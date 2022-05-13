@@ -1,0 +1,5 @@
+\selenium
+\.vscode
+\.git
+\.vagrant
+Vagrantfile
