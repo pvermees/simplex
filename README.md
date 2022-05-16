@@ -98,6 +98,77 @@ To view a full list of functions:
 help(package='simplex')
 ```
 
+## Vagrant
+
+Launch **simplex** in a virtual machine with `vagrant up`. Stop it
+with `vagrant halt`. If you have VirtualBox installed, everything should
+work. If you have some other virtualization technology, you might
+have to alter the `Vagrantfile` to make sure that your virtual
+machine has enough memory to build `Rcpp`. The virtual machine
+makes **simplex** available (with eight parallel instances)
+on [https://localhost:8080/simplex/].
+
+## .deb installation file
+
+Those running a Debian-based Linux distribution (such as Ubuntu)
+can install **simplex** with the `simplex_1.0-1.deb` installation
+file.
+
+Firstly you can run:
+
+```sh
+sudo apt install ./simplex_1.0-1.deb
+```
+
+This is not necessarily the latest simplex, but its first action is to
+install the latest version from github.
+
+**simplex** should now be available on [http://localhost/simplex/].
+If not, your `nginx` installation is probably not including its location
+block, which is installed in `/etc/nginx/app.d/simplex.conf`. Edit
+the file `/etc/nginx/sites-available/default` and find the `server`
+block containing the line `listen 80 default_server` (or, if you have
+set up your own server, you can add this line to whichever one
+you like). Add the line `include /etc/nginx/app.d/*.conf;`, so that
+the block looks a bit like this:
+
+```
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        # vvv ADDED THIS LINE HERE TO ENABLE SIMPLEX
+        include /etc/nginx/app.d/*.conf;
+
+        root /var/www/html;
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+        }
+}
+```
+
+Now restart nginx with `sudo systemctl restart nginx` and see if
+**simplex** appears at the above URL. You can turn **simplex**
+off with `sudo simplexctl stop` and back on again with
+`sudo simplexctl start`. Stop it from starting on boot with 
+`sudo simplexctl disable` and enable starting on boot with
+`sudo simplexctl enable`. You can see how all the instances are
+doing with `sudo simplexctl status`.
+
+If installed with this method, you can uninstall **simplex** with
+`sudo apt remove simplex`.
+
+If you want a newer offline version of the `.deb` file, you can
+update it with `sudo dpkg -b simplex_1.0-1/`.
+
 ## Author
 
 [Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve/)

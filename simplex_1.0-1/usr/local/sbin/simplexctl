@@ -1,0 +1,5 @@
+cmd=$1
+shift
+for p in $(seq 39101 39108)
+do systemctl --no-pager ${cmd} simplex@${p} $@
+done

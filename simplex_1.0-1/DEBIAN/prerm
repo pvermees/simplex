@@ -1,0 +1,3 @@
+#! /bin/sh
+/usr/local/sbin/simplexctl stop
+/usr/local/sbin/simplexctl disable

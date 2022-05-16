@@ -49,86 +49,24 @@ Vagrant.configure("2") do |config|
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
   #
-  # config.vm.provider "virtualbox" do |vb|
-  #   # Display the VirtualBox GUI when booting the machine
-  #   vb.gui = true
-  #
-  #   # Customize the amount of memory on the VM:
-  #   vb.memory = "1024"
-  # end
+  config.vm.provider "virtualbox" do |vb|
+    # Customize the amount of memory on the VM:
+    vb.memory = "1536"
+  end
+
   #
   # View the documentation for the provider you are using for more
   # information on available options.
+
+  config.vm.provision "file", source: "simplex_1.0-1.deb", destination: "$HOME/"
 
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-"SHELL"
-    useradd -mr wwwrunner
     apt-get update
-    apt-get install -y nginx git r-base r-base-dev
-    sudo -Hu wwwrunner sh <<- "RPACKAGES"
-    mkdir ~/R
-    echo R_LIBS_USER=~/R > ~/.Renviron
-    Rscript -e "install.packages(pkgs='remotes',lib='~/R')"
-    Rscript -e "remotes::install_github(repo=c('tim-band/shinylight','pvermees/simplex'),lib='~/R')"
-RPACKAGES
-    cat <<- "SYSTEMD" > /etc/systemd/system/simplex@.service
-    [Unit]
-    Description=simplex
-    After=network.target
-    [Service]
-    Type=simple
-    User=wwwrunner
-    ExecStart=/usr/bin/Rscript -e "simplex::simplex(%i)"
-    Restart=always
-    [Install]
-    WantedBy=multi-user.target
-SYSTEMD
-    cat <<- "SIMPLEXCTL" > /usr/local/sbin/simplexctl
-    cmd=$1
-    shift
-    for p in $(seq 3901 3908)
-    do systemctl --no-pager ${cmd} simplex@${p} $@
-    done
-SIMPLEXCTL
-    chmod a+x /usr/local/sbin/simplexctl
-    cat <<- "UPDATE" > /usr/local/sbin/updateSimplex.sh
-    sudo -Hu wwwrunner Rscript -e "remotes::install_github(repo=c('tim-band/shinylight','pvermees/simplex'),force=TRUE,lib='~/R')"
-    simplexctl restart
-UPDATE
-    chmod a+rx /usr/local/sbin/updateSimplex.sh
-    simplexctl enable
-    simplexctl start
-    crontab <<- "CRONTAB"
-    0 0 * * 0 /usr/local/sbin/updateSimplex.sh | /usr/bin/logger
-CRONTAB
-    cat <<- "NGINX" > /etc/nginx/sites-enabled/default
-    upstream simplex {
-      least_conn;
-      server 127.0.0.1:3901;
-      server 127.0.0.1:3902;
-      server 127.0.0.1:3903;
-      server 127.0.0.1:3904;
-      server 127.0.0.1:3905;
-      server 127.0.0.1:3906;
-      server 127.0.0.1:3907;
-      server 127.0.0.1:3908;
-    }
-    server {
-      listen 80 default_server;
-      listen [::]:80 default_server;
-      root /var/www/html;
-      index index.html;
-      server_name _;
-      location / {
-        proxy_pass http://simplex/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-      }
-    }
-NGINX
+    apt-get install -y ./simplex_1.0-1.deb
+    sed "s!^\\(\\s*\\)server_name\\s\\s*_\\s*;\\s*\\$!\\1server_name _;\\n\\1include /etc/nginx/app.d/*.conf;!" -i  /etc/nginx/sites-available/default
     systemctl restart nginx
   SHELL
 end
