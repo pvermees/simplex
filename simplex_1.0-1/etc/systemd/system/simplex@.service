@@ -1,0 +1,12 @@
+[Unit]
+Description=simplex
+After=network.target
+
+[Service]
+Type=simple
+User=wwwrunner
+ExecStart=/usr/bin/Rscript -e "simplex::simplex(%i)"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
