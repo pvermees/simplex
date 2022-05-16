@@ -163,6 +163,9 @@ off with `sudo simplexctl stop` and back on again with
 `sudo simplexctl enable`. You can see how all the instances are
 doing with `sudo simplexctl status`.
 
+If installed with this method, you can uninstall **simplex** with
+`sudo apt remove simplex`.
+
 If you want a newer offline version of the `.deb` file, you can
 update it with `sudo dpkg -b simplex_1.0-1/`.
 
