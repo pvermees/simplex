@@ -35,7 +35,7 @@ else
 newstart="$2"
 fi
 newend=$(expr ${newstart} + ${newcount} - 1)
-simplexctl stop
+${scfile} stop
 sed -e 's/^start=\(.*\)$/start='${newstart}/ -e 's/^end=\(.*\)$/end='${newend}/ -i ${scfile}
 echo 'upstream simplex {' > ${nxfile}
 echo '  least_conn;' >> ${nxfile}
