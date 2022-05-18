@@ -58,14 +58,14 @@ Vagrant.configure("2") do |config|
   # View the documentation for the provider you are using for more
   # information on available options.
 
-  config.vm.provision "file", source: "simplex_1.0-1.deb", destination: "$HOME/"
+  config.vm.provision "file", source: "simplex.deb", destination: "$HOME/"
 
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-"SHELL"
     apt-get update
-    apt-get install -y ./simplex_1.0-1.deb
+    apt-get install -y ./simplex.deb
     sed "s!^\\(\\s*\\)server_name\\s\\s*_\\s*;\\s*\\$!\\1server_name _;\\n\\1include /etc/nginx/app.d/*.conf;!" -i  /etc/nginx/sites-available/default
     configureSimplex.sh 8
     simplexctl start
