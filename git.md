@@ -21,13 +21,13 @@ on [https://localhost:8080/simplex/].
 ## .deb installation file
 
 Those running a Debian-based Linux distribution (such as Ubuntu)
-can install **simplex** with the `simplex_1.0-1.deb` installation
+can install **simplex** with the `simplex.deb` installation
 file.
 
 Firstly you can run:
 
 ```sh
-sudo apt install ./simplex_1.0-1.deb
+sudo apt install ./simplex.deb
 ```
 
 to install **simplex** on your machine with all its dependencies.
@@ -115,9 +115,9 @@ If installed with this method, you can uninstall **simplex** with
 
 ### updating the package (for developers)
 
-The `.deb` file is defined by the files in the `simplex_1.0-1` directory.
+The `.deb` file is defined by the files in the `simplex` directory.
 If you change these files, you can update the `.deb` file with
-`sudo dpkg -b simplex_1.0-1/`.
+`sudo dpkg -b simplex/`.
 
 ## By hand
 
@@ -169,12 +169,12 @@ sudo -Hu wwwrunner Rscript -e \
 
 ### Create a systemd service for *simplex*
 
-Copy the file `simplex_1.0-1/DEBIAN/systemd/system/simplex@.service` to
+Copy the file `simplex/DEBIAN/systemd/system/simplex@.service` to
 `/systemd/system/`.
 
 #### Copy the scripts onto your path
 
-Copy the files in `simplex_1.0-1/DEBIAN/usr/local/sbin/` to
+Copy the files in `simplex/DEBIAN/usr/local/sbin/` to
 `/usr/local/sbin/`.
 
 Now we can control **simplex**:
@@ -187,8 +187,8 @@ sudo simplexctl status
 
 ### Expose *simplex* with *nginx*
 
-Copy the file `simplex_1.0-1/DEBIAN/etc/nginx/app.d/simplex.conf` to
-`/etc/nginx/app.d/`, and `simplex_1.0-1/DEBIAN/etc/nginx/conf.d/simplex.conf` to `/etc/nginx/conf.d/`.
+Copy the file `simplex/DEBIAN/etc/nginx/app.d/simplex.conf` to
+`/etc/nginx/app.d/`, and `simplex/DEBIAN/etc/nginx/conf.d/simplex.conf` to `/etc/nginx/conf.d/`.
 
 As above in the section **ensuring availability**, ensure that your
 default `server` block in `/etc/nginx/sites-available/default` contains the
@@ -200,7 +200,7 @@ sudo systemctl restart nginx
 
 ### Auto-updating
 
-Copy the file `simplex_1.0-1/DEBIAN/etc/cron.weekly/simplex` to
+Copy the file `simplex/DEBIAN/etc/cron.weekly/simplex` to
 `/etc/cron.weekly`.
 
 This will automatically synchronise **shinylight** and **simplex** with **GitHub** on every Sunday.
