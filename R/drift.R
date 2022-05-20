@@ -109,10 +109,15 @@ get_a0 <- function(g,spot,ions){
             out[ion] <- stats::optimise(far_misfit,interval=init+c(-5,2),
                                         g=g,ap=ap)$minimum
         } else {
-            init <- log(max(0.5,sum(ap$counts))) -
-                log(sum(exp(g*ap$t)*ap$edt))
-            out[ion] <- stats::optimise(sem_misfit,interval=init+c(-5,2),
-                                        g=g,ap=ap)$minimum
+            sc <- sum(ap$counts)
+            den <- sum(exp(g*ap$t)*ap$edt)
+            if (sc>0){
+                init <- log(sc) - log(den)
+                out[ion] <- stats::optimise(sem_misfit,interval=init+c(-5,2),
+                                            g=g,ap=ap)$minimum
+            } else {
+                out[ion] <- log(0.5) - log(den)
+            }
         }
     }
     out

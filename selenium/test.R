@@ -1,5 +1,9 @@
 # move one folder up from the current file, e.g.:
 setwd('/home/pvermees/Documents/Programming/R/simplex/')
+if (FALSE){ # update dependencies
+    remotes::install_github('tim-band/shinylight')
+    remotes::install_github('pvermees/isoplotr')
+}
 source('R/calibrate.R')
 source('R/calibration.R')
 source('R/drift.R')

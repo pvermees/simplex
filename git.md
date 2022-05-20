@@ -1,4 +1,125 @@
-## Setting up your own online *simplex* server with *git*
+# Setting up your own *simplex* server
+
+Here are three ways to set up your own **simplex** server:
+
+* On a VirtualBox (or other) virtual machine with Vagrant
+* On a Debian-based Linux distribution with an installation file
+* By hand
+
+## Vagrant
+
+Vagrant is a technology for setting up a virtual machine simply.
+
+Launch **simplex** in a virtual machine with `vagrant up`. Stop it
+with `vagrant halt`. If you have VirtualBox installed, everything should
+work. If you have some other virtualization technology, you might
+have to alter the `Vagrantfile` to make sure that your virtual
+machine has enough memory to build `Rcpp`. The virtual machine
+makes **simplex** available (with eight parallel instances)
+on [https://localhost:8080/simplex/].
+
+## .deb installation file
+
+Those running a Debian-based Linux distribution (such as Ubuntu)
+can install **simplex** with the `simplex.deb` installation
+file.
+
+Firstly you can run:
+
+```sh
+sudo apt install ./simplex.deb
+```
+
+to install **simplex** on your machine with all its dependencies.
+
+### ensuring availability
+
+**simplex** should now be available on [http://localhost/simplex/].
+If not, your `nginx` installation is probably not including its location
+block, which is installed in `/etc/nginx/app.d/simplex.conf`. Edit
+the file `/etc/nginx/sites-available/default` and find the `server`
+block containing the line `listen 80 default_server;` (or, if you have
+set up your own server, you can add this line to whichever one
+you like). Add the line `include /etc/nginx/app.d/*.conf;`, so that
+the block looks a bit like this:
+
+```
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        # vvv ADDED THIS LINE HERE TO ENABLE SIMPLEX
+        include /etc/nginx/app.d/*.conf;
+
+        root /var/www/html;
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+        }
+}
+```
+
+Now restart nginx with `sudo systemctl restart nginx` and see if
+**simplex** appears at the above URL. You can turn **simplex**
+off with `sudo simplexctl stop` and back on again with
+`sudo simplexctl start`. Stop it from starting on boot with 
+`sudo simplexctl disable` and enable starting on boot with
+`sudo simplexctl enable`. You can see how all the instances are
+doing with `sudo simplexctl status`.
+
+### configuring simplex
+
+**simplex** can support many users at once. However, R itself is
+single-threaded, so if many users try to run their calculations at the
+same time, each calculation will run in turn. This means that some
+users might end up waiting a long time, even if more processing power
+is available on the server.
+
+This can be mitigated by running many different instances of
+**simplex** in parallel.
+
+You can configure **simplex** to run any number of instances
+between 1 and 99 with the following commands:
+
+```sh
+sudo configureSimplex.sh 8
+sudo simplexctl start
+```
+
+Here we are requesting 8 instances. The `configureSimplex.sh`
+script stops simplex, so in the next line we start it again.
+
+By default, **simplex** takes over port numbers 39101,
+39102, 39103... (one port per instance you have). If these
+interfere with other processes on your system, you can configure
+**simplex** to use a different starting port number like this:
+
+```sh
+sudo configureSimplex.sh 8 4000
+sudo simplexctl start
+```
+
+Here we are specifying ports 4000 to 4007.
+
+### uninstallation
+
+If installed with this method, you can uninstall **simplex** with
+`sudo apt remove simplex`.
+
+### updating the package (for developers)
+
+The `.deb` file is defined by the files in the `simplex` directory.
+If you change these files, you can update the `.deb` file with
+`sudo dpkg -b simplex/`.
+
+## By hand
 
 Here is a way to set up a mirror on a Linux machine using the
 following ingredients:
@@ -48,110 +169,41 @@ sudo -Hu wwwrunner Rscript -e \
 
 ### Create a systemd service for *simplex*
 
-Copy following into a new file `/etc/systemd/system/simplex.service`:
+Copy the file `simplex/DEBIAN/systemd/system/simplex@.service` to
+`/systemd/system/`.
 
-```
-[Unit]
-Description=simplex
-After=network.target
+#### Copy the scripts onto your path
 
-[Service]
-Type=simple
-User=wwwrunner
-ExecStart=/usr/bin/Rscript -e simplex::daemon(2829)
-Restart=always
+Copy the files in `simplex/DEBIAN/usr/local/sbin/` to
+`/usr/local/sbin/`.
 
-[Install]
-WantedBy=multi-user.target
-```
-
-Note we are setting `User=wwwrunner` to use our new user and we are
-running it on port 2829.
-
-Then to make **simplex** start on system boot type:
+Now we can control **simplex**:
 
 ```sh
-sudo systemctl enable simplex
+sudo simplexctl enable
+sudo simplexctl start
+sudo simplexctl status
 ```
-
-Of course you can use other `systemctl` commands such as `start`, `stop`
-and `restart` (to control whether it is running), and `disable` (to stop it
-from running automatically on boot).
 
 ### Expose *simplex* with *nginx*
 
-Ubuntu encourages you to put your configuration files in the
-directory `/etc/nginx/sites-enabled`. If this directory is present
-(and to be sure, you can check for a line saying `include
-/etc/nginx/sites-enabled/*;` in the file `/etc/nginx/nginx.conf`) then
-you need to add a file called `/etc/nginx/sites-enabled/default` with
-the following contents:
+Copy the file `simplex/DEBIAN/etc/nginx/app.d/simplex.conf` to
+`/etc/nginx/app.d/`, and `simplex/DEBIAN/etc/nginx/conf.d/simplex.conf` to `/etc/nginx/conf.d/`.
 
-```
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-
-    root /var/www/html;
-
-    index index.html;
-
-    server_name _;
-
-    location /simplex/ {
-        proxy_pass http://127.0.0.1:2829/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-```
-
-If you already have a file called `/etc/nginx/sites-enabled/default`,
-you will need to copy just the `location {...}` block into the
-appropriate `server {...}` block in the existing file.
-
-You can restart nginx to take the changes to its configuration we
-made above with:
+As above in the section **ensuring availability**, ensure that your
+default `server` block in `/etc/nginx/sites-available/default` contains the
+line: `include /etc/nginx/app.d/*.conf;`. Now restart nginx:
 
 ```sh
 sudo systemctl restart nginx
 ```
 
-If you need to start **simplex** now, call:
+### Auto-updating
 
-```sh
-sudo systemctl start simplex
-```
+Copy the file `simplex/DEBIAN/etc/cron.weekly/simplex` to
+`/etc/cron.weekly`.
 
-### Set up auto-updating
-
-To ensure that **simplex** is up-to-date, it is a good idea to set up
-auto-updating.
-
-Put the following in a script `/usr/local/sbin/updateSimplex.sh`:
-
-```sh
-sudo -Hu wwwrunner Rscript -e \
-     "remotes::install_github(repo=c('tim-band/shinylight','pvermees/simplex'),force=TRUE,lib='~/R')"
-systemctl restart simplex
-```
-
-Ensure it is executable with:
-
-```sh
-sudo chmod a+rx /usr/local/sbin/updateSimplex.sh
-```
-
-One way to ensure that this script is regularly run is with **crontab**. First enter `sudo crontab -e` at the command prompt and then enter:
-
-```
-# Minute    Hour   Day of Month    Month            Day of Week           Command
-# (0-59)   (0-23)    (1-31)    (1-12 or Jan-Dec) (0-6 or Sun-Sat)
-    0        0         *             *                  0        /usr/local/sbin/updateSimplex.sh | /usr/bin/logger
-```
-
-which will automatically synchronise **shinylight** and **simplex** with **GitHub** on every Sunday.
+This will automatically synchronise **shinylight** and **simplex** with **GitHub** on every Sunday.
 
 You can force an update yourself by running the script as the `root` user:
 
@@ -159,28 +211,7 @@ You can force an update yourself by running the script as the `root` user:
 sudo /usr/local/sbin/updateSimplex.sh
 ```
 
-### Maintenance
+### Configuring simplex
 
-You can view the logs from the various processes mentioned here
-as follows:
-
-Process | command for accessing logs
------|-----
-cron (including the update script) | `journalctl -eu cron`
-systemD | `journalctl -e _PID=1`
-simplex | `journalctl -eu simplex`
-nginx | `journalctl -eu nginx`
-nginx detail | logs are written into the `/var/log/nginx` directory
-
-`journalctl` has many interesting options; for example `-r` to see
-the most recent messages first, `-k` to see messages only from this
-boot, or `-f` to show messages as they come in. The `-e` option
-we have been using scrolls to the end of the log so that you are
-looking at the most recent entries immediately.
-
-If you need to set a custom timeout (say, to 6.5 seconds in this
-example), change the `ExecStart` line in `isoplotr.service` like this:
-
-```sh
-ExecStart=/usr/bin/Rscript -e simplex::daemon(2829, timeout=6.5)
-```
+See the section **configuring simplex** under **.deb installation file**
+above to find out how to horizontally scale **simplex** for more parallelism.
