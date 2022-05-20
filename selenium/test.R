@@ -1,4 +1,6 @@
 # move one folder up from the current file, e.g.:
+remotes::install_github('tim-band/shinylight')
+remotes::install_github('pvermees/isoplotr')
 setwd('/home/pvermees/Documents/Programming/R/simplex/')
 source('R/calibrate.R')
 source('R/calibration.R')

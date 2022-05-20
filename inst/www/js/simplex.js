@@ -8,7 +8,7 @@ var glob = {
 	"calibration": null,
 	"calibrated": null
     },
-    "auto": false,
+    "auto": true,
     "methods": null,
     "i": null,
     "start": true,
