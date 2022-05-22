@@ -158,9 +158,6 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
             cormat <- stats::cov2cor(E)
             out[i,(si+2*nr+1):nc] <- cormat[upper.tri(cormat)]
         }
-        if (x$samples[[i]]$lr$badblank){
-            rownames(out)[i] <- paste0(rownames(out)[i],'*')
-        }
     }
     out
 }

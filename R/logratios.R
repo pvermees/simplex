@@ -32,7 +32,9 @@ logratios_helper <- function(x,i=NULL,gui=FALSE){
             print(sname)
         }
         sp <- spot(dat=x,sname=sname)
-        out$samples[[sname]]$lr <- logratios.spot(x=sp)
+        lr <- logratios.spot(x=sp)
+        out$samples[[sname]]$lr <- lr$lr
+        if (lr$badblank) names(out$samples)[j] <- paste0(sname,'*')
     }
     class(out) <- unique(append("logratios",class(out)))
     out
@@ -53,8 +55,9 @@ logratios.spot <- function(x){
     fit$cov <- MASS::ginv(fit$hessian)
     pred <- do.call(what=fn,
                     args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))
-    out <- common2original(fit=fit,num=num,den=den,groups=groups)
-    out <- c(out,pred)
+    out <- list()
+    out$lr <- common2original(fit=fit,num=num,den=den,groups=groups)
+    out$lr <- c(out$lr,pred)
     out$badblank <- init$badblank
     invisible(out)
 }
