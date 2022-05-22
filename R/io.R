@@ -99,7 +99,8 @@ read_Cameca_asc <- function(f,mions=NULL){
             junk <- readLines(f,n=4,warn=FALSE)
             out$detector <- read_text(f,remove=1)
             out$dtype <- read_text(f,remove=1)
-            names(out$dwelltime) <- names(out$detector) <- names(out$dtype) <- ions
+            names(out$dwelltime) <- names(out$detector) <-
+                names(out$dtype) <- ions
         }
         if (grepl("DETECTOR PARAMETERS",line)) {
             junk <- readLines(f,n=3,warn=FALSE)
@@ -119,7 +120,8 @@ read_Cameca_asc <- function(f,mions=NULL){
                     break
                 }
             }
-            names(out$yield) <- names(out$background) <- names(out$deadtime) <- detectors
+            names(out$yield) <- names(out$background) <-
+                names(out$deadtime) <- detectors
         }
         if (grepl("RAW DATA",line)) {
             out$signal <- read_asc_block(f,ions=ions)
@@ -141,37 +143,37 @@ read_SHRIMP_op <- function(f,mions=NULL,gui=FALSE){
         if (length(line)<1){
             break
         } else if (nchar(line)>0){
-            spot <- list()
-            sname <- line
-            if (gui) shinylight::sendInfoText(paste("Reading ",sname,""))
-            else print(sname)
-            spot$date <- readLines(f,n=1,warn=FALSE)
-            spot$set <- read_numbers(f)
+            sp <- list()
+            sn <- line
+            if (gui) shinylight::sendInfoText(paste("Reading ",sn,""))
+            else print(sn)
+            sp$date <- readLines(f,n=1,warn=FALSE)
+            sp$set <- read_numbers(f)
             nscans <- read_numbers(f)
             nions <- read_numbers(f)
-            spot$deadtime <- 0
-            spot$dwelltime <- read_numbers(f)
+            sp$deadtime <- 0
+            sp$dwelltime <- read_numbers(f)
             if (nions==length(mions)) ions <- mions
             else ions <- paste0('m',1:nions)
-            spot$detector <- rep('COUNTER',length(ions))
-            spot$dtype <- rep('Em',length(ions))
-            spot$time <- matrix(0,nscans,nions)
+            sp$detector <- rep('COUNTER',length(ions))
+            sp$dtype <- rep('Em',length(ions))
+            sp$time <- matrix(0,nscans,nions)
             for (i in 1:nions){
-                spot$time[,i] <- read_numbers(f)
+                sp$time[,i] <- read_numbers(f)
             }
-            spot$signal <- matrix(0,nscans,nions)
+            sp$signal <- matrix(0,nscans,nions)
             for (i in 1:nions){
-                spot$signal[,i] <- read_numbers(f)
+                sp$signal[,i] <- read_numbers(f)
             }
-            spot$sbmbkg <- read_numbers(f)
-            spot$sbm <- matrix(0,nscans,nions)
+            sp$sbmbkg <- read_numbers(f)
+            sp$sbm <- matrix(0,nscans,nions)
             for (i in 1:nions){
-                spot$sbm[,i] <- read_numbers(f)
+                sp$sbm[,i] <- read_numbers(f)
             }
-            names(spot$dwelltime) <- names(spot$dtype) <-
-                names(spot$detector) <- colnames(spot$time) <-
-                colnames(spot$signal) <- colnames(spot$sbm) <- ions
-            out[[sname]] <- spot
+            names(sp$dwelltime) <- names(sp$dtype) <-
+                names(sp$detector) <- colnames(sp$time) <-
+                colnames(sp$signal) <- colnames(sp$sbm) <- ions
+            out[[sn]] <- sp
             junk <- readLines(f,n=1,warn=FALSE)
         }
     }
@@ -186,44 +188,44 @@ read_SHRIMP_pd <- function(f,mions=NULL,gui=FALSE){
             break
         } else if (nchar(line)>0 & grepl(line,'***',fixed=TRUE)){
             header <- readLines(f,n=4,warn=FALSE)
-            spot <- list()
+            sp <- list()
             namedate <- strsplit(header[[1]],split=', ')[[1]]
-            sname <- namedate[1]
-            if (gui) shinylight::sendInfoText(paste("Reading ",sname,""))
-            else print(sname)
-            spot$date <- paste(namedate[2:3],collapse=' ')
-            spot$set <- split_mixed(header[[2]],1,2)
+            sn <- namedate[1]
+            if (gui) shinylight::sendInfoText(paste("Reading ",sn,""))
+            else print(sn)
+            sp$date <- paste(namedate[2:3],collapse=' ')
+            sp$set <- split_mixed(header[[2]],1,2)
             nscans <- split_mixed(header[[2]],2,1)
             nions <- split_mixed(header[[2]],3,1)
-            spot$sbmbkg <- split_mixed(header[[2]],5,3)
-            spot$deadtime <- split_mixed(header[[2]],4,1)
+            sp$sbmbkg <- split_mixed(header[[2]],5,3)
+            sp$deadtime <- split_mixed(header[[2]],4,1)
             block <- utils::read.table(text=readLines(f,n=nions,warn=FALSE),
                                        fill=TRUE)
             ions <- block[,1]
             if (length(ions)==length(mions)) ions <- mions
-            spot$dwelltime <- block[,4]
-            names(spot$dwelltime) <- ions
-            spot$detector <- block[,11]
-            spot$dtype <- rep('Fc',length(ions))
-            spot$dtype[spot$detector=='COUNTER'] <- 'Em'
-            spot$time <- matrix(0,nscans,nions)
-            spot$signal <- matrix(0,nscans,nions)
-            spot$sbm <- matrix(0,nscans,nions)
+            sp$dwelltime <- block[,4]
+            names(sp$dwelltime) <- ions
+            sp$detector <- block[,11]
+            sp$dtype <- rep('Fc',length(ions))
+            sp$dtype[sp$detector=='COUNTER'] <- 'Em'
+            sp$time <- matrix(0,nscans,nions)
+            sp$signal <- matrix(0,nscans,nions)
+            sp$sbm <- matrix(0,nscans,nions)
             block <- readLines(f,n=1+nscans*nions*2,warn=FALSE)[-1]
-            names(spot$detector) <- names(spot$dtype) <-
-                colnames(spot$time) <- colnames(spot$signal) <- 
-                colnames(spot$sbm) <- ions
+            names(sp$detector) <- names(sp$dtype) <-
+                colnames(sp$time) <- colnames(sp$signal) <- 
+                colnames(sp$sbm) <- ions
             for (i in 1:nscans){
                 for (j in 1:nions){
                     ii <- (i-1)*nions*2 + (j-1)*2 + 1
                     dat <- utils::read.table(text=block[[ii]])
-                    spot$time[i,j] <- as.numeric(dat[3])
-                    spot$signal[i,j] <- sum(as.numeric(dat[-(1:4)]))
+                    sp$time[i,j] <- as.numeric(dat[3])
+                    sp$signal[i,j] <- sum(as.numeric(dat[-(1:4)]))
                     dat <- utils::read.table(text=block[[ii+1]])
-                    spot$sbm[i,j] <- sum(as.numeric(dat))
+                    sp$sbm[i,j] <- sum(as.numeric(dat))
                 }
             }
-            out[[sname]] <- spot
+            out[[sn]] <- sp
         }
     }
     out
