@@ -142,8 +142,8 @@ init_logratios <- function(spot,groups){
             Np <- alphapars(spot,num)
             Dp <- alphapars(spot,den)
             b0 <- c(b0, dc['a0',num] - dc['a0',den] )
-            if (mean(Np$sig-Np$bkg)<=0 |
-                mean(Dp$sig-Dp$bkg)<=0){
+            if (mean(Np$sig-Np$bkg)<0 |
+                mean(Dp$sig-Dp$bkg)<0){
                 warning('Signal does not exceed background.')
                 badblank <- TRUE
             }
