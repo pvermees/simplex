@@ -492,15 +492,19 @@ async function logratios(){
 	selectButton(2);
 	loadPage("logratios.html").then(
 	    () => {
+		if (glob.simplex.method.instrument=='Cameca'){
+		    show('.show4cameca');
+		    document.getElementById("xycheckbox").checked = glob.xy;
+		} else {
+		    hide('.show4cameca');
+		    glob.xy = false;
+		}
+	    },
+	    error => alert(error)
+	).then(
+	    () => {
 		if (glob.class.includes('logratios')){ // already has logratios
 		    loadSamples( () => initLogratios() );
-		    if (glob.simplex.method.instrument=='Cameca'){
-			show('.show4cameca');
-			document.getElementById("xycheckbox").checked = glob.xy;
-		    } else {
-			hide('.show4cameca');
-			glob.xy = false;
-		    }
 		} else { // does not yet have logratios
 		    loader();
 		    shinylight.call("getlogratios", {x:glob}, null, progress()).then(

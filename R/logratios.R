@@ -34,7 +34,7 @@ logratios_helper <- function(x,i=NULL,gui=FALSE){
         sp <- spot(dat=x,sname=sname)
         lr <- logratios.spot(x=sp)
         out$samples[[sname]]$lr <- lr$lr
-        if (lr$badblank) out$tabnames[sname] <- paste0(sname,'*')
+        out$tabnames[sname] <- ifelse(lr$badblank,paste0(sname,'*'),sname)
     }
     class(out) <- unique(append("logratios",class(out)))
     out
