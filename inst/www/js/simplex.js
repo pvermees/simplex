@@ -6,7 +6,8 @@ var glob = {
 	"samples": null,
 	"outliers": null,
 	"calibration": null,
-	"calibrated": null
+	"calibrated": null,
+	"tabnames": null
     },
     "auto": true,
     "methods": null,

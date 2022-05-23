@@ -19,6 +19,7 @@ calibrate <- function(cal,exterr=FALSE){
     } else {
         out <- calibrate_regression(dat=cal,exterr=exterr)
     }
+    class(out) <- unique(append("calibrated",class(out)))
     out
 }
 
@@ -54,7 +55,6 @@ calibrate_average <- function(dat,exterr=FALSE){
     }
     out$calibrated <- list(snames=names(dat$samples),ratios=alliso,
                            val=val,cov=J %*% E %*% t(J))
-    class(out) <- unique(append("calibrated",class(out)))
     out
 }
 

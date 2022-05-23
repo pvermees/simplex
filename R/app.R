@@ -239,7 +239,7 @@ convert2IsoplotR <- function(x){
     dat <- calibrate_it(x)
     isodat <- simplex2IsoplotR(dat,method=x$IsoplotRtype)
     out <- as.data.frame(isodat$x)
-    rownames(out) <- x$samples 
+    rownames(out) <- dat$tabnames
     out
 }
 

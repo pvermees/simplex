@@ -16,6 +16,7 @@
 logratios <- function(x,i=NULL){
     logratios_helper(x,i=i)
 }
+
 logratios_helper <- function(x,i=NULL,gui=FALSE){
     out <- x
     snames <- names(x$samples)
@@ -31,7 +32,9 @@ logratios_helper <- function(x,i=NULL,gui=FALSE){
             print(sname)
         }
         sp <- spot(dat=x,sname=sname)
-        out$samples[[sname]]$lr <- logratios.spot(x=sp)
+        lr <- logratios.spot(x=sp)
+        out$samples[[sname]]$lr <- lr$lr
+        if (lr$badblank) out$tabnames[sname] <- paste0(sname,'*')
     }
     class(out) <- unique(append("logratios",class(out)))
     out
@@ -42,17 +45,20 @@ logratios.spot <- function(x){
     den <- x$method$den
     B <- common_denominator(c(num,den))
     groups <- groupbypairs(B)
-    init <- init_logratios(spot=x,groups=groups)
     if (faraday(x)) fn <- faraday_misfit_b0g
     else fn <- sem_misfit_b0g
-    fit <- stats::optim(par=init,f=fn,method='L-BFGS-B',
-                        lower=init-2,upper=init+2,spot=x,
-                        groups=groups,hessian=TRUE)
+    init <- init_logratios(spot=x,groups=groups)
+    b0g <- init$b0g
+    fit <- optim(par=b0g,f=fn,method='L-BFGS-B',
+                 lower=b0g-2,upper=b0g+2,
+                 spot=x,groups=groups,hessian=TRUE)
     fit$cov <- MASS::ginv(fit$hessian)
     pred <- do.call(what=fn,
                     args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))
-    out <- common2original(fit=fit,num=num,den=den,groups=groups)
-    out <- c(out,pred)
+    out <- list()
+    out$lr <- common2original(fit=fit,num=num,den=den,groups=groups)
+    out$lr <- c(out$lr,pred)
+    out$badblank <- init$badblank
     invisible(out)
 }
 
@@ -127,17 +133,20 @@ init_logratios <- function(spot,groups){
     g <- NULL
     b0names <- NULL
     gnames <- NULL
+    badblank <- FALSE
     den <- groups$den
+    if (is.null(spot$dc)) dc <- drift.spot(spot)
+    else dc <- spot$dc
     for (nums in groups$num){
-        if (is.null(spot$dc)){
-            for (num in nums){
-                Np <- alphapars(spot,num)
-                Dp <- alphapars(spot,den)
-                absND <- abs((Np$sig-Np$bkg)/(Dp$sig-Dp$bkg))
-                b0 <- c(b0,mean(log(absND[absND>0])))
+        for (num in nums){
+            Np <- alphapars(spot,num)
+            Dp <- alphapars(spot,den)
+            b0 <- c(b0, dc['a0',num] - dc['a0',den] )
+            if (mean(Np$sig-Np$bkg)<0 |
+                mean(Dp$sig-Dp$bkg)<0){
+                warning('Signal does not exceed background.')
+                badblank <- TRUE
             }
-        } else {
-            b0 <- c(b0,spot$dc['a0',nums]-spot$dc['a0',den])
         }
         b0names <- c(b0names,nums)
         nele <- unique(element(nums))
@@ -147,9 +156,11 @@ init_logratios <- function(spot,groups){
             gnames <- c(gnames,nele)
         }
     }
-    out <- c(b0,g)
-    names(out) <- c(b0names,gnames)
-    out
+    out <- list()
+    out$b0g <- c(b0,g)
+    names(out$b0g) <- c(b0names,gnames)
+    out$badblank <- badblank
+    invisible(out)
 }
 
 faraday_misfit_b0g <- function(b0g,spot,groups,predict=FALSE){
