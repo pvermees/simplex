@@ -24,6 +24,7 @@ read_data <- function(f,m='IGG-UPb'){
     } else {
         out$samples <- read_samples_fn(fn=f,m=out$method)
     }
+    names(out$samples) -> out$tabnames -> names(out$tabnames)
     class(out) <- 'simplex'
     fixmethod(out)
 }
@@ -269,6 +270,7 @@ subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- x
     snames <- subset2snames(dat=x,prefix=prefix,snames=snames,i=i,...)
     out$samples <- x$samples[snames]
+    out$tabnames <- x$tabnames[snames]
     out
 }
 subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){

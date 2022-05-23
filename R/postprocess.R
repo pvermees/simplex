@@ -88,7 +88,7 @@ data2table.calibrated <- function(x,cov=FALSE,log=TRUE,log4lab=TRUE,...){
         val <- exp(cal$val)
         E <- diag(val) %*% cal$cov %*% diag(val)
     }
-    data2table_helper(val=val,E=E,snames=cal$snames,
+    data2table_helper(val=val,E=E,snames=x$tabnames,
                       ratios=ratios,cov=cov)
 }
 #' @param cov logical. If \code{TRUE}, returns the logratios along
@@ -99,7 +99,7 @@ data2table.calibrated <- function(x,cov=FALSE,log=TRUE,log4lab=TRUE,...){
 data2table.delta <- function(x,cov=FALSE,...){
     del <- x$delta
     cal <- x$calibrated
-    data2table_helper(val=del$val,E=del$cov,snames=cal$snames,
+    data2table_helper(val=del$val,E=del$cov,snames=x$tabnames,
                       ratios=cal$ratios,cov=cov)
 }
 
@@ -138,7 +138,7 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
     }
     if (addxy) cnames[1:2] <- c('x','y')
     colnames(out) <- cnames
-    rownames(out) <- names(x$samples)
+    rownames(out) <- x$tabnames
     for (i in 1:ns){
         if (log){
             val <- tavg[[i]]$val
@@ -281,7 +281,7 @@ simplex2IsoplotR <- function(dat,method='U-Pb'){
     }
     val <- as.vector(exp(J %*% cal$val))
     E <- diag(val) %*% J %*% cal$cov %*% t(J) %*% diag(val)
-    tab <- data2table_helper(val=val,E=E,snames=snames,ratios=oratios)
+    tab <- data2table_helper(val=val,E=E,snames=dat$tabnames,ratios=oratios)
     if (identical(method,'U-Pb')){
         out <- IsoplotR:::as.UPb(tab,format=5)
     } else if (identical(method,'U-Th-Pb')){
