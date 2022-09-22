@@ -274,9 +274,8 @@ subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out
 }
 subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
-    out <- x
-    snames <- subset2snames(dat=x,prefix=prefix,snames=snames,i=i,...)
-    out$samples <- x$samples[snames]
+    out <- subset.simplex(x,prefix=prefix,snames=snames,i=i,...)
+    snames <- names(out$samples)
     ni <- length(x$calibrated$num)
     i <- which(names(x$samples) %in% snames)
     ii <- as.vector(sapply((i-1)*ni,'+',1:ni))
