@@ -10,7 +10,7 @@
 #' data('SHRIMP',package='simplex')
 #' dc <- drift(x=SHRIMP)
 #' lr <- logratios(dc)
-#' plot(lr,i=1,option=2)
+#' plot(lr,i=1)
 #' }
 #' @export
 logratios <- function(x,i=NULL){
@@ -49,9 +49,9 @@ logratios.spot <- function(x){
     else fn <- sem_misfit_b0g
     init <- init_logratios(spot=x,groups=groups)
     b0g <- init$b0g
-    fit <- optim(par=b0g,f=fn,method='L-BFGS-B',
-                 lower=b0g-2,upper=b0g+2,
-                 spot=x,groups=groups,hessian=TRUE)
+    fit <- stats::optim(par=b0g,f=fn,method='L-BFGS-B',
+                        lower=b0g-2,upper=b0g+2,
+                        spot=x,groups=groups,hessian=TRUE)
     fit$cov <- MASS::ginv(fit$hessian)
     pred <- do.call(what=fn,
                     args=list(b0g=fit$par,spot=x,groups=groups,predict=TRUE))

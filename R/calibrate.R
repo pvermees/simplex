@@ -310,7 +310,7 @@ agegrid <- function(fit,pairing,stand){
     logDPstd <- stand$val[pairing$Y]
     logDPlim <- logDPstd + yrange - a - b * xlim
     tlim <- log(exp(logDPlim)+1)/lambda
-    tticks <- pretty(tlim)
+    tticks <- 10^(pretty(log10(tlim)))
     logDPticks <- log(exp(lambda*tticks)-1)
     nt <- length(tticks)
     xl <- rep(xlim[1],nt)

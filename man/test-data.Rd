@@ -10,15 +10,15 @@
 \alias{SHRIMP_UPb}
 \title{test data}
 \format{
-An object of class \code{calibration} (inherits from \code{logratios}, \code{drift}, \code{simplex}) of length 4.
+An object of class \code{calibrated} (inherits from \code{calibration}, \code{logratios}, \code{drift}, \code{simplex}) of length 5.
 
-An object of class \code{calibration} (inherits from \code{logratios}, \code{drift}, \code{simplex}) of length 4.
+An object of class \code{calibrated} (inherits from \code{calibration}, \code{logratios}, \code{drift}, \code{simplex}) of length 5.
 
-An object of class \code{calibrated} (inherits from \code{calibration}, \code{logratios}, \code{simplex}) of length 4.
+An object of class \code{calibrated} (inherits from \code{calibration}, \code{logratios}, \code{simplex}) of length 5.
 
-An object of class \code{calibrated} (inherits from \code{calibration}, \code{logratios}, \code{simplex}) of length 4.
+An object of class \code{calibrated} (inherits from \code{calibration}, \code{logratios}, \code{simplex}) of length 5.
 
-An object of class \code{calibration} (inherits from \code{logratios}, \code{drift}, \code{simplex}) of length 4.
+An object of class \code{calibrated} (inherits from \code{calibration}, \code{logratios}, \code{drift}, \code{simplex}) of length 5.
 }
 \usage{
 Cameca_UPb

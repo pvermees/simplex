@@ -24,6 +24,6 @@ extracts logratio averages from time resolved SIMS
 data('SHRIMP',package='simplex')
 dc <- drift(x=SHRIMP)
 lr <- logratios(dc)
-plot(lr,i=1,option=2)
+plot(lr,i=1)
 }
 }
