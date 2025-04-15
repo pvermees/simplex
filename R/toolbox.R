@@ -66,7 +66,9 @@ elements <- function(){
       'No','Lr','Rf','Db','Sg','Bh','Hs','Mt')
 }
 
+#' @export
 multicollector <- function(x,...){ UseMethod("multicollector",x) }
+#' @export
 multicollector.default <- function(x,...){
     detectors <- x$detector
     numion <- length(detectors)
@@ -76,9 +78,11 @@ multicollector.default <- function(x,...){
     else stop('Simplex does not currently manage mixed ',
               'peak-hopping and multidetection runs.')    
 }
+#' @export
 multicollector.simplex <- function(x){
     multicollector.default(x$samples[[1]])
 }
+#' @export
 multicollector.spot <- function(x){
     multicollector.default(x)
 }
