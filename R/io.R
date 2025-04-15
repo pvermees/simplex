@@ -266,6 +266,7 @@ read_asc_block <- function(f,ions){
     out
 }
 
+#' @export
 subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- x
     snames <- subset2snames(dat=x,prefix=prefix,snames=snames,i=i,...)
@@ -273,6 +274,7 @@ subset.simplex <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out$tabnames <- x$tabnames[snames]
     out
 }
+#' @export
 subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out <- subset.simplex(x,prefix=prefix,snames=snames,i=i,...)
     snames <- names(out$samples)
@@ -283,6 +285,7 @@ subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out$calibrated$cov <- out$calibrated$cov[ii,ii]
     out
 }
+#' @export
 subset2snames <- function(dat,prefix=NULL,snames=NULL,i=NULL,...){
     if (is.null(snames)){
         snames <- names(dat$samples)

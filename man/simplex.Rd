@@ -3,7 +3,6 @@
 \docType{package}
 \name{simplex}
 \alias{simplex}
-\alias{_PACKAGE}
 \alias{simplex-package}
 \title{Graphical User Interface for simplex}
 \usage{
