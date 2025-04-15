@@ -149,7 +149,7 @@ beta2york_regression <- function(tavg,pairing,stand){
 
 yorkfix <- function(xy,b,alpha=0.05){
     SS <- function(a,b,xy){
-        XY <- IsoplotR:::get.york.xy(xy,a,b)
+        XY <- IsoplotR:::get_york_xy(xy,a,b)
         dX <- XY[,1]-xy[,'X']
         sX <- xy[,'sX']
         dY <- XY[,2]-xy[,'Y']
