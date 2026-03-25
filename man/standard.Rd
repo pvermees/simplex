@@ -15,7 +15,10 @@ U-Pb age standards: \code{'Plesovice-t'}, \code{Qinghu-t},
 O-isotope standards: \code{'Plesovice-O'}, \code{'NBS28-O'},
 \code{'Qinghu-O'}, \code{'Penglai-O'},
 
-or S-isotope standards: \code{'Sonora-S'}.}
+S-isotope standards: \code{'Sonora-S'}.
+
+Pb-isotope standards: \code{'NIST610-Pb'}, \code{'BCR2G-Pb'},
+\code{'T1G-Pb'}, \code{'KL2G-Pb'}.}
 
 \item{tst}{two element with the standard's age and its standard
 error.}

@@ -244,6 +244,8 @@ simplex2IsoplotR <- function(dat,method='U-Pb'){
     } else if (identical(method,'Th-Pb')){
         iratios <- c('Pb204/Pb208','Pb208/Th232')
         oratios <- c('Th232/Pb208','Pb204/Pb208')
+    } else if (identical(method,'Pb-Pb')){
+        iratios <- oratios <- c('Pb204/Pb206','Pb207/Pb206')
     }
     if (!all(iratios %in% ratios)){
         stop("Input ratios should include: ",iratios)
@@ -269,6 +271,8 @@ simplex2IsoplotR <- function(dat,method='U-Pb'){
     } else if (identical(method,'Th-Pb')){
         j['Th232/Pb208','Pb208/Th232'] <- -1
         j['Pb204/Pb208','Pb204/Pb208'] <- 1
+    } else if (identical(method,'Pb-Pb')){
+        j <- diag(2)
     }
     cal <- dat$calibrated
     snames <- cal$snames
@@ -283,11 +287,13 @@ simplex2IsoplotR <- function(dat,method='U-Pb'){
     E <- diag(val) %*% J %*% cal$cov %*% t(J) %*% diag(val)
     tab <- data2table_helper(val=val,E=E,snames=dat$tabnames,ratios=oratios)
     if (identical(method,'U-Pb')){
-        out <- IsoplotR:::as.UPb(tab,format=5)
+        out <- IsoplotR::as.UPb(tab,format=5)
     } else if (identical(method,'U-Th-Pb')){
-        out <- IsoplotR:::as.UPb(tab,format=8)
+        out <- IsoplotR::as.UPb(tab,format=8)
     } else if (identical(method,'Th-Pb')){
-        out <- IsoplotR:::as.ThPb(tab,format=2)
+        out <- IsoplotR::as.ThPb(tab,format=2)
+    } else if (identical(method,'Pb-Pb')){
+        out <- IsoplotR::as.PbPb(tab,format=2)
     }
     out
 }

@@ -100,7 +100,7 @@ help(package='simplex')
 
 ## Author
 
-[Pieter Vermeesch](http://ucl.ac.uk/~ucfbpve/)
+[Pieter Vermeesch](https://pieter-vermeesch.es.ucl.ac.uk)
 
 ## License
 
