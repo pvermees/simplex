@@ -2,7 +2,8 @@
 #' @description get or set a list of data acquisition properties
 #' @param m the name of a data acquisition protocol. Pre-defined
 #'     values include \code{'IGG-UPb'}, \code{'GA-UPb'},
-#'     \code{'IGG-UThPb'}, \code{'IGG-O'}, and \code{'IGG-S'}).
+#'     \code{'IGG-UThPb'}, \code{'IGG-PbPb'}, \code{'IGG-O'}, and
+#'     \code{'IGG-S'}).
 #' @param instrument one of either \code{SHRIMP} or \code{Cameca}.
 #' @param ions vector of labels to be attached to the different ionic
 #'     masses that are visited during each sweep.

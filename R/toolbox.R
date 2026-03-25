@@ -67,7 +67,7 @@ elements <- function(){
 }
 
 #' Test if a dataset was measured by multicollector mass spectrometry
-#' @param x an simplex data object
+#' @param x a simplex data object
 #' @param ... optional arguments (not used)
 #' @export
 multicollector <- function(x,...){ UseMethod("multicollector",x) }
