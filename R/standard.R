@@ -69,6 +69,7 @@ standard <- function(preset,tst,measured,del,ref){
             out <- list()
             out$val <- Pbpresets[preset,c(1,3)]
             out$cov <- diag(Pbpresets[preset,c(2,4)]^2)
+            rownames(out$cov) <- colnames(out$cov) <- names(out$val)
         } else {
             stop("Invalid input to standard(...).")
         }

@@ -213,14 +213,16 @@ delta2york <- function(d,i,j){
 }
 
 #' @title convert to IsoplotR
-#' @description convert U-Pb or U-Th-Pb data to an IsoplotR object
+#' @description convert U-Pb, U-Th-Pb, or Pb-Pb data to an IsoplotR
+#'     object
 #' @param dat an object of class \code{calibrated}
-#' @param method sets the format of the \code{IsoplotR} oboject. If
+#' @param method sets the format of the \code{IsoplotR} object. If
 #'     \code{'U-Pb'}, produces a format 5 object of class \code{UPb};
 #'     if \code{'U-Th-Pb'}, produces a format 8 object of class
 #'     \code{UPb}; if \code{'Th-Pb'}, produces a format 2 object of
-#'     class \code{ThPb}.
-#' @return an object of class \code{UPb} or \code{ThPb}
+#'     class \code{ThPb}; if \code{'Pb-Pb'}, produces a format 2
+#'     object of class \code{PbPb}.
+#' @return an object of class \code{UPb}, \code{ThPb} or \code{PbPb}
 #' @examples
 #' \dontrun{
 #' m <- method('GA-UPb')
@@ -272,7 +274,8 @@ simplex2IsoplotR <- function(dat,method='U-Pb'){
         j['Th232/Pb208','Pb208/Th232'] <- -1
         j['Pb204/Pb208','Pb204/Pb208'] <- 1
     } else if (identical(method,'Pb-Pb')){
-        j <- diag(2)
+        j['Pb204/Pb206','Pb204/Pb206'] <- 1
+        j['Pb207/Pb206','Pb207/Pb206'] <- 1
     }
     cal <- dat$calibrated
     snames <- cal$snames
