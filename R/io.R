@@ -285,7 +285,6 @@ subset.calibrated <- function(x,prefix=NULL,snames=NULL,i=NULL,...){
     out$calibrated$cov <- out$calibrated$cov[ii,ii]
     out
 }
-#' @export
 subset2snames <- function(dat,prefix=NULL,snames=NULL,i=NULL,...){
     if (is.null(snames)){
         snames <- names(dat$samples)

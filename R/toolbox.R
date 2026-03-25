@@ -66,6 +66,9 @@ elements <- function(){
       'No','Lr','Rf','Db','Sg','Bh','Hs','Mt')
 }
 
+#' Test if a dataset was measured by multicollector mass spectrometry
+#' @param x an simplex data object
+#' @param ... optional arguments (not used)
 #' @export
 multicollector <- function(x,...){ UseMethod("multicollector",x) }
 #' @export
@@ -79,11 +82,11 @@ multicollector.default <- function(x,...){
               'peak-hopping and multidetection runs.')    
 }
 #' @export
-multicollector.simplex <- function(x){
+multicollector.simplex <- function(x,...){
     multicollector.default(x$samples[[1]])
 }
 #' @export
-multicollector.spot <- function(x){
+multicollector.spot <- function(x,...){
     multicollector.default(x)
 }
 

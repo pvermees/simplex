@@ -9,7 +9,11 @@
 #' O-isotope standards: \code{'Plesovice-O'}, \code{'NBS28-O'},
 #' \code{'Qinghu-O'}, \code{'Penglai-O'},
 #'
-#' or S-isotope standards: \code{'Sonora-S'}.
+#' S-isotope standards: \code{'Sonora-S'}.
+#'
+#' Pb-isotope standards: \code{'NIST610-Pb'}, \code{'BCR2G-Pb'},
+#' \code{'T1G-Pb'}, \code{'KL2G-Pb'}.
+#' 
 #' @param tst two element with the standard's age and its standard
 #'     error.
 #' @param measured logical. Only relevant for geochronological data.
@@ -33,7 +37,7 @@
 #' @export
 standard <- function(preset,tst,measured,del,ref){
     if (!missing(preset)){
-        files <- system.file(c('tstand.csv','Ostand.csv','Sstand.csv'),
+        files <- system.file(c('tstand.csv','Ostand.csv','Sstand.csv','Pbstand.csv'),
                              package='simplex')
         tpresets <- data.matrix(utils::read.csv(files[1],header=TRUE,
                                 row.names='standard',check.names=FALSE))
@@ -41,6 +45,8 @@ standard <- function(preset,tst,measured,del,ref){
                                 row.names='standard',check.names=FALSE))
         Spresets <- data.matrix(utils::read.csv(files[3],header=TRUE,
                                 row.names='standard',check.names=FALSE))
+        Pbpresets <- data.matrix(utils::read.csv(files[4],header=TRUE,
+                                 row.names='standard',check.names=FALSE))
         if (preset %in% rownames(tpresets)){
             geochron <- TRUE
             out <- age2stand(tst=tpresets[preset,])
@@ -58,6 +64,11 @@ standard <- function(preset,tst,measured,del,ref){
             del$cov <- diag(Spresets[preset,c(2,4,6)]^2)
             rownames(del$cov) <- colnames(del$cov) <- names(del$val)
             out <- del2stand(del,ref=troilite())
+        } else if (preset %in% rownames(Pbpresets)){
+            geochron <- FALSE
+            out <- list()
+            out$val <- Pbpresets[preset,c(1,3)]
+            out$cov <- diag(Pbpresets[preset,c(2,4)]^2)
         } else {
             stop("Invalid input to standard(...).")
         }

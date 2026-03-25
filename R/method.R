@@ -34,7 +34,7 @@
 #' @export
 method <- function(m='IGG-UPb',instrument,ions,num,
                    den,bkg,description){
-    if (m%in%c('IGG-UPb','IGG-UThPb','IGG-O','IGG-S','GA-UPb')){
+    if (m%in%c('IGG-UPb','IGG-UThPb','IGG-PbPb','IGG-O','IGG-S','GA-UPb')){
         out <- defaultmethod(m)
     } else {
         out <- list()
@@ -81,6 +81,13 @@ defaultmethod <- function(m){
         out$den <- c('Pb206','Pb206','Pb208','U238','U238','Th232','Th232')
         out$bkg <- 'nominal'
         out$description <- "Single collector U-Th-Pb dating at CAS-IGG (Beijing)."
+    } else if (m=='IGG-PbPb'){
+        out$instrument <- 'Cameca'
+        out$ions <- c('Pb204','205.9','Pb206','Pb207')
+        out$num <- c('Pb204','Pb207')
+        out$den <- c('Pb206','Pb206')
+        out$bkg <- 'nominal'
+        out$description <- "Multicollector Pb-Pb dating at CAS-IGG (Beijing)."
     } else if (m=='IGG-O'){
         out$instrument <- 'Cameca'
         out$ions <- c('O16','O17','O18')
