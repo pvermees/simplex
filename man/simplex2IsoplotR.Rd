@@ -9,17 +9,19 @@ simplex2IsoplotR(dat, method = "U-Pb")
 \arguments{
 \item{dat}{an object of class \code{calibrated}}
 
-\item{method}{sets the format of the \code{IsoplotR} oboject. If
+\item{method}{sets the format of the \code{IsoplotR} object. If
 \code{'U-Pb'}, produces a format 5 object of class \code{UPb};
 if \code{'U-Th-Pb'}, produces a format 8 object of class
 \code{UPb}; if \code{'Th-Pb'}, produces a format 2 object of
-class \code{ThPb}.}
+class \code{ThPb}; if \code{'Pb-Pb'}, produces a format 2
+object of class \code{PbPb}.}
 }
 \value{
-an object of class \code{UPb} or \code{ThPb}
+an object of class \code{UPb}, \code{ThPb} or \code{PbPb}
 }
 \description{
-convert U-Pb or U-Th-Pb data to an IsoplotR object
+convert U-Pb, U-Th-Pb, or Pb-Pb data to an IsoplotR
+    object
 }
 \examples{
 \dontrun{

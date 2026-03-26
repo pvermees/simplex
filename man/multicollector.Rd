@@ -7,7 +7,7 @@
 multicollector(x, ...)
 }
 \arguments{
-\item{x}{an simplex data object}
+\item{x}{a simplex data object}
 
 \item{...}{optional arguments (not used)}
 }
