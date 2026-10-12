@@ -9,7 +9,8 @@ method(m = "IGG-UPb", instrument, ions, num, den, bkg, description)
 \arguments{
 \item{m}{the name of a data acquisition protocol. Pre-defined
 values include \code{'IGG-UPb'}, \code{'GA-UPb'},
-\code{'IGG-UThPb'}, \code{'IGG-O'}, and \code{'IGG-S'}).}
+\code{'IGG-UThPb'}, \code{'IGG-PbPb'}, \code{'IGG-O'}, and
+\code{'IGG-S'}).}
 
 \item{instrument}{one of either \code{SHRIMP} or \code{Cameca}.}
 
