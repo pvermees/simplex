@@ -156,7 +156,7 @@ data2table.logratios <- function(x,log=TRUE,t=NULL,addxy=FALSE,...){
         out[i,si+2*(1:nr)] <- sqrt(diag(E))
         if (nr>1){
             cormat <- stats::cov2cor(E)
-            out[i,(si+2*nr+1):nc] <- cormat[upper.tri(cormat)]
+            out[i,(si+2*nr+1):nc] <- t(cormat)[lower.tri(cormat)]
         }
     }
     out
