@@ -58,6 +58,7 @@ calibrate_average <- function(dat,exterr=FALSE){
     out
 }
 
+
 calibrate_regression <- function(dat,exterr=FALSE){
     out <- dat
     cal <- dat$calibration$cal
